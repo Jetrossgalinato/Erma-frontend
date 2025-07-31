@@ -135,6 +135,7 @@ export default function Home() {
 
                       {/* Progress Bar */}
                       <div className="bg-orange-400 h-2 rounded-full"></div>
+                      <div className="bg-orange-400 h-2 w-25 rounded-full"></div>
 
                       {/* Request Button */}
                       <div className="relative">
