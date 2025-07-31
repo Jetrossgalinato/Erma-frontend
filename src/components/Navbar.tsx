@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -7,8 +8,16 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
-    <nav className="w-full bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <div className="text-xl font-semibold text-gray-800">MyApp</div>
+    <nav className="w-full bg-white shadow-sm px-6 flex justify-between items-center">
+      <div className="flex items-center">
+        <Image
+          src="/images/logocircle.png"
+          alt="Logo"
+          width={80}
+          height={80}
+          className="h-20 w-20 object-contain"
+        />
+      </div>
 
       {/* Desktop Links */}
       <div className="hidden md:flex gap-6 text-gray-600">
