@@ -27,7 +27,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Desktop Links */}
-      <div className="hidden md:flex pr-78 gap-6 text-gray-600">
+      <div className="hidden md:flex pr-60 gap-6 text-gray-600 items-center">
         <a
           href="home"
           onClick={() => handleLinkClick("Home")}
@@ -83,6 +83,14 @@ const Navbar: React.FC = () => {
         >
           Requests List
         </a>
+
+        {/* Sign In Button */}
+        <button
+          onClick={() => handleLinkClick("Sign In")}
+          className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
+        >
+          Sign In
+        </button>
       </div>
 
       {/* Mobile Menu Button */}
@@ -151,6 +159,14 @@ const Navbar: React.FC = () => {
           >
             Requests List
           </a>
+
+          {/* Mobile Sign In Button */}
+          <button
+            onClick={() => handleLinkClick("Sign In")}
+            className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
+          >
+            Sign In
+          </button>
         </div>
       )}
     </nav>
