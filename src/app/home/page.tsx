@@ -26,7 +26,7 @@ export default function Home() {
               your requests and borrowed items status.
             </p>
 
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center gap-2">
+            <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2">
               Get started
               <svg
                 className="w-5 h-5"

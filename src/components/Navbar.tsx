@@ -8,8 +8,8 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   return (
-    <nav className="w-full bg-white shadow-sm px-6 flex justify-between items-center">
-      <div className="flex items-center">
+    <nav className="w-full bg-white shadow-sm px-6 py-1 flex justify-between items-center">
+      <div className="flex items-center pl-78">
         <Image
           src="/images/logocircle.png"
           alt="Logo"
@@ -20,7 +20,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Desktop Links */}
-      <div className="hidden md:flex gap-6 text-gray-600">
+      <div className="hidden md:flex pr-78 gap-6 text-gray-600">
         <a href="#" className="hover:text-black transition">
           Home
         </a>
