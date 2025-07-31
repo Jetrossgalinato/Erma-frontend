@@ -85,12 +85,14 @@ const Navbar: React.FC = () => {
         </a>
 
         {/* Sign In Button */}
-        <button
-          onClick={() => handleLinkClick("Sign In")}
-          className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
-        >
-          Sign In
-        </button>
+        <a href="login">
+          <button
+            onClick={() => handleLinkClick("Sign In")}
+            className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
+          >
+            Sign In
+          </button>
+        </a>
       </div>
 
       {/* Mobile Menu Button */}
@@ -106,7 +108,7 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
           <a
-            href="#"
+            href="home"
             onClick={() => handleLinkClick("Home")}
             className={`py-2 text-gray-700 ${
               activeLink === "Home" ? "text-orange-500" : ""
@@ -161,12 +163,14 @@ const Navbar: React.FC = () => {
           </a>
 
           {/* Mobile Sign In Button */}
-          <button
-            onClick={() => handleLinkClick("Sign In")}
-            className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
-          >
-            Sign In
-          </button>
+          <a href="login">
+            <button
+              onClick={() => handleLinkClick("Sign In")}
+              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
+            >
+              Sign In
+            </button>
+          </a>
         </div>
       )}
     </nav>
