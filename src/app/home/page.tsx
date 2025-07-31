@@ -4,7 +4,10 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F5E6B8" }}>
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(to right, #fce7abff, #e2c15fff)" }}
+    >
       <Navbar />
 
       {/* Main Hero Section */}
