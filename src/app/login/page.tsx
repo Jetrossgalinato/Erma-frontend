@@ -1,5 +1,5 @@
 "use client";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50">
