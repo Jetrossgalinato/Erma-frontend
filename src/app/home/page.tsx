@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "linear-gradient(to right, #fce7abff, #e2c15fff)" }}
+      style={{ background: "linear-gradient(to right, #FEDD9E, #FDF1AD)" }}
     >
       <Navbar />
 
