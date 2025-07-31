@@ -11,9 +11,12 @@ export default function LoginPage() {
 
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
+            <h2 className="text-xl font-semibold text-gray-700">
+              Welcome back! 👋
+            </h2>
             Login to <span className="text-orange-600">CCIS ERMA</span>
-          </h2>
+          </div>
 
           <form className="space-y-4">
             <div>
