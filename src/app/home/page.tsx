@@ -11,25 +11,25 @@ export default function Home() {
       <Navbar />
 
       {/* Main Hero Section */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto px-8 py-20">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
-          <div className="space-y-8">
-            <div>
+          <div className="space-y-10 pl-4">
+            <div className="space-y-6">
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
                 Welcome to <span className="text-orange-500">CRIMS</span>
               </h1>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight">
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
                 CCIS Resource and Internship Management System
               </h1>
             </div>
 
-            <p className="text-lg text-gray-700 max-w-md">
+            <p className="text-lg text-gray-700 max-w-lg leading-relaxed">
               Your one-stop platform for managing college equipment requests and
               tracking your OJT attendance with ease.
             </p>
 
-            <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2">
+            <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2 mt-8">
               Get started
               <svg
                 className="w-5 h-5"
@@ -48,9 +48,9 @@ export default function Home() {
           </div>
 
           {/* Right Content - Phone Mockup */}
-          <div className="relative flex justify-center lg:justify-end">
-            {/* Floating Icons */}
-            <div className="absolute -top-4 -left-8 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center transform rotate-12 shadow-lg">
+          <div className="relative flex justify-center lg:justify-end items-center">
+            {/* Floating Icons - Better distributed */}
+            <div className="absolute -top-6 -left-12 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center transform rotate-12 shadow-lg">
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -66,7 +66,7 @@ export default function Home() {
               </svg>
             </div>
 
-            <div className="absolute top-16 -left-4 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center transform -rotate-12 shadow-lg">
+            <div className="absolute top-12 -left-8 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center transform -rotate-12 shadow-lg">
               <svg
                 className="w-10 h-10 text-purple-600"
                 fill="none"
@@ -82,9 +82,10 @@ export default function Home() {
               </svg>
             </div>
 
-            <div className="absolute -bottom-8 left-8 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center transform rotate-45 shadow-lg">
+            {/* Additional floating elements for better balance */}
+            <div className="absolute -bottom-4 left-4 w-14 h-14 bg-orange-400 rounded-full flex items-center justify-center transform rotate-45 shadow-lg">
               <svg
-                className="w-8 h-8 text-white"
+                className="w-7 h-7 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -93,13 +94,29 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
                 />
               </svg>
             </div>
 
-            {/* Phone Mockup */}
-            <div className="relative">
+            <div className="absolute bottom-16 -right-6 w-12 h-12 bg-purple-400 rounded-full flex items-center justify-center transform -rotate-12 shadow-lg">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+
+            {/* Phone Mockup - Better centered */}
+            <div className="relative z-10">
               {/* Phone Frame */}
               <div className="w-72 h-[600px] bg-black rounded-[3rem] p-2 shadow-2xl">
                 <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
@@ -121,7 +138,7 @@ export default function Home() {
                     {/* App Content */}
                     <div className="space-y-6">
                       {/* Projector Image */}
-                      <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <div className="bg-white rounded-xl p-4 shadow-sm">
                         <div className="w-full h-24 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                           <Image
                             src="/images/projector.png"
@@ -133,12 +150,14 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Progress Bar */}
-                      <div className="bg-orange-400 h-2 rounded-full"></div>
-                      <div className="bg-orange-400 h-2 w-25 rounded-full"></div>
+                      {/* Progress Bars - Better spacing */}
+                      <div className="space-y-3">
+                        <div className="bg-orange-400 h-2 rounded-full"></div>
+                        <div className="bg-orange-400 h-2 w-3/4 rounded-full"></div>
+                      </div>
 
                       {/* Request Button */}
-                      <div className="relative">
+                      <div className="relative mt-8">
                         <button className="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold text-lg shadow-lg">
                           Request
                         </button>
@@ -169,26 +188,26 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-slate-800 text-white py-8">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h3 className="text-lg font-semibold mb-2">
+      {/* Footer - Improved typography and spacing */}
+      <footer className="bg-slate-800 text-white py-12">
+        <div className="max-w-7xl mx-auto px-8 text-center">
+          <h3 className="text-xl font-semibold mb-3">
             College of Computing and Information Sciences (CCIS)
           </h3>
-          <p className="text-slate-300 mb-4">
+          <p className="text-slate-300 mb-6 text-base">
             Caraga State University - Ampayon, Butuan City, Caraga Region, 8600
             Philippines
           </p>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-slate-400 text-base mb-6">
             © 2025 CCIS ERMA. All rights reserved.
           </p>
 
           {/* Social Media Icons */}
-          <div className="flex justify-center items-center gap-4">
+          <div className="flex justify-center items-center gap-6">
             {/* Facebook Icon */}
             <a
               href="#"
-              className="text-slate-300 hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors p-2 rounded-full hover:bg-slate-700"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -198,7 +217,7 @@ export default function Home() {
             {/* GitHub Icon */}
             <a
               href="#"
-              className="text-slate-300 hover:text-white transition-colors"
+              className="text-slate-300 hover:text-white transition-colors p-2 rounded-full hover:bg-slate-700"
             >
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />

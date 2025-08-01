@@ -33,6 +33,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAvatarDropdownOpen(false);
+    alert("You have been logged out successfully.");
   };
 
   useEffect(() => {
@@ -85,7 +86,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Desktop Links */}
-      <div className="hidden md:flex pr-60 gap-6 text-gray-600 items-center">
+      <div className="hidden md:flex pr-78 gap-6 text-gray-600 items-center">
         <a
           href="home"
           onClick={() => handleLinkClick("Home")}
