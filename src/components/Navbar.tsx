@@ -89,7 +89,7 @@ const Navbar: React.FC = () => {
         <a
           href="home"
           onClick={() => handleLinkClick("Home")}
-          className={`hover:text-black transition ${
+          className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Home" ? "text-orange-500" : ""
           }`}
         >
@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
         <div className="relative dropdown-container">
           <button
             onClick={toggleResources}
-            className={`flex items-center gap-1 hover:text-black transition ${
+            className={`flex items-center gap-1 hover:text-black transition-colors duration-300 ${
               activeLink === "Resources" ? "text-orange-500" : ""
             }`}
           >
@@ -112,7 +112,7 @@ const Navbar: React.FC = () => {
               <a
                 href="#"
                 onClick={() => handleLinkClick("Equipment")}
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition ${
+                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Equipment" ? "text-orange-500" : ""
                 }`}
               >
@@ -121,7 +121,7 @@ const Navbar: React.FC = () => {
               <a
                 href="#"
                 onClick={() => handleLinkClick("Facilities")}
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition ${
+                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Facilities" ? "text-orange-500" : ""
                 }`}
               >
@@ -134,7 +134,7 @@ const Navbar: React.FC = () => {
         <a
           href="#"
           onClick={() => handleLinkClick("Requests List")}
-          className={`hover:text-black transition ${
+          className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Requests List" ? "text-orange-500" : ""
           }`}
         >
@@ -146,7 +146,7 @@ const Navbar: React.FC = () => {
           <div className="relative dropdown-container">
             <button
               onClick={toggleAvatarDropdown}
-              className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+              className="w-10 h-10 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow hover:shadow-md transition duration-300"
             >
               {getInitial()}
             </button>
@@ -159,7 +159,7 @@ const Navbar: React.FC = () => {
                     handleLinkClick("My Dashboard");
                     setIsAvatarDropdownOpen(false);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
                 >
                   <LayoutDashboard size={16} />
                   My Dashboard
@@ -170,7 +170,7 @@ const Navbar: React.FC = () => {
                     handleLinkClick("My Profile");
                     setIsAvatarDropdownOpen(false);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
                 >
                   <User size={16} />
                   My Profile
@@ -178,7 +178,7 @@ const Navbar: React.FC = () => {
                 <hr className="border-gray-200" />
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
                 >
                   <LogOut size={16} />
                   Logout
@@ -269,7 +269,7 @@ const Navbar: React.FC = () => {
             <div className="relative dropdown-container w-full">
               <button
                 onClick={toggleAvatarDropdown}
-                className="w-10 h-10 mt-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+                className="w-10 h-10 mt-2 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
               >
                 {getInitial()}
               </button>
@@ -306,7 +306,7 @@ const Navbar: React.FC = () => {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
                     <LogOut size={16} />
                     Logout
