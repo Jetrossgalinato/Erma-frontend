@@ -33,6 +33,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAvatarDropdownOpen(false);
+    alert("You have been logged out successfully.");
   };
 
   useEffect(() => {

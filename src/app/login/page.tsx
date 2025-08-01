@@ -23,7 +23,7 @@ export default function LoginPage() {
       setError(error.message);
     } else {
       setError("");
-      console.log("Login successful");
+      alert("You have logged in succesfully!");
       router.push("/home");
     }
   };
