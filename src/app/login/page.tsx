@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ background: "linear-gradient(to right, #FEDD9E, #FDF1AD)" }}
+      style={{ background: "linear-gradient(to left, #facc76ff, #FDF1AD)" }}
     >
       <Navbar />
 
