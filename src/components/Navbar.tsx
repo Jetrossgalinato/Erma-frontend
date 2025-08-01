@@ -1,17 +1,57 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { supabase } from "../../supabaseClient";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home"); // Track active link
+  const [activeLink, setActiveLink] = useState("Home");
+  const [userInitials, setUserInitials] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const name =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email;
+
+        const initials = name
+          ?.split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase();
+
+        setUserInitials(initials);
+      } else {
+        setUserInitials(null);
+      }
+    };
+
+    fetchUser();
+
+    // Optionally listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      fetchUser();
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
   const handleLinkClick = (linkName: string) => {
     setActiveLink(linkName);
-    setIsOpen(false); // Close mobile menu when link is clicked
+    setIsOpen(false);
   };
 
   return (
@@ -84,15 +124,24 @@ const Navbar: React.FC = () => {
           Requests List
         </a>
 
-        {/* Sign In Button */}
-        <a href="login">
-          <button
-            onClick={() => handleLinkClick("Sign In")}
-            className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
+        {/* Sign In or User Initials */}
+        {userInitials ? (
+          <div
+            className="bg-orange-500 text-white w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold"
+            title="Your Profile"
           >
-            Sign In
-          </button>
-        </a>
+            {userInitials}
+          </div>
+        ) : (
+          <a href="/login">
+            <button
+              onClick={() => handleLinkClick("Sign In")}
+              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
+            >
+              Sign In
+            </button>
+          </a>
+        )}
       </div>
 
       {/* Mobile Menu Button */}
@@ -162,15 +211,24 @@ const Navbar: React.FC = () => {
             Requests List
           </a>
 
-          {/* Mobile Sign In Button */}
-          <a href="login">
-            <button
-              onClick={() => handleLinkClick("Sign In")}
-              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
+          {/* Mobile Sign In or Initials */}
+          {userInitials ? (
+            <div
+              className="bg-orange-500 text-white w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold mt-2"
+              title="Your Profile"
             >
-              Sign In
-            </button>
-          </a>
+              {userInitials}
+            </div>
+          ) : (
+            <a href="/login">
+              <button
+                onClick={() => handleLinkClick("Sign In")}
+                className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
+              >
+                Sign In
+              </button>
+            </a>
+          )}
         </div>
       )}
     </nav>
