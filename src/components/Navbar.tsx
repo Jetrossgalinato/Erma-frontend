@@ -9,15 +9,23 @@ import { Session } from "@supabase/supabase-js";
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
+  const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("Home");
   const [session, setSession] = useState<Session | null>(null);
   const supabase = createClientComponentClient();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
+  const toggleAvatarDropdown = () =>
+    setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
   const handleLinkClick = (linkName: string) => {
     setActiveLink(linkName);
     setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAvatarDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -35,6 +43,22 @@ const Navbar: React.FC = () => {
       authListener.subscription.unsubscribe();
     };
   }, [supabase.auth]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".dropdown-container")) {
+        setIsResourcesOpen(false);
+        setIsAvatarDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const getInitial = () => {
     const name = session?.user?.user_metadata?.name || session?.user?.email;
@@ -65,7 +89,7 @@ const Navbar: React.FC = () => {
           Home
         </a>
 
-        <div className="relative">
+        <div className="relative dropdown-container">
           <button
             onClick={toggleResources}
             className={`flex items-center gap-1 hover:text-black transition ${
@@ -112,8 +136,45 @@ const Navbar: React.FC = () => {
 
         {/* Avatar or Sign In */}
         {session ? (
-          <div className="w-10 h-10 flex items-center justify-center bg-orange-500 text-white font-semibold rounded-full shadow">
-            {getInitial()}
+          <div className="relative dropdown-container">
+            <button
+              onClick={toggleAvatarDropdown}
+              className="w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+            >
+              {getInitial()}
+            </button>
+
+            {isAvatarDropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[140px] z-50">
+                <a
+                  href="/dashboard"
+                  onClick={() => {
+                    handleLinkClick("My Dashboard");
+                    setIsAvatarDropdownOpen(false);
+                  }}
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                >
+                  My Dashboard
+                </a>
+                <a
+                  href="/profile"
+                  onClick={() => {
+                    handleLinkClick("My Profile");
+                    setIsAvatarDropdownOpen(false);
+                  }}
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                >
+                  My Profile
+                </a>
+                <hr className="border-gray-200" />
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <a href="/login">
@@ -195,8 +256,50 @@ const Navbar: React.FC = () => {
 
           {/* Mobile Avatar or Sign In */}
           {session ? (
-            <div className="w-10 h-10 mt-2 flex items-center justify-center bg-orange-500 text-white font-semibold rounded-full shadow">
-              {getInitial()}
+            <div className="relative dropdown-container w-full">
+              <button
+                onClick={toggleAvatarDropdown}
+                className="w-10 h-10 mt-2 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+              >
+                {getInitial()}
+              </button>
+
+              {isAvatarDropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[140px] z-50">
+                  <a
+                    href="/dashboard"
+                    onClick={() => {
+                      handleLinkClick("My Dashboard");
+                      setIsAvatarDropdownOpen(false);
+                      setIsOpen(false);
+                    }}
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    My Dashboard
+                  </a>
+                  <a
+                    href="/profile"
+                    onClick={() => {
+                      handleLinkClick("My Profile");
+                      setIsAvatarDropdownOpen(false);
+                      setIsOpen(false);
+                    }}
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    My Profile
+                  </a>
+                  <hr className="border-gray-200" />
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <a href="/login" className="w-full mt-2">
