@@ -87,10 +87,12 @@ export default function RegisterPage() {
               </label>
               <select
                 id="role"
+                name="role"
                 required
+                defaultValue=""
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
-                <option value="" disabled selected>
+                <option value="" disabled>
                   Select a role
                 </option>
                 <option value="Super Admin">Super Admin</option>
