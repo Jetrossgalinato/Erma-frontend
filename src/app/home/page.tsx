@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div
       className="min-h-screen"
-      style={{ background: "linear-gradient(to right, #FEDD9E, #FDF1AD)" }}
+      style={{ background: "linear-gradient(to right, #facc76ff, #FDF1AD)" }}
     >
       <Navbar />
 
@@ -17,13 +17,10 @@ export default function Home() {
           <div className="space-y-8">
             <div>
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                Welcome
+                Welcome to <span className="text-orange-500">CRIMS</span>
               </h1>
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                to <span className="text-orange-500">CRIMS</span>
-              </h1>
-              <h1 className="text-3xl lg:text-4xl font-bold text-orange-500 leading-tight">
-                CCIS RESOURCE AND INTERNSHIP MANAGEMENT SYSTEM
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight">
+                CCIS Resource and Internship Management System
               </h1>
             </div>
 
