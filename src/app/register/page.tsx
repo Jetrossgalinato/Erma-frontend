@@ -85,12 +85,19 @@ export default function RegisterPage() {
               >
                 Role
               </label>
-              <input
-                type="role"
+              <select
                 id="role"
                 required
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
+              >
+                <option value="" disabled selected>
+                  Select a role
+                </option>
+                <option value="Super Admin">Super Admin</option>
+                <option value="Admin">Admin</option>
+                <option value="Staff">Staff</option>
+                <option value="Faculty">Faculty</option>
+              </select>
             </div>
 
             <button
