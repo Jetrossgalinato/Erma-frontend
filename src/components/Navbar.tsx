@@ -1,17 +1,75 @@
-import React, { useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  LayoutDashboard,
+  User,
+  LogOut,
+} from "lucide-react";
 import Image from "next/image";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Session } from "@supabase/supabase-js";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home"); // Track active link
+  const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState("Home");
+  const [session, setSession] = useState<Session | null>(null);
+  const supabase = createClientComponentClient();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
+  const toggleAvatarDropdown = () =>
+    setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
   const handleLinkClick = (linkName: string) => {
     setActiveLink(linkName);
-    setIsOpen(false); // Close mobile menu when link is clicked
+    setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAvatarDropdownOpen(false);
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".dropdown-container")) {
+        setIsResourcesOpen(false);
+        setIsAvatarDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const getInitial = () => {
+    const name = session?.user?.user_metadata?.name || session?.user?.email;
+    return name ? name.charAt(0).toUpperCase() : "?";
   };
 
   return (
@@ -31,18 +89,17 @@ const Navbar: React.FC = () => {
         <a
           href="home"
           onClick={() => handleLinkClick("Home")}
-          className={`hover:text-black transition ${
+          className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Home" ? "text-orange-500" : ""
           }`}
         >
           Home
         </a>
 
-        {/* Resources Dropdown */}
-        <div className="relative">
+        <div className="relative dropdown-container">
           <button
             onClick={toggleResources}
-            className={`flex items-center gap-1 hover:text-black transition ${
+            className={`flex items-center gap-1 hover:text-black transition-colors duration-300 ${
               activeLink === "Resources" ? "text-orange-500" : ""
             }`}
           >
@@ -55,7 +112,7 @@ const Navbar: React.FC = () => {
               <a
                 href="#"
                 onClick={() => handleLinkClick("Equipment")}
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition ${
+                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Equipment" ? "text-orange-500" : ""
                 }`}
               >
@@ -64,7 +121,7 @@ const Navbar: React.FC = () => {
               <a
                 href="#"
                 onClick={() => handleLinkClick("Facilities")}
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition ${
+                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Facilities" ? "text-orange-500" : ""
                 }`}
               >
@@ -77,22 +134,68 @@ const Navbar: React.FC = () => {
         <a
           href="#"
           onClick={() => handleLinkClick("Requests List")}
-          className={`hover:text-black transition ${
+          className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Requests List" ? "text-orange-500" : ""
           }`}
         >
           Requests List
         </a>
 
-        {/* Sign In Button */}
-        <a href="login">
-          <button
-            onClick={() => handleLinkClick("Sign In")}
-            className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
-          >
-            Sign In
-          </button>
-        </a>
+        {/* Avatar or Sign In */}
+        {session ? (
+          <div className="relative dropdown-container">
+            <button
+              onClick={toggleAvatarDropdown}
+              className="w-10 h-10 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow hover:shadow-md transition duration-300"
+            >
+              {getInitial()}
+            </button>
+
+            {isAvatarDropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                <a
+                  href="/dashboard"
+                  onClick={() => {
+                    handleLinkClick("My Dashboard");
+                    setIsAvatarDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                >
+                  <LayoutDashboard size={16} />
+                  My Dashboard
+                </a>
+                <a
+                  href="/profile"
+                  onClick={() => {
+                    handleLinkClick("My Profile");
+                    setIsAvatarDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                >
+                  <User size={16} />
+                  My Profile
+                </a>
+                <hr className="border-gray-200" />
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <a href="/login">
+            <button
+              onClick={() => handleLinkClick("Sign In")}
+              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
+            >
+              Sign In
+            </button>
+          </a>
+        )}
       </div>
 
       {/* Mobile Menu Button */}
@@ -117,7 +220,6 @@ const Navbar: React.FC = () => {
             Home
           </a>
 
-          {/* Mobile Resources Dropdown */}
           <div className="w-full">
             <button
               onClick={toggleResources}
@@ -162,15 +264,66 @@ const Navbar: React.FC = () => {
             Requests List
           </a>
 
-          {/* Mobile Sign In Button */}
-          <a href="login">
-            <button
-              onClick={() => handleLinkClick("Sign In")}
-              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 mt-2 w-full"
-            >
-              Sign In
-            </button>
-          </a>
+          {/* Mobile Avatar or Sign In */}
+          {session ? (
+            <div className="relative dropdown-container w-full">
+              <button
+                onClick={toggleAvatarDropdown}
+                className="w-10 h-10 mt-2 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+              >
+                {getInitial()}
+              </button>
+
+              {isAvatarDropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                  <a
+                    href="/dashboard"
+                    onClick={() => {
+                      handleLinkClick("My Dashboard");
+                      setIsAvatarDropdownOpen(false);
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <LayoutDashboard size={16} />
+                    My Dashboard
+                  </a>
+                  <a
+                    href="/profile"
+                    onClick={() => {
+                      handleLinkClick("My Profile");
+                      setIsAvatarDropdownOpen(false);
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <User size={16} />
+                    My Profile
+                  </a>
+                  <hr className="border-gray-200" />
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <a href="/login" className="w-full mt-2">
+              <button
+                onClick={() => handleLinkClick("Sign In")}
+                className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 w-full"
+              >
+                Sign In
+              </button>
+            </a>
+          )}
         </div>
       )}
     </nav>
