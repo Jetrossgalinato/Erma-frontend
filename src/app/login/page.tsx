@@ -15,7 +15,7 @@ export default function LoginPage() {
             <h2 className="text-xl font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
-            Login to <span className="text-orange-600">CCIS ERMA</span>
+            Login to <span className="text-orange-600">CRIMS</span>
           </div>
 
           <form className="space-y-4">

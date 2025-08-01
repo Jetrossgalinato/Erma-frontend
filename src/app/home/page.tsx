@@ -17,16 +17,19 @@ export default function Home() {
           <div className="space-y-8">
             <div>
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                Request resources
+                Welcome
               </h1>
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                with <span className="text-orange-500">CCIS ERMA</span>
+                to <span className="text-orange-500">CRIMS</span>
+              </h1>
+              <h1 className="text-3xl lg:text-4xl font-bold text-orange-500 leading-tight">
+                CCIS RESOURCE AND INTERNSHIP MANAGEMENT SYSTEM
               </h1>
             </div>
 
             <p className="text-lg text-gray-700 max-w-md">
-              Request facilities and borrow college equipment with ease. Track
-              your requests and borrowed items status.
+              Your one-stop platform for managing college equipment requests and
+              tracking your OJT attendance with ease.
             </p>
 
             <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2">
