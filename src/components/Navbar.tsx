@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Menu, X, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  LayoutDashboard,
+  User,
+  LogOut,
+} from "lucide-react";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session } from "@supabase/supabase-js";
@@ -145,15 +152,16 @@ const Navbar: React.FC = () => {
             </button>
 
             {isAvatarDropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[140px] z-50">
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
                 <a
                   href="/dashboard"
                   onClick={() => {
                     handleLinkClick("My Dashboard");
                     setIsAvatarDropdownOpen(false);
                   }}
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
+                  <LayoutDashboard size={16} />
                   My Dashboard
                 </a>
                 <a
@@ -162,15 +170,17 @@ const Navbar: React.FC = () => {
                     handleLinkClick("My Profile");
                     setIsAvatarDropdownOpen(false);
                   }}
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
+                  <User size={16} />
                   My Profile
                 </a>
                 <hr className="border-gray-200" />
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
+                  <LogOut size={16} />
                   Logout
                 </button>
               </div>
@@ -265,7 +275,7 @@ const Navbar: React.FC = () => {
               </button>
 
               {isAvatarDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[140px] z-50">
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
                   <a
                     href="/dashboard"
                     onClick={() => {
@@ -273,8 +283,9 @@ const Navbar: React.FC = () => {
                       setIsAvatarDropdownOpen(false);
                       setIsOpen(false);
                     }}
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
+                    <LayoutDashboard size={16} />
                     My Dashboard
                   </a>
                   <a
@@ -284,8 +295,9 @@ const Navbar: React.FC = () => {
                       setIsAvatarDropdownOpen(false);
                       setIsOpen(false);
                     }}
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
+                    <User size={16} />
                     My Profile
                   </a>
                   <hr className="border-gray-200" />
@@ -294,8 +306,9 @@ const Navbar: React.FC = () => {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
+                    <LogOut size={16} />
                     Logout
                   </button>
                 </div>
