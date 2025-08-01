@@ -1,7 +1,60 @@
 "use client";
+
+import { useState } from "react";
+import { supabase } from "../../../supabaseClient";
 import Navbar from "../../components/Navbar";
 
 export default function RegisterPage() {
+  const [formData, setFormData] = useState({
+    email: "",
+    name: "",
+    password: "",
+    confirmpassword: "",
+    role: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { email, name, password, confirmpassword, role } = formData;
+
+    if (password !== confirmpassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+          role: role,
+        },
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert(
+        "Registration successful! Please check your email to verify your account."
+      );
+    }
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col"
@@ -18,7 +71,7 @@ export default function RegisterPage() {
             Register to <span className="text-orange-600">CRIMS</span>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="email"
@@ -30,6 +83,8 @@ export default function RegisterPage() {
                 type="email"
                 id="email"
                 required
+                onChange={handleChange}
+                value={formData.email}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
@@ -42,9 +97,11 @@ export default function RegisterPage() {
                 Full Name
               </label>
               <input
-                type="name"
+                type="text"
                 id="name"
                 required
+                onChange={handleChange}
+                value={formData.name}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
@@ -60,9 +117,12 @@ export default function RegisterPage() {
                 type="password"
                 id="password"
                 required
+                onChange={handleChange}
+                value={formData.password}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
+
             <div>
               <label
                 htmlFor="confirmpassword"
@@ -74,6 +134,8 @@ export default function RegisterPage() {
                 type="password"
                 id="confirmpassword"
                 required
+                onChange={handleChange}
+                value={formData.confirmpassword}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
@@ -87,9 +149,9 @@ export default function RegisterPage() {
               </label>
               <select
                 id="role"
-                name="role"
                 required
-                defaultValue=""
+                onChange={handleChange}
+                value={formData.role}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 <option value="" disabled>
@@ -104,16 +166,17 @@ export default function RegisterPage() {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
             >
-              Register
+              {loading ? "Registering..." : "Register"}
             </button>
           </form>
 
           <p className="mt-4 text-sm text-gray-600 text-center">
             Already have an account?{" "}
             <a
-              href="login"
+              href="/login"
               className="text-orange-600 font-semibold hover:underline"
             >
               Sign In
@@ -122,7 +185,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="bg-slate-800 text-white py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h3 className="text-lg font-semibold mb-2">
@@ -136,9 +198,7 @@ export default function RegisterPage() {
             © 2025 CCIS ERMA. All rights reserved.
           </p>
 
-          {/* Social Media Icons */}
           <div className="flex justify-center items-center gap-4">
-            {/* Facebook Icon */}
             <a
               href="#"
               className="text-slate-300 hover:text-white transition-colors"
@@ -147,8 +207,6 @@ export default function RegisterPage() {
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
             </a>
-
-            {/* GitHub Icon */}
             <a
               href="#"
               className="text-slate-300 hover:text-white transition-colors"
