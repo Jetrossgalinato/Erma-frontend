@@ -88,7 +88,7 @@ const Navbar: React.FC = () => {
       {/* Desktop Links */}
       <div className="hidden md:flex pr-70 gap-6 text-gray-600 items-center">
         <a
-          href=""
+          href="/home"
           onClick={() => handleLinkClick("Home")}
           className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Home" ? "text-orange-500" : ""
@@ -111,7 +111,7 @@ const Navbar: React.FC = () => {
           {isResourcesOpen && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[120px] z-50">
               <a
-                href="/resources/equipment"
+                href="/equipment"
                 onClick={() => handleLinkClick("Equipment")}
                 className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Equipment" ? "text-orange-500" : ""
@@ -120,7 +120,7 @@ const Navbar: React.FC = () => {
                 Equipment
               </a>
               <a
-                href="/resources/facilities"
+                href="/facilities"
                 onClick={() => handleLinkClick("Facilities")}
                 className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
                   activeLink === "Facilities" ? "text-orange-500" : ""
@@ -234,7 +234,7 @@ const Navbar: React.FC = () => {
             {isResourcesOpen && (
               <div className="pl-4 flex flex-col">
                 <a
-                  href="/resources/equipment"
+                  href="/equipment"
                   onClick={() => handleLinkClick("Equipment")}
                   className={`py-1 text-gray-600 ${
                     activeLink === "Equipment" ? "text-orange-500" : ""
@@ -243,7 +243,7 @@ const Navbar: React.FC = () => {
                   Equipment
                 </a>
                 <a
-                  href="/resources/facilities"
+                  href="/facilities"
                   onClick={() => handleLinkClick("Facilities")}
                   className={`py-1 text-gray-600 ${
                     activeLink === "Facilities" ? "text-orange-500" : ""
