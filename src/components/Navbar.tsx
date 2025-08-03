@@ -88,7 +88,7 @@ const Navbar: React.FC = () => {
       {/* Desktop Links */}
       <div className="hidden md:flex pr-70 gap-6 text-gray-600 items-center">
         <a
-          href="home"
+          href=""
           onClick={() => handleLinkClick("Home")}
           className={`hover:text-black transition-colors duration-300 ${
             activeLink === "Home" ? "text-orange-500" : ""
