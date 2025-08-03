@@ -10,6 +10,7 @@ import {
   LogOut,
 } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session } from "@supabase/supabase-js";
 
@@ -17,18 +18,14 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home");
   const [session, setSession] = useState<Session | null>(null);
   const supabase = createClientComponentClient();
+  const pathname = usePathname();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
   const toggleAvatarDropdown = () =>
     setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
-  const handleLinkClick = (linkName: string) => {
-    setActiveLink(linkName);
-    setIsOpen(false);
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -52,7 +49,6 @@ const Navbar: React.FC = () => {
     };
   }, [supabase.auth]);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -89,9 +85,8 @@ const Navbar: React.FC = () => {
       <div className="hidden md:flex pr-70 gap-6 text-gray-600 items-center">
         <a
           href="/home"
-          onClick={() => handleLinkClick("Home")}
           className={`hover:text-black transition-colors duration-300 ${
-            activeLink === "Home" ? "text-orange-500" : ""
+            pathname === "/home" ? "text-orange-500" : ""
           }`}
         >
           Home
@@ -101,7 +96,10 @@ const Navbar: React.FC = () => {
           <button
             onClick={toggleResources}
             className={`flex items-center gap-1 hover:text-black transition-colors duration-300 ${
-              activeLink === "Resources" ? "text-orange-500" : ""
+              pathname.startsWith("/equipment") ||
+              pathname.startsWith("/facilities")
+                ? "text-orange-500"
+                : ""
             }`}
           >
             Resources
@@ -112,18 +110,16 @@ const Navbar: React.FC = () => {
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[120px] z-50">
               <a
                 href="/equipment"
-                onClick={() => handleLinkClick("Equipment")}
                 className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
-                  activeLink === "Equipment" ? "text-orange-500" : ""
+                  pathname.startsWith("/equipment") ? "text-orange-500" : ""
                 }`}
               >
                 Equipment
               </a>
               <a
                 href="/facilities"
-                onClick={() => handleLinkClick("Facilities")}
                 className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
-                  activeLink === "Facilities" ? "text-orange-500" : ""
+                  pathname.startsWith("/facilities") ? "text-orange-500" : ""
                 }`}
               >
                 Facilities
@@ -133,16 +129,14 @@ const Navbar: React.FC = () => {
         </div>
 
         <a
-          href="#"
-          onClick={() => handleLinkClick("Requests List")}
+          href="/requests"
           className={`hover:text-black transition-colors duration-300 ${
-            activeLink === "Requests List" ? "text-orange-500" : ""
+            pathname === "/requests" ? "text-orange-500" : ""
           }`}
         >
           Requests List
         </a>
 
-        {/* Avatar or Sign In */}
         {session ? (
           <div className="relative dropdown-container">
             <button
@@ -156,22 +150,14 @@ const Navbar: React.FC = () => {
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
                 <a
                   href="/dashboard"
-                  onClick={() => {
-                    handleLinkClick("My Dashboard");
-                    setIsAvatarDropdownOpen(false);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
                   <LayoutDashboard size={16} />
                   My Dashboard
                 </a>
                 <a
                   href="/profile"
-                  onClick={() => {
-                    handleLinkClick("My Profile");
-                    setIsAvatarDropdownOpen(false);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
                   <User size={16} />
                   My Profile
@@ -179,7 +165,7 @@ const Navbar: React.FC = () => {
                 <hr className="border-gray-200" />
                 <button
                   onClick={handleLogout}
-                  className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300"
+                  className="flex items-center cursor-pointer gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
                   <LogOut size={16} />
                   Logout
@@ -189,10 +175,7 @@ const Navbar: React.FC = () => {
           </div>
         ) : (
           <a href="/login">
-            <button
-              onClick={() => handleLinkClick("Sign In")}
-              className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300"
-            >
+            <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300">
               Sign In
             </button>
           </a>
@@ -212,10 +195,9 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
           <a
-            href="home"
-            onClick={() => handleLinkClick("Home")}
+            href="/home"
             className={`py-2 text-gray-700 ${
-              activeLink === "Home" ? "text-orange-500" : ""
+              pathname === "/home" ? "text-orange-500" : ""
             }`}
           >
             Home
@@ -225,7 +207,10 @@ const Navbar: React.FC = () => {
             <button
               onClick={toggleResources}
               className={`flex items-center justify-between w-full py-2 text-gray-700 ${
-                activeLink === "Resources" ? "text-orange-500" : ""
+                pathname.startsWith("/equipment") ||
+                pathname.startsWith("/facilities")
+                  ? "text-orange-500"
+                  : ""
               }`}
             >
               Resources
@@ -235,18 +220,16 @@ const Navbar: React.FC = () => {
               <div className="pl-4 flex flex-col">
                 <a
                   href="/equipment"
-                  onClick={() => handleLinkClick("Equipment")}
                   className={`py-1 text-gray-600 ${
-                    activeLink === "Equipment" ? "text-orange-500" : ""
+                    pathname.startsWith("/equipment") ? "text-orange-500" : ""
                   }`}
                 >
                   Equipment
                 </a>
                 <a
                   href="/facilities"
-                  onClick={() => handleLinkClick("Facilities")}
                   className={`py-1 text-gray-600 ${
-                    activeLink === "Facilities" ? "text-orange-500" : ""
+                    pathname.startsWith("/facilities") ? "text-orange-500" : ""
                   }`}
                 >
                   Facilities
@@ -256,21 +239,19 @@ const Navbar: React.FC = () => {
           </div>
 
           <a
-            href="#"
-            onClick={() => handleLinkClick("Requests List")}
+            href="/requests"
             className={`py-2 text-gray-700 ${
-              activeLink === "Requests List" ? "text-orange-500" : ""
+              pathname === "/requests" ? "text-orange-500" : ""
             }`}
           >
             Requests List
           </a>
 
-          {/* Mobile Avatar or Sign In */}
           {session ? (
-            <div className="relative dropdown-container w-full">
+            <div className="relative dropdown-container w-full mt-2">
               <button
                 onClick={toggleAvatarDropdown}
-                className="w-10 h-10 mt-2 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition-colors duration-200"
+                className="w-10 h-10 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow transition"
               >
                 {getInitial()}
               </button>
@@ -279,11 +260,6 @@ const Navbar: React.FC = () => {
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
                   <a
                     href="/dashboard"
-                    onClick={() => {
-                      handleLinkClick("My Dashboard");
-                      setIsAvatarDropdownOpen(false);
-                      setIsOpen(false);
-                    }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
                     <LayoutDashboard size={16} />
@@ -291,11 +267,6 @@ const Navbar: React.FC = () => {
                   </a>
                   <a
                     href="/profile"
-                    onClick={() => {
-                      handleLinkClick("My Profile");
-                      setIsAvatarDropdownOpen(false);
-                      setIsOpen(false);
-                    }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                   >
                     <User size={16} />
@@ -317,10 +288,7 @@ const Navbar: React.FC = () => {
             </div>
           ) : (
             <a href="/login" className="w-full mt-2">
-              <button
-                onClick={() => handleLinkClick("Sign In")}
-                className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300 w-full"
-              >
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md w-full transition">
                 Sign In
               </button>
             </a>

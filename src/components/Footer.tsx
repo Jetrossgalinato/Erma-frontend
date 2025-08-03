@@ -10,7 +10,7 @@ const Footer = () => {
           Philippines
         </p>
         <p className="text-slate-400 text-base mb-6">
-          © 2025 CCIS CRIMS. All rights reserved.
+          © 2025 CSU CRIMS. All rights reserved.
         </p>
 
         {/* Social Media Icons */}
