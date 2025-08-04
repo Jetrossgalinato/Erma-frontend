@@ -134,7 +134,7 @@ const Navbar: React.FC = () => {
             pathname === "/requests" ? "text-orange-500" : ""
           }`}
         >
-          Requests List
+          Account Requests
         </a>
 
         {session ? (
