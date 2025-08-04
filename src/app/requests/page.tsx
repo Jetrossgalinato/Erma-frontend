@@ -375,8 +375,14 @@ export default function AccountRequestsPage() {
 
           {/* Add Request Modal */}
           {showAddForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-opacity-50">
-              <div className="bg-white text-gray-800 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30"
+              onClick={() => setShowAddForm(false)}
+            >
+              <div
+                className="bg-white text-gray-800 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+              >
                 <h2 className="text-xl font-bold mb-4">Add New Request</h2>
                 <form onSubmit={handleAddFormSubmit}>
                   <div className="space-y-4">
