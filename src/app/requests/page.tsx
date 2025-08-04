@@ -1,11 +1,12 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Database } from "@/../lib/database.types";
 import {
   Search,
   User,
   Mail,
   Calendar,
-  Shield,
   UserCheck,
   UserX,
   Trash2,
@@ -17,30 +18,17 @@ import Footer from "@/components/Footer";
 
 // Define types for better TypeScript support
 type RequestStatus = "Pending" | "Approved" | "Rejected";
-type AccountType = "Student" | "Faculty" | "Staff" | "Admin" | "Guest";
 
 interface AccountRequest {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
-  accountType: AccountType;
   status: RequestStatus;
   requestedAt: string;
   department?: string;
-  studentId?: string;
-  employeeId?: string;
   phoneNumber?: string;
 }
-
-const accountTypes = [
-  "All Account Types",
-  "Student",
-  "Faculty",
-  "Staff",
-  "Admin",
-  "Guest",
-];
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
 
@@ -56,10 +44,10 @@ const departments = [
   "External",
 ];
 
+const supabase = createClientComponentClient<Database>();
+
 export default function AccountRequestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAccountType, setSelectedAccountType] =
-    useState("All Account Types");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDepartment, setSelectedDepartment] =
     useState("All Departments");
@@ -70,7 +58,6 @@ export default function AccountRequestsPage() {
     firstName: "",
     lastName: "",
     email: "",
-    accountType: "Student",
     department: "",
     phoneNumber: "",
   });
@@ -101,16 +88,25 @@ export default function AccountRequestsPage() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/account-requests');
-      // const data = await response.json();
-      // setRequests(data);
+      if (error) throw error;
 
-      // For now, start with empty array
-      setRequests([]);
+      const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
+        id: acc.id || idx, // fallback if no ID
+        firstName: acc.first_name || "",
+        lastName: acc.last_name || "",
+        email: acc.email || "",
+        status: acc.status as RequestStatus,
+        requestedAt: acc.created_at?.split("T")[0] || "",
+        department: acc.department || undefined,
+        phoneNumber: acc.phone_number || undefined,
+      }));
+
+      setRequests(mappedRequests);
     } catch (error) {
       console.error("Failed to fetch requests:", error);
     } finally {
@@ -128,19 +124,10 @@ export default function AccountRequestsPage() {
         firstName: request.firstName || "",
         lastName: request.lastName || "",
         email: request.email || "",
-        accountType: (request.accountType as AccountType) || "Student",
         status: "Pending",
         requestedAt: today,
         department: request.department,
         phoneNumber: request.phoneNumber,
-        ...(request.accountType === "Student" && {
-          studentId: `STU${newId.toString().padStart(4, "0")}`,
-        }),
-        ...(["Faculty", "Staff", "Admin"].includes(
-          request.accountType || ""
-        ) && {
-          employeeId: `EMP${newId.toString().padStart(4, "0")}`,
-        }),
       };
 
       // In a real app, this would be an API call
@@ -155,7 +142,6 @@ export default function AccountRequestsPage() {
         firstName: "",
         lastName: "",
         email: "",
-        accountType: "Student",
         department: "",
         phoneNumber: "",
       });
@@ -174,15 +160,7 @@ export default function AccountRequestsPage() {
       const fullName = `${request.firstName} ${request.lastName}`.toLowerCase();
       const matchesSearch =
         fullName.includes(searchTerm.toLowerCase()) ||
-        request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (request.studentId &&
-          request.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (request.employeeId &&
-          request.employeeId.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesAccountType =
-        selectedAccountType === "All Account Types" ||
-        request.accountType === selectedAccountType;
+        request.email.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         selectedStatus === "All Statuses" || request.status === selectedStatus;
@@ -217,7 +195,6 @@ export default function AccountRequestsPage() {
 
       return (
         matchesSearch &&
-        matchesAccountType &&
         matchesStatus &&
         matchesDepartment &&
         matchesRequestedAt
@@ -225,7 +202,6 @@ export default function AccountRequestsPage() {
     });
   }, [
     searchTerm,
-    selectedAccountType,
     selectedStatus,
     selectedDepartment,
     selectedRequestedAt,
@@ -287,40 +263,6 @@ export default function AccountRequestsPage() {
         return "bg-green-100 text-green-800";
       case "Rejected":
         return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getAccountTypeIcon = (type: AccountType) => {
-    switch (type) {
-      case "Student":
-        return <User className="w-5 h-5 text-blue-600" />;
-      case "Faculty":
-        return <Shield className="w-5 h-5 text-purple-600" />;
-      case "Staff":
-        return <UserCheck className="w-5 h-5 text-green-600" />;
-      case "Admin":
-        return <Shield className="w-5 h-5 text-red-600" />;
-      case "Guest":
-        return <User className="w-5 h-5 text-gray-600" />;
-      default:
-        return <User className="w-5 h-5 text-gray-600" />;
-    }
-  };
-
-  const getAccountTypeColor = (type: AccountType): string => {
-    switch (type) {
-      case "Student":
-        return "bg-blue-100 text-blue-800";
-      case "Faculty":
-        return "bg-purple-100 text-purple-800";
-      case "Staff":
-        return "bg-green-100 text-green-800";
-      case "Admin":
-        return "bg-red-100 text-red-800";
-      case "Guest":
-        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -424,22 +366,6 @@ export default function AccountRequestsPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       required
                     />
-                    <select
-                      value={newRequest.accountType}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          accountType: e.target.value as AccountType,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      {accountTypes.slice(1).map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
                     <input
                       type="text"
                       placeholder="Department"
@@ -532,32 +458,17 @@ export default function AccountRequestsPage() {
 
           {/* Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search Bar */}
               <div className="md:col-span-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by name, email, ID..."
+                  placeholder="Search by name, email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
-              </div>
-
-              {/* Account Type Filter */}
-              <div className="md:col-span-1">
-                <select
-                  value={selectedAccountType}
-                  onChange={(e) => setSelectedAccountType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  {accountTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Status Filter */}
@@ -626,7 +537,7 @@ export default function AccountRequestsPage() {
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3 flex-1">
-                        {getAccountTypeIcon(request.accountType)}
+                        <User className="w-5 h-5 text-blue-600" />
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">
                             {request.firstName} {request.lastName}
@@ -649,37 +560,10 @@ export default function AccountRequestsPage() {
                     </div>
 
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600">
-                          Account Type:
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${getAccountTypeColor(
-                            request.accountType
-                          )}`}
-                        >
-                          {request.accountType}
-                        </span>
-                      </div>
-
                       {request.department && (
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Department:</span>{" "}
                           {request.department}
-                        </p>
-                      )}
-
-                      {request.studentId && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Student ID:</span>{" "}
-                          {request.studentId}
-                        </p>
-                      )}
-
-                      {request.employeeId && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Employee ID:</span>{" "}
-                          {request.employeeId}
                         </p>
                       )}
 
