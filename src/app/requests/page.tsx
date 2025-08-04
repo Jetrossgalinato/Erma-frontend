@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 import {
@@ -92,8 +92,28 @@ export default function AccountRequestsPage() {
   const [requestedAtOptions] = useState(getDateOptions());
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
 
-  // Simulated API functions - replace these with actual API calls
-  const fetchRequests = async () => {
+  // Helper function for consistent error handling
+  const handleError = (error: unknown, operation: string): string => {
+    console.error(`Failed to ${operation}:`, error);
+
+    let errorMessage = "Please try again.";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error && typeof error === "object" && "message" in error) {
+      errorMessage = String(error.message);
+
+      // Check for Supabase error details
+      if ("details" in error) {
+        console.error("Error details:", error.details);
+      }
+    }
+
+    return errorMessage;
+  };
+
+  // Fetch requests function with TypeScript error handling
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -117,36 +137,28 @@ export default function AccountRequestsPage() {
 
       setRequests(mappedRequests);
     } catch (error) {
-      console.error("Failed to fetch requests:", error);
+      const errorMessage = handleError(error, "fetch requests");
+      alert(`Failed to fetch requests: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const addRequest = async (request: Partial<AccountRequest>) => {
     try {
-      const newId = Math.max(0, ...requests.map((r) => r.id)) + 1;
-      const today = new Date().toISOString().split("T")[0];
-
-      const fullRequest: AccountRequest = {
-        id: newId,
-        firstName: request.firstName || "",
-        lastName: request.lastName || "",
-        email: request.email || "",
-        status: "Pending",
-        requestedAt: today,
+      const { error } = await supabase.from("account_requests").insert({
+        first_name: request.firstName,
+        last_name: request.lastName,
+        email: request.email,
         department: request.department,
-        phoneNumber: request.phoneNumber,
-        acc_role: request.acc_role || "",
-      };
+        phone_number: request.phoneNumber,
+        acc_role: request.acc_role,
+        status: "Pending",
+      });
 
-      // In a real app, this would be an API call
-      // await fetch('/api/account-requests', {
-      //   method: 'POST',
-      //   body: JSON.stringify(fullRequest)
-      // });
+      if (error) throw error;
 
-      setRequests((prev) => [...prev, fullRequest]);
+      fetchRequests(); // refresh list after insertion
       setShowAddForm(false);
       setNewRequest({
         firstName: "",
@@ -157,13 +169,14 @@ export default function AccountRequestsPage() {
         acc_role: "",
       });
     } catch (error) {
-      console.error("Failed to add request:", error);
+      const errorMessage = handleError(error, "add request");
+      alert(`Failed to add request: ${errorMessage}`);
     }
   };
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   // Filter and search logic
   const filteredRequests = useMemo(() => {
@@ -226,13 +239,31 @@ export default function AccountRequestsPage() {
 
   const handleApprove = async (requestId: number) => {
     try {
-      const { error } = await supabase
+      // First check if this request is already approved
+      const { data: existingAccount } = await supabase
         .from("accounts")
-        .update({ status: "Approved" as string })
+        .select("*")
+        .eq("acc_req_id", requestId)
+        .single();
+
+      if (!existingAccount) {
+        // Insert into accounts table, referencing the request
+        const { error: insertError } = await supabase.from("accounts").insert({
+          acc_req_id: requestId,
+        });
+
+        if (insertError) throw insertError;
+      }
+
+      // Update status in the account_requests table
+      const { error: updateError } = await supabase
+        .from("account_requests")
+        .update({ status: "Approved" })
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
+      // Update local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
@@ -241,14 +272,15 @@ export default function AccountRequestsPage() {
         )
       );
     } catch (error) {
-      console.error("Failed to approve request:", error);
+      const errorMessage = handleError(error, "approve request");
+      alert(`Failed to approve request: ${errorMessage}`);
     }
   };
 
   const handleReject = async (requestId: number) => {
     try {
       const { error } = await supabase
-        .from("accounts")
+        .from("account_requests")
         .update({ status: "Rejected" as string })
         .eq("id", requestId);
 
@@ -263,14 +295,15 @@ export default function AccountRequestsPage() {
         )
       );
     } catch (error) {
-      console.error("Failed to reject request:", error);
+      const errorMessage = handleError(error, "reject request");
+      alert(`Failed to reject request: ${errorMessage}`);
     }
   };
 
   const handleRemove = async (requestId: number) => {
     try {
       const { error } = await supabase
-        .from("accounts")
+        .from("account_requests")
         .delete()
         .eq("id", requestId);
 
@@ -281,7 +314,8 @@ export default function AccountRequestsPage() {
         prevRequests.filter((request) => request.id !== requestId)
       );
     } catch (error) {
-      console.error("Failed to remove request:", error);
+      const errorMessage = handleError(error, "remove request");
+      alert(`Failed to remove request: ${errorMessage}`);
     }
   };
 
