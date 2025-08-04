@@ -146,17 +146,29 @@ export default function AccountRequestsPage() {
 
   const addRequest = async (request: Partial<AccountRequest>) => {
     try {
-      const { error } = await supabase.from("account_requests").insert({
-        first_name: request.firstName,
-        last_name: request.lastName,
-        email: request.email,
-        department: request.department,
-        phone_number: request.phoneNumber,
-        acc_role: request.acc_role,
-        status: "Pending",
+      // First, insert into account_requests table
+      const { data: requestData, error: requestError } = await supabase
+        .from("account_requests")
+        .insert({
+          first_name: request.firstName,
+          last_name: request.lastName,
+          email: request.email,
+          department: request.department,
+          phone_number: request.phoneNumber,
+          acc_role: request.acc_role,
+          status: "Approved",
+        })
+        .select()
+        .single();
+
+      if (requestError) throw requestError;
+
+      // Then, insert into accounts table using the request ID
+      const { error: accountError } = await supabase.from("accounts").insert({
+        acc_req_id: requestData.id,
       });
 
-      if (error) throw error;
+      if (accountError) throw accountError;
 
       fetchRequests(); // refresh list after insertion
       setShowAddForm(false);
@@ -168,6 +180,9 @@ export default function AccountRequestsPage() {
         phoneNumber: "",
         acc_role: "",
       });
+
+      // Optional: Show success message
+      alert("Account request added and approved successfully!");
     } catch (error) {
       const errorMessage = handleError(error, "add request");
       alert(`Failed to add request: ${errorMessage}`);
