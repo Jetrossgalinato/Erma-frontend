@@ -32,17 +32,7 @@ interface AccountRequest {
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
 
-const departments = [
-  "All Departments",
-  "Computer Science",
-  "Mathematics",
-  "Biology",
-  "Physics",
-  "Chemistry",
-  "IT Services",
-  "Administration",
-  "External",
-];
+const departments = ["All Departments", "BSIT", "BSCS", "BSIS"];
 
 const supabase = createClientComponentClient<Database>();
 
