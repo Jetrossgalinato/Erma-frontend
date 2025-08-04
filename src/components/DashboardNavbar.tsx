@@ -4,26 +4,24 @@ import React, { useEffect, useState } from "react";
 import {
   Menu,
   X,
-  ChevronDown,
   LayoutDashboard,
   User,
   LogOut,
+  Home,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session } from "@supabase/supabase-js";
 
-const Navbar: React.FC = () => {
+const DashboardNavbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const supabase = createClientComponentClient();
-  const pathname = usePathname();
 
   const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
   const toggleAvatarDropdown = () =>
     setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
 
@@ -31,6 +29,12 @@ const Navbar: React.FC = () => {
     await supabase.auth.signOut();
     setIsAvatarDropdownOpen(false);
     alert("You have been logged out successfully.");
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Add your search logic here
+    console.log("Searching for:", searchQuery);
   };
 
   useEffect(() => {
@@ -53,7 +57,6 @@ const Navbar: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest(".dropdown-container")) {
-        setIsResourcesOpen(false);
         setIsAvatarDropdownOpen(false);
       }
     };
@@ -81,69 +84,24 @@ const Navbar: React.FC = () => {
         />
       </div>
 
-      {/* Desktop Links */}
-      <div className="hidden md:flex pr-70 gap-6 text-gray-600 items-center">
-        <a
-          href="/home"
-          className={`hover:text-black transition-colors duration-300 ${
-            pathname === "/home" ? "text-orange-500" : ""
-          }`}
-        >
-          Home
-        </a>
-
-        <div className="relative dropdown-container">
-          <button
-            onClick={toggleResources}
-            className={`flex items-center gap-1 hover:text-black transition-colors duration-300 ${
-              pathname.startsWith("/equipment") ||
-              pathname.startsWith("/facilities")
-                ? "text-orange-500"
-                : ""
-            }`}
-          >
-            Resources
-            <ChevronDown size={16} />
-          </button>
-
-          {isResourcesOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[120px] z-50">
-              <a
-                href="/equipment"
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
-                  pathname.startsWith("/equipment") ? "text-orange-500" : ""
-                }`}
-              >
-                Equipment
-              </a>
-              <a
-                href="/facilities"
-                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
-                  pathname.startsWith("/facilities") ? "text-orange-500" : ""
-                }`}
-              >
-                Facilities
-              </a>
+      {/* Desktop Search Bar and Avatar */}
+      <div className="hidden md:flex pr-70 items-center gap-4">
+        {session && (
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative">
+              <Search
+                size={20}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-64 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              />
             </div>
-          )}
-        </div>
-
-        {session ? (
-          <a
-            href="/requests"
-            className={`hover:text-black transition-colors duration-300 ${
-              pathname === "/requests" ? "text-orange-500" : ""
-            }`}
-          >
-            Account Requests
-          </a>
-        ) : (
-          <span
-            className="text-gray-400 cursor-not-allowed"
-            title="Sign in to access"
-          >
-            Account Requests
-          </span>
+          </form>
         )}
 
         {session ? (
@@ -157,6 +115,14 @@ const Navbar: React.FC = () => {
 
             {isAvatarDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                <a
+                  href="/home"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                >
+                  <Home size={16} />
+                  Back to Home
+                </a>
+                <hr className="border-gray-200" />
                 <a
                   href="/dashboard"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
@@ -203,66 +169,22 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
-          <a
-            href="/home"
-            className={`py-2 text-gray-700 ${
-              pathname === "/home" ? "text-orange-500" : ""
-            }`}
-          >
-            Home
-          </a>
-
-          <div className="w-full">
-            <button
-              onClick={toggleResources}
-              className={`flex items-center justify-between w-full py-2 text-gray-700 ${
-                pathname.startsWith("/equipment") ||
-                pathname.startsWith("/facilities")
-                  ? "text-orange-500"
-                  : ""
-              }`}
-            >
-              Resources
-              <ChevronDown size={16} />
-            </button>
-            {isResourcesOpen && (
-              <div className="pl-4 flex flex-col">
-                <a
-                  href="/equipment"
-                  className={`py-1 text-gray-600 ${
-                    pathname.startsWith("/equipment") ? "text-orange-500" : ""
-                  }`}
-                >
-                  Equipment
-                </a>
-                <a
-                  href="/facilities"
-                  className={`py-1 text-gray-600 ${
-                    pathname.startsWith("/facilities") ? "text-orange-500" : ""
-                  }`}
-                >
-                  Facilities
-                </a>
+          {session && (
+            <form onSubmit={handleSearch} className="w-full mb-4">
+              <div className="relative">
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                />
               </div>
-            )}
-          </div>
-
-          {session ? (
-            <a
-              href="/requests"
-              className={`py-2 text-gray-700 ${
-                pathname === "/requests" ? "text-orange-500" : ""
-              }`}
-            >
-              Account Requests
-            </a>
-          ) : (
-            <span
-              className="py-2 text-gray-400 cursor-not-allowed"
-              title="Sign in to access"
-            >
-              Account Requests
-            </span>
+            </form>
           )}
 
           {session ? (
@@ -276,6 +198,14 @@ const Navbar: React.FC = () => {
 
               {isAvatarDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                  <a
+                    href="/home"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <Home size={16} />
+                    Back to Home
+                  </a>
+                  <hr className="border-gray-200" />
                   <a
                     href="/dashboard"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
@@ -317,4 +247,4 @@ const Navbar: React.FC = () => {
   );
 };
 
-export default Navbar;
+export default DashboardNavbar;

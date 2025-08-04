@@ -8,7 +8,10 @@ import Footer from "../../components/Footer";
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: "",
-    name: "",
+    firstName: "",
+    lastName: "",
+    department: "",
+    phoneNumber: "",
     password: "",
     confirmpassword: "",
     role: "",
@@ -17,43 +20,89 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    const { email, name, password, confirmpassword, role } = formData;
+    const {
+      email,
+      password,
+      confirmpassword,
+      firstName,
+      lastName,
+      department,
+      phoneNumber,
+      role,
+    } = formData;
 
     if (password !== confirmpassword) {
       alert("Passwords do not match!");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: name,
-          role: role,
+          full_name: `${firstName} ${lastName}`,
+          role,
         },
       },
     });
 
-    setLoading(false);
-
     if (error) {
       alert(error.message);
-    } else {
-      alert(
-        "Registration successful! Please check your email to verify your account."
-      );
+      setLoading(false);
+      return;
     }
+
+    const userId = signUpData.user?.id;
+
+    if (userId) {
+      const { error: insertError } = await supabase.from("accounts").insert([
+        {
+          user_id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          department,
+          phone_number: phoneNumber,
+        },
+      ]);
+
+      if (insertError) {
+        alert(
+          "User created but failed to save extra data: " + insertError.message
+        );
+      } else {
+        alert(
+          "Registration submitted! Please wait for approval from the Super Admin before logging in."
+        );
+      }
+    }
+
+    setLoading(false);
+
+    setFormData({
+      email: "",
+      firstName: "",
+      lastName: "",
+      department: "",
+      phoneNumber: "",
+      password: "",
+      confirmpassword: "",
+      role: "",
+    });
+
+    window.location.href = "/login";
   };
 
   return (
@@ -73,6 +122,7 @@ export default function RegisterPage() {
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -90,23 +140,85 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* First Name */}
             <div>
               <label
-                htmlFor="name"
+                htmlFor="firstName"
                 className="block text-sm font-medium text-gray-700"
               >
-                Full Name
+                First Name
               </label>
               <input
                 type="text"
-                id="name"
+                id="firstName"
                 required
                 onChange={handleChange}
-                value={formData.name}
+                value={formData.firstName}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
 
+            {/* Last Name */}
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                required
+                onChange={handleChange}
+                value={formData.lastName}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            {/* Department */}
+            <div>
+              <label
+                htmlFor="department"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Department
+              </label>
+              <select
+                id="department"
+                required
+                onChange={handleChange}
+                value={formData.department}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="" disabled>
+                  Select department
+                </option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSIS">BSIS</option>
+              </select>
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label
+                htmlFor="phoneNumber"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Phone Number
+              </label>
+              <input
+                type="text"
+                id="phoneNumber"
+                required
+                onChange={handleChange}
+                value={formData.phoneNumber}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -124,6 +236,7 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Confirm Password */}
             <div>
               <label
                 htmlFor="confirmpassword"
@@ -141,6 +254,7 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Role */}
             <div>
               <label
                 htmlFor="role"
@@ -165,6 +279,7 @@ export default function RegisterPage() {
               </select>
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -186,7 +301,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
