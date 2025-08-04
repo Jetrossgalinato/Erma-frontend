@@ -28,11 +28,27 @@ interface AccountRequest {
   requestedAt: string;
   department?: string;
   phoneNumber?: string;
+  acc_role?: string;
 }
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
 
+// Updated departments from register page
 const departments = ["All Departments", "BSIT", "BSCS", "BSIS"];
+
+// Role options from register page
+const roleOptions = [
+  "All Roles",
+  "CCIS Dean",
+  "Lab Technician",
+  "Comlab Adviser",
+  "Department Chairperson",
+  "Associate Dean",
+  "College Clerk",
+  "Student Assistant",
+  "Lecturer",
+  "Instructor",
+];
 
 const supabase = createClientComponentClient<Database>();
 
@@ -41,6 +57,7 @@ export default function AccountRequestsPage() {
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDepartment, setSelectedDepartment] =
     useState("All Departments");
+  const [selectedRole, setSelectedRole] = useState("All Roles");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -50,6 +67,7 @@ export default function AccountRequestsPage() {
     email: "",
     department: "",
     phoneNumber: "",
+    acc_role: "",
   });
 
   // Generate date options dynamically
@@ -94,6 +112,7 @@ export default function AccountRequestsPage() {
         requestedAt: acc.created_at?.split("T")[0] || "",
         department: acc.department || undefined,
         phoneNumber: acc.phone_number || undefined,
+        acc_role: acc.acc_role || "",
       }));
 
       setRequests(mappedRequests);
@@ -118,6 +137,7 @@ export default function AccountRequestsPage() {
         requestedAt: today,
         department: request.department,
         phoneNumber: request.phoneNumber,
+        acc_role: request.acc_role || "",
       };
 
       // In a real app, this would be an API call
@@ -134,6 +154,7 @@ export default function AccountRequestsPage() {
         email: "",
         department: "",
         phoneNumber: "",
+        acc_role: "",
       });
     } catch (error) {
       console.error("Failed to add request:", error);
@@ -158,6 +179,9 @@ export default function AccountRequestsPage() {
       const matchesDepartment =
         selectedDepartment === "All Departments" ||
         request.department === selectedDepartment;
+
+      const matchesRole =
+        selectedRole === "All Roles" || request.acc_role === selectedRole;
 
       const matchesRequestedAt = (() => {
         if (selectedRequestedAt === "All Dates") return true;
@@ -187,6 +211,7 @@ export default function AccountRequestsPage() {
         matchesSearch &&
         matchesStatus &&
         matchesDepartment &&
+        matchesRole &&
         matchesRequestedAt
       );
     });
@@ -194,6 +219,7 @@ export default function AccountRequestsPage() {
     searchTerm,
     selectedStatus,
     selectedDepartment,
+    selectedRole,
     selectedRequestedAt,
     requests,
   ]);
@@ -370,10 +396,10 @@ export default function AccountRequestsPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       required
                     />
-                    <input
-                      type="text"
-                      placeholder="Department"
-                      value={newRequest.department}
+
+                    {/* Updated Department Dropdown */}
+                    <select
+                      value={newRequest.department || ""}
                       onChange={(e) =>
                         setNewRequest({
                           ...newRequest,
@@ -381,7 +407,15 @@ export default function AccountRequestsPage() {
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
+                    >
+                      <option value="" disabled>
+                        Select department
+                      </option>
+                      <option value="BSIT">BSIT</option>
+                      <option value="BSCS">BSCS</option>
+                      <option value="BSIS">BSIS</option>
+                    </select>
+
                     <input
                       type="tel"
                       placeholder="Phone Number"
@@ -394,6 +428,35 @@ export default function AccountRequestsPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
+
+                    {/* Updated Role Dropdown */}
+                    <select
+                      value={newRequest.acc_role || ""}
+                      onChange={(e) =>
+                        setNewRequest({
+                          ...newRequest,
+                          acc_role: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="" disabled>
+                        Select a role
+                      </option>
+                      <option value="CCIS Dean">CCIS Dean</option>
+                      <option value="Lab Technician">Lab Technician</option>
+                      <option value="Comlab Adviser">Comlab Adviser</option>
+                      <option value="Department Chairperson">
+                        Department Chairperson
+                      </option>
+                      <option value="Associate Dean">Associate Dean</option>
+                      <option value="College Clerk">College Clerk</option>
+                      <option value="Student Assistant">
+                        Student Assistant
+                      </option>
+                      <option value="Lecturer">Lecturer</option>
+                      <option value="Instructor">Instructor</option>
+                    </select>
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
@@ -460,9 +523,9 @@ export default function AccountRequestsPage() {
             </div>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Filters - Updated to include Role filter */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Search Bar */}
               <div className="md:col-span-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
@@ -505,6 +568,21 @@ export default function AccountRequestsPage() {
                 </select>
               </div>
 
+              {/* Role Filter - New */}
+              <div className="md:col-span-1">
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Requested At Filter */}
               <div className="md:col-span-1">
                 <select
@@ -530,7 +608,7 @@ export default function AccountRequestsPage() {
             </div>
           )}
 
-          {/* Account Requests Grid */}
+          {/* Account Requests Grid - Updated to show role */}
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {filteredRequests.map((request) => (
@@ -568,6 +646,13 @@ export default function AccountRequestsPage() {
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Department:</span>{" "}
                           {request.department}
+                        </p>
+                      )}
+
+                      {request.acc_role && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Role:</span>{" "}
+                          {request.acc_role}
                         </p>
                       )}
 
