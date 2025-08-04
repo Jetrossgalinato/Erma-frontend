@@ -91,16 +91,18 @@ export default function RegisterPage() {
     const userId = signUpData.user?.id;
 
     if (userId) {
-      const { error: insertError } = await supabase.from("accounts").insert([
-        {
-          user_id: userId,
-          first_name: firstName,
-          last_name: lastName,
-          department,
-          phone_number: phoneNumber,
-          acc_role: mappedRole, // 👈 Store mappedRole in public.accounts too
-        },
-      ]);
+      const { error: insertError } = await supabase
+        .from("account_requests")
+        .insert([
+          {
+            user_id: userId,
+            first_name: firstName,
+            last_name: lastName,
+            department,
+            phone_number: phoneNumber,
+            acc_role: mappedRole, // 👈 Store mappedRole in public.accounts too
+          },
+        ]);
 
       if (insertError) {
         alert(

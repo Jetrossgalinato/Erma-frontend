@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 import {
@@ -10,7 +10,6 @@ import {
   UserCheck,
   UserX,
   Trash2,
-  Plus,
   RefreshCw,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -28,11 +27,27 @@ interface AccountRequest {
   requestedAt: string;
   department?: string;
   phoneNumber?: string;
+  acc_role?: string;
 }
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
 
+// Updated departments from register page
 const departments = ["All Departments", "BSIT", "BSCS", "BSIS"];
+
+// Role options from register page
+const roleOptions = [
+  "All Roles",
+  "CCIS Dean",
+  "Lab Technician",
+  "Comlab Adviser",
+  "Department Chairperson",
+  "Associate Dean",
+  "College Clerk",
+  "Student Assistant",
+  "Lecturer",
+  "Instructor",
+];
 
 const supabase = createClientComponentClient<Database>();
 
@@ -41,16 +56,9 @@ export default function AccountRequestsPage() {
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDepartment, setSelectedDepartment] =
     useState("All Departments");
+  const [selectedRole, setSelectedRole] = useState("All Roles");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newRequest, setNewRequest] = useState<Partial<AccountRequest>>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    department: "",
-    phoneNumber: "",
-  });
 
   // Generate date options dynamically
   const getDateOptions = () => {
@@ -74,12 +82,32 @@ export default function AccountRequestsPage() {
   const [requestedAtOptions] = useState(getDateOptions());
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
 
-  // Simulated API functions - replace these with actual API calls
-  const fetchRequests = async () => {
+  // Helper function for consistent error handling
+  const handleError = (error: unknown, operation: string): string => {
+    console.error(`Failed to ${operation}:`, error);
+
+    let errorMessage = "Please try again.";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (error && typeof error === "object" && "message" in error) {
+      errorMessage = String(error.message);
+
+      // Check for Supabase error details
+      if ("details" in error) {
+        console.error("Error details:", error.details);
+      }
+    }
+
+    return errorMessage;
+  };
+
+  // Fetch requests function with TypeScript error handling
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("account_requests_with_email")
+        .from("account_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -94,55 +122,21 @@ export default function AccountRequestsPage() {
         requestedAt: acc.created_at?.split("T")[0] || "",
         department: acc.department || undefined,
         phoneNumber: acc.phone_number || undefined,
+        acc_role: acc.acc_role || "",
       }));
 
       setRequests(mappedRequests);
     } catch (error) {
-      console.error("Failed to fetch requests:", error);
+      const errorMessage = handleError(error, "fetch requests");
+      alert(`Failed to fetch requests: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  };
-
-  const addRequest = async (request: Partial<AccountRequest>) => {
-    try {
-      const newId = Math.max(0, ...requests.map((r) => r.id)) + 1;
-      const today = new Date().toISOString().split("T")[0];
-
-      const fullRequest: AccountRequest = {
-        id: newId,
-        firstName: request.firstName || "",
-        lastName: request.lastName || "",
-        email: request.email || "",
-        status: "Pending",
-        requestedAt: today,
-        department: request.department,
-        phoneNumber: request.phoneNumber,
-      };
-
-      // In a real app, this would be an API call
-      // await fetch('/api/account-requests', {
-      //   method: 'POST',
-      //   body: JSON.stringify(fullRequest)
-      // });
-
-      setRequests((prev) => [...prev, fullRequest]);
-      setShowAddForm(false);
-      setNewRequest({
-        firstName: "",
-        lastName: "",
-        email: "",
-        department: "",
-        phoneNumber: "",
-      });
-    } catch (error) {
-      console.error("Failed to add request:", error);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   // Filter and search logic
   const filteredRequests = useMemo(() => {
@@ -158,6 +152,9 @@ export default function AccountRequestsPage() {
       const matchesDepartment =
         selectedDepartment === "All Departments" ||
         request.department === selectedDepartment;
+
+      const matchesRole =
+        selectedRole === "All Roles" || request.acc_role === selectedRole;
 
       const matchesRequestedAt = (() => {
         if (selectedRequestedAt === "All Dates") return true;
@@ -187,6 +184,7 @@ export default function AccountRequestsPage() {
         matchesSearch &&
         matchesStatus &&
         matchesDepartment &&
+        matchesRole &&
         matchesRequestedAt
       );
     });
@@ -194,19 +192,38 @@ export default function AccountRequestsPage() {
     searchTerm,
     selectedStatus,
     selectedDepartment,
+    selectedRole,
     selectedRequestedAt,
     requests,
   ]);
 
   const handleApprove = async (requestId: number) => {
     try {
-      const { error } = await supabase
+      // First check if this request is already approved
+      const { data: existingAccount } = await supabase
         .from("accounts")
-        .update({ status: "Approved" as string })
+        .select("*")
+        .eq("acc_req_id", requestId)
+        .single();
+
+      if (!existingAccount) {
+        // Insert into accounts table, referencing the request
+        const { error: insertError } = await supabase.from("accounts").insert({
+          acc_req_id: requestId,
+        });
+
+        if (insertError) throw insertError;
+      }
+
+      // Update status in the account_requests table
+      const { error: updateError } = await supabase
+        .from("account_requests")
+        .update({ status: "Approved" })
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
+      // Update local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
@@ -215,14 +232,15 @@ export default function AccountRequestsPage() {
         )
       );
     } catch (error) {
-      console.error("Failed to approve request:", error);
+      const errorMessage = handleError(error, "approve request");
+      alert(`Failed to approve request: ${errorMessage}`);
     }
   };
 
   const handleReject = async (requestId: number) => {
     try {
       const { error } = await supabase
-        .from("accounts")
+        .from("account_requests")
         .update({ status: "Rejected" as string })
         .eq("id", requestId);
 
@@ -237,25 +255,56 @@ export default function AccountRequestsPage() {
         )
       );
     } catch (error) {
-      console.error("Failed to reject request:", error);
+      const errorMessage = handleError(error, "reject request");
+      alert(`Failed to reject request: ${errorMessage}`);
     }
   };
 
   const handleRemove = async (requestId: number) => {
+    // Add confirmation dialog
+    const confirmDelete = window.confirm(
+      "Are you sure you want to remove this request? This action cannot be undone and will also remove any associated account."
+    );
+
+    if (!confirmDelete) return;
+
     try {
-      const { error } = await supabase
+      // First, check if there's an associated account record
+      const { data: accountData, error: accountCheckError } = await supabase
         .from("accounts")
+        .select("id")
+        .eq("acc_req_id", requestId);
+
+      if (accountCheckError) throw accountCheckError;
+
+      // If there's an associated account, delete it first
+      if (accountData && accountData.length > 0) {
+        const { error: accountDeleteError } = await supabase
+          .from("accounts")
+          .delete()
+          .eq("acc_req_id", requestId);
+
+        if (accountDeleteError) throw accountDeleteError;
+      }
+
+      // Now delete the account request
+      const { error: requestDeleteError } = await supabase
+        .from("account_requests")
         .delete()
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (requestDeleteError) throw requestDeleteError;
 
       // Update local state only if the delete was successful
       setRequests((prevRequests) =>
         prevRequests.filter((request) => request.id !== requestId)
       );
+
+      // Optional: Show success message
+      alert("Request removed successfully!");
     } catch (error) {
-      console.error("Failed to remove request:", error);
+      const errorMessage = handleError(error, "remove request");
+      alert(`Failed to remove request: ${errorMessage}`);
     }
   };
 
@@ -275,13 +324,6 @@ export default function AccountRequestsPage() {
   const pendingCount = requests.filter((r) => r.status === "Pending").length;
   const approvedCount = requests.filter((r) => r.status === "Approved").length;
   const rejectedCount = requests.filter((r) => r.status === "Rejected").length;
-
-  const handleAddFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newRequest.firstName && newRequest.lastName && newRequest.email) {
-      addRequest(newRequest);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -309,111 +351,8 @@ export default function AccountRequestsPage() {
                 />
                 Refresh
               </button>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 cursor-pointer text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Request
-              </button>
             </div>
           </div>
-
-          {/* Add Request Modal */}
-          {showAddForm && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30"
-              onClick={() => setShowAddForm(false)}
-            >
-              <div
-                className="bg-white text-gray-800 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto"
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
-              >
-                <h2 className="text-xl font-bold mb-4">Add New Request</h2>
-                <form onSubmit={handleAddFormSubmit}>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="First Name"
-                        value={newRequest.firstName}
-                        onChange={(e) =>
-                          setNewRequest({
-                            ...newRequest,
-                            firstName: e.target.value,
-                          })
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                      />
-                      <input
-                        type="text"
-                        placeholder="Last Name"
-                        value={newRequest.lastName}
-                        onChange={(e) =>
-                          setNewRequest({
-                            ...newRequest,
-                            lastName: e.target.value,
-                          })
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                      />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={newRequest.email}
-                      onChange={(e) =>
-                        setNewRequest({ ...newRequest, email: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Department"
-                      value={newRequest.department}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          department: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={newRequest.phoneNumber}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          phoneNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Add Request
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddForm(false)}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -460,9 +399,9 @@ export default function AccountRequestsPage() {
             </div>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and Filters - Updated to include Role filter */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Search Bar */}
               <div className="md:col-span-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
@@ -505,6 +444,21 @@ export default function AccountRequestsPage() {
                 </select>
               </div>
 
+              {/* Role Filter - New */}
+              <div className="md:col-span-1">
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Requested At Filter */}
               <div className="md:col-span-1">
                 <select
@@ -530,7 +484,7 @@ export default function AccountRequestsPage() {
             </div>
           )}
 
-          {/* Account Requests Grid */}
+          {/* Account Requests Grid - Updated to show role */}
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {filteredRequests.map((request) => (
@@ -568,6 +522,13 @@ export default function AccountRequestsPage() {
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Department:</span>{" "}
                           {request.department}
+                        </p>
+                      )}
+
+                      {request.acc_role && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Role:</span>{" "}
+                          {request.acc_role}
                         </p>
                       )}
 
