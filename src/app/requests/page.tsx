@@ -316,18 +316,47 @@ export default function AccountRequestsPage() {
   };
 
   const handleRemove = async (requestId: number) => {
+    // Add confirmation dialog
+    const confirmDelete = window.confirm(
+      "Are you sure you want to remove this request? This action cannot be undone and will also remove any associated account."
+    );
+
+    if (!confirmDelete) return;
+
     try {
-      const { error } = await supabase
+      // First, check if there's an associated account record
+      const { data: accountData, error: accountCheckError } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("acc_req_id", requestId);
+
+      if (accountCheckError) throw accountCheckError;
+
+      // If there's an associated account, delete it first
+      if (accountData && accountData.length > 0) {
+        const { error: accountDeleteError } = await supabase
+          .from("accounts")
+          .delete()
+          .eq("acc_req_id", requestId);
+
+        if (accountDeleteError) throw accountDeleteError;
+      }
+
+      // Now delete the account request
+      const { error: requestDeleteError } = await supabase
         .from("account_requests")
         .delete()
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (requestDeleteError) throw requestDeleteError;
 
       // Update local state only if the delete was successful
       setRequests((prevRequests) =>
         prevRequests.filter((request) => request.id !== requestId)
       );
+
+      // Optional: Show success message
+      alert("Request removed successfully!");
     } catch (error) {
       const errorMessage = handleError(error, "remove request");
       alert(`Failed to remove request: ${errorMessage}`);

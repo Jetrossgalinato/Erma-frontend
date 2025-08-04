@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     // Fetch the corresponding account record
     const { data: account, error: accountError } = await supabase
-      .from("accounts")
+      .from("account_requests")
       .select("is_approved")
       .eq("user_id", user.id)
       .single();
