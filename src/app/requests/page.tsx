@@ -89,17 +89,17 @@ export default function AccountRequestsPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("accounts")
+        .from("account_requests_with_email")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
-        id: acc.id || idx, // fallback if no ID
+        id: acc.id || idx,
         firstName: acc.first_name || "",
         lastName: acc.last_name || "",
-        email: acc.email || "",
+        email: acc.email || "", // this will now come from auth.users
         status: acc.status as RequestStatus,
         requestedAt: acc.created_at?.split("T")[0] || "",
         department: acc.department || undefined,
