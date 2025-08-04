@@ -144,7 +144,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
-      <div className="py-4">
+      <div className="py-4 pt-25">
         {/* Main Menu */}
         <div className="space-y-1">
           {menuItems.map((item, index) => (
