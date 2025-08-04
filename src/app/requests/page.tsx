@@ -30,7 +30,6 @@ interface AccountRequest {
   department?: string;
   studentId?: string;
   employeeId?: string;
-  reason?: string;
   phoneNumber?: string;
 }
 
@@ -74,7 +73,6 @@ export default function AccountRequestsPage() {
     accountType: "Student",
     department: "",
     phoneNumber: "",
-    reason: "",
   });
 
   // Generate date options dynamically
@@ -135,7 +133,6 @@ export default function AccountRequestsPage() {
         requestedAt: today,
         department: request.department,
         phoneNumber: request.phoneNumber,
-        reason: request.reason,
         ...(request.accountType === "Student" && {
           studentId: `STU${newId.toString().padStart(4, "0")}`,
         }),
@@ -161,7 +158,6 @@ export default function AccountRequestsPage() {
         accountType: "Student",
         department: "",
         phoneNumber: "",
-        reason: "",
       });
     } catch (error) {
       console.error("Failed to add request:", error);
@@ -462,15 +458,6 @@ export default function AccountRequestsPage() {
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
-                    <textarea
-                      placeholder="Reason for request"
-                      value={newRequest.reason}
-                      onChange={(e) =>
-                        setNewRequest({ ...newRequest, reason: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      rows={3}
-                    />
                   </div>
                   <div className="flex gap-3 mt-6">
                     <button
@@ -702,17 +689,6 @@ export default function AccountRequestsPage() {
                         {request.requestedAt}
                       </p>
                     </div>
-
-                    {request.reason && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                          Reason:
-                        </p>
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {request.reason}
-                        </p>
-                      </div>
-                    )}
 
                     <div className="flex gap-2">
                       {request.status === "Pending" ? (
