@@ -45,10 +45,7 @@ export default function DashboardPage() {
 
       {/* Top Navbar - Fixed at top with highest z-index */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
-        <DashboardNavbar
-          onMenuClick={() => setSidebarOpen(true)}
-          sidebarOpen={sidebarOpen}
-        />
+        <DashboardNavbar />
       </header>
 
       {/* Sidebar */}
