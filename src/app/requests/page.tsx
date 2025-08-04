@@ -10,7 +10,6 @@ import {
   UserCheck,
   UserX,
   Trash2,
-  Plus,
   RefreshCw,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -60,15 +59,6 @@ export default function AccountRequestsPage() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newRequest, setNewRequest] = useState<Partial<AccountRequest>>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    department: "",
-    phoneNumber: "",
-    acc_role: "",
-  });
 
   // Generate date options dynamically
   const getDateOptions = () => {
@@ -143,51 +133,6 @@ export default function AccountRequestsPage() {
       setLoading(false);
     }
   }, []);
-
-  const addRequest = async (request: Partial<AccountRequest>) => {
-    try {
-      // First, insert into account_requests table
-      const { data: requestData, error: requestError } = await supabase
-        .from("account_requests")
-        .insert({
-          first_name: request.firstName,
-          last_name: request.lastName,
-          email: request.email,
-          department: request.department,
-          phone_number: request.phoneNumber,
-          acc_role: request.acc_role,
-          status: "Approved",
-        })
-        .select()
-        .single();
-
-      if (requestError) throw requestError;
-
-      // Then, insert into accounts table using the request ID
-      const { error: accountError } = await supabase.from("accounts").insert({
-        acc_req_id: requestData.id,
-      });
-
-      if (accountError) throw accountError;
-
-      fetchRequests(); // refresh list after insertion
-      setShowAddForm(false);
-      setNewRequest({
-        firstName: "",
-        lastName: "",
-        email: "",
-        department: "",
-        phoneNumber: "",
-        acc_role: "",
-      });
-
-      // Optional: Show success message
-      alert("Account request added and approved successfully!");
-    } catch (error) {
-      const errorMessage = handleError(error, "add request");
-      alert(`Failed to add request: ${errorMessage}`);
-    }
-  };
 
   useEffect(() => {
     fetchRequests();
@@ -380,13 +325,6 @@ export default function AccountRequestsPage() {
   const approvedCount = requests.filter((r) => r.status === "Approved").length;
   const rejectedCount = requests.filter((r) => r.status === "Rejected").length;
 
-  const handleAddFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newRequest.firstName && newRequest.lastName && newRequest.email) {
-      addRequest(newRequest);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -413,148 +351,8 @@ export default function AccountRequestsPage() {
                 />
                 Refresh
               </button>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 cursor-pointer text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Request
-              </button>
             </div>
           </div>
-
-          {/* Add Request Modal */}
-          {showAddForm && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30"
-              onClick={() => setShowAddForm(false)}
-            >
-              <div
-                className="bg-white text-gray-800 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto"
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
-              >
-                <h2 className="text-xl font-bold mb-4">Add New Request</h2>
-                <form onSubmit={handleAddFormSubmit}>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="First Name"
-                        value={newRequest.firstName}
-                        onChange={(e) =>
-                          setNewRequest({
-                            ...newRequest,
-                            firstName: e.target.value,
-                          })
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                      />
-                      <input
-                        type="text"
-                        placeholder="Last Name"
-                        value={newRequest.lastName}
-                        onChange={(e) =>
-                          setNewRequest({
-                            ...newRequest,
-                            lastName: e.target.value,
-                          })
-                        }
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        required
-                      />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={newRequest.email}
-                      onChange={(e) =>
-                        setNewRequest({ ...newRequest, email: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                      required
-                    />
-
-                    {/* Updated Department Dropdown */}
-                    <select
-                      value={newRequest.department || ""}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          department: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="" disabled>
-                        Select department
-                      </option>
-                      <option value="BSIT">BSIT</option>
-                      <option value="BSCS">BSCS</option>
-                      <option value="BSIS">BSIS</option>
-                    </select>
-
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={newRequest.phoneNumber}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          phoneNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
-
-                    {/* Updated Role Dropdown */}
-                    <select
-                      value={newRequest.acc_role || ""}
-                      onChange={(e) =>
-                        setNewRequest({
-                          ...newRequest,
-                          acc_role: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                      <option value="" disabled>
-                        Select a role
-                      </option>
-                      <option value="CCIS Dean">CCIS Dean</option>
-                      <option value="Lab Technician">Lab Technician</option>
-                      <option value="Comlab Adviser">Comlab Adviser</option>
-                      <option value="Department Chairperson">
-                        Department Chairperson
-                      </option>
-                      <option value="Associate Dean">Associate Dean</option>
-                      <option value="College Clerk">College Clerk</option>
-                      <option value="Student Assistant">
-                        Student Assistant
-                      </option>
-                      <option value="Lecturer">Lecturer</option>
-                      <option value="Instructor">Instructor</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Add Request
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddForm(false)}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
