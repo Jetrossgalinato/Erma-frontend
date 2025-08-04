@@ -8,16 +8,22 @@ import Footer from "../../components/Footer";
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: "",
-    name: "",
+    first_name: "",
+    last_name: "",
     password: "",
     confirmpassword: "",
     role: "",
+    department: "",
+    phone: "",
+    reason: "",
   });
 
   const [loading, setLoading] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -25,7 +31,17 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { email, name, password, confirmpassword, role } = formData;
+    const {
+      email,
+      first_name,
+      last_name,
+      password,
+      confirmpassword,
+      role,
+      department,
+      phone,
+      reason,
+    } = formData;
 
     if (password !== confirmpassword) {
       alert("Passwords do not match!");
@@ -39,8 +55,11 @@ export default function RegisterPage() {
       password,
       options: {
         data: {
-          full_name: name,
-          role: role,
+          full_name: `${first_name} ${last_name}`,
+          role,
+          department,
+          phone,
+          reason,
         },
       },
     });
@@ -66,9 +85,7 @@ export default function RegisterPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
           <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Welcome back! 👋
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-700">Welcome! 👋</h2>
             Register to <span className="text-orange-600">CRIMS</span>
           </div>
 
@@ -90,21 +107,91 @@ export default function RegisterPage() {
               />
             </div>
 
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label
+                  htmlFor="first_name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="first_name"
+                  required
+                  onChange={handleChange}
+                  value={formData.first_name}
+                  className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <div className="flex-1">
+                <label
+                  htmlFor="last_name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last_name"
+                  required
+                  onChange={handleChange}
+                  value={formData.last_name}
+                  className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+            </div>
+
             <div>
               <label
-                htmlFor="name"
+                htmlFor="department"
                 className="block text-sm font-medium text-gray-700"
               >
-                Full Name
+                Department
               </label>
               <input
                 type="text"
-                id="name"
+                id="department"
                 required
                 onChange={handleChange}
-                value={formData.name}
+                value={formData.department}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Phone Number
+              </label>
+              <input
+                type="text"
+                id="phone"
+                required
+                onChange={handleChange}
+                value={formData.phone}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="reason"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Reason for Request
+              </label>
+              <textarea
+                id="reason"
+                required
+                onChange={handleChange}
+                value={formData.reason}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+                rows={3}
+              ></textarea>
             </div>
 
             <div>
@@ -186,7 +273,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
