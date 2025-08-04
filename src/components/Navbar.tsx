@@ -128,14 +128,23 @@ const Navbar: React.FC = () => {
           )}
         </div>
 
-        <a
-          href="/requests"
-          className={`hover:text-black transition-colors duration-300 ${
-            pathname === "/requests" ? "text-orange-500" : ""
-          }`}
-        >
-          Account Requests
-        </a>
+        {session ? (
+          <a
+            href="/requests"
+            className={`hover:text-black transition-colors duration-300 ${
+              pathname === "/requests" ? "text-orange-500" : ""
+            }`}
+          >
+            Account Requests
+          </a>
+        ) : (
+          <span
+            className="text-gray-400 cursor-not-allowed"
+            title="Sign in to access"
+          >
+            Account Requests
+          </span>
+        )}
 
         {session ? (
           <div className="relative dropdown-container">
@@ -238,14 +247,23 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          <a
-            href="/requests"
-            className={`py-2 text-gray-700 ${
-              pathname === "/requests" ? "text-orange-500" : ""
-            }`}
-          >
-            Requests List
-          </a>
+          {session ? (
+            <a
+              href="/requests"
+              className={`py-2 text-gray-700 ${
+                pathname === "/requests" ? "text-orange-500" : ""
+              }`}
+            >
+              Account Requests
+            </a>
+          ) : (
+            <span
+              className="py-2 text-gray-400 cursor-not-allowed"
+              title="Sign in to access"
+            >
+              Account Requests
+            </span>
+          )}
 
           {session ? (
             <div className="relative dropdown-container w-full mt-2">
