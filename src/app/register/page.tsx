@@ -29,60 +29,80 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     const {
       email,
+      password,
+      confirmpassword,
       firstName,
       lastName,
       department,
       phoneNumber,
-      password,
-      confirmpassword,
       role,
     } = formData;
 
     if (password !== confirmpassword) {
       alert("Passwords do not match!");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: `${firstName} ${lastName}`,
-          first_name: firstName,
-          last_name: lastName,
-          department,
-          phone_number: phoneNumber,
           role,
         },
       },
     });
 
-    setLoading(false);
-
     if (error) {
       alert(error.message);
-    } else {
-      alert(
-        "Registration successful! Please check your email to verify your account."
-      );
-      setFormData({
-        email: "",
-        firstName: "",
-        lastName: "",
-        department: "",
-        phoneNumber: "",
-        password: "",
-        confirmpassword: "",
-        role: "",
-      });
-      window.location.href = "/login"; // Redirect to login page after successful registration
+      setLoading(false);
+      return;
     }
+
+    const userId = signUpData.user?.id;
+
+    if (userId) {
+      const { error: insertError } = await supabase.from("accounts").insert([
+        {
+          user_id: userId,
+          first_name: firstName,
+          last_name: lastName,
+          department,
+          phone_number: phoneNumber,
+        },
+      ]);
+
+      if (insertError) {
+        alert(
+          "User created but failed to save extra data: " + insertError.message
+        );
+      } else {
+        alert(
+          "Registration successful! Please check your email to verify your account."
+        );
+      }
+    }
+
+    setLoading(false);
+
+    setFormData({
+      email: "",
+      firstName: "",
+      lastName: "",
+      department: "",
+      phoneNumber: "",
+      password: "",
+      confirmpassword: "",
+      role: "",
+    });
+
+    window.location.href = "/login";
   };
 
   return (
