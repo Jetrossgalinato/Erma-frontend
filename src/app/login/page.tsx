@@ -15,18 +15,46 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setError("");
-      alert("You have logged in succesfully!");
-      router.push("/home");
+    if (authError) {
+      setError(authError.message);
+      return;
     }
+
+    const user = authData?.user;
+
+    if (!user) {
+      setError("No user data returned.");
+      return;
+    }
+
+    // Fetch the corresponding account record
+    const { data: account, error: accountError } = await supabase
+      .from("accounts")
+      .select("is_approved")
+      .eq("user_id", user.id)
+      .single();
+
+    if (accountError || !account) {
+      setError("Account not found or not approved.");
+      await supabase.auth.signOut(); // logout
+      return;
+    }
+
+    if (!account.is_approved) {
+      setError("Your account is pending approval.");
+      await supabase.auth.signOut(); // logout
+      return;
+    }
+
+    setError("");
+    alert("You have logged in successfully!");
+    router.push("/home");
   };
 
   return (
