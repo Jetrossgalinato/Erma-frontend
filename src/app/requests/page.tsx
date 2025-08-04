@@ -10,6 +10,8 @@ import {
   UserX,
   Trash2,
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 // Define types for better TypeScript support
 type RequestStatus = "Pending" | "Approved" | "Rejected";
@@ -321,6 +323,7 @@ export default function AccountRequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -594,6 +597,7 @@ export default function AccountRequestsPage() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
