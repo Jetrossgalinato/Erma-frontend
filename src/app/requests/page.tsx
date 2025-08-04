@@ -360,7 +360,7 @@ export default function AccountRequestsPage() {
               <button
                 onClick={fetchRequests}
                 disabled={loading}
-                className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -369,7 +369,7 @@ export default function AccountRequestsPage() {
               </button>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 cursor-pointer text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Request
@@ -379,8 +379,8 @@ export default function AccountRequestsPage() {
 
           {/* Add Request Modal */}
           {showAddForm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-opacity-50">
+              <div className="bg-white text-gray-800 rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">Add New Request</h2>
                 <form onSubmit={handleAddFormSubmit}>
                   <div className="space-y-4">
@@ -760,15 +760,6 @@ export default function AccountRequestsPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No account requests yet
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  Get started by adding your first account request
-                </p>
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Add First Request
-                </button>
               </div>
             )}
 
