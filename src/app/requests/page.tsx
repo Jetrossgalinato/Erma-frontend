@@ -117,7 +117,7 @@ export default function AccountRequestsPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("account_requests_with_email")
+        .from("account_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
