@@ -12,7 +12,6 @@ export default function RegisterPage() {
     lastName: "",
     department: "",
     phoneNumber: "",
-    reason: "",
     password: "",
     confirmpassword: "",
     role: "",
@@ -37,7 +36,6 @@ export default function RegisterPage() {
       lastName,
       department,
       phoneNumber,
-      reason,
       password,
       confirmpassword,
       role,
@@ -60,7 +58,6 @@ export default function RegisterPage() {
           last_name: lastName,
           department,
           phone_number: phoneNumber,
-          reason,
           role,
         },
       },
@@ -187,24 +184,6 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 value={formData.phoneNumber}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Reason for Request */}
-            <div>
-              <label
-                htmlFor="reason"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Reason for Request
-              </label>
-              <textarea
-                id="reason"
-                rows={3}
-                required
-                onChange={handleChange}
-                value={formData.reason}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
 
