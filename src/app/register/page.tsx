@@ -71,6 +71,17 @@ export default function RegisterPage() {
       alert(
         "Registration successful! Please check your email to verify your account."
       );
+      setFormData({
+        email: "",
+        firstName: "",
+        lastName: "",
+        department: "",
+        phoneNumber: "",
+        password: "",
+        confirmpassword: "",
+        role: "",
+      });
+      window.location.href = "/login"; // Redirect to login page after successful registration
     }
   };
 
