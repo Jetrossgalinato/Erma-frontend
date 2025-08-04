@@ -31,6 +31,7 @@ const Navbar: React.FC = () => {
     await supabase.auth.signOut();
     setIsAvatarDropdownOpen(false);
     alert("You have been logged out successfully.");
+    window.location.href = "/home";
   };
 
   useEffect(() => {
