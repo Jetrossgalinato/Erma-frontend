@@ -1,149 +1,163 @@
 "use client";
 import { useState, useMemo } from "react";
-import { Search, Calendar, User, FileText, Clock } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import {
+  Search,
+  User,
+  Mail,
+  Calendar,
+  Shield,
+  UserCheck,
+  UserX,
+  Trash2,
+} from "lucide-react";
 
 // Define types for better TypeScript support
-type RequestStatus = "Pending" | "Approved" | "Rejected" | "In Review";
-type RequestType =
-  | "Equipment"
-  | "Room Booking"
-  | "Maintenance"
-  | "Access"
-  | "Other";
+type RequestStatus = "Pending" | "Approved" | "Rejected";
+type AccountType = "Student" | "Faculty" | "Staff" | "Admin" | "Guest";
 
-interface Request {
+interface AccountRequest {
   id: number;
-  title: string;
-  requestType: RequestType;
+  firstName: string;
+  lastName: string;
+  email: string;
+  accountType: AccountType;
   status: RequestStatus;
-  createdBy: string;
   requestedAt: string;
-  description: string;
-  priority: "Low" | "Medium" | "High";
   department?: string;
+  studentId?: string;
+  employeeId?: string;
+  reason?: string;
+  phoneNumber?: string;
 }
 
 // Mock data for demonstration
-const mockRequests: Request[] = [
+const mockAccountRequests: AccountRequest[] = [
   {
     id: 1,
-    title: "Computer Laboratory 1 Booking",
-    requestType: "Room Booking",
+    firstName: "John",
+    lastName: "Smith",
+    email: "john.smith@university.edu",
+    accountType: "Student",
     status: "Pending",
-    createdBy: "John Smith",
     requestedAt: "2024-08-04",
-    description: "Need to book Computer Lab 1 for programming class",
-    priority: "Medium",
     department: "Computer Science",
+    studentId: "CS2024001",
+    phoneNumber: "+1234567890",
+    reason: "New student enrollment for Fall 2024 semester",
   },
   {
     id: 2,
-    title: "Projector Repair Request",
-    requestType: "Maintenance",
-    status: "In Review",
-    createdBy: "Sarah Johnson",
+    firstName: "Sarah",
+    lastName: "Johnson",
+    email: "sarah.johnson@university.edu",
+    accountType: "Faculty",
+    status: "Pending",
     requestedAt: "2024-08-03",
-    description: "Projector in Conference Room A is not working properly",
-    priority: "High",
-    department: "IT Services",
+    department: "Mathematics",
+    employeeId: "FAC2024012",
+    phoneNumber: "+1234567891",
+    reason: "New faculty member joining Mathematics department",
   },
   {
     id: 3,
-    title: "New Laptop Equipment",
-    requestType: "Equipment",
+    firstName: "Mike",
+    lastName: "Davis",
+    email: "mike.davis@university.edu",
+    accountType: "Staff",
     status: "Approved",
-    createdBy: "Mike Davis",
     requestedAt: "2024-08-02",
-    description: "Request for 5 new laptops for research team",
-    priority: "Medium",
-    department: "Research",
+    department: "IT Services",
+    employeeId: "STA2024045",
+    phoneNumber: "+1234567892",
+    reason: "IT support staff member",
   },
   {
     id: 4,
-    title: "Library Access Card",
-    requestType: "Access",
+    firstName: "Emily",
+    lastName: "Chen",
+    email: "emily.chen@university.edu",
+    accountType: "Student",
     status: "Approved",
-    createdBy: "Emily Chen",
     requestedAt: "2024-08-01",
-    description: "Need access card for extended library hours",
-    priority: "Low",
-    department: "Graduate Studies",
+    department: "Biology",
+    studentId: "BIO2024078",
+    phoneNumber: "+1234567893",
+    reason: "Graduate student research program",
   },
   {
     id: 5,
-    title: "AC Repair in Office 204",
-    requestType: "Maintenance",
+    firstName: "Robert",
+    lastName: "Wilson",
+    email: "robert.wilson@external.com",
+    accountType: "Guest",
     status: "Rejected",
-    createdBy: "Robert Wilson",
     requestedAt: "2024-07-31",
-    description: "Air conditioning unit not cooling properly",
-    priority: "High",
-    department: "Facilities",
+    department: "External",
+    phoneNumber: "+1234567894",
+    reason: "Guest lecturer access - insufficient documentation",
   },
   {
     id: 6,
-    title: "Seminar Room B Booking",
-    requestType: "Room Booking",
+    firstName: "Lisa",
+    lastName: "Anderson",
+    email: "lisa.anderson@university.edu",
+    accountType: "Admin",
     status: "Pending",
-    createdBy: "Lisa Anderson",
     requestedAt: "2024-08-04",
-    description: "Book seminar room for department meeting",
-    priority: "Medium",
     department: "Administration",
+    employeeId: "ADM2024003",
+    phoneNumber: "+1234567895",
+    reason: "New administrator for student services",
   },
   {
     id: 7,
-    title: "Software License Request",
-    requestType: "Other",
-    status: "In Review",
-    createdBy: "David Brown",
+    firstName: "David",
+    lastName: "Brown",
+    email: "david.brown@university.edu",
+    accountType: "Faculty",
+    status: "Pending",
     requestedAt: "2024-08-03",
-    description: "Need Adobe Creative Suite license for design work",
-    priority: "Low",
-    department: "Marketing",
+    department: "Physics",
+    employeeId: "FAC2024013",
+    phoneNumber: "+1234567896",
+    reason: "Visiting professor for research collaboration",
   },
   {
     id: 8,
-    title: "Laboratory Equipment Setup",
-    requestType: "Equipment",
+    firstName: "Jennifer",
+    lastName: "Lee",
+    email: "jennifer.lee@university.edu",
+    accountType: "Student",
     status: "Approved",
-    createdBy: "Jennifer Lee",
     requestedAt: "2024-08-02",
-    description: "Setup new microscopes in Biology Lab",
-    priority: "High",
-    department: "Biology",
+    department: "Chemistry",
+    studentId: "CHE2024055",
+    phoneNumber: "+1234567897",
+    reason: "Transfer student from partner university",
   },
 ];
 
-const requestTypes = [
-  "All Request Types",
-  "Equipment",
-  "Room Booking",
-  "Maintenance",
-  "Access",
-  "Other",
+const accountTypes = [
+  "All Account Types",
+  "Student",
+  "Faculty",
+  "Staff",
+  "Admin",
+  "Guest",
 ];
 
-const requestStatuses = [
-  "All Statuses",
-  "Pending",
-  "Approved",
-  "Rejected",
-  "In Review",
-];
+const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
 
-const createdByOptions = [
-  "All Users",
-  "John Smith",
-  "Sarah Johnson",
-  "Mike Davis",
-  "Emily Chen",
-  "Robert Wilson",
-  "Lisa Anderson",
-  "David Brown",
-  "Jennifer Lee",
+const departments = [
+  "All Departments",
+  "Computer Science",
+  "Mathematics",
+  "Biology",
+  "Physics",
+  "Chemistry",
+  "IT Services",
+  "Administration",
+  "External",
 ];
 
 const requestedAtOptions = [
@@ -157,31 +171,38 @@ const requestedAtOptions = [
   "This Month",
 ];
 
-export default function RequestsPage() {
+export default function AccountRequestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRequestType, setSelectedRequestType] =
-    useState("All Request Types");
+  const [selectedAccountType, setSelectedAccountType] =
+    useState("All Account Types");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
-  const [selectedCreatedBy, setSelectedCreatedBy] = useState("All Users");
+  const [selectedDepartment, setSelectedDepartment] =
+    useState("All Departments");
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
+  const [requests, setRequests] = useState(mockAccountRequests);
 
   // Filter and search logic
   const filteredRequests = useMemo(() => {
-    return mockRequests.filter((request) => {
+    return requests.filter((request) => {
+      const fullName = `${request.firstName} ${request.lastName}`.toLowerCase();
       const matchesSearch =
-        request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.description.toLowerCase().includes(searchTerm.toLowerCase());
+        fullName.includes(searchTerm.toLowerCase()) ||
+        request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (request.studentId &&
+          request.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (request.employeeId &&
+          request.employeeId.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      const matchesRequestType =
-        selectedRequestType === "All Request Types" ||
-        request.requestType === selectedRequestType;
+      const matchesAccountType =
+        selectedAccountType === "All Account Types" ||
+        request.accountType === selectedAccountType;
 
       const matchesStatus =
         selectedStatus === "All Statuses" || request.status === selectedStatus;
 
-      const matchesCreatedBy =
-        selectedCreatedBy === "All Users" ||
-        request.createdBy === selectedCreatedBy;
+      const matchesDepartment =
+        selectedDepartment === "All Departments" ||
+        request.department === selectedDepartment;
 
       const matchesRequestedAt = (() => {
         if (selectedRequestedAt === "All Dates") return true;
@@ -206,19 +227,46 @@ export default function RequestsPage() {
 
       return (
         matchesSearch &&
-        matchesRequestType &&
+        matchesAccountType &&
         matchesStatus &&
-        matchesCreatedBy &&
+        matchesDepartment &&
         matchesRequestedAt
       );
     });
   }, [
     searchTerm,
-    selectedRequestType,
+    selectedAccountType,
     selectedStatus,
-    selectedCreatedBy,
+    selectedDepartment,
     selectedRequestedAt,
+    requests,
   ]);
+
+  const handleApprove = (requestId: number) => {
+    setRequests((prevRequests) =>
+      prevRequests.map((request) =>
+        request.id === requestId
+          ? { ...request, status: "Approved" as RequestStatus }
+          : request
+      )
+    );
+  };
+
+  const handleReject = (requestId: number) => {
+    setRequests((prevRequests) =>
+      prevRequests.map((request) =>
+        request.id === requestId
+          ? { ...request, status: "Rejected" as RequestStatus }
+          : request
+      )
+    );
+  };
+
+  const handleRemove = (requestId: number) => {
+    setRequests((prevRequests) =>
+      prevRequests.filter((request) => request.id !== requestId)
+    );
+  };
 
   const getStatusColor = (status: RequestStatus): string => {
     switch (status) {
@@ -228,55 +276,106 @@ export default function RequestsPage() {
         return "bg-green-100 text-green-800";
       case "Rejected":
         return "bg-red-100 text-red-800";
-      case "In Review":
-        return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getPriorityColor = (priority: string): string => {
-    switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-800";
-      case "Medium":
-        return "bg-orange-100 text-orange-800";
-      case "Low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getRequestTypeIcon = (type: RequestType) => {
+  const getAccountTypeIcon = (type: AccountType) => {
     switch (type) {
-      case "Equipment":
-        return <FileText className="w-5 h-5 text-blue-600" />;
-      case "Room Booking":
-        return <Calendar className="w-5 h-5 text-green-600" />;
-      case "Maintenance":
-        return <Clock className="w-5 h-5 text-orange-600" />;
-      case "Access":
-        return <User className="w-5 h-5 text-purple-600" />;
+      case "Student":
+        return <User className="w-5 h-5 text-blue-600" />;
+      case "Faculty":
+        return <Shield className="w-5 h-5 text-purple-600" />;
+      case "Staff":
+        return <UserCheck className="w-5 h-5 text-green-600" />;
+      case "Admin":
+        return <Shield className="w-5 h-5 text-red-600" />;
+      case "Guest":
+        return <User className="w-5 h-5 text-gray-600" />;
       default:
-        return <FileText className="w-5 h-5 text-gray-600" />;
+        return <User className="w-5 h-5 text-gray-600" />;
     }
   };
+
+  const getAccountTypeColor = (type: AccountType): string => {
+    switch (type) {
+      case "Student":
+        return "bg-blue-100 text-blue-800";
+      case "Faculty":
+        return "bg-purple-100 text-purple-800";
+      case "Staff":
+        return "bg-green-100 text-green-800";
+      case "Admin":
+        return "bg-red-100 text-red-800";
+      case "Guest":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const pendingCount = requests.filter((r) => r.status === "Pending").length;
+  const approvedCount = requests.filter((r) => r.status === "Approved").length;
+  const rejectedCount = requests.filter((r) => r.status === "Rejected").length;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Navbar */}
-      <Navbar />
-      <div className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Requests Management
+              Account Requests Management
             </h1>
             <p className="text-gray-600">
-              Track and manage all your facility and equipment requests
+              Review and manage user registration requests for the system
             </p>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">
+                    Pending Requests
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {pendingCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-full">
+                  <Calendar className="w-6 h-6 text-yellow-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Approved</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {approvedCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <UserCheck className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Rejected</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {rejectedCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-red-100 rounded-full">
+                  <UserX className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Search and Filters */}
@@ -287,21 +386,21 @@ export default function RequestsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search requests..."
+                  placeholder="Search by name, email, ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
 
-              {/* Request Type Filter */}
+              {/* Account Type Filter */}
               <div className="md:col-span-1">
                 <select
-                  value={selectedRequestType}
-                  onChange={(e) => setSelectedRequestType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  value={selectedAccountType}
+                  onChange={(e) => setSelectedAccountType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
-                  {requestTypes.map((type) => (
+                  {accountTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
@@ -314,7 +413,7 @@ export default function RequestsPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
                   {requestStatuses.map((status) => (
                     <option key={status} value={status}>
@@ -324,16 +423,16 @@ export default function RequestsPage() {
                 </select>
               </div>
 
-              {/* Created By Filter */}
+              {/* Department Filter */}
               <div className="md:col-span-1">
                 <select
-                  value={selectedCreatedBy}
-                  onChange={(e) => setSelectedCreatedBy(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
-                  {createdByOptions.map((user) => (
-                    <option key={user} value={user}>
-                      {user}
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
                     </option>
                   ))}
                 </select>
@@ -344,7 +443,7 @@ export default function RequestsPage() {
                 <select
                   value={selectedRequestedAt}
                   onChange={(e) => setSelectedRequestedAt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
                   {requestedAtOptions.map((date) => (
                     <option key={date} value={date}>
@@ -356,15 +455,8 @@ export default function RequestsPage() {
             </div>
           </div>
 
-          {/* Add New Request Button */}
-          <div className="mb-6">
-            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-              + New Request
-            </button>
-          </div>
-
-          {/* Requests Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {/* Account Requests Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
             {filteredRequests.map((request) => (
               <div
                 key={request.id}
@@ -372,11 +464,19 @@ export default function RequestsPage() {
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2 flex-1 pr-2">
-                      {getRequestTypeIcon(request.requestType)}
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {request.title}
-                      </h3>
+                    <div className="flex items-center gap-3 flex-1">
+                      {getAccountTypeIcon(request.accountType)}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {request.firstName} {request.lastName}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          <p className="text-sm text-gray-600">
+                            {request.email}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -388,50 +488,91 @@ export default function RequestsPage() {
                   </div>
 
                   <div className="space-y-2 mb-4">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Type:</span>{" "}
-                      {request.requestType}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Created By:</span>{" "}
-                      {request.createdBy}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Requested At:</span>{" "}
-                      {request.requestedAt}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">
+                        Account Type:
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${getAccountTypeColor(
+                          request.accountType
+                        )}`}
+                      >
+                        {request.accountType}
+                      </span>
+                    </div>
+
                     {request.department && (
                       <p className="text-sm text-gray-600">
                         <span className="font-medium">Department:</span>{" "}
                         {request.department}
                       </p>
                     )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Priority:
-                      </span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(
-                          request.priority
-                        )}`}
-                      >
-                        {request.priority}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {request.description}
+                    {request.studentId && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Student ID:</span>{" "}
+                        {request.studentId}
+                      </p>
+                    )}
+
+                    {request.employeeId && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Employee ID:</span>{" "}
+                        {request.employeeId}
+                      </p>
+                    )}
+
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Phone:</span>{" "}
+                      {request.phoneNumber}
+                    </p>
+
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Requested:</span>{" "}
+                      {request.requestedAt}
                     </p>
                   </div>
 
+                  {request.reason && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-600 mb-1">
+                        Reason:
+                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {request.reason}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
-                    <button className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
-                      View Details
-                    </button>
-                    <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-                      {request.status === "Pending" ? "Process" : "Update"}
+                    {request.status === "Pending" ? (
+                      <>
+                        <button
+                          onClick={() => handleApprove(request.id)}
+                          className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <UserCheck className="w-4 h-4" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(request.id)}
+                          className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-1"
+                        >
+                          <UserX className="w-4 h-4" />
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <button className="flex-1 px-3 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                        View Details
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleRemove(request.id)}
+                      className="px-3 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
+                      title="Remove request"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -444,7 +585,7 @@ export default function RequestsPage() {
             <div className="text-center py-12">
               <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No requests found
+                No account requests found
               </h3>
               <p className="text-gray-600">
                 Try adjusting your search or filters
@@ -453,8 +594,6 @@ export default function RequestsPage() {
           )}
         </div>
       </div>
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }
