@@ -14,7 +14,7 @@ export default function RegisterPage() {
     phoneNumber: "",
     password: "",
     confirmpassword: "",
-    role: "",
+    acc_role: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function RegisterPage() {
       lastName,
       department,
       phoneNumber,
-      role,
+      acc_role,
     } = formData;
 
     if (password !== confirmpassword) {
@@ -54,7 +54,7 @@ export default function RegisterPage() {
       options: {
         data: {
           full_name: `${firstName} ${lastName}`,
-          role,
+          acc_role: acc_role,
         },
       },
     });
@@ -99,7 +99,7 @@ export default function RegisterPage() {
       phoneNumber: "",
       password: "",
       confirmpassword: "",
-      role: "",
+      acc_role: "",
     });
 
     window.location.href = "/login";
@@ -257,25 +257,32 @@ export default function RegisterPage() {
             {/* Role */}
             <div>
               <label
-                htmlFor="role"
+                htmlFor="acc_role"
                 className="block text-sm font-medium text-gray-700"
               >
                 Role
               </label>
               <select
-                id="role"
+                id="acc_role"
                 required
                 onChange={handleChange}
-                value={formData.role}
+                value={formData.acc_role}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 <option value="" disabled>
                   Select a role
                 </option>
-                <option value="Super Admin">Super Admin</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
-                <option value="Faculty">Faculty</option>
+                <option value="CCIS Dean">CCIS Dean</option>
+                <option value="Lab Technician">Lab Technician</option>
+                <option value="Comlab Adviser">Comlab Adviser</option>
+                <option value="Department Chairperson">
+                  Department Chairperson
+                </option>
+                <option value="Associate Dean">Associate Dean</option>
+                <option value="College Clerk">College Clerk</option>
+                <option value="Student Assistant">Student Assistant</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Instructor">Instructor</option>
               </select>
             </div>
 
