@@ -8,14 +8,14 @@ import Footer from "../../components/Footer";
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: "",
-    first_name: "",
-    last_name: "",
+    firstName: "",
+    lastName: "",
+    department: "",
+    phoneNumber: "",
+    reason: "",
     password: "",
     confirmpassword: "",
     role: "",
-    department: "",
-    phone: "",
-    reason: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -33,14 +33,14 @@ export default function RegisterPage() {
 
     const {
       email,
-      first_name,
-      last_name,
+      firstName,
+      lastName,
+      department,
+      phoneNumber,
+      reason,
       password,
       confirmpassword,
       role,
-      department,
-      phone,
-      reason,
     } = formData;
 
     if (password !== confirmpassword) {
@@ -55,11 +55,13 @@ export default function RegisterPage() {
       password,
       options: {
         data: {
-          full_name: `${first_name} ${last_name}`,
-          role,
+          full_name: `${firstName} ${lastName}`,
+          first_name: firstName,
+          last_name: lastName,
           department,
-          phone,
+          phone_number: phoneNumber,
           reason,
+          role,
         },
       },
     });
@@ -85,11 +87,14 @@ export default function RegisterPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
           <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-700">Welcome! 👋</h2>
+            <h2 className="text-xl font-semibold text-gray-700">
+              Welcome back! 👋
+            </h2>
             Register to <span className="text-orange-600">CRIMS</span>
           </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -107,42 +112,43 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label
-                  htmlFor="first_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  id="first_name"
-                  required
-                  onChange={handleChange}
-                  value={formData.first_name}
-                  className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                />
-              </div>
-
-              <div className="flex-1">
-                <label
-                  htmlFor="last_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  id="last_name"
-                  required
-                  onChange={handleChange}
-                  value={formData.last_name}
-                  className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                />
-              </div>
+            {/* First Name */}
+            <div>
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                First Name
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                required
+                onChange={handleChange}
+                value={formData.firstName}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
             </div>
 
+            {/* Last Name */}
+            <div>
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                required
+                onChange={handleChange}
+                value={formData.lastName}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            {/* Department */}
             <div>
               <label
                 htmlFor="department"
@@ -150,33 +156,41 @@ export default function RegisterPage() {
               >
                 Department
               </label>
-              <input
-                type="text"
+              <select
                 id="department"
                 required
                 onChange={handleChange}
                 value={formData.department}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
+              >
+                <option value="" disabled>
+                  Select department
+                </option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSIS">BSIS</option>
+              </select>
             </div>
 
+            {/* Phone Number */}
             <div>
               <label
-                htmlFor="phone"
+                htmlFor="phoneNumber"
                 className="block text-sm font-medium text-gray-700"
               >
                 Phone Number
               </label>
               <input
                 type="text"
-                id="phone"
+                id="phoneNumber"
                 required
                 onChange={handleChange}
-                value={formData.phone}
+                value={formData.phoneNumber}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
 
+            {/* Reason for Request */}
             <div>
               <label
                 htmlFor="reason"
@@ -186,14 +200,15 @@ export default function RegisterPage() {
               </label>
               <textarea
                 id="reason"
+                rows={3}
                 required
                 onChange={handleChange}
                 value={formData.reason}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
-                rows={3}
-              ></textarea>
+              />
             </div>
 
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -211,6 +226,7 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Confirm Password */}
             <div>
               <label
                 htmlFor="confirmpassword"
@@ -228,6 +244,7 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Role */}
             <div>
               <label
                 htmlFor="role"
@@ -252,6 +269,7 @@ export default function RegisterPage() {
               </select>
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
