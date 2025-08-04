@@ -200,8 +200,12 @@ export default function AccountRequestsPage() {
 
   const handleApprove = async (requestId: number) => {
     try {
-      // In a real app, this would be an API call
-      // await fetch(`/api/account-requests/${requestId}/approve`, { method: 'PUT' });
+      const { error } = await supabase
+        .from("accounts")
+        .update({ status: "Approved" as string })
+        .eq("id", requestId);
+
+      if (error) throw error;
 
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
@@ -217,9 +221,14 @@ export default function AccountRequestsPage() {
 
   const handleReject = async (requestId: number) => {
     try {
-      // In a real app, this would be an API call
-      // await fetch(`/api/account-requests/${requestId}/reject`, { method: 'PUT' });
+      const { error } = await supabase
+        .from("accounts")
+        .update({ status: "Rejected" as string })
+        .eq("id", requestId);
 
+      if (error) throw error;
+
+      // If the update is successful, update the local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
@@ -234,9 +243,14 @@ export default function AccountRequestsPage() {
 
   const handleRemove = async (requestId: number) => {
     try {
-      // In a real app, this would be an API call
-      // await fetch(`/api/account-requests/${requestId}`, { method: 'DELETE' });
+      const { error } = await supabase
+        .from("accounts")
+        .delete()
+        .eq("id", requestId);
 
+      if (error) throw error;
+
+      // Update local state only if the delete was successful
       setRequests((prevRequests) =>
         prevRequests.filter((request) => request.id !== requestId)
       );
