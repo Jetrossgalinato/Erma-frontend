@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Menu, X, LayoutDashboard, User, LogOut, Home } from "lucide-react";
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  User,
+  LogOut,
+  Home,
+  Search,
+} from "lucide-react";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Session } from "@supabase/supabase-js";
@@ -10,6 +18,7 @@ const DashboardNavbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const supabase = createClientComponentClient();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -20,6 +29,12 @@ const DashboardNavbar: React.FC = () => {
     await supabase.auth.signOut();
     setIsAvatarDropdownOpen(false);
     alert("You have been logged out successfully.");
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Add your search logic here
+    console.log("Searching for:", searchQuery);
   };
 
   useEffect(() => {
@@ -69,8 +84,26 @@ const DashboardNavbar: React.FC = () => {
         />
       </div>
 
-      {/* Desktop Avatar */}
-      <div className="hidden md:flex pr-70 items-center">
+      {/* Desktop Search Bar and Avatar */}
+      <div className="hidden md:flex pr-70 items-center gap-4">
+        {session && (
+          <form onSubmit={handleSearch} className="relative">
+            <div className="relative">
+              <Search
+                size={20}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 w-64 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+          </form>
+        )}
+
         {session ? (
           <div className="relative dropdown-container">
             <button
@@ -136,6 +169,24 @@ const DashboardNavbar: React.FC = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
+          {session && (
+            <form onSubmit={handleSearch} className="w-full mb-4">
+              <div className="relative">
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                />
+              </div>
+            </form>
+          )}
+
           {session ? (
             <div className="relative dropdown-container w-full mt-2">
               <button
