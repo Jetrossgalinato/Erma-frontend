@@ -48,13 +48,36 @@ export default function RegisterPage() {
       return;
     }
 
+    // 🔁 Map role selection to actual Supabase role
+    let mappedRole = "";
+
+    const superAdminRoles = ["CCIS Dean", "Lab Technician", "Comlab Adviser"];
+    const adminRoles = ["Department Chairperson", "Associate Dean"];
+    const staffRoles = ["College Clerk", "Student Assistant"];
+    const facultyRoles = ["Lecturer", "Instructor"];
+
+    if (superAdminRoles.includes(acc_role)) {
+      mappedRole = "Super Admin";
+    } else if (adminRoles.includes(acc_role)) {
+      mappedRole = "Admin";
+    } else if (staffRoles.includes(acc_role)) {
+      mappedRole = "Staff";
+    } else if (facultyRoles.includes(acc_role)) {
+      mappedRole = "Faculty";
+    } else {
+      alert("Invalid role selected.");
+      setLoading(false);
+      return;
+    }
+
+    // 🧾 Register user in Supabase Auth
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: `${firstName} ${lastName}`,
-          acc_role: acc_role,
+          acc_role: mappedRole, // 👈 Use mappedRole here
         },
       },
     });
@@ -75,6 +98,7 @@ export default function RegisterPage() {
           last_name: lastName,
           department,
           phone_number: phoneNumber,
+          acc_role: mappedRole, // 👈 Store mappedRole in public.accounts too
         },
       ]);
 
