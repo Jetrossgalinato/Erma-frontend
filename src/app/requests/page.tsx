@@ -11,15 +11,18 @@ import {
   UserX,
   Trash2,
   RefreshCw,
+  ArrowRight,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils"; // Import the helper function
 
 // Define types for better TypeScript support
 type RequestStatus = "Pending" | "Approved" | "Rejected";
 
 interface AccountRequest {
   id: number;
+  user_id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -28,6 +31,7 @@ interface AccountRequest {
   department?: string;
   phoneNumber?: string;
   acc_role?: string;
+  approved_acc_role?: string;
 }
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
@@ -115,6 +119,7 @@ export default function AccountRequestsPage() {
 
       const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
         id: acc.id || idx,
+        user_id: acc.user_id || "",
         firstName: acc.first_name || "",
         lastName: acc.last_name || "",
         email: acc.email || "", // this will now come from auth.users
@@ -123,6 +128,7 @@ export default function AccountRequestsPage() {
         department: acc.department || undefined,
         phoneNumber: acc.phone_number || undefined,
         acc_role: acc.acc_role || "",
+        approved_acc_role: acc.approved_acc_role || undefined,
       }));
 
       setRequests(mappedRequests);
@@ -197,8 +203,15 @@ export default function AccountRequestsPage() {
     requests,
   ]);
 
-  const handleApprove = async (requestId: number) => {
+  const handleApprove = async (
+    requestId: number,
+    originalRole: string,
+    userId: string
+  ) => {
     try {
+      // Map the role to system role
+      const approvedRole = mapRoleToSystemRole(originalRole);
+
       // First check if this request is already approved
       const { data: existingAccount } = await supabase
         .from("accounts")
@@ -215,21 +228,55 @@ export default function AccountRequestsPage() {
         if (insertError) throw insertError;
       }
 
-      // Update status in the account_requests table
+      // Update status and approved role in the account_requests table
       const { error: updateError } = await supabase
         .from("account_requests")
-        .update({ status: "Approved", is_approved: true })
+        .update({
+          status: "Approved",
+          is_approved: true,
+          approved_acc_role: approvedRole,
+          approved_at: new Date().toISOString(),
+        })
         .eq("id", requestId);
 
       if (updateError) throw updateError;
+
+      // Update user metadata in Supabase Auth (optional but recommended)
+      try {
+        const { error: authError } = await supabase.auth.admin.updateUserById(
+          userId,
+          {
+            user_metadata: {
+              acc_role: approvedRole,
+            },
+          }
+        );
+
+        if (authError) {
+          console.warn("Could not update user metadata:", authError);
+        }
+      } catch (authError) {
+        console.warn(
+          "Auth update failed (this might be expected in client-side code):",
+          authError
+        );
+      }
 
       // Update local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
-            ? { ...request, status: "Approved" as RequestStatus }
+            ? {
+                ...request,
+                status: "Approved" as RequestStatus,
+                approved_acc_role: approvedRole,
+              }
             : request
         )
+      );
+
+      alert(
+        `Account approved! Role mapped from "${originalRole}" to "${approvedRole}"`
       );
     } catch (error) {
       const errorMessage = handleError(error, "approve request");
@@ -241,7 +288,10 @@ export default function AccountRequestsPage() {
     try {
       const { error } = await supabase
         .from("account_requests")
-        .update({ status: "Rejected" as string })
+        .update({
+          status: "Rejected" as string,
+          approved_at: new Date().toISOString(),
+        })
         .eq("id", requestId);
 
       if (error) throw error;
@@ -484,7 +534,7 @@ export default function AccountRequestsPage() {
             </div>
           )}
 
-          {/* Account Requests Grid - Updated to show role */}
+          {/* Account Requests Grid - Updated to show role mapping */}
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {filteredRequests.map((request) => (
@@ -526,10 +576,28 @@ export default function AccountRequestsPage() {
                       )}
 
                       {request.acc_role && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Role:</span>{" "}
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">Requested Role:</span>{" "}
                           {request.acc_role}
-                        </p>
+                          {request.status === "Pending" && (
+                            <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
+                              <ArrowRight className="w-3 h-3" />
+                              <span>
+                                Will map to:{" "}
+                                {mapRoleToSystemRole(request.acc_role)}
+                              </span>
+                            </div>
+                          )}
+                          {request.approved_acc_role &&
+                            request.status === "Approved" && (
+                              <div className="flex items-center gap-2 mt-1 text-xs text-green-600">
+                                <ArrowRight className="w-3 h-3" />
+                                <span>
+                                  Approved as: {request.approved_acc_role}
+                                </span>
+                              </div>
+                            )}
+                        </div>
                       )}
 
                       {request.phoneNumber && (
@@ -549,7 +617,13 @@ export default function AccountRequestsPage() {
                       {request.status === "Pending" ? (
                         <>
                           <button
-                            onClick={() => handleApprove(request.id)}
+                            onClick={() =>
+                              handleApprove(
+                                request.id,
+                                request.acc_role || "",
+                                request.user_id
+                              )
+                            }
                             className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
                           >
                             <UserCheck className="w-4 h-4" />

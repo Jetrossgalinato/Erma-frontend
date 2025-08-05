@@ -48,27 +48,35 @@ export default function RegisterPage() {
       return;
     }
 
-    // 🧾 Register user in Supabase Auth (store original role)
-    const { data: signUpData, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: `${firstName} ${lastName}`,
-          acc_role: acc_role, // 👈 Store the original role selection
-        },
-      },
-    });
+    try {
+      // 🧾 Register user in Supabase Auth (store original role)
+      const { data: signUpData, error: authError } = await supabase.auth.signUp(
+        {
+          email,
+          password,
+          options: {
+            data: {
+              full_name: `${firstName} ${lastName}`,
+              acc_role: acc_role, // 👈 Store the original role selection
+            },
+          },
+        }
+      );
 
-    if (error) {
-      alert(error.message);
-      setLoading(false);
-      return;
-    }
+      if (authError) {
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
 
-    const userId = signUpData.user?.id;
+      const userId = signUpData.user?.id;
 
-    if (userId) {
+      if (!userId) {
+        throw new Error("User ID not returned from authentication");
+      }
+
+      // Add a small delay to ensure user is properly created in auth.users
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // 📝 Insert into account_requests table
       const { error: insertError } = await supabase
         .from("account_requests")
         .insert([
@@ -79,35 +87,61 @@ export default function RegisterPage() {
             department,
             phone_number: phoneNumber,
             acc_role: acc_role, // 👈 Store the original role (e.g., "CCIS Dean")
+            status: "Pending", // Set initial status
             // approved_acc_role will be set later during the approval process
           },
         ]);
 
       if (insertError) {
-        alert(
-          "User created but failed to save extra data: " + insertError.message
-        );
-      } else {
-        alert(
-          "Registration submitted! Please wait for approval from the Super Admin before logging in."
+        console.error("Insert error details:", insertError);
+
+        // If the foreign key constraint fails, we should clean up the auth user
+        try {
+          await supabase.auth.admin.deleteUser(userId);
+        } catch (cleanupError) {
+          console.error(
+            "Failed to cleanup user after insert error:",
+            cleanupError
+          );
+        }
+
+        throw new Error(
+          `Failed to save registration data: ${insertError.message}`
         );
       }
+
+      // ✅ Success
+      alert(
+        "Registration submitted successfully! Please wait for approval from the Super Admin before logging in."
+      );
+
+      // Reset form
+      setFormData({
+        email: "",
+        firstName: "",
+        lastName: "",
+        department: "",
+        phoneNumber: "",
+        password: "",
+        confirmpassword: "",
+        acc_role: "",
+      });
+
+      // Redirect to login
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Registration failed:", error);
+
+      let errorMessage = "Registration failed. Please try again.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-
-    setFormData({
-      email: "",
-      firstName: "",
-      lastName: "",
-      department: "",
-      phoneNumber: "",
-      password: "",
-      confirmpassword: "",
-      acc_role: "",
-    });
-
-    window.location.href = "/login";
   };
 
   return (
@@ -120,9 +154,7 @@ export default function RegisterPage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
           <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Welcome back! 👋
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-700">Welcome! 👋</h2>
             Register to <span className="text-orange-600">CRIMS</span>
           </div>
 
@@ -295,7 +327,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Registering..." : "Register"}
             </button>
