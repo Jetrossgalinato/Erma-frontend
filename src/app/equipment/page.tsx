@@ -15,12 +15,22 @@ interface Equipment {
   category: string;
   facility: string;
   status: EquipmentStatus;
+  serial_number?: string;
+  purchase_date?: string;
+  last_maintenance?: string;
+  assigned_to?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export default function EquipmentPage() {
   const supabase = createClientComponentClient<Database>();
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(
+    null
+  );
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
@@ -167,9 +177,16 @@ export default function EquipmentPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
+                    <button
+                      className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                      onClick={() => {
+                        setSelectedEquipment(equipment);
+                        setShowModal(true);
+                      }}
+                    >
                       View
                     </button>
+
                     <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
                       Edit
                     </button>
@@ -192,6 +209,56 @@ export default function EquipmentPage() {
           )}
         </div>
       </div>
+      {showModal && selectedEquipment && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+          <div className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-bold mb-4">
+              {selectedEquipment.name}
+            </h2>
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Category:</strong> {selectedEquipment.category}
+              </p>
+              <p>
+                <strong>Facility:</strong> {selectedEquipment.facility}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedEquipment.status}
+              </p>
+              <p>
+                <strong>Serial Number:</strong>{" "}
+                {selectedEquipment.serial_number || "N/A"}
+              </p>
+              <p>
+                <strong>Purchase Date:</strong>{" "}
+                {selectedEquipment.purchase_date || "N/A"}
+              </p>
+              <p>
+                <strong>Last Maintenance:</strong>{" "}
+                {selectedEquipment.last_maintenance || "N/A"}
+              </p>
+              <p>
+                <strong>Assigned To (User ID):</strong>{" "}
+                {selectedEquipment.assigned_to || "Unassigned"}
+              </p>
+              <p>
+                <strong>Created At:</strong>{" "}
+                {selectedEquipment.created_at || "N/A"}
+              </p>
+              <p>
+                <strong>Updated At:</strong>{" "}
+                {selectedEquipment.updated_at || "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
