@@ -218,7 +218,7 @@ export default function AccountRequestsPage() {
       // Update status in the account_requests table
       const { error: updateError } = await supabase
         .from("account_requests")
-        .update({ status: "Approved" })
+        .update({ status: "Approved", is_approved: true })
         .eq("id", requestId);
 
       if (updateError) throw updateError;
