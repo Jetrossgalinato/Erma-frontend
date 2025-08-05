@@ -1,10 +1,12 @@
 "use client";
-import { useState, useMemo } from "react";
+
+import { useEffect, useMemo, useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Database } from "@/../lib/database.types";
 import { Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-// Define types for better TypeScript support
 type EquipmentStatus = "Available" | "In Use" | "Maintenance";
 
 interface Equipment {
@@ -13,78 +15,52 @@ interface Equipment {
   category: string;
   facility: string;
   status: EquipmentStatus;
+  serial_number?: string;
+  purchase_date?: string;
+  last_maintenance?: string;
+  assigned_to?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Mock data for demonstration
-const mockEquipment: Equipment[] = [
-  {
-    id: 1,
-    name: "Industrial Printer HP LaserJet Pro",
-    category: "Office Equipment",
-    facility: "Main Office",
-    status: "Available",
-  },
-  {
-    id: 2,
-    name: "Forklift Toyota 8FBU25",
-    category: "Heavy Machinery",
-    facility: "Warehouse A",
-    status: "In Use",
-  },
-  {
-    id: 3,
-    name: "Conference Room Projector",
-    category: "Audio/Visual",
-    facility: "Main Office",
-    status: "Maintenance",
-  },
-  {
-    id: 4,
-    name: "Safety Equipment Kit",
-    category: "Safety",
-    facility: "Warehouse B",
-    status: "Available",
-  },
-  {
-    id: 5,
-    name: "Desktop Computer Dell OptiPlex",
-    category: "IT Equipment",
-    facility: "Main Office",
-    status: "Available",
-  },
-  {
-    id: 6,
-    name: "Hydraulic Lift Scissor Jack",
-    category: "Heavy Machinery",
-    facility: "Workshop",
-    status: "In Use",
-  },
-];
-
-const categories = [
-  "All Categories",
-  "Office Equipment",
-  "Heavy Machinery",
-  "Audio/Visual",
-  "Safety",
-  "IT Equipment",
-];
-const facilities = [
-  "All Facilities",
-  "Main Office",
-  "Warehouse A",
-  "Warehouse B",
-  "Workshop",
-];
-
 export default function EquipmentPage() {
+  const supabase = createClientComponentClient<Database>();
+  const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(
+    null
+  );
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
-  // Filter and search logic
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      const { data, error } = await supabase.from("equipments").select("*");
+      if (error) {
+        console.error("Failed to fetch equipment:", error);
+      } else {
+        setEquipmentData(data as Equipment[]);
+      }
+    };
+
+    fetchEquipment();
+  }, [supabase]);
+
+  // Generate unique categories and facilities dynamically
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(equipmentData.map((e) => e.category)));
+    return ["All Categories", ...unique];
+  }, [equipmentData]);
+
+  const facilities = useMemo(() => {
+    const unique = Array.from(new Set(equipmentData.map((e) => e.facility)));
+    return ["All Facilities", ...unique];
+  }, [equipmentData]);
+
+  // Filtering logic
   const filteredEquipment = useMemo(() => {
-    return mockEquipment.filter((equipment) => {
+    return equipmentData.filter((equipment) => {
       const matchesSearch = equipment.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -97,7 +73,7 @@ export default function EquipmentPage() {
 
       return matchesSearch && matchesCategory && matchesFacility;
     });
-  }, [searchTerm, selectedCategory, selectedFacility]);
+  }, [equipmentData, searchTerm, selectedCategory, selectedFacility]);
 
   const getStatusColor = (status: EquipmentStatus): string => {
     switch (status) {
@@ -117,7 +93,6 @@ export default function EquipmentPage() {
       <Navbar />
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Equipment Management
@@ -127,10 +102,8 @@ export default function EquipmentPage() {
             </p>
           </div>
 
-          {/* Search and Filters */}
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              {/* Search Bar */}
               <div className="md:col-span-6 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
                 <input
@@ -142,7 +115,6 @@ export default function EquipmentPage() {
                 />
               </div>
 
-              {/* Category Filter */}
               <div className="md:col-span-3">
                 <select
                   value={selectedCategory}
@@ -157,7 +129,6 @@ export default function EquipmentPage() {
                 </select>
               </div>
 
-              {/* Facility Filter */}
               <div className="md:col-span-3">
                 <select
                   value={selectedFacility}
@@ -174,7 +145,6 @@ export default function EquipmentPage() {
             </div>
           </div>
 
-          {/* Equipment Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredEquipment.map((equipment) => (
               <div
@@ -207,9 +177,16 @@ export default function EquipmentPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <button className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
+                    <button
+                      className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                      onClick={() => {
+                        setSelectedEquipment(equipment);
+                        setShowModal(true);
+                      }}
+                    >
                       View
                     </button>
+
                     <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
                       Edit
                     </button>
@@ -219,7 +196,6 @@ export default function EquipmentPage() {
             ))}
           </div>
 
-          {/* No Results */}
           {filteredEquipment.length === 0 && (
             <div className="text-center py-12">
               <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -233,8 +209,63 @@ export default function EquipmentPage() {
           )}
         </div>
       </div>
+      {showModal && selectedEquipment && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
+          onClick={() => setShowModal(false)} // Clicking outside closes modal
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+              {selectedEquipment.name}
+            </h2>
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Category:</strong> {selectedEquipment.category}
+              </p>
+              <p>
+                <strong>Facility:</strong> {selectedEquipment.facility}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedEquipment.status}
+              </p>
+              <p>
+                <strong>Serial Number:</strong>{" "}
+                {selectedEquipment.serial_number || "N/A"}
+              </p>
+              <p>
+                <strong>Purchase Date:</strong>{" "}
+                {selectedEquipment.purchase_date || "N/A"}
+              </p>
+              <p>
+                <strong>Last Maintenance:</strong>{" "}
+                {selectedEquipment.last_maintenance || "N/A"}
+              </p>
+              <p>
+                <strong>Assigned To (User ID):</strong>{" "}
+                {selectedEquipment.assigned_to || "Unassigned"}
+              </p>
+              <p>
+                <strong>Created At:</strong>{" "}
+                {selectedEquipment.created_at || "N/A"}
+              </p>
+              <p>
+                <strong>Updated At:</strong>{" "}
+                {selectedEquipment.updated_at || "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Footer */}
       <Footer />
     </div>
   );
