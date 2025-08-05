@@ -210,7 +210,7 @@ export default function EquipmentPage() {
         </div>
       </div>
       {showModal && selectedEquipment && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center">
           <div className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg">
             <button
               onClick={() => setShowModal(false)}
@@ -218,7 +218,7 @@ export default function EquipmentPage() {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-2xl text-gray-800 font-bold mb-4">
               {selectedEquipment.name}
             </h2>
             <div className="space-y-2 text-sm text-gray-700">
