@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -33,19 +33,22 @@ export default function EquipmentPage() {
   );
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
+  const [loading, setLoading] = useState(false);
+
+  const fetchEquipment = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("equipments").select("*");
+    if (error) {
+      console.error("Failed to fetch equipment:", error);
+    } else {
+      setEquipmentData(data as Equipment[]);
+    }
+    setLoading(false);
+  }, [supabase]);
 
   useEffect(() => {
-    const fetchEquipment = async () => {
-      const { data, error } = await supabase.from("equipments").select("*");
-      if (error) {
-        console.error("Failed to fetch equipment:", error);
-      } else {
-        setEquipmentData(data as Equipment[]);
-      }
-    };
-
     fetchEquipment();
-  }, [supabase]);
+  }, [fetchEquipment]);
 
   // Generate unique categories and facilities dynamically
   const categories = useMemo(() => {
@@ -100,6 +103,18 @@ export default function EquipmentPage() {
             <p className="text-gray-600">
               Track and manage your equipment inventory
             </p>
+          </div>
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={fetchEquipment}
+              disabled={loading}
+              className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
