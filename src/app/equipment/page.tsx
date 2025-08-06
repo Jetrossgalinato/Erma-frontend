@@ -132,10 +132,11 @@ export default function EquipmentPage() {
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Equipment Management
+              Equipments
             </h1>
             <p className="text-gray-600">
-              Track and manage your equipment inventory
+              View all equipment records, filter by category or facility, and
+              search for specific items.
             </p>
           </div>
           <div className="flex gap-3 mb-6">
