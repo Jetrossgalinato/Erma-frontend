@@ -33,8 +33,6 @@ const facilityTypes = [
 
 const floorLevels = ["All Floor Levels", "1st Floor", "2nd Floor", "3rd Floor"];
 
-const buildings = ["HIRAYA"];
-
 export default function FacilitiesPage() {
   const supabase = createClientComponentClient<Database>();
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -45,7 +43,6 @@ export default function FacilitiesPage() {
     useState("All Facility Types");
   const [selectedFloorLevel, setSelectedFloorLevel] =
     useState("All Floor Levels");
-  const [selectedBuilding, setSelectedBuilding] = useState("HIRAYA");
   const [selectedStatus, setSelectedStatus] = useState<
     FacilityStatus | "All Statuses"
   >("All Statuses");
@@ -83,10 +80,6 @@ export default function FacilitiesPage() {
         selectedFloorLevel === "All Floor Levels" ||
         facility.floor_level === selectedFloorLevel;
 
-      const matchesBuilding =
-        selectedBuilding === "All Buildings" ||
-        facility.building === selectedBuilding;
-
       const matchesStatus =
         selectedStatus === "All Statuses" || facility.status === selectedStatus;
 
@@ -94,7 +87,6 @@ export default function FacilitiesPage() {
         matchesSearch &&
         matchesFacilityType &&
         matchesFloorLevel &&
-        matchesBuilding &&
         matchesStatus
       );
     });
@@ -103,7 +95,6 @@ export default function FacilitiesPage() {
     searchTerm,
     selectedFacilityType,
     selectedFloorLevel,
-    selectedBuilding,
     selectedStatus,
   ]);
 
@@ -174,19 +165,6 @@ export default function FacilitiesPage() {
                 {floorLevels.map((level) => (
                   <option key={level} value={level}>
                     {level}
-                  </option>
-                ))}
-              </select>
-
-              {/* Building Filter */}
-              <select
-                value={selectedBuilding}
-                onChange={(e) => setSelectedBuilding(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-              >
-                {buildings.map((building) => (
-                  <option key={building} value={building}>
-                    {building}
                   </option>
                 ))}
               </select>
