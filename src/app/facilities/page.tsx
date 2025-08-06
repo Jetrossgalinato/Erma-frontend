@@ -306,13 +306,6 @@ export default function FacilitiesPage() {
           </div>
         </div>
       </div>
-      {/* connection_type: string;
-  facility_type: string;
-  floor_level: string;
-  cooling_tools: string;
-  building: string;
-  remarks: string;
-  status: FacilityStatus; */}
       {showModal && selectedFacility && (
         <div
           className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
