@@ -46,6 +46,9 @@ export default function FacilitiesPage() {
   const [selectedFloorLevel, setSelectedFloorLevel] =
     useState("All Floor Levels");
   const [selectedBuilding, setSelectedBuilding] = useState("HIRAYA");
+  const [selectedStatus, setSelectedStatus] = useState<
+    FacilityStatus | "All Statuses"
+  >("All Statuses");
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -71,21 +74,28 @@ export default function FacilitiesPage() {
       const matchesSearch = facility.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
+
       const matchesFacilityType =
         selectedFacilityType === "All Facility Types" ||
         facility.facility_type === selectedFacilityType;
+
       const matchesFloorLevel =
         selectedFloorLevel === "All Floor Levels" ||
         facility.floor_level === selectedFloorLevel;
+
       const matchesBuilding =
         selectedBuilding === "All Buildings" ||
         facility.building === selectedBuilding;
+
+      const matchesStatus =
+        selectedStatus === "All Statuses" || facility.status === selectedStatus;
 
       return (
         matchesSearch &&
         matchesFacilityType &&
         matchesFloorLevel &&
-        matchesBuilding
+        matchesBuilding &&
+        matchesStatus
       );
     });
   }, [
@@ -94,6 +104,7 @@ export default function FacilitiesPage() {
     selectedFacilityType,
     selectedFloorLevel,
     selectedBuilding,
+    selectedStatus,
   ]);
 
   const getStatusColor = (status: FacilityStatus): string => {
@@ -178,6 +189,23 @@ export default function FacilitiesPage() {
                     {building}
                   </option>
                 ))}
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={selectedStatus}
+                onChange={(e) =>
+                  setSelectedStatus(
+                    e.target.value as FacilityStatus | "All Statuses"
+                  )
+                }
+                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              >
+                <option value="All Statuses">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Occupied">Occupied</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Reserved">Reserved</option>
               </select>
             </div>
           </div>
