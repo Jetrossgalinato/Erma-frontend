@@ -38,6 +38,9 @@ export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFacilityType, setSelectedFacilityType] =
     useState("All Facility Types");
@@ -97,6 +100,17 @@ export default function FacilitiesPage() {
     selectedFloorLevel,
     selectedStatus,
   ]);
+
+  // Pagination logic
+  const paginatedFacilities = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredFacilities.slice(start, end);
+  }, [filteredFacilities, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFacilityType, selectedFloorLevel, selectedStatus]);
 
   const getStatusColor = (status: FacilityStatus): string => {
     switch (status) {
@@ -219,7 +233,7 @@ export default function FacilitiesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {filteredFacilities.map((facility) => (
+              {paginatedFacilities.map((facility) => (
                 <div
                   key={facility.id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
@@ -263,6 +277,23 @@ export default function FacilitiesPage() {
               ))}
             </div>
           )}
+          <div className="flex justify-center mt-2 mb-12 space-x-2">
+            {Array.from({
+              length: Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE),
+            }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       <Footer />
