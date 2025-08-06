@@ -186,10 +186,11 @@ export default function FacilitiesPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Facilities Management
+              Facilities
             </h1>
             <p className="text-gray-600">
-              Track and manage your facility inventory and bookings
+              View all facility records, filter by type, floor level, or
+              building, and search for specific facilities.
             </p>
           </div>
 
