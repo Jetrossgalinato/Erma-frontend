@@ -33,6 +33,29 @@ interface Equipment {
   updated_at?: string;
 }
 
+const facility = [
+  "All Facilities",
+  "CL1",
+  "CL2",
+  "CL3",
+  "CL4",
+  "CL5",
+  "CL6",
+  "CL10",
+  "CL11",
+  "MULTIMEDIA LAB",
+  "MSIT LAB",
+  "NET LAB",
+  "DEANS OFFICE",
+  "FACULTY OFFICE",
+  "REPAIR ROOM",
+  "AIR LAB",
+  "CHCI",
+  "VLRC",
+  "ICTC",
+  "NAVIGATU",
+];
+
 export default function EquipmentPage() {
   const supabase = createClientComponentClient<Database>();
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
@@ -72,17 +95,6 @@ export default function EquipmentPage() {
       )
     );
     return ["All Categories", ...unique];
-  }, [equipmentData]);
-
-  const facilities = useMemo(() => {
-    const unique = Array.from(
-      new Set(
-        equipmentData
-          .map((e) => e.facility)
-          .filter((fac): fac is string => fac !== null)
-      )
-    );
-    return ["All Facilities", ...unique];
   }, [equipmentData]);
 
   // Filtering logic
@@ -187,7 +199,7 @@ export default function EquipmentPage() {
                   onChange={(e) => setSelectedFacility(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 >
-                  {facilities.map((facility) => (
+                  {facility.map((facility) => (
                     <option key={facility} value={facility}>
                       {facility}
                     </option>
