@@ -23,17 +23,17 @@ interface Facility {
 
 const facilityTypes = [
   "All Facility Types",
-  "Laboratory",
-  "Meeting Room",
-  "Classroom",
-  "Common Area",
+  "Room",
   "Office",
-  "Study Area",
+  "Computer Lab",
+  "Incubation Hub",
+  "Robotic Hub",
+  "Hall",
 ];
 
 const floorLevels = ["All Floor Levels", "1st Floor", "2nd Floor", "3rd Floor"];
 
-const buildings = ["All Buildings", "HIRAYA"];
+const buildings = ["HIRAYA"];
 
 export default function FacilitiesPage() {
   const supabase = createClientComponentClient<Database>();
@@ -45,7 +45,7 @@ export default function FacilitiesPage() {
     useState("All Facility Types");
   const [selectedFloorLevel, setSelectedFloorLevel] =
     useState("All Floor Levels");
-  const [selectedBuilding, setSelectedBuilding] = useState("All Buildings");
+  const [selectedBuilding, setSelectedBuilding] = useState("HIRAYA");
 
   // Fetch data from Supabase
   useEffect(() => {
