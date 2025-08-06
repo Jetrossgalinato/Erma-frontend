@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -48,22 +48,22 @@ export default function FacilitiesPage() {
   >("All Statuses");
 
   // Fetch data from Supabase
-  useEffect(() => {
-    const fetchFacilities = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from("facilities").select("*");
+  const fetchFacilities = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("facilities").select("*");
 
-      if (error) {
-        console.error("Error fetching facilities:", error);
-      } else {
-        setFacilities(data as Facility[]);
-      }
+    if (error) {
+      console.error("Error fetching facilities:", error);
+    } else {
+      setFacilities(data as Facility[]);
+    }
 
-      setLoading(false);
-    };
-
-    fetchFacilities();
+    setLoading(false);
   }, [supabase]);
+
+  useEffect(() => {
+    fetchFacilities();
+  }, [fetchFacilities]);
 
   // Filter logic
   const filteredFacilities = useMemo(() => {
@@ -118,14 +118,28 @@ export default function FacilitiesPage() {
       <Navbar />
       <div className="flex-1 p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Facilities
-            </h1>
-            <p className="text-gray-600">
-              View all facility records, filter by type, floor level, or
-              building, and search for specific facilities.
-            </p>
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Facilities
+              </h1>
+              <p className="text-gray-600">
+                View all facility records, filter by type, floor level, or
+                building, and search for specific facilities.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={fetchFacilities}
+                disabled={loading}
+                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            </div>
           </div>
 
           {/* Search and Filters */}
