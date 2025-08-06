@@ -40,6 +40,10 @@ export default function FacilitiesPage() {
 
   const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
+    null
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFacilityType, setSelectedFacilityType] =
@@ -265,7 +269,13 @@ export default function FacilitiesPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors">
+                      <button
+                        className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                        onClick={() => {
+                          setSelectedFacility(facility);
+                          setShowModal(true);
+                        }}
+                      >
                         View
                       </button>
                       <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
@@ -296,6 +306,61 @@ export default function FacilitiesPage() {
           </div>
         </div>
       </div>
+      {/* connection_type: string;
+  facility_type: string;
+  floor_level: string;
+  cooling_tools: string;
+  building: string;
+  remarks: string;
+  status: FacilityStatus; */}
+      {showModal && selectedFacility && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
+          onClick={() => setShowModal(false)} // Clicking outside closes modal
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+              {selectedFacility.name}
+            </h2>
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Connection Type:</strong>{" "}
+                {selectedFacility.connection_type || "N/A"}
+              </p>
+              <p>
+                <strong>Facility Type:</strong>{" "}
+                {selectedFacility.facility_type || "N/A"}
+              </p>
+              <p>
+                <strong>Floor Level:</strong>{" "}
+                {selectedFacility.floor_level || "N/A"}
+              </p>
+              <p>
+                <strong>Cooling Tools:</strong>{" "}
+                {selectedFacility.cooling_tools || "N/A"}
+              </p>
+              <p>
+                <strong>Building:</strong> {selectedFacility.building || "N/A"}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedFacility.status || "N/A"}
+              </p>
+              <p>
+                <strong>Remarks:</strong> {selectedFacility.remarks || "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );
