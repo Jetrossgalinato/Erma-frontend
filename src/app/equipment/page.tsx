@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
-import { Search } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -11,15 +11,25 @@ type EquipmentStatus = "Available" | "In Use" | "Maintenance";
 
 interface Equipment {
   id: number;
+  created_at: string;
   name: string;
-  category: string;
-  facility: string;
+  po_number: string | null;
+  unit_number: string | null;
+  brand_name: string | null;
+  description: string | null;
+  facility: string | null;
+  category: string | null;
   status: EquipmentStatus;
-  serial_number?: string;
-  purchase_date?: string;
-  last_maintenance?: string;
-  assigned_to?: number;
-  created_at?: string;
+  date_acquire: string | null;
+  supplier: string | null;
+  amount: string | null;
+  estimated_life: string | null;
+  item_number: string | null;
+  property_num: string | null;
+  control_numb: string | null;
+  serial_number: string | null;
+  person_liable: string | null;
+  remarks: string | null;
   updated_at?: string;
 }
 
@@ -33,28 +43,45 @@ export default function EquipmentPage() {
   );
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
+  const [loading, setLoading] = useState(false);
+  const ITEMS_PER_PAGE = 9;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchEquipment = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("equipments").select("*");
+    if (error) {
+      console.error("Failed to fetch equipment:", error);
+    } else {
+      setEquipmentData(data as Equipment[]);
+    }
+    setLoading(false);
+  }, [supabase]);
 
   useEffect(() => {
-    const fetchEquipment = async () => {
-      const { data, error } = await supabase.from("equipments").select("*");
-      if (error) {
-        console.error("Failed to fetch equipment:", error);
-      } else {
-        setEquipmentData(data as Equipment[]);
-      }
-    };
-
     fetchEquipment();
-  }, [supabase]);
+  }, [fetchEquipment]);
 
   // Generate unique categories and facilities dynamically
   const categories = useMemo(() => {
-    const unique = Array.from(new Set(equipmentData.map((e) => e.category)));
+    const unique = Array.from(
+      new Set(
+        equipmentData
+          .map((e) => e.category)
+          .filter((cat): cat is string => cat !== null)
+      )
+    );
     return ["All Categories", ...unique];
   }, [equipmentData]);
 
   const facilities = useMemo(() => {
-    const unique = Array.from(new Set(equipmentData.map((e) => e.facility)));
+    const unique = Array.from(
+      new Set(
+        equipmentData
+          .map((e) => e.facility)
+          .filter((fac): fac is string => fac !== null)
+      )
+    );
     return ["All Facilities", ...unique];
   }, [equipmentData]);
 
@@ -75,6 +102,16 @@ export default function EquipmentPage() {
     });
   }, [equipmentData, searchTerm, selectedCategory, selectedFacility]);
 
+  const paginatedEquipment = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredEquipment.slice(start, end);
+  }, [filteredEquipment, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedFacility]);
+
   const getStatusColor = (status: EquipmentStatus): string => {
     switch (status) {
       case "Available":
@@ -91,15 +128,30 @@ export default function EquipmentPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="flex-1 p-6">
+      <div className=" p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Equipment Management
-            </h1>
-            <p className="text-gray-600">
-              Track and manage your equipment inventory
-            </p>
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Equipments
+              </h1>
+              <p className="text-gray-600">
+                View all equipment records, filter by category or facility, and
+                search for specific items.
+              </p>
+            </div>
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={fetchEquipment}
+                disabled={loading}
+                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
@@ -117,7 +169,7 @@ export default function EquipmentPage() {
 
               <div className="md:col-span-3">
                 <select
-                  value={selectedCategory}
+                  value={selectedCategory ?? ""}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 >
@@ -131,7 +183,7 @@ export default function EquipmentPage() {
 
               <div className="md:col-span-3">
                 <select
-                  value={selectedFacility}
+                  value={selectedFacility ?? ""}
                   onChange={(e) => setSelectedFacility(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 >
@@ -146,7 +198,7 @@ export default function EquipmentPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {filteredEquipment.map((equipment) => (
+            {paginatedEquipment.map((equipment) => (
               <div
                 key={equipment.id}
                 className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
@@ -196,6 +248,24 @@ export default function EquipmentPage() {
             ))}
           </div>
 
+          <div className="flex justify-center mt-2 mb-12 space-x-2">
+            {Array.from({
+              length: Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
+            }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
           {filteredEquipment.length === 0 && (
             <div className="text-center py-12">
               <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
@@ -229,37 +299,49 @@ export default function EquipmentPage() {
             </h2>
             <div className="space-y-2 text-sm text-gray-700">
               <p>
-                <strong>Category:</strong> {selectedEquipment.category}
+                <strong>PO Number:</strong>{" "}
+                {selectedEquipment.po_number || "N/A"}
               </p>
               <p>
-                <strong>Facility:</strong> {selectedEquipment.facility}
+                <strong>Unit Number:</strong>{" "}
+                {selectedEquipment.unit_number || "N/A"}
               </p>
               <p>
-                <strong>Status:</strong> {selectedEquipment.status}
+                <strong>Brand Name:</strong>{" "}
+                {selectedEquipment.brand_name || "N/A"}
               </p>
               <p>
-                <strong>Serial Number:</strong>{" "}
-                {selectedEquipment.serial_number || "N/A"}
+                <strong>Description:</strong>{" "}
+                {selectedEquipment.description || "N/A"}
               </p>
               <p>
-                <strong>Purchase Date:</strong>{" "}
-                {selectedEquipment.purchase_date || "N/A"}
+                <strong>Supplier:</strong> {selectedEquipment.supplier || "N/A"}
               </p>
               <p>
-                <strong>Last Maintenance:</strong>{" "}
-                {selectedEquipment.last_maintenance || "N/A"}
+                <strong>Amount:</strong> {selectedEquipment.amount || "N/A"}
               </p>
               <p>
-                <strong>Assigned To (User ID):</strong>{" "}
-                {selectedEquipment.assigned_to || "Unassigned"}
+                <strong>Estimated Life:</strong>{" "}
+                {selectedEquipment.estimated_life || "N/A"}
               </p>
               <p>
-                <strong>Created At:</strong>{" "}
-                {selectedEquipment.created_at || "N/A"}
+                <strong>Item Number:</strong>{" "}
+                {selectedEquipment.item_number || "N/A"}
               </p>
               <p>
-                <strong>Updated At:</strong>{" "}
-                {selectedEquipment.updated_at || "N/A"}
+                <strong>Property Number:</strong>{" "}
+                {selectedEquipment.property_num || "N/A"}
+              </p>
+              <p>
+                <strong>Control Number:</strong>{" "}
+                {selectedEquipment.control_numb || "N/A"}
+              </p>
+              <p>
+                <strong>Person Liable:</strong>{" "}
+                {selectedEquipment.person_liable || "N/A"}
+              </p>
+              <p>
+                <strong>Remarks:</strong> {selectedEquipment.remarks || "N/A"}
               </p>
             </div>
           </div>
