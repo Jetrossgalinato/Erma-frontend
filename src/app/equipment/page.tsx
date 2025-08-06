@@ -128,28 +128,30 @@ export default function EquipmentPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="flex-1 p-6">
+      <div className=" p-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Equipments
-            </h1>
-            <p className="text-gray-600">
-              View all equipment records, filter by category or facility, and
-              search for specific items.
-            </p>
-          </div>
-          <div className="flex gap-3 mb-6">
-            <button
-              onClick={fetchEquipment}
-              disabled={loading}
-              className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </button>
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Equipments
+              </h1>
+              <p className="text-gray-600">
+                View all equipment records, filter by category or facility, and
+                search for specific items.
+              </p>
+            </div>
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={fetchEquipment}
+                disabled={loading}
+                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
