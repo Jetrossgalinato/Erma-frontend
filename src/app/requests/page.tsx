@@ -63,6 +63,8 @@ export default function AccountRequestsPage() {
   const [selectedRole, setSelectedRole] = useState("All Roles");
   const [requests, setRequests] = useState<AccountRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const ITEMS_PER_PAGE = 9;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Generate date options dynamically
   const getDateOptions = () => {
@@ -201,6 +203,22 @@ export default function AccountRequestsPage() {
     selectedRole,
     selectedRequestedAt,
     requests,
+  ]);
+
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredRequests.slice(start, end);
+  }, [filteredRequests, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    selectedStatus,
+    selectedDepartment,
+    selectedRole,
+    selectedRequestedAt,
   ]);
 
   const handleApprove = async (
@@ -537,7 +555,7 @@ export default function AccountRequestsPage() {
           {/* Account Requests Grid - Updated to show role mapping */}
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
-              {filteredRequests.map((request) => (
+              {paginatedRequests.map((request) => (
                 <div
                   key={request.id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
@@ -655,6 +673,24 @@ export default function AccountRequestsPage() {
               ))}
             </div>
           )}
+
+          <div className="flex justify-center mt-2 mb-12 space-x-2">
+            {Array.from({
+              length: Math.ceil(filteredRequests.length / ITEMS_PER_PAGE),
+            }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
 
           {/* No Results */}
           {!loading &&
