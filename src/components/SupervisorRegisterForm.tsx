@@ -1,0 +1,119 @@
+"use client";
+
+import { useState } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+
+export default function SupervisorRegisterForm() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [position, setPosition] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const {
+      data: { user },
+      error: signUpError,
+    } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
+    if (!user) {
+      setError("Signup successful but user data not returned.");
+      return;
+    }
+
+    const { error: insertError } = await supabase.from("supervisor").insert([
+      {
+        user_id: user.id,
+        full_name: fullName,
+        email: email,
+        position: position,
+        is_approved: false, // optional: depending on your logic
+      },
+    ]);
+
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
+    alert("Registration submitted successfully. Awaiting approval.");
+    router.push("/login");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Full Name
+        </label>
+        <input
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Password
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Position
+        </label>
+        <input
+          type="text"
+          value={position}
+          onChange={(e) => setPosition(e.target.value)}
+          required
+          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        />
+      </div>
+
+      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+      <button
+        type="submit"
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
+      >
+        Register as Supervisor
+      </button>
+    </form>
+  );
+}
