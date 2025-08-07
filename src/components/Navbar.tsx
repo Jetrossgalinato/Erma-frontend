@@ -72,7 +72,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
-      <div className="flex items-center pl-70">
+      <div className="flex items-center pl-40">
         <Image
           src="/images/logocircle.png"
           alt="Logo"
@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Desktop Links */}
-      <div className="hidden md:flex pr-70 gap-6 text-gray-600 items-center">
+      <div className="hidden md:flex pr-40 gap-6 text-gray-600 items-center">
         <a
           href="/home"
           className={`hover:text-black transition-colors duration-300 ${
