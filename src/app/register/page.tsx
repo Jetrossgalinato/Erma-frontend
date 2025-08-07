@@ -1,148 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../../lib/supabaseClient";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import EmployeeRegisterForm from "../../components/EmployeeRegisterForm";
+import InternRegisterForm from "../../components/InternRegisterForm";
+import SupervisorRegisterForm from "../../components/SupervisorRegisterForm";
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    firstName: "",
-    lastName: "",
-    department: "",
-    phoneNumber: "",
-    password: "",
-    confirmpassword: "",
-    acc_role: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const {
-      email,
-      password,
-      confirmpassword,
-      firstName,
-      lastName,
-      department,
-      phoneNumber,
-      acc_role,
-    } = formData;
-
-    if (password !== confirmpassword) {
-      alert("Passwords do not match!");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // 🧾 Register user in Supabase Auth (store original role)
-      const { data: signUpData, error: authError } = await supabase.auth.signUp(
-        {
-          email,
-          password,
-          options: {
-            data: {
-              full_name: `${firstName} ${lastName}`,
-              acc_role: acc_role, // 👈 Store the original role selection
-            },
-          },
-        }
-      );
-
-      if (authError) {
-        throw new Error(`Authentication error: ${authError.message}`);
-      }
-
-      const userId = signUpData.user?.id;
-
-      if (!userId) {
-        throw new Error("User ID not returned from authentication");
-      }
-
-      // Add a small delay to ensure user is properly created in auth.users
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // 📝 Insert into account_requests table
-      const { error: insertError } = await supabase
-        .from("account_requests")
-        .insert([
-          {
-            user_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            department,
-            phone_number: phoneNumber,
-            acc_role: acc_role, // 👈 Store the original role (e.g., "CCIS Dean")
-            status: "Pending", // Set initial status
-            // approved_acc_role will be set later during the approval process
-          },
-        ]);
-
-      if (insertError) {
-        console.error("Insert error details:", insertError);
-
-        // If the foreign key constraint fails, we should clean up the auth user
-        try {
-          await supabase.auth.admin.deleteUser(userId);
-        } catch (cleanupError) {
-          console.error(
-            "Failed to cleanup user after insert error:",
-            cleanupError
-          );
-        }
-
-        throw new Error(
-          `Failed to save registration data: ${insertError.message}`
-        );
-      }
-
-      // ✅ Success
-      alert(
-        "Registration submitted successfully! Please wait for approval from the Super Admin before logging in."
-      );
-
-      // Reset form
-      setFormData({
-        email: "",
-        firstName: "",
-        lastName: "",
-        department: "",
-        phoneNumber: "",
-        password: "",
-        confirmpassword: "",
-        acc_role: "",
-      });
-
-      // Redirect to login
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Registration failed:", error);
-
-      let errorMessage = "Registration failed. Please try again.";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      alert(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [registerAs, setRegisterAs] = useState<
+    "employee" | "intern" | "supervisor"
+  >("employee");
 
   return (
     <div
@@ -151,197 +19,42 @@ export default function RegisterPage() {
     >
       <Navbar />
 
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-700">Welcome! 👋</h2>
-            Register to <span className="text-orange-600">CRIMS</span>
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                onChange={handleChange}
-                value={formData.email}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* First Name */}
-            <div>
-              <label
-                htmlFor="firstName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                First Name
-              </label>
-              <input
-                type="text"
-                id="firstName"
-                required
-                onChange={handleChange}
-                value={formData.firstName}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <label
-                htmlFor="lastName"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Last Name
-              </label>
-              <input
-                type="text"
-                id="lastName"
-                required
-                onChange={handleChange}
-                value={formData.lastName}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Department */}
-            <div>
-              <label
-                htmlFor="department"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Department
-              </label>
-              <select
-                id="department"
-                required
-                onChange={handleChange}
-                value={formData.department}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                <option value="" disabled>
-                  Select department
-                </option>
-                <option value="BSIT">BSIT</option>
-                <option value="BSCS">BSCS</option>
-                <option value="BSIS">BSIS</option>
-              </select>
-            </div>
-
-            {/* Phone Number */}
-            <div>
-              <label
-                htmlFor="phoneNumber"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <input
-                type="text"
-                id="phoneNumber"
-                required
-                onChange={handleChange}
-                value={formData.phoneNumber}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                required
-                onChange={handleChange}
-                value={formData.password}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label
-                htmlFor="confirmpassword"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmpassword"
-                required
-                onChange={handleChange}
-                value={formData.confirmpassword}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              />
-            </div>
-
-            {/* Role */}
-            <div>
-              <label
-                htmlFor="acc_role"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Role
-              </label>
-              <select
-                id="acc_role"
-                required
-                onChange={handleChange}
-                value={formData.acc_role}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                <option value="" disabled>
-                  Select a role
-                </option>
-                <option value="CCIS Dean">CCIS Dean</option>
-                <option value="Lab Technician">Lab Technician</option>
-                <option value="Comlab Adviser">Comlab Adviser</option>
-                <option value="Department Chairperson">
-                  Department Chairperson
-                </option>
-                <option value="Associate Dean">Associate Dean</option>
-                <option value="College Clerk">College Clerk</option>
-                <option value="Student Assistant">Student Assistant</option>
-                <option value="Lecturer">Lecturer</option>
-                <option value="Instructor">Instructor</option>
-              </select>
-            </div>
-
-            {/* Submit Button */}
+      <div className="flex flex-col items-center justify-center flex-1 px-4 py-12">
+        <div className="mb-4 text-center">
+          <h1 className="text-2xl font-bold text-gray-800">Register as:</h1>
+          <div className="mt-2 flex gap-4 justify-center">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setRegisterAs("employee")}
+              className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                registerAs === "employee" ? "bg-orange-600" : "bg-gray-400"
+              }`}
             >
-              {loading ? "Registering..." : "Register"}
+              Employee
             </button>
-          </form>
-
-          <p className="mt-4 text-sm text-gray-600 text-center">
-            Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-orange-600 font-semibold hover:underline"
+            <button
+              onClick={() => setRegisterAs("intern")}
+              className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                registerAs === "intern" ? "bg-orange-600" : "bg-gray-400"
+              }`}
             >
-              Sign In
-            </a>
-          </p>
+              Intern
+            </button>
+            <button
+              onClick={() => setRegisterAs("supervisor")}
+              className={`px-4 py-2 rounded-lg text-white font-semibold ${
+                registerAs === "supervisor" ? "bg-orange-600" : "bg-gray-400"
+              }`}
+            >
+              Supervisor
+            </button>
+          </div>
+        </div>
+
+        {/* Render the selected register form */}
+        <div className="w-full max-w-md">
+          {registerAs === "employee" && <EmployeeRegisterForm />}
+          {registerAs === "intern" && <InternRegisterForm />}
+          {registerAs === "supervisor" && <SupervisorRegisterForm />}
         </div>
       </div>
 
