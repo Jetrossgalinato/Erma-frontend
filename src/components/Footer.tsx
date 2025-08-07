@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="bg-slate-800 text-white py-12">
+    <footer className="bg-slate-800 text-white py-6">
       <div className="max-w-7xl mx-auto px-8 text-center">
         <h3 className="text-xl font-semibold mb-3">
           College of Computing and Information Sciences (CCIS)
