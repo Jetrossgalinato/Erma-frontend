@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -7,9 +8,10 @@ import Footer from "../../components/Footer";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient(); // Use the same client as navbar
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("intern"); // Default role
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,6 +35,8 @@ export default function LoginPage() {
       return;
     }
 
+    // Optional: use `role` in a condition if needed
+
     // Fetch the corresponding account record
     const { data: account, error: accountError } = await supabase
       .from("account_requests")
@@ -42,13 +46,13 @@ export default function LoginPage() {
 
     if (accountError || !account) {
       setError("Account not found or not approved.");
-      await supabase.auth.signOut(); // logout
+      await supabase.auth.signOut();
       return;
     }
 
     if (!account.is_approved) {
       setError("Your account is pending approval.");
-      await supabase.auth.signOut(); // logout
+      await supabase.auth.signOut();
       return;
     }
 
@@ -108,6 +112,26 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* 🔽 Dropdown for Organization */}
+            <div>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Organization
+              </label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="employee">Employee</option>
+                <option value="intern">Intern</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
+
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>
             )}
@@ -132,7 +156,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
