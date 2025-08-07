@@ -15,7 +15,6 @@ export default function SupervisorRegisterForm() {
   const [department, setDepartment] = useState("");
   const [error, setError] = useState("");
 
-  // ✅ Make this function async
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -27,7 +26,7 @@ export default function SupervisorRegisterForm() {
       password,
       options: {
         data: {
-          full_name: fullName, // Optional: saves to auth.users.user_metadata
+          full_name: fullName,
         },
       },
     });
@@ -42,16 +41,40 @@ export default function SupervisorRegisterForm() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("supervisor").insert([
-      {
-        account_id: user.id,
-        position,
-        department,
-      },
-    ]);
+    // 👇 Split fullName into first and last names
+    const [firstName = "", lastName = ""] = fullName.trim().split(" ");
 
-    if (insertError) {
-      setError(insertError.message);
+    const { error: supervisorError } = await supabase
+      .from("supervisor")
+      .insert([
+        {
+          account_id: user.id,
+          position,
+          department,
+        },
+      ]);
+
+    if (supervisorError) {
+      setError(supervisorError.message);
+      return;
+    }
+
+    // ✅ Insert into account_requests with full info
+    const { error: requestError } = await supabase
+      .from("account_requests")
+      .insert([
+        {
+          user_id: user.id,
+          is_supervisor: true,
+          is_intern: false,
+          first_name: firstName,
+          last_name: lastName,
+          department: department,
+        },
+      ]);
+
+    if (requestError) {
+      setError(requestError.message);
       return;
     }
 
