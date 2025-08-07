@@ -129,7 +129,7 @@ const Navbar: React.FC = () => {
           )}
         </div>
 
-        {session ? (
+        {session && (
           <a
             href="/requests"
             className={`hover:text-black transition-colors duration-300 ${
@@ -138,13 +138,6 @@ const Navbar: React.FC = () => {
           >
             Account Requests
           </a>
-        ) : (
-          <span
-            className="text-gray-400 cursor-not-allowed"
-            title="Sign in to access"
-          >
-            Account Requests
-          </span>
         )}
 
         {session ? (
@@ -248,7 +241,7 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {session ? (
+          {session && (
             <a
               href="/requests"
               className={`py-2 text-gray-700 ${
@@ -257,13 +250,6 @@ const Navbar: React.FC = () => {
             >
               Account Requests
             </a>
-          ) : (
-            <span
-              className="py-2 text-gray-400 cursor-not-allowed"
-              title="Sign in to access"
-            >
-              Account Requests
-            </span>
           )}
 
           {session ? (
