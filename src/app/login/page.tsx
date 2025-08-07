@@ -35,27 +35,42 @@ export default function LoginPage() {
       return;
     }
 
-    // Optional: use `role` in a condition if needed
+    let tableName = "";
+    switch (role) {
+      case "employee":
+        tableName = "account_requests";
+        break;
+      case "intern":
+        tableName = "interns";
+        break;
+      case "supervisor":
+        tableName = "supervisors";
+        break;
+      default:
+        setError("Invalid organization selected.");
+        return;
+    }
 
-    // Fetch the corresponding account record
-    const { data: account, error: accountError } = await supabase
-      .from("account_requests")
+    // Try to fetch user data from the selected table
+    const { data: roleData, error: roleError } = await supabase
+      .from(tableName)
       .select("is_approved")
       .eq("user_id", user.id)
       .single();
 
-    if (accountError || !account) {
-      setError("Account not found or not approved.");
+    if (roleError || !roleData) {
+      setError(`No ${role} record found for this user.`);
       await supabase.auth.signOut();
       return;
     }
 
-    if (!account.is_approved) {
+    if (!roleData.is_approved) {
       setError("Your account is pending approval.");
       await supabase.auth.signOut();
       return;
     }
 
+    // Success
     setError("");
     alert("You have logged in successfully!");
     router.push("/home");
