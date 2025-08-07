@@ -12,8 +12,10 @@ export default function SupervisorRegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [position, setPosition] = useState("");
+  const [department, setDepartment] = useState("");
   const [error, setError] = useState("");
 
+  // ✅ Make this function async
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -23,6 +25,11 @@ export default function SupervisorRegisterForm() {
     } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName, // Optional: saves to auth.users.user_metadata
+        },
+      },
     });
 
     if (signUpError) {
@@ -37,11 +44,9 @@ export default function SupervisorRegisterForm() {
 
     const { error: insertError } = await supabase.from("supervisor").insert([
       {
-        user_id: user.id,
-        full_name: fullName,
-        email: email,
-        position: position,
-        is_approved: false,
+        account_id: user.id,
+        position,
+        department,
       },
     ]);
 
@@ -107,6 +112,19 @@ export default function SupervisorRegisterForm() {
             type="text"
             value={position}
             onChange={(e) => setPosition(e.target.value)}
+            required
+            className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Department
+          </label>
+          <input
+            type="text"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
             required
             className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
