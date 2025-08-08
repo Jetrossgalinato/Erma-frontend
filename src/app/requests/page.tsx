@@ -32,6 +32,8 @@ interface AccountRequest {
   phoneNumber?: string;
   acc_role?: string;
   approved_acc_role?: string;
+  is_supervisor?: boolean;
+  is_intern?: boolean;
 }
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
@@ -114,10 +116,12 @@ export default function AccountRequestsPage() {
     try {
       const { data, error } = await supabase
         .from("account_requests")
-        .select("*")
+        .select(`*,  is_supervisor, is_intern `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error; // or handle it however you prefer
+      }
 
       const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
         id: acc.id || idx,
@@ -131,6 +135,8 @@ export default function AccountRequestsPage() {
         phoneNumber: acc.phone_number || undefined,
         acc_role: acc.acc_role || "",
         approved_acc_role: acc.approved_acc_role || undefined,
+        is_supervisor: acc.is_supervisor ?? false,
+        is_intern: acc.is_intern ?? false,
       }));
 
       setRequests(mappedRequests);
@@ -597,15 +603,16 @@ export default function AccountRequestsPage() {
                         <div className="text-sm text-gray-600">
                           <span className="font-medium">Requested Role:</span>{" "}
                           {request.acc_role}
-                          {request.status === "Pending" && (
-                            <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
-                              <ArrowRight className="w-3 h-3" />
-                              <span>
-                                Will map to:{" "}
-                                {mapRoleToSystemRole(request.acc_role)}
-                              </span>
-                            </div>
-                          )}
+                          {request.status === "Pending" &&
+                            !(request.is_supervisor || request.is_intern) && (
+                              <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
+                                <ArrowRight className="w-3 h-3" />
+                                <span>
+                                  Will map to:{" "}
+                                  {mapRoleToSystemRole(request.acc_role)}
+                                </span>
+                              </div>
+                            )}
                           {request.approved_acc_role &&
                             request.status === "Approved" && (
                               <div className="flex items-center gap-2 mt-1 text-xs text-green-600">
