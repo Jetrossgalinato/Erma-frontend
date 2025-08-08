@@ -26,6 +26,7 @@ export default function InternRegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [studentId, setStudentId] = useState("");
+  const [department, setDepartment] = useState("");
   const [internType, setInternType] = useState("");
   const [rfid, setRfid] = useState("");
   const [dutyHours, setDutyHours] = useState("");
@@ -37,7 +38,7 @@ export default function InternRegisterForm() {
     const fetchSupervisors = async () => {
       const { data, error } = await supabase.from("supervisor").select(`
         id,
-        account_requests (
+        account_requests:supervisor_account_req_id_fkey (
           first_name,
           last_name,
           is_approved
@@ -69,12 +70,14 @@ export default function InternRegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const {
-      data: { user },
-      error: signUpError,
-    } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
     });
 
     if (signUpError) {
@@ -82,24 +85,35 @@ export default function InternRegisterForm() {
       return;
     }
 
-    if (!user) {
-      setError("Signup successful but user data not returned.");
+    // ✅ Wait for user to be available
+    const { data: freshUser, error: getUserError } =
+      await supabase.auth.getUser();
+
+    if (getUserError || !freshUser?.user) {
+      setError("User not fully provisioned yet. Please try again.");
       return;
     }
 
-    const { error: insertError } = await supabase.from("intern").insert([
-      {
-        user_id: user.id,
-        full_name: fullName,
-        email: email,
-        student_id: studentId,
-        intern_type: internType,
-        rfid: rfid,
-        total_hours_required: dutyHours,
-        supervisor_id: supervisorId,
-        is_approved: false,
-      },
-    ]);
+    const [firstName = "", lastName = ""] = fullName.trim().split(" ", 2);
+
+    const { error: insertError } = await supabase
+      .from("account_requests")
+      .insert([
+        {
+          user_id: freshUser.user.id, // Use fresh user id
+          first_name: firstName,
+          last_name: lastName,
+          student_id: studentId,
+          intern_type: internType,
+          rfid: rfid,
+          total_hours_required: dutyHours,
+          supervisor_id: supervisorId,
+          is_approved: false,
+          is_supervisor: false,
+          is_intern: true,
+          department: department,
+        },
+      ]);
 
     if (insertError) {
       setError(insertError.message);
@@ -163,6 +177,19 @@ export default function InternRegisterForm() {
             type="text"
             value={studentId}
             onChange={(e) => setStudentId(e.target.value)}
+            required
+            className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Department
+          </label>
+          <input
+            type="text"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
             required
             className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
