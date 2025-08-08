@@ -233,9 +233,7 @@ export default function AccountRequestsPage() {
     userId: string
   ) => {
     try {
-      const approvedRole = mapRoleToSystemRole(originalRole);
-
-      // Step 1: Get account request to check is_supervisor
+      // Step 1: Get account request to check is_supervisor and is_intern
       const { data: accountRequest, error: accountRequestError } =
         await supabase
           .from("account_requests")
@@ -245,9 +243,15 @@ export default function AccountRequestsPage() {
 
       if (accountRequestError) throw accountRequestError;
 
-      const { is_supervisor } = accountRequest;
+      const { is_supervisor, is_intern } = accountRequest;
 
-      // Step 2: Check if this request is already in accounts table
+      // ✅ Conditionally map or copy role
+      const approvedRole =
+        !is_supervisor && !is_intern
+          ? mapRoleToSystemRole(originalRole)
+          : originalRole;
+
+      // Step 2: Check and insert into accounts if not existing
       const { data: existingAccount } = await supabase
         .from("accounts")
         .select("*")
@@ -261,7 +265,7 @@ export default function AccountRequestsPage() {
         if (insertError) throw insertError;
       }
 
-      // Step 3: If it's a supervisor, insert to supervisor table (if not already present)
+      // Step 3: Insert to supervisor table if applicable
       if (is_supervisor) {
         const { data: existingSupervisor } = await supabase
           .from("supervisor")
@@ -291,7 +295,7 @@ export default function AccountRequestsPage() {
 
       if (updateError) throw updateError;
 
-      // Step 5: Update Supabase Auth user metadata
+      // Step 5: Update Auth metadata
       try {
         const { error: authError } = await supabase.auth.admin.updateUserById(
           userId,
@@ -301,29 +305,30 @@ export default function AccountRequestsPage() {
             },
           }
         );
-
-        if (authError) {
-          console.warn("Could not update user metadata:", authError);
-        }
+        if (authError) console.warn("Auth metadata update failed:", authError);
       } catch (authError) {
-        console.warn("Auth update failed:", authError);
+        console.warn("Supabase auth update exception:", authError);
       }
 
       // Step 6: Update local UI
-      setRequests((prevRequests) =>
-        prevRequests.map((request) =>
-          request.id === requestId
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
             ? {
-                ...request,
-                status: "Approved" as RequestStatus,
+                ...r,
+                status: "Approved",
                 approved_acc_role: approvedRole,
               }
-            : request
+            : r
         )
       );
 
       alert(
-        `Account approved! Role mapped from "${originalRole}" to "${approvedRole}"`
+        `Account approved! Role ${
+          is_supervisor || is_intern
+            ? "copied as-is"
+            : `mapped from "${originalRole}" to "${approvedRole}"`
+        }`
       );
     } catch (error) {
       const errorMessage = handleError(error, "approve request");
