@@ -69,7 +69,7 @@ export default function SupervisorRegisterForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg">
+    <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Supervisor Registration
       </h2>

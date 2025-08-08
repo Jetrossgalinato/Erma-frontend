@@ -20,38 +20,34 @@ export default function RegisterPage() {
       <Navbar />
 
       <div className="flex flex-col items-center justify-center flex-1 px-4 py-12">
+        {/* New Heading */}
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Welcome back! 👋</h2>
+          <p className="text-lg text-gray-700">
+            Register to{" "}
+            <span className="text-orange-600 font-semibold">CRIMS</span> as:
+          </p>
+        </div>
+
+        {/* Dropdown for role selection */}
         <div className="mb-4 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Register as:</h1>
-          <div className="mt-2 flex gap-4 justify-center">
-            <button
-              onClick={() => setRegisterAs("employee")}
-              className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                registerAs === "employee" ? "bg-orange-600" : "bg-gray-400"
-              }`}
-            >
-              Employee
-            </button>
-            <button
-              onClick={() => setRegisterAs("intern")}
-              className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                registerAs === "intern" ? "bg-orange-600" : "bg-gray-400"
-              }`}
-            >
-              Intern
-            </button>
-            <button
-              onClick={() => setRegisterAs("supervisor")}
-              className={`px-4 py-2 rounded-lg text-white font-semibold ${
-                registerAs === "supervisor" ? "bg-orange-600" : "bg-gray-400"
-              }`}
-            >
-              Supervisor
-            </button>
-          </div>
+          <select
+            value={registerAs}
+            onChange={(e) =>
+              setRegisterAs(
+                e.target.value as "employee" | "intern" | "supervisor"
+              )
+            }
+            className="px-4 py-2 rounded-lg bg-white border border-gray-300 shadow-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="employee">Employee</option>
+            <option value="intern">Intern</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
         </div>
 
         {/* Render the selected register form */}
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md mt-6">
           {registerAs === "employee" && <EmployeeRegisterForm />}
           {registerAs === "intern" && <InternRegisterForm />}
           {registerAs === "supervisor" && <SupervisorRegisterForm />}
