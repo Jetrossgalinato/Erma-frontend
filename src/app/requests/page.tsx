@@ -252,17 +252,21 @@ export default function AccountRequestsPage() {
           : originalRole;
 
       // Step 2: Check and insert into accounts if not existing
-      const { data: existingAccount } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("acc_req_id", requestId)
-        .single();
+      if (!is_intern && !is_supervisor) {
+        const { data: existingAccount } = await supabase
+          .from("accounts")
+          .select("*")
+          .eq("acc_req_id", requestId)
+          .single();
 
-      if (!existingAccount) {
-        const { error: insertError } = await supabase.from("accounts").insert({
-          acc_req_id: requestId,
-        });
-        if (insertError) throw insertError;
+        if (!existingAccount) {
+          const { error: insertError } = await supabase
+            .from("accounts")
+            .insert({
+              acc_req_id: requestId,
+            });
+          if (insertError) throw insertError;
+        }
       }
 
       // Step 3: Insert to supervisor table if applicable
@@ -279,6 +283,22 @@ export default function AccountRequestsPage() {
             .insert([{ account_req_id: requestId }]);
 
           if (insertSupervisorError) throw insertSupervisorError;
+        }
+      }
+      // If is_intern, insert into interns table
+      if (is_intern) {
+        const { data: existingIntern } = await supabase
+          .from("intern")
+          .select("id")
+          .eq("account_req_id", requestId)
+          .maybeSingle();
+
+        if (!existingIntern) {
+          const { error: insertInternError } = await supabase
+            .from("intern")
+            .insert([{ account_req_id: requestId }]);
+
+          if (insertInternError) throw insertInternError;
         }
       }
 
