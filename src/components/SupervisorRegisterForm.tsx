@@ -44,22 +44,7 @@ export default function SupervisorRegisterForm() {
     // 👇 Split fullName into first and last names
     const [firstName = "", lastName = ""] = fullName.trim().split(" ");
 
-    const { error: supervisorError } = await supabase
-      .from("supervisor")
-      .insert([
-        {
-          account_id: user.id,
-          position,
-          department,
-        },
-      ]);
-
-    if (supervisorError) {
-      setError(supervisorError.message);
-      return;
-    }
-
-    // ✅ Insert into account_requests with full info
+    // ✅ Only insert into account_requests (wait for approval before inserting to supervisor table)
     const { error: requestError } = await supabase
       .from("account_requests")
       .insert([
@@ -70,6 +55,7 @@ export default function SupervisorRegisterForm() {
           first_name: firstName,
           last_name: lastName,
           department: department,
+          acc_role: position,
         },
       ]);
 
