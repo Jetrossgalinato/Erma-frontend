@@ -233,10 +233,21 @@ export default function AccountRequestsPage() {
     userId: string
   ) => {
     try {
-      // Map the role to system role
       const approvedRole = mapRoleToSystemRole(originalRole);
 
-      // First check if this request is already approved
+      // Step 1: Get account request to check is_supervisor
+      const { data: accountRequest, error: accountRequestError } =
+        await supabase
+          .from("account_requests")
+          .select("*")
+          .eq("id", requestId)
+          .single();
+
+      if (accountRequestError) throw accountRequestError;
+
+      const { is_supervisor } = accountRequest;
+
+      // Step 2: Check if this request is already in accounts table
       const { data: existingAccount } = await supabase
         .from("accounts")
         .select("*")
@@ -244,15 +255,30 @@ export default function AccountRequestsPage() {
         .single();
 
       if (!existingAccount) {
-        // Insert into accounts table, referencing the request
         const { error: insertError } = await supabase.from("accounts").insert({
           acc_req_id: requestId,
         });
-
         if (insertError) throw insertError;
       }
 
-      // Update status and approved role in the account_requests table
+      // Step 3: If it's a supervisor, insert to supervisor table (if not already present)
+      if (is_supervisor) {
+        const { data: existingSupervisor } = await supabase
+          .from("supervisor")
+          .select("id")
+          .eq("account_req_id", requestId)
+          .maybeSingle();
+
+        if (!existingSupervisor) {
+          const { error: insertSupervisorError } = await supabase
+            .from("supervisor")
+            .insert([{ account_req_id: requestId }]);
+
+          if (insertSupervisorError) throw insertSupervisorError;
+        }
+      }
+
+      // Step 4: Update request status
       const { error: updateError } = await supabase
         .from("account_requests")
         .update({
@@ -265,7 +291,7 @@ export default function AccountRequestsPage() {
 
       if (updateError) throw updateError;
 
-      // Update user metadata in Supabase Auth (optional but recommended)
+      // Step 5: Update Supabase Auth user metadata
       try {
         const { error: authError } = await supabase.auth.admin.updateUserById(
           userId,
@@ -280,13 +306,10 @@ export default function AccountRequestsPage() {
           console.warn("Could not update user metadata:", authError);
         }
       } catch (authError) {
-        console.warn(
-          "Auth update failed (this might be expected in client-side code):",
-          authError
-        );
+        console.warn("Auth update failed:", authError);
       }
 
-      // Update local state
+      // Step 6: Update local UI
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
