@@ -44,22 +44,7 @@ export default function SupervisorRegisterForm() {
     // 👇 Split fullName into first and last names
     const [firstName = "", lastName = ""] = fullName.trim().split(" ");
 
-    const { error: supervisorError } = await supabase
-      .from("supervisor")
-      .insert([
-        {
-          account_id: user.id,
-          position,
-          department,
-        },
-      ]);
-
-    if (supervisorError) {
-      setError(supervisorError.message);
-      return;
-    }
-
-    // ✅ Insert into account_requests with full info
+    // ✅ Only insert into account_requests (wait for approval before inserting to supervisor table)
     const { error: requestError } = await supabase
       .from("account_requests")
       .insert([
@@ -70,6 +55,7 @@ export default function SupervisorRegisterForm() {
           first_name: firstName,
           last_name: lastName,
           department: department,
+          acc_role: position,
         },
       ]);
 
@@ -83,7 +69,7 @@ export default function SupervisorRegisterForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-lg">
+    <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Supervisor Registration
       </h2>
@@ -161,6 +147,13 @@ export default function SupervisorRegisterForm() {
         >
           Register as Supervisor
         </button>
+
+        <p className="text-sm text-gray-600 text-center font-bold">
+          Already have an account?{" "}
+          <a href="/login" className="text-orange-600 hover:underline">
+            Login
+          </a>
+        </p>
       </form>
     </div>
   );

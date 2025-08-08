@@ -292,6 +292,13 @@ export default function EmployeeRegisterForm() {
       >
         {loading ? "Registering..." : "Register"}
       </button>
+
+      <p className="text-sm text-gray-600 text-center  font-bold">
+        Already have an account?{" "}
+        <a href="/login" className="text-orange-600 hover:underline">
+          Login
+        </a>
+      </p>
     </form>
   );
 }

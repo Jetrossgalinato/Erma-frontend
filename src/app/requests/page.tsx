@@ -32,6 +32,8 @@ interface AccountRequest {
   phoneNumber?: string;
   acc_role?: string;
   approved_acc_role?: string;
+  is_supervisor?: boolean;
+  is_intern?: boolean;
 }
 
 const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
@@ -114,10 +116,12 @@ export default function AccountRequestsPage() {
     try {
       const { data, error } = await supabase
         .from("account_requests")
-        .select("*")
+        .select(`*,  is_supervisor, is_intern `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error; // or handle it however you prefer
+      }
 
       const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
         id: acc.id || idx,
@@ -131,6 +135,8 @@ export default function AccountRequestsPage() {
         phoneNumber: acc.phone_number || undefined,
         acc_role: acc.acc_role || "",
         approved_acc_role: acc.approved_acc_role || undefined,
+        is_supervisor: acc.is_supervisor ?? false,
+        is_intern: acc.is_intern ?? false,
       }));
 
       setRequests(mappedRequests);
@@ -227,26 +233,76 @@ export default function AccountRequestsPage() {
     userId: string
   ) => {
     try {
-      // Map the role to system role
-      const approvedRole = mapRoleToSystemRole(originalRole);
+      // Step 1: Get account request to check is_supervisor and is_intern
+      const { data: accountRequest, error: accountRequestError } =
+        await supabase
+          .from("account_requests")
+          .select("*")
+          .eq("id", requestId)
+          .single();
 
-      // First check if this request is already approved
-      const { data: existingAccount } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("acc_req_id", requestId)
-        .single();
+      if (accountRequestError) throw accountRequestError;
 
-      if (!existingAccount) {
-        // Insert into accounts table, referencing the request
-        const { error: insertError } = await supabase.from("accounts").insert({
-          acc_req_id: requestId,
-        });
+      const { is_supervisor, is_intern } = accountRequest;
 
-        if (insertError) throw insertError;
+      // ✅ Conditionally map or copy role
+      const approvedRole =
+        !is_supervisor && !is_intern
+          ? mapRoleToSystemRole(originalRole)
+          : originalRole;
+
+      // Step 2: Check and insert into accounts if not existing
+      if (!is_intern && !is_supervisor) {
+        const { data: existingAccount } = await supabase
+          .from("accounts")
+          .select("*")
+          .eq("acc_req_id", requestId)
+          .single();
+
+        if (!existingAccount) {
+          const { error: insertError } = await supabase
+            .from("accounts")
+            .insert({
+              acc_req_id: requestId,
+            });
+          if (insertError) throw insertError;
+        }
       }
 
-      // Update status and approved role in the account_requests table
+      // Step 3: Insert to supervisor table if applicable
+      if (is_supervisor) {
+        const { data: existingSupervisor } = await supabase
+          .from("supervisor")
+          .select("id")
+          .eq("account_req_id", requestId)
+          .maybeSingle();
+
+        if (!existingSupervisor) {
+          const { error: insertSupervisorError } = await supabase
+            .from("supervisor")
+            .insert([{ account_req_id: requestId }]);
+
+          if (insertSupervisorError) throw insertSupervisorError;
+        }
+      }
+      // If is_intern, insert into interns table
+      if (is_intern) {
+        const { data: existingIntern } = await supabase
+          .from("intern")
+          .select("id")
+          .eq("account_req_id", requestId)
+          .maybeSingle();
+
+        if (!existingIntern) {
+          const { error: insertInternError } = await supabase
+            .from("intern")
+            .insert([{ account_req_id: requestId }]);
+
+          if (insertInternError) throw insertInternError;
+        }
+      }
+
+      // Step 4: Update request status
       const { error: updateError } = await supabase
         .from("account_requests")
         .update({
@@ -259,7 +315,7 @@ export default function AccountRequestsPage() {
 
       if (updateError) throw updateError;
 
-      // Update user metadata in Supabase Auth (optional but recommended)
+      // Step 5: Update Auth metadata
       try {
         const { error: authError } = await supabase.auth.admin.updateUserById(
           userId,
@@ -269,32 +325,30 @@ export default function AccountRequestsPage() {
             },
           }
         );
-
-        if (authError) {
-          console.warn("Could not update user metadata:", authError);
-        }
+        if (authError) console.warn("Auth metadata update failed:", authError);
       } catch (authError) {
-        console.warn(
-          "Auth update failed (this might be expected in client-side code):",
-          authError
-        );
+        console.warn("Supabase auth update exception:", authError);
       }
 
-      // Update local state
-      setRequests((prevRequests) =>
-        prevRequests.map((request) =>
-          request.id === requestId
+      // Step 6: Update local UI
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
             ? {
-                ...request,
-                status: "Approved" as RequestStatus,
+                ...r,
+                status: "Approved",
                 approved_acc_role: approvedRole,
               }
-            : request
+            : r
         )
       );
 
       alert(
-        `Account approved! Role mapped from "${originalRole}" to "${approvedRole}"`
+        `Account approved! Role ${
+          is_supervisor || is_intern
+            ? "copied as-is"
+            : `mapped from "${originalRole}" to "${approvedRole}"`
+        }`
       );
     } catch (error) {
       const errorMessage = handleError(error, "approve request");
@@ -597,15 +651,16 @@ export default function AccountRequestsPage() {
                         <div className="text-sm text-gray-600">
                           <span className="font-medium">Requested Role:</span>{" "}
                           {request.acc_role}
-                          {request.status === "Pending" && (
-                            <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
-                              <ArrowRight className="w-3 h-3" />
-                              <span>
-                                Will map to:{" "}
-                                {mapRoleToSystemRole(request.acc_role)}
-                              </span>
-                            </div>
-                          )}
+                          {request.status === "Pending" &&
+                            !(request.is_supervisor || request.is_intern) && (
+                              <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
+                                <ArrowRight className="w-3 h-3" />
+                                <span>
+                                  Will map to:{" "}
+                                  {mapRoleToSystemRole(request.acc_role)}
+                                </span>
+                              </div>
+                            )}
                           {request.approved_acc_role &&
                             request.status === "Approved" && (
                               <div className="flex items-center gap-2 mt-1 text-xs text-green-600">

@@ -11,7 +11,7 @@ export default function LoginPage() {
   const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("intern"); // Default role
+  const [role, setRole] = useState("employee"); // Default role
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
