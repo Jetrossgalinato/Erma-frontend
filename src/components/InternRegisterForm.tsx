@@ -9,6 +9,15 @@ interface Supervisor {
   full_name: string;
 }
 
+interface RawSupervisor {
+  id: string;
+  account_requests: {
+    first_name: string | null;
+    last_name: string | null;
+    is_approved: boolean;
+  } | null;
+}
+
 export default function InternRegisterForm() {
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -26,16 +35,32 @@ export default function InternRegisterForm() {
 
   useEffect(() => {
     const fetchSupervisors = async () => {
-      const { data, error } = await supabase
-        .from("supervisor")
-        .select("id, full_name")
-        .eq("is_approved", true);
+      const { data, error } = await supabase.from("supervisor").select(`
+        id,
+        account_requests (
+          first_name,
+          last_name,
+          is_approved
+        )
+      `);
 
       if (error) {
         console.error("Failed to fetch supervisors:", error.message);
-      } else {
-        setSupervisors(data || []);
+        return;
       }
+
+      const mapped = (data as unknown as RawSupervisor[])
+        .filter((sup) => sup.account_requests?.is_approved)
+        .map((sup) => {
+          const first = sup.account_requests?.first_name || "";
+          const last = sup.account_requests?.last_name || "";
+          return {
+            id: sup.id,
+            full_name: `${first} ${last}`.trim(),
+          };
+        });
+
+      setSupervisors(mapped);
     };
 
     fetchSupervisors();
