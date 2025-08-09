@@ -255,14 +255,18 @@ export default function InternRegisterForm() {
           <label className="block text-sm font-medium text-gray-700">
             Intern Type
           </label>
-          <input
-            type="text"
+          <select
             value={internType}
             onChange={(e) => setInternType(e.target.value)}
-            placeholder="e.g. OJT, Practicum"
             required
-            className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
+            className="mt-1 w-full px-4 py-2 border text-black bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          >
+            <option value="" disabled>
+              Select Intern Type
+            </option>
+            <option value="OJT">OJT</option>
+            <option value="SA">SA</option>
+          </select>
         </div>
 
         {/* RFID */}
