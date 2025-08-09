@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react"; // 👈 For toggle icons
 
 interface Supervisor {
   id: string;
@@ -25,7 +26,9 @@ export default function InternRegisterForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // ✅ Added confirm password
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 Toggle state
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // 👈 Toggle state
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("");
   const [internType, setInternType] = useState("");
@@ -70,9 +73,8 @@ export default function InternRegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Reset error before validation
+    setError("");
 
-    // ✅ Check if passwords match before proceeding
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -82,9 +84,7 @@ export default function InternRegisterForm() {
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-        },
+        data: { full_name: fullName },
       },
     });
 
@@ -93,7 +93,6 @@ export default function InternRegisterForm() {
       return;
     }
 
-    // ✅ Wait for user to be available
     const { data: freshUser, error: getUserError } =
       await supabase.auth.getUser();
 
@@ -108,7 +107,7 @@ export default function InternRegisterForm() {
       .from("account_requests")
       .insert([
         {
-          user_id: freshUser.user.id, // Use fresh user id
+          user_id: freshUser.user.id,
           first_name: firstName,
           last_name: lastName,
           student_id: studentId,
@@ -171,13 +170,22 @@ export default function InternRegisterForm() {
           <label className="block text-sm font-medium text-gray-700">
             Password
           </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Confirm Password */}
@@ -185,19 +193,29 @@ export default function InternRegisterForm() {
           <label className="block text-sm font-medium text-gray-700">
             Confirm Password
           </label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className={`mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 ${
-              confirmPassword && confirmPassword !== password
-                ? "border-red-500 focus:ring-red-400"
-                : "text-black focus:ring-orange-400"
-            }`}
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className={`mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 pr-10 ${
+                confirmPassword && confirmPassword !== password
+                  ? "border-red-500 focus:ring-red-400"
+                  : "text-black focus:ring-orange-400"
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
+        {/* The rest of your form stays the same */}
         {/* Student ID */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -289,10 +307,8 @@ export default function InternRegisterForm() {
           </select>
         </div>
 
-        {/* Error Message */}
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-        {/* Submit */}
         <button
           type="submit"
           className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
@@ -300,7 +316,6 @@ export default function InternRegisterForm() {
           Register as Intern
         </button>
 
-        {/* Login Redirect */}
         <p className="text-sm text-gray-600 text-center font-bold">
           Already have an account?{" "}
           <a href="/login" className="text-orange-600 hover:underline">
