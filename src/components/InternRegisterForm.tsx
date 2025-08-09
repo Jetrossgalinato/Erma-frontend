@@ -25,6 +25,7 @@ export default function InternRegisterForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // ✅ Added confirm password
   const [studentId, setStudentId] = useState("");
   const [department, setDepartment] = useState("");
   const [internType, setInternType] = useState("");
@@ -69,6 +70,13 @@ export default function InternRegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // Reset error before validation
+
+    // ✅ Check if passwords match before proceeding
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
@@ -125,11 +133,12 @@ export default function InternRegisterForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto  bg-white p-8 rounded-lg shadow-lg">
+    <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Intern Registration
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Full Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Full Name
@@ -143,6 +152,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Email */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Email
@@ -156,6 +166,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Password */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Password
@@ -169,6 +180,25 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Confirm Password */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            className={`mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 ${
+              confirmPassword && confirmPassword !== password
+                ? "border-red-500 focus:ring-red-400"
+                : "text-black focus:ring-orange-400"
+            }`}
+          />
+        </div>
+
+        {/* Student ID */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Student ID
@@ -182,6 +212,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Department */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Department
@@ -195,6 +226,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Intern Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Intern Type
@@ -209,6 +241,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* RFID */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             RFID
@@ -222,6 +255,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Duty Hours */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Total Duty Hours
@@ -235,6 +269,7 @@ export default function InternRegisterForm() {
           />
         </div>
 
+        {/* Supervisor Select */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Select Supervisor
@@ -254,15 +289,19 @@ export default function InternRegisterForm() {
           </select>
         </div>
 
+        {/* Error Message */}
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
+        {/* Submit */}
         <button
           type="submit"
           className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
         >
           Register as Intern
         </button>
-        <p className="text-sm text-gray-600 text-center  font-bold">
+
+        {/* Login Redirect */}
+        <p className="text-sm text-gray-600 text-center font-bold">
           Already have an account?{" "}
           <a href="/login" className="text-orange-600 hover:underline">
             Login
