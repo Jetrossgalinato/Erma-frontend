@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function EmployeeRegisterForm() {
@@ -16,6 +17,8 @@ export default function EmployeeRegisterForm() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -47,7 +50,6 @@ export default function EmployeeRegisterForm() {
     }
 
     try {
-      // Step 1: Sign up user
       const { data: signUpData, error: authError } = await supabase.auth.signUp(
         {
           email,
@@ -67,10 +69,8 @@ export default function EmployeeRegisterForm() {
       const userId = signUpData.user?.id;
       if (!userId) throw new Error("User ID not returned from authentication");
 
-      // Wait briefly to avoid race condition
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Step 2: Insert into account_requests table
       const { error: insertError } = await supabase
         .from("account_requests")
         .insert([
@@ -86,7 +86,6 @@ export default function EmployeeRegisterForm() {
         ]);
 
       if (insertError) {
-        // Cleanup failed user
         try {
           await supabase.auth.admin.deleteUser(userId);
         } catch (cleanupError) {
@@ -101,7 +100,6 @@ export default function EmployeeRegisterForm() {
         "Registration submitted successfully! Please wait for approval from the Super Admin before logging in."
       );
 
-      // Reset
       setFormData({
         email: "",
         firstName: "",
@@ -127,10 +125,11 @@ export default function EmployeeRegisterForm() {
       className="space-y-4 bg-white rounded-2xl shadow-xl p-8"
       onSubmit={handleSubmit}
     >
-      <h2 className="text-xl font-semibold text-gray-700 text-center mb-4">
+      <h2 className="text-2xl font-semibold text-gray-700 text-center mb-4">
         Employee Registration
       </h2>
 
+      {/* Email */}
       <div>
         <label
           htmlFor="email"
@@ -148,6 +147,7 @@ export default function EmployeeRegisterForm() {
         />
       </div>
 
+      {/* First Name */}
       <div>
         <label
           htmlFor="firstName"
@@ -165,6 +165,7 @@ export default function EmployeeRegisterForm() {
         />
       </div>
 
+      {/* Last Name */}
       <div>
         <label
           htmlFor="lastName"
@@ -182,6 +183,7 @@ export default function EmployeeRegisterForm() {
         />
       </div>
 
+      {/* Department */}
       <div>
         <label
           htmlFor="department"
@@ -205,6 +207,7 @@ export default function EmployeeRegisterForm() {
         </select>
       </div>
 
+      {/* Phone Number */}
       <div>
         <label
           htmlFor="phoneNumber"
@@ -222,6 +225,7 @@ export default function EmployeeRegisterForm() {
         />
       </div>
 
+      {/* Password */}
       <div>
         <label
           htmlFor="password"
@@ -229,16 +233,26 @@ export default function EmployeeRegisterForm() {
         >
           Password
         </label>
-        <input
-          type="password"
-          id="password"
-          required
-          value={formData.password}
-          onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
       </div>
 
+      {/* Confirm Password */}
       <div>
         <label
           htmlFor="confirmpassword"
@@ -246,16 +260,26 @@ export default function EmployeeRegisterForm() {
         >
           Confirm Password
         </label>
-        <input
-          type="password"
-          id="confirmpassword"
-          required
-          value={formData.confirmpassword}
-          onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
-        />
+        <div className="relative">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            id="confirmpassword"
+            required
+            value={formData.confirmpassword}
+            onChange={handleChange}
+            className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
       </div>
 
+      {/* Role */}
       <div>
         <label
           htmlFor="acc_role"
@@ -285,6 +309,7 @@ export default function EmployeeRegisterForm() {
         </select>
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
@@ -293,7 +318,7 @@ export default function EmployeeRegisterForm() {
         {loading ? "Registering..." : "Register"}
       </button>
 
-      <p className="text-sm text-gray-600 text-center  font-bold">
+      <p className="text-sm text-gray-600 text-center font-bold">
         Already have an account?{" "}
         <a href="/login" className="text-orange-600 hover:underline">
           Login
