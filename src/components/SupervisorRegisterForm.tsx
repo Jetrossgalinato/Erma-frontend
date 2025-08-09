@@ -195,7 +195,7 @@ export default function SupervisorRegisterForm() {
           type="submit"
           className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
         >
-          Register as Supervisor
+          Register
         </button>
 
         <p className="text-sm text-gray-600 text-center font-bold">

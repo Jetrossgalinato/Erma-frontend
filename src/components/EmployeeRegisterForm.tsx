@@ -125,7 +125,7 @@ export default function EmployeeRegisterForm() {
       className="space-y-4 bg-white rounded-2xl shadow-xl p-8"
       onSubmit={handleSubmit}
     >
-      <h2 className="text-xl font-semibold text-gray-700 text-center mb-4">
+      <h2 className="text-2xl font-semibold text-gray-700 text-center mb-4">
         Employee Registration
       </h2>
 
