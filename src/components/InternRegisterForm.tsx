@@ -235,13 +235,19 @@ export default function InternRegisterForm() {
           <label className="block text-sm font-medium text-gray-700">
             Department
           </label>
-          <input
-            type="text"
+          <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
             required
-            className="mt-1 w-full px-4 py-2 border text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
+            className="mt-1 w-full px-4 py-2 border text-black bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          >
+            <option value="" disabled>
+              Select Department
+            </option>
+            <option value="BSIT">BSIT</option>
+            <option value="BSIS">BSIS</option>
+            <option value="BSCS">BSCS</option>
+          </select>
         </div>
 
         {/* Intern Type */}
