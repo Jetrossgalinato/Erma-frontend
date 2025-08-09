@@ -29,34 +29,25 @@ export default function LoginPage() {
     }
 
     const user = authData?.user;
-
     if (!user) {
       setError("No user data returned.");
       return;
     }
 
-    let tableName = "";
-    switch (role) {
-      case "employee":
-        tableName = "account_requests";
-        break;
-      case "intern":
-        tableName = "interns";
-        break;
-      case "supervisor":
-        tableName = "supervisors";
-        break;
-      default:
-        setError("Invalid organization selected.");
-        return;
+    // Always query from account_requests
+    let query = supabase
+      .from("account_requests")
+      .select("is_approved")
+      .eq("user_id", user.id);
+
+    // Add the role-specific filter
+    if (role === "intern") {
+      query = query.eq("is_intern", true);
+    } else if (role === "supervisor") {
+      query = query.eq("is_supervisor", true);
     }
 
-    // Try to fetch user data from the selected table
-    const { data: roleData, error: roleError } = await supabase
-      .from(tableName)
-      .select("is_approved")
-      .eq("user_id", user.id)
-      .single();
+    const { data: roleData, error: roleError } = await query.single();
 
     if (roleError || !roleData) {
       setError(`No ${role} record found for this user.`);
@@ -70,7 +61,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Success
     setError("");
     alert("You have logged in successfully!");
     router.push("/home");
