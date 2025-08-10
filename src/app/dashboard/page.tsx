@@ -90,7 +90,8 @@ export default function DashboardPage() {
                   Dashboard
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  Welcome to your dashboard! Here's an overview of your system.
+                  Welcome to your dashboard! {"Here's"} an overview of your
+                  system.
                 </p>
               </div>
 
