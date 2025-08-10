@@ -2,17 +2,37 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [activeFacilitiesCount, setActiveFacilitiesCount] = useState<
+    number | null
+  >(null);
 
-  // Handle hydration mismatch
+  const supabase = createClientComponentClient();
+
   useEffect(() => {
     setMounted(true);
-  }, []);
 
-  // Close sidebar when clicking outside on mobile
+    const fetchActiveFacilities = async () => {
+      // If you have is_active column, uncomment the .eq() filter
+      const { count, error } = await supabase
+        .from("facilities")
+        // .eq("is_active", true) // optional filter
+        .select("*", { count: "exact", head: true });
+
+      if (error) {
+        console.error("Error fetching facilities count:", error.message);
+      } else {
+        setActiveFacilitiesCount(count ?? 0);
+      }
+    };
+
+    fetchActiveFacilities();
+  }, [supabase]);
+
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
@@ -43,27 +63,24 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Top Navbar - Fixed at top with highest z-index */}
+      {/* Top Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
         <DashboardNavbar />
       </header>
 
       {/* Sidebar */}
       <aside
-        className={`
-        fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="w-64 h-full">
           <Sidebar />
         </div>
       </aside>
 
-      {/* Right section: Content */}
+      {/* Main Content */}
       <div className="flex flex-col flex-1 min-w-0">
-        {/* Main Content */}
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
@@ -73,13 +90,14 @@ export default function DashboardPage() {
                   Dashboard
                 </h1>
                 <p className="mt-2 text-sm text-gray-600">
-                  {`Welcome to your dashboard! Here's an overview of your system.`}
+                  Welcome to your dashboard! {"Here's"} an overview of your
+                  system.
                 </p>
               </div>
 
-              {/* Dashboard content grid */}
+              {/* Stats cards */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
-                {/* Stats cards */}
+                {/* Total Equipment */}
                 <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -106,6 +124,7 @@ export default function DashboardPage() {
                             Total Equipment
                           </dt>
                           <dd className="text-lg font-semibold text-gray-900">
+                            {/* Replace with dynamic value if needed */}
                             124
                           </dd>
                         </dl>
@@ -114,6 +133,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Active Facilities */}
                 <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -140,7 +160,9 @@ export default function DashboardPage() {
                             Active Facilities
                           </dt>
                           <dd className="text-lg font-semibold text-gray-900">
-                            8
+                            {activeFacilitiesCount !== null
+                              ? activeFacilitiesCount
+                              : "Loading..."}
                           </dd>
                         </dl>
                       </div>
@@ -148,6 +170,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Pending Requests */}
                 <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -182,6 +205,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Alerts */}
                 <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
                   <div className="p-5">
                     <div className="flex items-center">
@@ -217,7 +241,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Recent activity section */}
+              {/* Recent Activity */}
               <div className="bg-white shadow-sm rounded-lg border border-gray-200">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
@@ -260,17 +284,21 @@ export default function DashboardPage() {
                               <div>
                                 <span
                                   className={`
-                                  h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
-                                  ${item.color === "blue" ? "bg-blue-500" : ""}
-                                  ${
-                                    item.color === "green" ? "bg-green-500" : ""
-                                  }
-                                  ${
-                                    item.color === "yellow"
-                                      ? "bg-yellow-500"
-                                      : ""
-                                  }
-                                `}
+                                    h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
+                                    ${
+                                      item.color === "blue" ? "bg-blue-500" : ""
+                                    }
+                                    ${
+                                      item.color === "green"
+                                        ? "bg-green-500"
+                                        : ""
+                                    }
+                                    ${
+                                      item.color === "yellow"
+                                        ? "bg-yellow-500"
+                                        : ""
+                                    }
+                                  `}
                                 >
                                   <svg
                                     className="w-4 h-4 text-white"
