@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 
 interface FacilityEquipmentData {
@@ -68,6 +69,18 @@ export default function EquipmentCountPerFacilityChart() {
       <p className="text-gray-500 italic">Loading equipment count chart...</p>
     );
 
+  const maxCount = Math.max(...data.map((d) => d.count), 1); // avoid divide by zero
+
+  // Function to create a darker orange based on percentage
+  const getBarColor = (count: number) => {
+    const intensity = count / maxCount; // 0 to 1
+    // Base orange: #fdcb5fff → Darker: #f18500
+    const r = Math.round(247 - (247 - 241) * intensity); // R: 247 → 241
+    const g = Math.round(177 - (177 - 133) * intensity); // G: 177 → 133
+    const b = Math.round(25 - (25 - 0) * intensity); // B: 25 → 0
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
@@ -77,7 +90,7 @@ export default function EquipmentCountPerFacilityChart() {
         <BarChart
           data={data}
           layout="vertical"
-          barSize={Math.max(20, Math.min(40, 300 / data.length))} // Dynamic bar size
+          barSize={Math.max(20, Math.min(40, 300 / data.length))}
           margin={{ left: -120, right: 20, top: 0, bottom: 0 }}
         >
           <CartesianGrid stroke="#f0f0f0" strokeDasharray="3 3" />
@@ -112,12 +125,11 @@ export default function EquipmentCountPerFacilityChart() {
             }}
             itemStyle={{ color: "#f18500ff", fontWeight: 600 }}
           />
-          <Bar
-            dataKey="count"
-            fill="#f7b119ff"
-            radius={[0, 6, 6, 0]} // rounded on right side
-            animationDuration={800}
-          />
+          <Bar dataKey="count" radius={[0, 6, 6, 0]} animationDuration={800}>
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={getBarColor(entry.count)} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
