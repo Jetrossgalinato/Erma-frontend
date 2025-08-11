@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import EquipmentCategoryChart from "@/components/EquipmentCategoryChart";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -164,6 +165,11 @@ export default function DashboardPage() {
                   bgColor="bg-teal-500"
                   iconPath="M3 7h18M3 12h18M3 17h18"
                 />
+              </div>
+
+              {/* Equipment Categories Chart */}
+              <div className="mb-8">
+                <EquipmentCategoryChart />
               </div>
             </div>
           </div>

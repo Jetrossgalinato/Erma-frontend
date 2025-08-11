@@ -61,7 +61,9 @@ export default function EquipmentCategoryChart() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h2 className="text-lg font-bold mb-4">Equipment by Category</h2>
+      <h2 className="text-lg text-gray-800 font-bold mb-4">
+        Equipment by Category
+      </h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
