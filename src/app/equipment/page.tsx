@@ -7,7 +7,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-type EquipmentStatus = "Available" | "In Use" | "Maintenance";
+type EquipmentStatus = "Working" | "In Use" | "For Repair";
 
 interface Equipment {
   id: number;
@@ -126,11 +126,11 @@ export default function EquipmentPage() {
 
   const getStatusColor = (status: EquipmentStatus): string => {
     switch (status) {
-      case "Available":
+      case "Working":
         return "bg-green-100 text-green-800";
       case "In Use":
         return "bg-orange-100 text-orange-800";
-      case "Maintenance":
+      case "For Repair":
         return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
