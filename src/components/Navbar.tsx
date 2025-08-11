@@ -115,7 +115,7 @@ const Navbar: React.FC = () => {
                   pathname.startsWith("/equipment") ? "text-orange-500" : ""
                 }`}
               >
-                Equipment
+                Equipments
               </a>
               <a
                 href="/facilities"
@@ -227,7 +227,7 @@ const Navbar: React.FC = () => {
                     pathname.startsWith("/equipment") ? "text-orange-500" : ""
                   }`}
                 >
-                  Equipment
+                  Equipments
                 </a>
                 <a
                   href="/facilities"
