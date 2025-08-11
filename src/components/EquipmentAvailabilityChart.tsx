@@ -13,89 +13,94 @@ import {
   Cell,
 } from "recharts";
 
-interface PersonEquipmentData {
-  person: string;
+interface AvailabilityData {
+  status: string;
   count: number;
 }
 
-export default function EquipmentCountPerPersonLiableChart() {
-  const [data, setData] = useState<PersonEquipmentData[]>([]);
+export default function EquipmentAvailabilityChart() {
+  const [data, setData] = useState<AvailabilityData[]>([]);
   const [loading, setLoading] = useState(true);
 
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const fetchEquipmentCounts = async () => {
+    const fetchAvailabilityCounts = async () => {
       const { data: equipment, error } = await supabase
         .from("equipments")
-        .select("person_liable");
+        .select("availability");
 
       if (error) {
-        console.error("Error fetching equipment:", error);
+        console.error("Error fetching equipment availability:", error);
         setLoading(false);
         return;
       }
 
-      const personCount: Record<string, number> = {};
+      // Initialize all statuses so labels always appear even if 0
+      const statusCount: Record<string, number> = {
+        Available: 0,
+        "For Disposal": 0,
+        Disposed: 0,
+      };
+
       equipment.forEach((item) => {
-        const person = item.person_liable?.trim() || "Unassigned";
-        personCount[person] = (personCount[person] || 0) + 1;
+        const status = item.availability?.trim() as keyof typeof statusCount;
+        if (status in statusCount) {
+          statusCount[status] += 1;
+        }
       });
 
-      const formattedData: PersonEquipmentData[] = Object.entries(personCount)
-        .map(([person, count]) => ({
-          person,
+      const formattedData: AvailabilityData[] = Object.entries(statusCount).map(
+        ([status, count]) => ({
+          status,
           count,
-        }))
-        .sort((a, b) => b.count - a.count);
+        })
+      );
 
       setData(formattedData);
       setLoading(false);
     };
 
-    fetchEquipmentCounts();
+    fetchAvailabilityCounts();
   }, [supabase]);
 
   if (loading)
     return (
       <p className="text-gray-500 italic">
-        Loading equipment count per person chart...
+        Loading equipment availability chart...
       </p>
     );
 
-  const lightOrange = "#f7a563ff"; // pastel light orange
+  // Assign fixed colors for each status
+  const statusColors: Record<string, string> = {
+    Available: "#a5d6a7", // soft green
+    "For Disposal": "#fff59d", // light yellow
+    Disposed: "#ef9a9a", // light red
+  };
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
-        Equipment Count per Person Liable
+        Equipment Availability Status
       </h2>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={data}
-          layout="vertical"
-          barSize={Math.max(20, Math.min(40, 300 / data.length))}
-          margin={{ left: -120, right: 20, top: 0, bottom: 0 }}
+          barSize={50}
+          margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
         >
           <CartesianGrid stroke="#f0f0f0" strokeDasharray="3 3" />
           <XAxis
-            type="number"
-            allowDecimals={false}
+            dataKey="status"
             tick={{ fill: "#4b5563", fontSize: 12, fontWeight: 500 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            type="category"
-            dataKey="person"
-            tick={{ fill: "#4b5563", fontSize: 11, fontWeight: 500 }}
+            allowDecimals={false}
+            tick={{ fill: "#4b5563", fontSize: 12, fontWeight: 500 }}
             axisLine={false}
             tickLine={false}
-            width={220}
-            interval={0}
-            tickFormatter={(value) =>
-              value.length > 20 ? `${value.substring(0, 20)}...` : value
-            }
           />
           <Tooltip
             cursor={{ fill: "rgba(0,0,0,0.04)" }}
@@ -107,11 +112,14 @@ export default function EquipmentCountPerPersonLiableChart() {
               color: "#000",
               fontSize: "13px",
             }}
-            itemStyle={{ color: "#f8951c", fontWeight: 600 }}
+            itemStyle={{ fontWeight: 600 }}
           />
-          <Bar dataKey="count" radius={[0, 6, 6, 0]} animationDuration={800}>
-            {data.map((_, index) => (
-              <Cell key={`cell-${index}`} fill={lightOrange} />
+          <Bar dataKey="count" radius={[6, 6, 0, 0]} animationDuration={800}>
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={statusColors[entry.status] || "#ccc"}
+              />
             ))}
           </Bar>
         </BarChart>
