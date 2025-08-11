@@ -14,6 +14,14 @@ export default function DashboardPage() {
   const [activeFacilitiesCount, setActiveFacilitiesCount] = useState<
     number | null
   >(null);
+  const [totalSupply, setTotalSupply] = useState<number | null>(null);
+  const [borrowedLast7Days, setBorrowedLast7Days] = useState<number | null>(
+    null
+  );
+  const [borrowedToday, setBorrowedToday] = useState<number | null>(null);
+  const [totalEquipmentCategories, setTotalEquipmentCategories] = useState<
+    number | null
+  >(null);
 
   const supabase = createClientComponentClient();
 
@@ -29,6 +37,10 @@ export default function DashboardPage() {
         setPendingRequests(0);
         setTotalEquipment(0);
         setActiveFacilitiesCount(0);
+        setTotalSupply(0);
+        setBorrowedLast7Days(0);
+        setBorrowedToday(0);
+        setTotalEquipmentCategories(0);
         return;
       }
 
@@ -36,6 +48,10 @@ export default function DashboardPage() {
       setPendingRequests(data.pending_requests ?? 0);
       setTotalEquipment(data.total_equipment ?? 0);
       setActiveFacilitiesCount(data.active_facilities ?? 0);
+      setTotalSupply(data.total_supply ?? 0);
+      setBorrowedLast7Days(data.borrowed_last_7_days ?? 0);
+      setBorrowedToday(data.borrowed_today ?? 0);
+      setTotalEquipmentCategories(data.total_equipment_categories ?? 0);
     };
 
     fetchCounts();
@@ -123,6 +139,30 @@ export default function DashboardPage() {
                   value={activeFacilitiesCount}
                   bgColor="bg-green-500"
                   iconPath="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+                <StatCard
+                  title="Total Supply"
+                  value={totalSupply}
+                  bgColor="bg-indigo-500"
+                  iconPath="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
+                <StatCard
+                  title="Borrowed (Last 7 Days)"
+                  value={borrowedLast7Days}
+                  bgColor="bg-orange-500"
+                  iconPath="M9 17v-6a2 2 0 00-2-2H5l7-7 7 7h-2a2 2 0 00-2 2v6"
+                />
+                <StatCard
+                  title="Borrowed Today"
+                  value={borrowedToday}
+                  bgColor="bg-red-500"
+                  iconPath="M12 8v4l3 3"
+                />
+                <StatCard
+                  title="Equipment Categories"
+                  value={totalEquipmentCategories}
+                  bgColor="bg-teal-500"
+                  iconPath="M3 7h18M3 12h18M3 17h18"
                 />
               </div>
             </div>
