@@ -36,7 +36,6 @@ export default function EquipmentCountPerPersonLiableChart() {
         return;
       }
 
-      // Count occurrences of each person liable
       const personCount: Record<string, number> = {};
       equipment.forEach((item) => {
         const person = item.person_liable?.trim() || "Unassigned";
@@ -48,7 +47,7 @@ export default function EquipmentCountPerPersonLiableChart() {
           person,
           count,
         }))
-        .sort((a, b) => b.count - a.count); // Optional: sort by count
+        .sort((a, b) => b.count - a.count);
 
       setData(formattedData);
       setLoading(false);
@@ -64,15 +63,7 @@ export default function EquipmentCountPerPersonLiableChart() {
       </p>
     );
 
-  // For dynamic bar shading
-  const maxCount = Math.max(...data.map((d) => d.count), 1);
-  const getBarColor = (count: number) => {
-    const intensity = count / maxCount; // 0 → light, 1 → dark
-    const r = Math.round(247 - (247 - 241) * intensity);
-    const g = Math.round(177 - (177 - 133) * intensity);
-    const b = Math.round(25 - (25 - 0) * intensity);
-    return `rgb(${r}, ${g}, ${b})`;
-  };
+  const lightOrange = "#fcbf8eff"; // pastel light orange
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
@@ -116,11 +107,11 @@ export default function EquipmentCountPerPersonLiableChart() {
               color: "#000",
               fontSize: "13px",
             }}
-            itemStyle={{ color: "#f18500ff", fontWeight: 600 }}
+            itemStyle={{ color: "#f8951c", fontWeight: 600 }}
           />
           <Bar dataKey="count" radius={[0, 6, 6, 0]} animationDuration={800}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={getBarColor(entry.count)} />
+            {data.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={lightOrange} />
             ))}
           </Bar>
         </BarChart>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import EquipmentCountPerPersonLiableChart from "@/components/EquipmentCountPerPersonLiableChart";
 import EquipmentCategoryChart from "@/components/EquipmentCategoryChart";
 import EquipmentStatusChart from "@/components/EquipmentStatusChart";
 import EquipmentPerFacilityChart from "@/components/EquipmentPerFacilityChart";
@@ -116,7 +117,6 @@ export default function DashboardPage() {
                   system.
                 </p>
               </div>
-
               {/* Stats cards */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
                 <StatCard
@@ -169,16 +169,19 @@ export default function DashboardPage() {
                 />
               </div>
 
+              {/* Equipment per person liable chart */}
+              <div className="mb-8">
+                <EquipmentCountPerPersonLiableChart />
+              </div>
+
               {/* Equipment Categories Chart */}
               <div className="mb-8">
                 <EquipmentCategoryChart />
               </div>
-
               {/* Equipment Status Chart */}
               <div className="mb-8">
                 <EquipmentStatusChart />
               </div>
-
               {/* Equipment Per Facility Chart */}
               <div className="mb-8">
                 <EquipmentPerFacilityChart />
