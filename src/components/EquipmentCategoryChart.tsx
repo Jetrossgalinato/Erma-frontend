@@ -35,7 +35,6 @@ export default function EquipmentCategoryChart() {
         return;
       }
 
-      // Count per category
       const categoryCount: Record<string, number> = {};
       categories.forEach((item) => {
         const cat = item.category || "Uncategorized";
@@ -57,23 +56,45 @@ export default function EquipmentCategoryChart() {
   }, [supabase]);
 
   if (loading)
-    return <p className="text-gray-500">Loading category chart...</p>;
+    return <p className="text-gray-500 italic">Loading category chart...</p>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h2 className="text-lg text-gray-800 font-bold mb-4">
+    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
         Equipment by Category
       </h2>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="category" />
-          <YAxis />
-          <Tooltip
-            contentStyle={{ backgroundColor: "#fff", color: "#000" }}
-            itemStyle={{ color: "#ec8200ff" }} // Dark orange
+        <BarChart data={data} barSize={40}>
+          <CartesianGrid stroke="#f0f0f0" strokeDasharray="3 3" />
+          <XAxis
+            dataKey="category"
+            tick={{ fill: "#4b5563", fontSize: 12, fontWeight: 500 }}
+            axisLine={false}
+            tickLine={false}
           />
-          <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+          <YAxis
+            tick={{ fill: "#4b5563", fontSize: 12, fontWeight: 500 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            cursor={{ fill: "rgba(0,0,0,0.04)" }}
+            contentStyle={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              color: "#000",
+              fontSize: "13px",
+            }}
+            itemStyle={{ color: "#FF8C00", fontWeight: 600 }}
+          />
+          <Bar
+            dataKey="count"
+            fill="#3B82F6"
+            radius={[6, 6, 0, 0]}
+            animationDuration={800}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
