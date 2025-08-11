@@ -74,7 +74,7 @@ const DashboardNavbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
-      <div className="flex items-center pl-70">
+      <div className="flex items-center pl-40">
         <Image
           src="/images/logocircle.png"
           alt="Logo"
@@ -85,7 +85,7 @@ const DashboardNavbar: React.FC = () => {
       </div>
 
       {/* Desktop Search Bar and Avatar */}
-      <div className="hidden md:flex pr-70 items-center gap-4">
+      <div className="hidden md:flex pr-40 items-center gap-4">
         {session && (
           <form onSubmit={handleSearch} className="relative">
             <div className="relative">
