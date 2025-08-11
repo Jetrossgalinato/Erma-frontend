@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 
 interface EquipmentStatusData {
@@ -66,6 +67,13 @@ export default function EquipmentStatusChart() {
   if (loading)
     return <p className="text-gray-500 italic">Loading status chart...</p>;
 
+  // Define colors for each status
+  const statusColors: Record<string, string> = {
+    Working: "#10B981", // teal green
+    "In Use": "#FF8C00", // dark orange
+    "For Repair": "#DC2626", // red
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
       <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
@@ -97,12 +105,14 @@ export default function EquipmentStatusChart() {
             }}
             itemStyle={{ color: "#FF8C00", fontWeight: 600 }}
           />
-          <Bar
-            dataKey="count"
-            fill="#10B981" // teal green for freshness
-            radius={[6, 6, 0, 0]}
-            animationDuration={800}
-          />
+          <Bar dataKey="count" radius={[6, 6, 0, 0]} animationDuration={800}>
+            {data.map((entry) => (
+              <Cell
+                key={`cell-${entry.status}`}
+                fill={statusColors[entry.status] || "#9CA3AF"} // gray fallback
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>
