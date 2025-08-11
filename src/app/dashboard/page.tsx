@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import EquipmentCategoryChart from "@/components/EquipmentCategoryChart";
+import EquipmentStatusChart from "@/components/EquipmentStatusChart";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -170,6 +171,11 @@ export default function DashboardPage() {
               {/* Equipment Categories Chart */}
               <div className="mb-8">
                 <EquipmentCategoryChart />
+              </div>
+
+              {/* Equipment Status Chart */}
+              <div className="mb-8">
+                <EquipmentStatusChart />
               </div>
             </div>
           </div>
