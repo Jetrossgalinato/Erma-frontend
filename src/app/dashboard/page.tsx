@@ -50,7 +50,7 @@ export default function DashboardPage() {
       setPendingRequests(data.pending_requests ?? 0);
       setTotalEquipment(data.total_equipment ?? 0);
       setActiveFacilitiesCount(data.active_facilities ?? 0);
-      setTotalSupply(data.total_supply ?? 0);
+      setTotalSupply(data.total_supplies ?? 0);
       setBorrowedLast7Days(data.borrowed_last_7_days ?? 0);
       setBorrowedToday(data.borrowed_today ?? 0);
       setTotalEquipmentCategories(data.total_equipment_categories ?? 0);
