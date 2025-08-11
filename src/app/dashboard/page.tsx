@@ -3,8 +3,12 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import EquipmentCountPerPersonLiableChart from "@/components/EquipmentCountPerPersonLiableChart";
 import EquipmentCategoryChart from "@/components/EquipmentCategoryChart";
 import EquipmentStatusChart from "@/components/EquipmentStatusChart";
+import EquipmentPerFacilityChart from "@/components/EquipmentPerFacilityChart";
+import EquipmentAvailabilityChart from "@/components/EquipmentAvailabilityChart";
+import { StatCardsGrid } from "@/components/StatCards";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,7 +54,7 @@ export default function DashboardPage() {
       setPendingRequests(data.pending_requests ?? 0);
       setTotalEquipment(data.total_equipment ?? 0);
       setActiveFacilitiesCount(data.active_facilities ?? 0);
-      setTotalSupply(data.total_supply ?? 0);
+      setTotalSupply(data.total_supplies ?? 0);
       setBorrowedLast7Days(data.borrowed_last_7_days ?? 0);
       setBorrowedToday(data.borrowed_today ?? 0);
       setTotalEquipmentCategories(data.total_equipment_categories ?? 0);
@@ -62,6 +66,62 @@ export default function DashboardPage() {
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
+
+  // Create stats array for StatCardsGrid
+  const stats = [
+    {
+      title: "Total Users",
+      value: totalUsers,
+      bgColor: "bg-purple-500",
+      iconPath:
+        "M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z",
+    },
+    {
+      title: "Pending Requests",
+      value: pendingRequests,
+      bgColor: "bg-yellow-500",
+      iconPath:
+        "M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2zm8 0h-2a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z",
+    },
+    {
+      title: "Total Equipments",
+      value: totalEquipment,
+      bgColor: "bg-blue-500",
+      iconPath:
+        "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+    },
+    {
+      title: "Active Facilities",
+      value: activeFacilitiesCount,
+      bgColor: "bg-green-500",
+      iconPath:
+        "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+    },
+    {
+      title: "Total Supplies",
+      value: totalSupply,
+      bgColor: "bg-indigo-500",
+      iconPath: "M4 6h16M4 10h16M4 14h16M4 18h16",
+    },
+    {
+      title: "Borrowed (Last 7 Days)",
+      value: borrowedLast7Days,
+      bgColor: "bg-orange-500",
+      iconPath: "M9 17v-6a2 2 0 00-2-2H5l7-7 7 7h-2a2 2 0 00-2 2v6",
+    },
+    {
+      title: "Borrowed Today",
+      value: borrowedToday,
+      bgColor: "bg-red-500",
+      iconPath: "M12 8v4l3 3",
+    },
+    {
+      title: "Equipment Categories",
+      value: totalEquipmentCategories,
+      bgColor: "bg-teal-500",
+      iconPath: "M3 7h18M3 12h18M3 17h18",
+    },
+  ];
 
   if (!mounted) {
     return (
@@ -116,120 +176,32 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {/* Stats cards */}
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                <StatCard
-                  title="Total Users"
-                  value={totalUsers}
-                  bgColor="bg-purple-500"
-                  iconPath="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <StatCard
-                  title="Pending Requests"
-                  value={pendingRequests}
-                  bgColor="bg-yellow-500"
-                  iconPath="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2zm8 0h-2a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z"
-                />
-                <StatCard
-                  title="Total Equipment"
-                  value={totalEquipment}
-                  bgColor="bg-blue-500"
-                  iconPath="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-                <StatCard
-                  title="Active Facilities"
-                  value={activeFacilitiesCount}
-                  bgColor="bg-green-500"
-                  iconPath="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-                <StatCard
-                  title="Total Supply"
-                  value={totalSupply}
-                  bgColor="bg-indigo-500"
-                  iconPath="M4 6h16M4 10h16M4 14h16M4 18h16"
-                />
-                <StatCard
-                  title="Borrowed (Last 7 Days)"
-                  value={borrowedLast7Days}
-                  bgColor="bg-orange-500"
-                  iconPath="M9 17v-6a2 2 0 00-2-2H5l7-7 7 7h-2a2 2 0 00-2 2v6"
-                />
-                <StatCard
-                  title="Borrowed Today"
-                  value={borrowedToday}
-                  bgColor="bg-red-500"
-                  iconPath="M12 8v4l3 3"
-                />
-                <StatCard
-                  title="Equipment Categories"
-                  value={totalEquipmentCategories}
-                  bgColor="bg-teal-500"
-                  iconPath="M3 7h18M3 12h18M3 17h18"
-                />
-              </div>
+              {/* Stats cards using StatCardsGrid component */}
+              <StatCardsGrid stats={stats} />
 
+              {/* Equipment per person liable chart */}
+              <div className="mb-8">
+                <EquipmentCountPerPersonLiableChart />
+              </div>
               {/* Equipment Categories Chart */}
               <div className="mb-8">
                 <EquipmentCategoryChart />
               </div>
-
               {/* Equipment Status Chart */}
               <div className="mb-8">
                 <EquipmentStatusChart />
               </div>
+              {/* Equipment Per Facility Chart */}
+              <div className="mb-8">
+                <EquipmentPerFacilityChart />
+              </div>
+              {/* Equipment Availability Chart */}
+              <div className="mb-8">
+                <EquipmentAvailabilityChart />
+              </div>
             </div>
           </div>
         </main>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  bgColor,
-  iconPath,
-}: {
-  title: string;
-  value: number | null;
-  bgColor: string;
-  iconPath: string;
-}) {
-  return (
-    <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div
-              className={`w-8 h-8 ${bgColor} rounded-md flex items-center justify-center`}
-            >
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={iconPath}
-                />
-              </svg>
-            </div>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
-                {title}
-              </dt>
-              <dd className="text-lg font-semibold text-gray-900">
-                {value !== null ? value : "Loading..."}
-              </dd>
-            </dl>
-          </div>
-        </div>
       </div>
     </div>
   );
