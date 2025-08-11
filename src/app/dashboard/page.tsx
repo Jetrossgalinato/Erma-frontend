@@ -7,6 +7,7 @@ import EquipmentCountPerPersonLiableChart from "@/components/EquipmentCountPerPe
 import EquipmentCategoryChart from "@/components/EquipmentCategoryChart";
 import EquipmentStatusChart from "@/components/EquipmentStatusChart";
 import EquipmentPerFacilityChart from "@/components/EquipmentPerFacilityChart";
+import EquipmentAvailabilityChart from "@/components/EquipmentAvailabilityChart";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -173,7 +174,6 @@ export default function DashboardPage() {
               <div className="mb-8">
                 <EquipmentCountPerPersonLiableChart />
               </div>
-
               {/* Equipment Categories Chart */}
               <div className="mb-8">
                 <EquipmentCategoryChart />
@@ -185,6 +185,10 @@ export default function DashboardPage() {
               {/* Equipment Per Facility Chart */}
               <div className="mb-8">
                 <EquipmentPerFacilityChart />
+              </div>
+              {/* Equipment Availability Chart */}
+              <div className="mb-8">
+                <EquipmentAvailabilityChart />
               </div>
             </div>
           </div>
