@@ -21,34 +21,21 @@ export default function DashboardPage() {
     setMounted(true);
 
     const fetchCounts = async () => {
-      // Total Users from auth.users
-      const { data: totalUsersData, error: usersError } = await supabase.rpc(
-        "get_total_users"
-      );
-      if (usersError) {
-        console.error("Error fetching total users:", usersError);
+      const { data, error } = await supabase.rpc("get_dashboard_counts");
+
+      if (error) {
+        console.error("Error fetching dashboard counts:", error);
         setTotalUsers(0);
-      } else {
-        setTotalUsers(totalUsersData ?? 0);
+        setPendingRequests(0);
+        setTotalEquipment(0);
+        setActiveFacilitiesCount(0);
+        return;
       }
 
-      // Pending Requests
-      const { count: pendingCount } = await supabase
-        .from("account_requests")
-        .select("*", { count: "exact", head: true });
-      setPendingRequests(pendingCount ?? 0);
-
-      // Total Equipment
-      const { count: equipmentCount } = await supabase
-        .from("equipments")
-        .select("*", { count: "exact", head: true });
-      setTotalEquipment(equipmentCount ?? 0);
-
-      // Active Facilities
-      const { count: facilitiesCount } = await supabase
-        .from("facilities")
-        .select("*", { count: "exact", head: true });
-      setActiveFacilitiesCount(facilitiesCount ?? 0);
+      setTotalUsers(data.total_users ?? 0);
+      setPendingRequests(data.pending_requests ?? 0);
+      setTotalEquipment(data.total_equipment ?? 0);
+      setActiveFacilitiesCount(data.active_facilities ?? 0);
     };
 
     fetchCounts();
@@ -113,31 +100,24 @@ export default function DashboardPage() {
 
               {/* Stats cards */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                {/* Total Users */}
                 <StatCard
                   title="Total Users"
                   value={totalUsers}
                   bgColor="bg-purple-500"
                   iconPath="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
-
-                {/* Pending Requests */}
                 <StatCard
                   title="Pending Requests"
                   value={pendingRequests}
                   bgColor="bg-yellow-500"
                   iconPath="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2zm8 0h-2a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z"
                 />
-
-                {/* Total Equipment */}
                 <StatCard
                   title="Total Equipment"
                   value={totalEquipment}
                   bgColor="bg-blue-500"
                   iconPath="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
-
-                {/* Active Facilities */}
                 <StatCard
                   title="Active Facilities"
                   value={activeFacilitiesCount}
