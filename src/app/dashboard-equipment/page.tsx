@@ -162,12 +162,10 @@ export default function DashboardEquipmentPage() {
         const simulatedData: Partial<Equipment>[] = [
           {
             name: "Sample Equipment 1",
-
             description: "Sample description 1",
           },
           {
             name: "Sample Equipment 2",
-
             description: "Sample description 2",
           },
         ];
@@ -368,6 +366,55 @@ export default function DashboardEquipmentPage() {
       editingCell?.rowId === eq.id && editingCell?.column === column;
 
     if (isEditing) {
+      // Special handling for status column
+      if (column === "status") {
+        return (
+          <div className="relative">
+            <select
+              value={editingCell.value}
+              onChange={(e) => handleCellEdit(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleCancelEdit}
+              autoFocus
+              className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
+            >
+              <option value="">Select status</option>
+              <option value="working">Working</option>
+              <option value="in_use">In Use</option>
+              <option value="for_repair">For Repair</option>
+            </select>
+            <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
+              Press Enter to save, Esc to cancel
+            </div>
+          </div>
+        );
+      }
+
+      // Special handling for availability column
+      if (column === "availability") {
+        return (
+          <div className="relative">
+            <select
+              value={editingCell.value}
+              onChange={(e) => handleCellEdit(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleCancelEdit}
+              autoFocus
+              className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
+            >
+              <option value="">Select availability</option>
+              <option value="Available">Available</option>
+              <option value="For Disposal">For Disposal</option>
+              <option value="Disposed">Disposed</option>
+            </select>
+            <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
+              Press Enter to save, Esc to cancel
+            </div>
+          </div>
+        );
+      }
+
+      // Regular input for other columns
       return (
         <div className="relative">
           <input
@@ -599,10 +646,9 @@ export default function DashboardEquipmentPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                          {/* Required Fields */}
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              name <span className="text-red-500">*</span>
+                              Name <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -620,7 +666,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              po_number
+                              PO Number
                             </label>
                             <input
                               type="text"
@@ -638,7 +684,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              unit_number
+                              Unit Number
                             </label>
                             <input
                               type="text"
@@ -656,7 +702,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              brand_name
+                              Brand Name
                             </label>
                             <input
                               type="text"
@@ -674,7 +720,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              category
+                              Category
                             </label>
                             <input
                               type="text"
@@ -692,7 +738,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              status
+                              Status
                             </label>
                             <select
                               value={newEquipment.status || ""}
@@ -713,7 +759,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              availability
+                              Availability
                             </label>
                             <select
                               value={newEquipment.availability || ""}
@@ -734,7 +780,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              date_acquired
+                              Date Acquired
                             </label>
                             <input
                               type="date"
@@ -751,7 +797,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              supplier
+                              Supplier
                             </label>
                             <input
                               type="text"
@@ -769,7 +815,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              amount
+                              Amount
                             </label>
                             <input
                               type="text"
@@ -841,25 +887,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Remarks
-                            </label>
-                            <textarea
-                              value={newEquipment.remarks || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  remarks: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                              rows={2}
-                              placeholder="Remarks"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              serial_number
+                              Serial Number
                             </label>
                             <input
                               type="text"
@@ -877,7 +905,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              property_number
+                              Property Number
                             </label>
                             <input
                               type="text"
@@ -895,7 +923,7 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              person_liable
+                              Person Liable
                             </label>
                             <input
                               type="text"
@@ -911,9 +939,29 @@ export default function DashboardEquipmentPage() {
                             />
                           </div>
 
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Facility ID
+                            </label>
+                            <input
+                              type="number"
+                              value={newEquipment.facility_id || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  facility_id: e.target.value
+                                    ? parseInt(e.target.value, 10)
+                                    : undefined,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Facility ID"
+                            />
+                          </div>
+
                           <div className="md:col-span-2">
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              description
+                              Description
                             </label>
                             <textarea
                               value={newEquipment.description || ""}
@@ -926,6 +974,24 @@ export default function DashboardEquipmentPage() {
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                               rows={2}
                               placeholder="Description"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Remarks
+                            </label>
+                            <textarea
+                              value={newEquipment.remarks || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  remarks: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                              rows={2}
+                              placeholder="Remarks"
                             />
                           </div>
                         </div>
@@ -996,9 +1062,6 @@ export default function DashboardEquipmentPage() {
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Control Number
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Remarks
-                          </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Serial Number
                           </th>
@@ -1008,8 +1071,14 @@ export default function DashboardEquipmentPage() {
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Person Liable
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Facility ID
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Description
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Remarks
                           </th>
                         </tr>
                       </thead>
@@ -1053,19 +1122,47 @@ export default function DashboardEquipmentPage() {
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm border-r border-gray-100">
                               {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "status"
-                                ? renderEditableCell(eq, "status", eq.status)
-                                : getStatusBadge(eq.status)}
+                              editingCell?.column === "status" ? (
+                                renderEditableCell(eq, "status", eq.status)
+                              ) : (
+                                <div
+                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                  onDoubleClick={() =>
+                                    handleCellDoubleClick(
+                                      eq.id,
+                                      "status",
+                                      eq.status
+                                    )
+                                  }
+                                  title="Double-click to edit"
+                                >
+                                  {getStatusBadge(eq.status)}
+                                </div>
+                              )}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm border-r border-gray-100">
                               {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "availability"
-                                ? renderEditableCell(
-                                    eq,
-                                    "availability",
-                                    eq.availability
-                                  )
-                                : getAvailabilityBadge(eq.availability)}
+                              editingCell?.column === "availability" ? (
+                                renderEditableCell(
+                                  eq,
+                                  "availability",
+                                  eq.availability
+                                )
+                              ) : (
+                                <div
+                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                  onDoubleClick={() =>
+                                    handleCellDoubleClick(
+                                      eq.id,
+                                      "availability",
+                                      eq.availability
+                                    )
+                                  }
+                                  title="Double-click to edit"
+                                >
+                                  {getAvailabilityBadge(eq.availability)}
+                                </div>
+                              )}
                             </td>
 
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
@@ -1136,28 +1233,6 @@ export default function DashboardEquipmentPage() {
                                 eq.control_number
                               )}
                             </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 max-w-xs">
-                              <div
-                                className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                title={eq.remarks || "Double-click to edit"}
-                                onDoubleClick={() =>
-                                  handleCellDoubleClick(
-                                    eq.id,
-                                    "remarks",
-                                    eq.remarks
-                                  )
-                                }
-                              >
-                                {editingCell?.rowId === eq.id &&
-                                editingCell?.column === "remarks"
-                                  ? renderEditableCell(
-                                      eq,
-                                      "remarks",
-                                      eq.remarks
-                                    )
-                                  : eq.remarks || "-"}
-                              </div>
-                            </td>
 
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
                               {renderEditableCell(
@@ -1180,7 +1255,14 @@ export default function DashboardEquipmentPage() {
                                 eq.person_liable
                               )}
                             </td>
-                            <td className="px-3 py-3 text-sm text-gray-600 max-w-xs">
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
+                              {renderEditableCell(
+                                eq,
+                                "facility_id",
+                                eq.facility_id
+                              )}
+                            </td>
+                            <td className="px-3 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-100">
                               <div
                                 className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                                 title={eq.description || "Double-click to edit"}
@@ -1200,6 +1282,28 @@ export default function DashboardEquipmentPage() {
                                       eq.description
                                     )
                                   : eq.description || "-"}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 text-sm text-gray-600 max-w-xs">
+                              <div
+                                className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                title={eq.remarks || "Double-click to edit"}
+                                onDoubleClick={() =>
+                                  handleCellDoubleClick(
+                                    eq.id,
+                                    "remarks",
+                                    eq.remarks
+                                  )
+                                }
+                              >
+                                {editingCell?.rowId === eq.id &&
+                                editingCell?.column === "remarks"
+                                  ? renderEditableCell(
+                                      eq,
+                                      "remarks",
+                                      eq.remarks
+                                    )
+                                  : eq.remarks || "-"}
                               </div>
                             </td>
                           </tr>
@@ -1291,9 +1395,6 @@ export default function DashboardEquipmentPage() {
                                   Name
                                 </th>
                                 <th className="px-4 py-2 text-left font-medium text-gray-700">
-                                  Quantity
-                                </th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-700">
                                   Description
                                 </th>
                               </tr>
@@ -1304,7 +1405,6 @@ export default function DashboardEquipmentPage() {
                                   <td className="px-4 py-2 text-gray-900">
                                     {item.name || "—"}
                                   </td>
-
                                   <td className="px-4 py-2 text-gray-600 truncate max-w-xs">
                                     {item.description || "—"}
                                   </td>
