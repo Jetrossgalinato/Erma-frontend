@@ -770,6 +770,78 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Estimated Life
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.estimated_life || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  estimated_life: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Estimated Life"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Item Number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.item_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  item_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Item Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Control Number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.control_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  control_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Control Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Remarks
+                            </label>
+                            <textarea
+                              value={newEquipment.remarks || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  remarks: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                              rows={2}
+                              placeholder="Remarks"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
                               serial_number
                             </label>
                             <input
