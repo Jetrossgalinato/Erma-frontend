@@ -67,7 +67,7 @@ export default function DashboardEquipmentPage() {
       const { data, error } = await supabase
         .from("equipments")
         .select("*")
-        .order("id", { ascending: false });
+        .order("id", { ascending: true });
 
       if (error) {
         console.error("Error fetching equipments:", error);
