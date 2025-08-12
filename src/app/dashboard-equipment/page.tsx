@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -44,17 +44,41 @@ export default function DashboardEquipmentPage() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<Partial<Equipment>[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
     name: "",
     quantity: 1,
   });
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchEquipments = useCallback(
     async (showAnimation = false) => {
@@ -114,6 +138,78 @@ export default function DashboardEquipmentPage() {
       setNewEquipment({ name: "", quantity: 1 });
       fetchEquipments(false);
     }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      processExcelFile(file);
+    }
+  };
+
+  const processExcelFile = async (file: File) => {
+    setIsProcessing(true);
+    try {
+      // Here you would typically use a library like SheetJS to parse the Excel file
+      // For now, we'll simulate the process
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Simulate parsed data - replace this with actual Excel parsing logic
+        const simulatedData: Partial<Equipment>[] = [
+          {
+            name: "Sample Equipment 1",
+            quantity: 2,
+            description: "Sample description 1",
+          },
+          {
+            name: "Sample Equipment 2",
+            quantity: 1,
+            description: "Sample description 2",
+          },
+        ];
+        setImportData(simulatedData);
+        setIsProcessing(false);
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error("Error processing file:", error);
+      alert("Failed to process Excel file");
+      setIsProcessing(false);
+    }
+  };
+
+  const handleImportData = async () => {
+    if (importData.length === 0) {
+      alert("No data to import");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const dataToInsert = importData.map((item) => ({
+        ...item,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error } = await supabase.from("equipments").insert(dataToInsert);
+
+      if (error) {
+        console.error("Error importing data:", error);
+        alert("Failed to import data");
+      } else {
+        setShowImportModal(false);
+        setSelectedFile(null);
+        setImportData([]);
+        fetchEquipments(false);
+        alert(`Successfully imported ${importData.length} equipment records`);
+      }
+    } catch (error) {
+      console.error("Error during import:", error);
+      alert("Failed to import data");
+    }
+    setIsProcessing(false);
   };
 
   const handleCellDoubleClick = (
@@ -329,25 +425,94 @@ export default function DashboardEquipmentPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowInsertModal(true)}
-                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  {/* Insert Dropdown Button */}
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setShowDropdown(!showDropdown)}
+                      className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Insert
-                  </button>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Insert
+                      <svg
+                        className="w-4 h-4 ml-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {showDropdown && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setShowInsertModal(true);
+                              setShowDropdown(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                              />
+                            </svg>
+                            Insert Row
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowImportModal(true);
+                              setShowDropdown(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                              />
+                            </svg>
+                            Import Data from Excel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
@@ -604,98 +769,243 @@ export default function DashboardEquipmentPage() {
         </main>
       </div>
 
-      {/* Insert Modal */}
+      {/* Insert Row Modal */}
       {showInsertModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div className="flex items-center justify-center min-h-screen p-4">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
               onClick={() => setShowInsertModal(false)}
-            ></div>
+            />
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                      Insert New Equipment
-                    </h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={newEquipment.name || ""}
-                          onChange={(e) =>
-                            setNewEquipment({
-                              ...newEquipment,
-                              name: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter equipment name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Quantity
-                        </label>
-                        <input
-                          type="number"
-                          value={newEquipment.quantity || 1}
-                          onChange={(e) =>
-                            setNewEquipment({
-                              ...newEquipment,
-                              quantity: parseInt(e.target.value) || 1,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          min="1"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Description
-                        </label>
-                        <textarea
-                          value={newEquipment.description || ""}
-                          onChange={(e) =>
-                            setNewEquipment({
-                              ...newEquipment,
-                              description: e.target.value,
-                            })
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          rows={3}
-                          placeholder="Enter equipment description"
-                        />
-                      </div>
-                    </div>
+            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                  Add new row
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newEquipment.name || ""}
+                      onChange={(e) =>
+                        setNewEquipment({
+                          ...newEquipment,
+                          name: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Equipment name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      value={newEquipment.quantity || 1}
+                      onChange={(e) =>
+                        setNewEquipment({
+                          ...newEquipment,
+                          quantity: parseInt(e.target.value) || 1,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      min="1"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={newEquipment.description || ""}
+                      onChange={(e) =>
+                        setNewEquipment({
+                          ...newEquipment,
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                      rows={3}
+                      placeholder="Equipment description"
+                    />
                   </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={handleInsertEquipment}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Insert
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowInsertModal(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                  Cancel
-                </button>
+
+                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowInsertModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInsertEquipment}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Add row
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Import Data Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+              onClick={() => setShowImportModal(false)}
+            />
+
+            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                  Import data
+                </h3>
+
+                <div className="space-y-6">
+                  {/* File Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Upload file
+                    </label>
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <svg
+                        className="mx-auto h-8 w-8 text-gray-400 mb-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {selectedFile
+                          ? selectedFile.name
+                          : "Click to upload or drag and drop"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Excel files (.xlsx, .xls) up to 10MB
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  {importData.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Preview
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {importData.length} row
+                          {importData.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="max-h-48 overflow-y-auto">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                              <tr>
+                                <th className="px-4 py-2 text-left font-medium text-gray-700">
+                                  Name
+                                </th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-700">
+                                  Quantity
+                                </th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-700">
+                                  Description
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {importData.map((item, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-4 py-2 text-gray-900">
+                                    {item.name || "—"}
+                                  </td>
+                                  <td className="px-4 py-2 text-gray-900">
+                                    {item.quantity || "—"}
+                                  </td>
+                                  <td className="px-4 py-2 text-gray-600 truncate max-w-xs">
+                                    {item.description || "—"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Processing */}
+                  {isProcessing && (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent"></div>
+                      <span className="ml-3 text-sm text-gray-600">
+                        Processing...
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setSelectedFile(null);
+                      setImportData([]);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportData}
+                    disabled={importData.length === 0 || isProcessing}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isProcessing ? "Importing..." : "Import"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input for drag and drop functionality */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx,.xls"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 }
