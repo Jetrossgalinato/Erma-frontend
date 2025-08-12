@@ -3,7 +3,6 @@ import {
   Home,
   Monitor,
   Building,
-  Tag,
   Package,
   FileText,
   ShoppingCart,
@@ -114,8 +113,6 @@ const Sidebar: React.FC = () => {
     { icon: Home, label: "Dashboard", count: null, active: true },
     { icon: Monitor, label: "Equipment", count: 0 },
     { icon: Building, label: "Facilities", count: 0 },
-    { icon: Tag, label: "Categories", count: 0 },
-    { icon: Package, label: "Stock Units", count: 0 },
   ];
 
   const borrowingItems: MenuItemData[] = [
