@@ -38,6 +38,8 @@ type EditingCell = {
 };
 
 export default function DashboardEquipmentPage() {
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,38 @@ export default function DashboardEquipmentPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Remove the old handleDeleteRow function and replace it with this one
+  const handleDeleteSelectedRows = async () => {
+    if (selectedRows.length === 0) return;
+
+    const { error } = await supabase
+      .from("equipments")
+      .delete()
+      .in("id", selectedRows);
+
+    if (error) {
+      console.error("Error deleting equipments:", error);
+      alert("Failed to delete selected equipments");
+    } else {
+      // Update local state by filtering out all selected rows
+      setEquipments((prev) =>
+        prev.filter((eq) => !selectedRows.includes(eq.id))
+      );
+      setSelectedRows([]); // Clear the selection
+      console.log(`Successfully deleted ${selectedRows.length} rows.`);
+    }
+
+    // Close the modal
+    setShowDeleteModal(false);
+  };
+
+  // You'll also need a function to handle the individual checkbox changes
+  const handleCheckboxChange = (id: number) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
 
   const fetchEquipments = useCallback(
     async (showAnimation = false) => {
@@ -582,6 +616,75 @@ export default function DashboardEquipmentPage() {
                   </div>
 
                   <button
+                    onClick={() => setShowDeleteModal(true)}
+                    disabled={selectedRows.length === 0}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
+                      selectedRows.length === 0
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-red-600 hover:bg-red-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    }`}
+                  >
+                    Delete Selected ({selectedRows.length})
+                  </button>
+
+                  {/* The new Confirmation Modal */}
+                  {showDeleteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                      <div
+                        className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
+                        onClick={() => setShowDeleteModal(false)}
+                      ></div>
+                      <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
+                        <div className="p-6">
+                          <div className="flex items-center justify-center">
+                            <svg
+                              className="h-10 w-10 text-red-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="mt-3 text-center">
+                            <h3 className="text-lg font-medium text-gray-900">
+                              Delete Selected Equipments
+                            </h3>
+                            <div className="mt-2">
+                              <p className="text-sm text-gray-500">
+                                Are you sure you want to delete **
+                                {selectedRows.length}** equipment records? This
+                                action cannot be undone.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+                          <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                            onClick={handleDeleteSelectedRows}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                            onClick={() => setShowDeleteModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
                     className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
@@ -1020,6 +1123,29 @@ export default function DashboardEquipmentPage() {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
+                          {/* Add a new header for the checkbox column */}
+                          <th className="w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                            {/* Optional: Add a master checkbox to select/deselect all rows */}
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                              // Logic to check if all rows are selected
+                              checked={
+                                selectedRows.length === equipments.length &&
+                                equipments.length > 0
+                              }
+                              onChange={() => {
+                                if (selectedRows.length === equipments.length) {
+                                  setSelectedRows([]); // Deselect all
+                                } else {
+                                  setSelectedRows(
+                                    equipments.map((eq) => eq.id)
+                                  ); // Select all
+                                }
+                              }}
+                            />
+                          </th>
+
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             ID
                           </th>
@@ -1090,6 +1216,14 @@ export default function DashboardEquipmentPage() {
                               index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                             }`}
                           >
+                            <td className="w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <input
+                                type="checkbox"
+                                className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                                checked={selectedRows.includes(eq.id)}
+                                onChange={() => handleCheckboxChange(eq.id)}
+                              />
+                            </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-100 font-mono">
                               {eq.id}
                             </td>
