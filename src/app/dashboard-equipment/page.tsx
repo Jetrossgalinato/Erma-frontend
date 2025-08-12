@@ -330,15 +330,25 @@ export default function DashboardEquipmentPage() {
     if (!availability) return <span className="text-gray-400">-</span>;
 
     const availabilityColors = {
-      Available: "bg-green-100 text-green-800",
-      Unavailable: "bg-red-100 text-red-800",
-      "In use": "bg-yellow-100 text-yellow-800",
+      available: "bg-green-100 text-green-800",
+      disposed: "bg-red-100 text-red-800",
+      for_disposal: "bg-yellow-100 text-yellow-800",
     };
 
-    const colorClass =
-      availabilityColors[
-        availability.toLowerCase() as keyof typeof availabilityColors
-      ] || "bg-blue-100 text-blue-800";
+    type AvailabilityKey = keyof typeof availabilityColors;
+
+    function normalizeAvailability(input: string): AvailabilityKey | undefined {
+      const normalized = input.toLowerCase().replace(/ /g, "_");
+      if (normalized in availabilityColors) {
+        return normalized as AvailabilityKey;
+      }
+      return undefined;
+    }
+
+    const key = normalizeAvailability(availability);
+    const colorClass = key
+      ? availabilityColors[key]
+      : "bg-blue-100 text-blue-800";
 
     return (
       <span
@@ -717,8 +727,8 @@ export default function DashboardEquipmentPage() {
                             >
                               <option value="">Select availability</option>
                               <option value="Available">Available</option>
-                              <option value="Unavailable">Unavailable</option>
-                              <option value="In use">In Use</option>
+                              <option value="For Disposal">For Disposal</option>
+                              <option value="Disposed">Disposed</option>
                             </select>
                           </div>
 
