@@ -299,15 +299,23 @@ export default function DashboardEquipmentPage() {
     if (!status) return <span className="text-gray-400">-</span>;
 
     const statusColors = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-red-100 text-red-800",
-      maintenance: "bg-yellow-100 text-yellow-800",
-      retired: "bg-gray-100 text-gray-800",
+      working: "bg-green-100 text-green-800",
+      for_repair: "bg-red-100 text-red-800",
+      in_use: "bg-yellow-100 text-yellow-800",
     };
 
-    const colorClass =
-      statusColors[status.toLowerCase() as keyof typeof statusColors] ||
-      "bg-blue-100 text-blue-800";
+    type StatusKey = keyof typeof statusColors;
+
+    function normalizeStatus(input: string): StatusKey | undefined {
+      const normalized = input.toLowerCase().replace(/ /g, "_");
+      if (normalized in statusColors) {
+        return normalized as StatusKey;
+      }
+      return undefined;
+    }
+
+    const key = normalizeStatus(status);
+    const colorClass = key ? statusColors[key] : "bg-blue-100 text-blue-800";
 
     return (
       <span
@@ -322,9 +330,9 @@ export default function DashboardEquipmentPage() {
     if (!availability) return <span className="text-gray-400">-</span>;
 
     const availabilityColors = {
-      available: "bg-green-100 text-green-800",
-      unavailable: "bg-red-100 text-red-800",
-      "in use": "bg-yellow-100 text-yellow-800",
+      Available: "bg-green-100 text-green-800",
+      Unavailable: "bg-red-100 text-red-800",
+      "In use": "bg-yellow-100 text-yellow-800",
     };
 
     const colorClass =
@@ -423,8 +431,8 @@ export default function DashboardEquipmentPage() {
                     Equipments
                   </h1>
                   <p className="mt-2 text-sm text-gray-600">
-                    Welcome to the Equipments page, where you can manage all
-                    your equipment efficiently.
+                    Welcome to the Equipments page, where you can manage all the
+                    equipments efficiently.
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -687,10 +695,9 @@ export default function DashboardEquipmentPage() {
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="">Select status</option>
-                              <option value="active">Active</option>
-                              <option value="inactive">Inactive</option>
-                              <option value="maintenance">Maintenance</option>
-                              <option value="retired">Retired</option>
+                              <option value="working">Working</option>
+                              <option value="in_use">In Use</option>
+                              <option value="for_repair">For Repair</option>
                             </select>
                           </div>
 
@@ -709,9 +716,9 @@ export default function DashboardEquipmentPage() {
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="">Select availability</option>
-                              <option value="available">Available</option>
-                              <option value="unavailable">Unavailable</option>
-                              <option value="in use">In Use</option>
+                              <option value="Available">Available</option>
+                              <option value="Unavailable">Unavailable</option>
+                              <option value="In use">In Use</option>
                             </select>
                           </div>
 
