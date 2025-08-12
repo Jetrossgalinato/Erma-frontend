@@ -36,6 +36,23 @@ export default function DashboardEquipmentPage() {
           <Sidebar />
         </div>
       </aside>
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+              <div className="mb-8 pt-8">
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                  Equipments
+                </h1>
+                <p className="mt-2 text-sm text-gray-600">
+                  Welcome to the Equipments page, where you can manage all your
+                  equipment efficiently.
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
