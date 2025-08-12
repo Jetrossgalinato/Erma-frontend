@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -13,6 +13,7 @@ import { StatCardsGrid } from "@/components/StatCards";
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [pendingRequests, setPendingRequests] = useState<number | null>(null);
@@ -31,10 +32,12 @@ export default function DashboardPage() {
 
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    setMounted(true);
+  const fetchCounts = useCallback(
+    async (showAnimation = false) => {
+      if (showAnimation) {
+        setIsRefreshing(true);
+      }
 
-    const fetchCounts = async () => {
       const { data, error } = await supabase.rpc("get_dashboard_counts");
 
       if (error) {
@@ -47,24 +50,40 @@ export default function DashboardPage() {
         setBorrowedLast7Days(0);
         setBorrowedToday(0);
         setTotalEquipmentCategories(0);
-        return;
+      } else {
+        setTotalUsers(data.total_users ?? 0);
+        setPendingRequests(data.pending_requests ?? 0);
+        setTotalEquipment(data.total_equipment ?? 0);
+        setActiveFacilitiesCount(data.active_facilities ?? 0);
+        setTotalSupply(data.total_supplies ?? 0);
+        setBorrowedLast7Days(data.borrowed_last_7_days ?? 0);
+        setBorrowedToday(data.borrowed_today ?? 0);
+        setTotalEquipmentCategories(data.total_equipment_categories ?? 0);
       }
 
-      setTotalUsers(data.total_users ?? 0);
-      setPendingRequests(data.pending_requests ?? 0);
-      setTotalEquipment(data.total_equipment ?? 0);
-      setActiveFacilitiesCount(data.active_facilities ?? 0);
-      setTotalSupply(data.total_supplies ?? 0);
-      setBorrowedLast7Days(data.borrowed_last_7_days ?? 0);
-      setBorrowedToday(data.borrowed_today ?? 0);
-      setTotalEquipmentCategories(data.total_equipment_categories ?? 0);
-    };
+      if (showAnimation) {
+        // Keep animation running for at least 500ms for better UX
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      }
+    },
+    [supabase]
+  );
 
-    fetchCounts();
-  }, [supabase]);
+  useEffect(() => {
+    setMounted(true);
+    fetchCounts(false);
+  }, [fetchCounts]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
+  };
+
+  const handleRefreshClick = () => {
+    if (!isRefreshing) {
+      fetchCounts(true);
+    }
   };
 
   // Create stats array for StatCardsGrid
@@ -166,14 +185,34 @@ export default function DashboardPage() {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <div className="mb-8 pt-8">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                  Dashboard
-                </h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  Welcome to your dashboard! {"Here's"} an overview of the
-                  system.
-                </p>
+              <div className="mb-8 pt-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    Dashboard
+                  </h1>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Welcome to your dashboard! {"Here's"} an overview of the
+                    system.
+                  </p>
+                </div>
+                <button
+                  onClick={handleRefreshClick}
+                  disabled={isRefreshing}
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                    isRefreshing
+                      ? "cursor-not-allowed opacity-75"
+                      : "hover:shadow-md"
+                  }`}
+                >
+                  <span
+                    className={`inline-block mr-2 transition-transform duration-300 ${
+                      isRefreshing ? "animate-spin" : ""
+                    }`}
+                  >
+                    ⟳
+                  </span>
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </button>
               </div>
 
               {/* Stats cards using StatCardsGrid component */}
