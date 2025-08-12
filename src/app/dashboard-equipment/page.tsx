@@ -1124,7 +1124,10 @@ export default function DashboardEquipmentPage() {
                       <thead className="bg-gray-50">
                         <tr>
                           {/* Add a new header for the checkbox column */}
-                          <th className="w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             {/* Optional: Add a master checkbox to select/deselect all rows */}
                             <input
                               type="checkbox"
@@ -1146,7 +1149,10 @@ export default function DashboardEquipmentPage() {
                             />
                           </th>
 
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th
+                            scope="col"
+                            className="sticky left-12 z-10 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             ID
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -1216,7 +1222,7 @@ export default function DashboardEquipmentPage() {
                               index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                             }`}
                           >
-                            <td className="w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-white border-r border-gray-200">
                               <input
                                 type="checkbox"
                                 className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
@@ -1224,9 +1230,16 @@ export default function DashboardEquipmentPage() {
                                 onChange={() => handleCheckboxChange(eq.id)}
                               />
                             </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-100 font-mono">
+                            {/* ID Data Cell (Sticky) */}
+                            <td
+                              onDoubleClick={() =>
+                                handleCellDoubleClick(eq.id, "id", eq.id)
+                              }
+                              className="sticky left-12 z-10 px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white border-r border-gray-200"
+                            >
                               {eq.id}
                             </td>
+
                             <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
                               {renderEditableCell(eq, "name", eq.name)}
                             </td>
