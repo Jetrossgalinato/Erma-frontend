@@ -18,7 +18,7 @@ type Equipment = {
   amount?: string;
   estimated_life?: string;
   item_number?: string;
-  property_num?: string;
+  property_number?: string;
   control_numb?: string;
   serial_number?: string;
   person_liable?: string;
@@ -27,7 +27,6 @@ type Equipment = {
   name: string;
   facility_id?: number;
   availability?: string;
-  quantity: number;
   created_at: string;
 };
 
@@ -43,7 +42,7 @@ export default function DashboardEquipmentPage() {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showInsertModal, setShowInsertModal] = useState(false);
+  const [showInsertForm, setShowInsertForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
@@ -52,7 +51,6 @@ export default function DashboardEquipmentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
     name: "",
-    quantity: 1,
   });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -134,10 +132,15 @@ export default function DashboardEquipmentPage() {
       console.error("Error inserting equipment:", error);
       alert("Failed to insert equipment");
     } else {
-      setShowInsertModal(false);
-      setNewEquipment({ name: "", quantity: 1 });
+      setShowInsertForm(false);
+      setNewEquipment({ name: "" });
       fetchEquipments(false);
     }
+  };
+
+  const handleCancelInsert = () => {
+    setShowInsertForm(false);
+    setNewEquipment({ name: "" });
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,12 +162,12 @@ export default function DashboardEquipmentPage() {
         const simulatedData: Partial<Equipment>[] = [
           {
             name: "Sample Equipment 1",
-            quantity: 2,
+
             description: "Sample description 1",
           },
           {
             name: "Sample Equipment 2",
-            quantity: 1,
+
             description: "Sample description 2",
           },
         ];
@@ -242,7 +245,7 @@ export default function DashboardEquipmentPage() {
 
     // Convert value appropriately
     let finalValue: string | number | null = value === "" ? null : value;
-    if (column === "quantity" || column === "facility_id") {
+    if (column === "facility_id") {
       finalValue = value === "" ? null : parseInt(value, 10);
     }
 
@@ -351,7 +354,7 @@ export default function DashboardEquipmentPage() {
         <div className="relative">
           <input
             type={
-              column === "quantity" || column === "facility_id"
+              column === "facility_id"
                 ? "number"
                 : column === "date_acquired"
                 ? "date"
@@ -466,7 +469,7 @@ export default function DashboardEquipmentPage() {
                         <div className="py-1">
                           <button
                             onClick={() => {
-                              setShowInsertModal(true);
+                              setShowInsertForm(true);
                               setShowDropdown(false);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -506,7 +509,7 @@ export default function DashboardEquipmentPage() {
                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
                               />
                             </svg>
-                            Import Data from Excel
+                            Import Data from Excel File
                           </button>
                         </div>
                       </div>
@@ -549,6 +552,315 @@ export default function DashboardEquipmentPage() {
                 </div>
               ) : (
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                  {/* Insert Form Row */}
+                  {showInsertForm && (
+                    <div className="border-b border-gray-200 bg-green-50">
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Add new row to equipments
+                          </h4>
+                          <button
+                            onClick={handleCancelInsert}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                          {/* Required Fields */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.name || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  name: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Equipment name"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              po_number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.po_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  po_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="PO Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              unit_number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.unit_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  unit_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Unit Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              brand_name
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.brand_name || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  brand_name: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Brand Name"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              category
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.category || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  category: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Category"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              status
+                            </label>
+                            <select
+                              value={newEquipment.status || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  status: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            >
+                              <option value="">Select status</option>
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                              <option value="maintenance">Maintenance</option>
+                              <option value="retired">Retired</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              availability
+                            </label>
+                            <select
+                              value={newEquipment.availability || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  availability: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            >
+                              <option value="">Select availability</option>
+                              <option value="available">Available</option>
+                              <option value="unavailable">Unavailable</option>
+                              <option value="in use">In Use</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              date_acquired
+                            </label>
+                            <input
+                              type="date"
+                              value={newEquipment.date_acquired || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  date_acquired: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              supplier
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.supplier || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  supplier: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Supplier"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              amount
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.amount || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  amount: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Amount"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              serial_number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.serial_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  serial_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Serial Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              property_number
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.property_number || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  property_number: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Property Number"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              person_liable
+                            </label>
+                            <input
+                              type="text"
+                              value={newEquipment.person_liable || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  person_liable: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Person Liable"
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              description
+                            </label>
+                            <textarea
+                              value={newEquipment.description || ""}
+                              onChange={(e) =>
+                                setNewEquipment({
+                                  ...newEquipment,
+                                  description: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                              rows={2}
+                              placeholder="Description"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCancelInsert}
+                            className="px-3 py-1.5 text-sm text-black font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleInsertEquipment}
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -576,9 +888,6 @@ export default function DashboardEquipmentPage() {
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Availability
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                            Quantity
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Date Acquired
@@ -657,9 +966,7 @@ export default function DashboardEquipmentPage() {
                                   )
                                 : getAvailabilityBadge(eq.availability)}
                             </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-100 font-semibold">
-                              {renderEditableCell(eq, "quantity", eq.quantity)}
-                            </td>
+
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
                               {editingCell?.rowId === eq.id &&
                               editingCell?.column === "date_acquired" ? (
@@ -717,8 +1024,8 @@ export default function DashboardEquipmentPage() {
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
                               {renderEditableCell(
                                 eq,
-                                "property_num",
-                                eq.property_num
+                                "property_number",
+                                eq.property_number
                               )}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
@@ -768,99 +1075,6 @@ export default function DashboardEquipmentPage() {
           </div>
         </main>
       </div>
-
-      {/* Insert Row Modal */}
-      {showInsertModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <div
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowInsertModal(false)}
-            />
-
-            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-md">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">
-                  Add new row
-                </h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      value={newEquipment.name || ""}
-                      onChange={(e) =>
-                        setNewEquipment({
-                          ...newEquipment,
-                          name: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Equipment name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantity
-                    </label>
-                    <input
-                      type="number"
-                      value={newEquipment.quantity || 1}
-                      onChange={(e) =>
-                        setNewEquipment({
-                          ...newEquipment,
-                          quantity: parseInt(e.target.value) || 1,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      min="1"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      value={newEquipment.description || ""}
-                      onChange={(e) =>
-                        setNewEquipment({
-                          ...newEquipment,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                      rows={3}
-                      placeholder="Equipment description"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowInsertModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleInsertEquipment}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Add row
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Import Data Modal */}
       {showImportModal && (
@@ -945,9 +1159,7 @@ export default function DashboardEquipmentPage() {
                                   <td className="px-4 py-2 text-gray-900">
                                     {item.name || "—"}
                                   </td>
-                                  <td className="px-4 py-2 text-gray-900">
-                                    {item.quantity || "—"}
-                                  </td>
+
                                   <td className="px-4 py-2 text-gray-600 truncate max-w-xs">
                                     {item.description || "—"}
                                   </td>
