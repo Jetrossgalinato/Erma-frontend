@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -35,6 +35,7 @@ export default function DashboardEquipmentPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const supabase = createClientComponentClient();
 
@@ -42,9 +43,14 @@ export default function DashboardEquipmentPage() {
     setSidebarOpen(false);
   };
 
-  useEffect(() => {
-    const fetchEquipments = async () => {
-      setLoading(true);
+  const fetchEquipments = useCallback(
+    async (showAnimation = false) => {
+      if (showAnimation) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
       const { data, error } = await supabase.from("equipments").select("*");
 
       if (error) {
@@ -52,11 +58,28 @@ export default function DashboardEquipmentPage() {
       } else {
         setEquipments(data as Equipment[]);
       }
-      setLoading(false);
-    };
 
-    fetchEquipments();
-  }, [supabase]);
+      if (showAnimation) {
+        // Keep animation running for at least 500ms for better UX
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      } else {
+        setLoading(false);
+      }
+    },
+    [supabase]
+  );
+
+  const handleRefreshClick = useCallback(() => {
+    if (!isRefreshing) {
+      fetchEquipments(true);
+    }
+  }, [isRefreshing, fetchEquipments]);
+
+  useEffect(() => {
+    fetchEquipments(false);
+  }, [fetchEquipments]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -137,14 +160,34 @@ export default function DashboardEquipmentPage() {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <div className="mb-8 pt-8">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                  Equipments
-                </h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  Welcome to the Equipments page, where you can manage all your
-                  equipment efficiently.
-                </p>
+              <div className="mb-8 pt-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    Equipments
+                  </h1>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Welcome to the Equipments page, where you can manage all
+                    your equipment efficiently.
+                  </p>
+                </div>
+                <button
+                  onClick={handleRefreshClick}
+                  disabled={isRefreshing}
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                    isRefreshing
+                      ? "cursor-not-allowed opacity-75"
+                      : "hover:shadow-md"
+                  }`}
+                >
+                  <span
+                    className={`inline-block mr-2 transition-transform duration-300 ${
+                      isRefreshing ? "animate-spin" : ""
+                    }`}
+                  >
+                    ⟳
+                  </span>
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </button>
               </div>
 
               {loading ? (
