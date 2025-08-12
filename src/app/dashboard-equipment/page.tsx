@@ -19,7 +19,7 @@ type Equipment = {
   estimated_life?: string;
   item_number?: string;
   property_number?: string;
-  control_numb?: string;
+  control_number?: string;
   serial_number?: string;
   person_liable?: string;
   remarks?: string;
@@ -899,6 +899,18 @@ export default function DashboardEquipmentPage() {
                             Amount
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Estimated Life
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Item Number
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Control Number
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Remarks
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Serial Number
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -1014,6 +1026,50 @@ export default function DashboardEquipmentPage() {
                                 </div>
                               )}
                             </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {renderEditableCell(
+                                eq,
+                                "estimated_life",
+                                eq.estimated_life
+                              )}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {renderEditableCell(
+                                eq,
+                                "item_number",
+                                eq.item_number
+                              )}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {renderEditableCell(
+                                eq,
+                                "control_number",
+                                eq.control_number
+                              )}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 max-w-xs">
+                              <div
+                                className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                                title={eq.remarks || "Double-click to edit"}
+                                onDoubleClick={() =>
+                                  handleCellDoubleClick(
+                                    eq.id,
+                                    "remarks",
+                                    eq.remarks
+                                  )
+                                }
+                              >
+                                {editingCell?.rowId === eq.id &&
+                                editingCell?.column === "remarks"
+                                  ? renderEditableCell(
+                                      eq,
+                                      "remarks",
+                                      eq.remarks
+                                    )
+                                  : eq.remarks || "-"}
+                              </div>
+                            </td>
+
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
                               {renderEditableCell(
                                 eq,
