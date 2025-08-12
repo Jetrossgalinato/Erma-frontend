@@ -39,6 +39,10 @@ type EditingCell = {
 
 export default function DashboardEquipmentPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
+    null
+  );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
@@ -247,21 +251,53 @@ export default function DashboardEquipmentPage() {
     setIsProcessing(false);
   };
 
-  const handleCellDoubleClick = (
-    rowId: number,
-    column: keyof Equipment,
-    currentValue: string | number | null | undefined
+  const handleEditClick = () => {
+    if (selectedRows.length !== 1) return;
+    const rowToEdit = equipments.find((eq) => eq.id === selectedRows[0]);
+    if (rowToEdit) {
+      setEditingEquipment(rowToEdit);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleEditChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
-    const stringValue =
-      currentValue === null || currentValue === undefined
-        ? ""
-        : String(currentValue);
-    setEditingCell({
-      rowId,
-      column,
-      value: stringValue,
-      originalValue: stringValue,
-    });
+    const { name, value } = e.target;
+    if (editingEquipment) {
+      setEditingEquipment({ ...editingEquipment, [name]: value });
+    }
+  };
+
+  // The new save function for the edit modal
+  const handleSaveEdit = async () => {
+    if (!editingEquipment || !editingEquipment.id) return;
+
+    const { id, ...updates } = editingEquipment;
+    const { error } = await supabase
+      .from("equipments")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updating equipment:", error);
+      alert("Failed to update equipment");
+    } else {
+      // Update local state with the new data
+      setEquipments((prev) =>
+        prev.map((eq) => (eq.id === id ? editingEquipment : eq))
+      );
+      // Clear the edit state and close the modal
+      setEditingEquipment(null);
+      setShowEditModal(false);
+      setSelectedRows([]);
+      alert("Equipment updated successfully!");
+    }
   };
 
   const handleCellEdit = (value: string) => {
@@ -270,42 +306,9 @@ export default function DashboardEquipmentPage() {
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingCell) return;
-
-    const { rowId, column, value } = editingCell;
-
-    // Convert value appropriately
-    let finalValue: string | number | null = value === "" ? null : value;
-    if (column === "facility_id") {
-      finalValue = value === "" ? null : parseInt(value, 10);
-    }
-
-    const { error } = await supabase
-      .from("equipments")
-      .update({
-        [column]: finalValue,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", rowId);
-
-    if (error) {
-      console.error("Error updating equipment:", error);
-      alert("Failed to update equipment");
-    } else {
-      // Update local state
-      setEquipments((prev) =>
-        prev.map((eq) =>
-          eq.id === rowId ? { ...eq, [column]: finalValue } : eq
-        )
-      );
-    }
-
-    setEditingCell(null);
-  };
-
   const handleCancelEdit = () => {
-    setEditingCell(null);
+    setEditingEquipment(null);
+    setShowEditModal(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -478,11 +481,7 @@ export default function DashboardEquipmentPage() {
       value === null || value === undefined ? "-" : String(value);
 
     return (
-      <div
-        className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-        onDoubleClick={() => handleCellDoubleClick(eq.id, column, value)}
-        title="Double-click to edit"
-      >
+      <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
         {displayValue}
       </div>
     );
@@ -614,6 +613,26 @@ export default function DashboardEquipmentPage() {
                       </div>
                     )}
                   </div>
+                  {/* The Edit button */}
+                  <button
+                    onClick={handleEditClick}
+                    disabled={selectedRows.length !== 1}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
+                      selectedRows.length !== 1
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                    Edit Selected (
+                    {selectedRows.length === 1 ? "1" : selectedRows.length})
+                  </button>
 
                   <button
                     onClick={() => setShowDeleteModal(true)}
@@ -1231,12 +1250,7 @@ export default function DashboardEquipmentPage() {
                               />
                             </td>
                             {/* ID Data Cell (Sticky) */}
-                            <td
-                              onDoubleClick={() =>
-                                handleCellDoubleClick(eq.id, "id", eq.id)
-                              }
-                              className="sticky left-12 z-10 px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white border-r border-gray-200"
-                            >
+                            <td className="sticky left-12 z-10 px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white border-r border-gray-200">
                               {eq.id}
                             </td>
 
@@ -1272,17 +1286,7 @@ export default function DashboardEquipmentPage() {
                               editingCell?.column === "status" ? (
                                 renderEditableCell(eq, "status", eq.status)
                               ) : (
-                                <div
-                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                  onDoubleClick={() =>
-                                    handleCellDoubleClick(
-                                      eq.id,
-                                      "status",
-                                      eq.status
-                                    )
-                                  }
-                                  title="Double-click to edit"
-                                >
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                   {getStatusBadge(eq.status)}
                                 </div>
                               )}
@@ -1296,17 +1300,7 @@ export default function DashboardEquipmentPage() {
                                   eq.availability
                                 )
                               ) : (
-                                <div
-                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                  onDoubleClick={() =>
-                                    handleCellDoubleClick(
-                                      eq.id,
-                                      "availability",
-                                      eq.availability
-                                    )
-                                  }
-                                  title="Double-click to edit"
-                                >
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                   {getAvailabilityBadge(eq.availability)}
                                 </div>
                               )}
@@ -1321,17 +1315,7 @@ export default function DashboardEquipmentPage() {
                                   eq.date_acquired
                                 )
                               ) : (
-                                <div
-                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                  onDoubleClick={() =>
-                                    handleCellDoubleClick(
-                                      eq.id,
-                                      "date_acquired",
-                                      eq.date_acquired
-                                    )
-                                  }
-                                  title="Double-click to edit"
-                                >
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                   {formatDate(eq.date_acquired)}
                                 </div>
                               )}
@@ -1344,17 +1328,7 @@ export default function DashboardEquipmentPage() {
                               editingCell?.column === "amount" ? (
                                 renderEditableCell(eq, "amount", eq.amount)
                               ) : (
-                                <div
-                                  className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                  onDoubleClick={() =>
-                                    handleCellDoubleClick(
-                                      eq.id,
-                                      "amount",
-                                      eq.amount
-                                    )
-                                  }
-                                  title="Double-click to edit"
-                                >
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                   {eq.amount ? `₱${eq.amount}` : "-"}
                                 </div>
                               )}
@@ -1410,17 +1384,7 @@ export default function DashboardEquipmentPage() {
                               )}
                             </td>
                             <td className="px-3 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-100">
-                              <div
-                                className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                title={eq.description || "Double-click to edit"}
-                                onDoubleClick={() =>
-                                  handleCellDoubleClick(
-                                    eq.id,
-                                    "description",
-                                    eq.description
-                                  )
-                                }
-                              >
+                              <div className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                 {editingCell?.rowId === eq.id &&
                                 editingCell?.column === "description"
                                   ? renderEditableCell(
@@ -1432,17 +1396,7 @@ export default function DashboardEquipmentPage() {
                               </div>
                             </td>
                             <td className="px-3 py-3 text-sm text-gray-600 max-w-xs">
-                              <div
-                                className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                                title={eq.remarks || "Double-click to edit"}
-                                onDoubleClick={() =>
-                                  handleCellDoubleClick(
-                                    eq.id,
-                                    "remarks",
-                                    eq.remarks
-                                  )
-                                }
-                              >
+                              <div className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
                                 {editingCell?.rowId === eq.id &&
                                 editingCell?.column === "remarks"
                                   ? renderEditableCell(
@@ -1597,6 +1551,145 @@ export default function DashboardEquipmentPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* The new Edit Modal */}
+      {showEditModal && editingEquipment && (
+        <div className="fixed inset-0 z-50 text-black flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
+            onClick={handleCancelEdit}
+          ></div>
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-2xl w-full z-50">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit Equipment: {editingEquipment.name}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editingEquipment.name || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    PO Number
+                  </label>
+                  <input
+                    type="text"
+                    name="po_number"
+                    value={editingEquipment.po_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unit Number
+                  </label>
+                  <input
+                    type="text"
+                    name="unit_number"
+                    value={editingEquipment.unit_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Brand Name
+                  </label>
+                  <input
+                    type="text"
+                    name="brand_name"
+                    value={editingEquipment.brand_name || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={editingEquipment.category || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={editingEquipment.status || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select status</option>
+                    <option value="working">Working</option>
+                    <option value="in_use">In Use</option>
+                    <option value="for_repair">For Repair</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Availability
+                  </label>
+                  <select
+                    name="availability"
+                    value={editingEquipment.availability || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select availability</option>
+                    <option value="available">Available</option>
+                    <option value="for_disposal">For Disposal</option>
+                    <option value="disposed">Disposed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date Acquired
+                  </label>
+                  <input
+                    type="date"
+                    name="date_acquired"
+                    value={editingEquipment.date_acquired?.split("T")[0] || ""} // Format for date input
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                onClick={handleSaveEdit}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
