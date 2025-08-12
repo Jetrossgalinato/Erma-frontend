@@ -1,9 +1,10 @@
+"use client"; // Needed if this is in /app directory
+
 import React, { useState } from "react";
 import {
   Home,
   Monitor,
   Building,
-  Tag,
   Package,
   FileText,
   ShoppingCart,
@@ -15,8 +16,8 @@ import {
   ChevronRight,
   LucideIcon,
 } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
-// Types
 type SectionKey =
   | "borrowing"
   | "supplies"
@@ -28,7 +29,7 @@ interface MenuItemData {
   icon: LucideIcon;
   label: string;
   count: number | null;
-  active?: boolean;
+  path?: string;
 }
 
 interface MenuItemProps extends MenuItemData {
@@ -41,35 +42,41 @@ interface SectionHeaderProps {
   onToggle: () => void;
 }
 
-// Components
 const SidebarMenuItem: React.FC<MenuItemProps> = ({
   icon: Icon,
   label,
   count,
-  active = false,
   isSubItem = false,
-}) => (
-  <div
-    className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
-      active
-        ? "bg-orange-50 text-orange-600 border-r-2 border-orange-500"
-        : "text-gray-600"
-    } ${isSubItem ? "pl-10" : ""}`}
-  >
-    <div className="flex items-center space-x-3">
-      <Icon
-        size={16}
-        className={active ? "text-orange-500" : "text-gray-400"}
-      />
-      <span className="text-sm font-medium">{label}</span>
+  path,
+}) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const active = path && pathname === path;
+
+  return (
+    <div
+      onClick={() => path && router.push(path)}
+      className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+        active
+          ? "bg-orange-50 text-orange-600 border-r-2 border-orange-500"
+          : "text-gray-600"
+      } ${isSubItem ? "pl-10" : ""}`}
+    >
+      <div className="flex items-center space-x-3">
+        <Icon
+          size={16}
+          className={active ? "text-orange-500" : "text-gray-400"}
+        />
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      {count !== null && (
+        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full min-w-[20px] text-center">
+          {count}
+        </span>
+      )}
     </div>
-    {count !== null && (
-      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full min-w-[20px] text-center">
-        {count}
-      </span>
-    )}
-  </div>
-);
+  );
+};
 
 const SidebarSectionHeader: React.FC<SectionHeaderProps> = ({
   label,
@@ -91,7 +98,6 @@ const SidebarSectionHeader: React.FC<SectionHeaderProps> = ({
   </div>
 );
 
-// Main Component
 const Sidebar: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
@@ -111,35 +117,68 @@ const Sidebar: React.FC = () => {
   };
 
   const menuItems: MenuItemData[] = [
-    { icon: Home, label: "Dashboard", count: null, active: true },
-    { icon: Monitor, label: "Equipment", count: 0 },
-    { icon: Building, label: "Facilities", count: 0 },
-    { icon: Tag, label: "Categories", count: 0 },
-    { icon: Package, label: "Stock Units", count: 0 },
+    { icon: Home, label: "Dashboard", count: null, path: "/dashboard" },
+    {
+      icon: Monitor,
+      label: "Equipment",
+      count: 0,
+      path: "/dashboard-equipment",
+    },
+    { icon: Building, label: "Facilities", count: 0, path: "/facilities" },
   ];
 
   const borrowingItems: MenuItemData[] = [
-    { icon: FileText, label: "Request List", count: 0 },
-    { icon: ShoppingCart, label: "Borrowed Items", count: 0 },
+    {
+      icon: FileText,
+      label: "Request List",
+      count: 0,
+      path: "/borrowing/requests",
+    },
+    {
+      icon: ShoppingCart,
+      label: "Borrowed Items",
+      count: 0,
+      path: "/borrowing/borrowed",
+    },
   ];
 
   const suppliesItems: MenuItemData[] = [
-    { icon: Package, label: "Supplies And Materials", count: 0 },
-    { icon: Truck, label: "Supplies Cart", count: 0 },
+    {
+      icon: Package,
+      label: "Supplies And Materials",
+      count: 0,
+      path: "/supplies/materials",
+    },
+    { icon: Truck, label: "Supplies Cart", count: 0, path: "/supplies/cart" },
   ];
 
   const monitoringItems: MenuItemData[] = [
-    { icon: Monitor, label: "Equipment Monitoring", count: 0 },
-    { icon: Building, label: "Facility Monitoring", count: 0 },
-    { icon: Activity, label: "Stock Monitoring", count: 0 },
+    {
+      icon: Monitor,
+      label: "Equipment Monitoring",
+      count: 0,
+      path: "/monitoring/equipment",
+    },
+    {
+      icon: Building,
+      label: "Facility Monitoring",
+      count: 0,
+      path: "/monitoring/facility",
+    },
+    {
+      icon: Activity,
+      label: "Stock Monitoring",
+      count: 0,
+      path: "/monitoring/stock",
+    },
   ];
 
   const userManagementItems: MenuItemData[] = [
-    { icon: Users, label: "Users", count: 1 },
+    { icon: Users, label: "Users", count: 1, path: "/users" },
   ];
 
   const filamentShieldItems: MenuItemData[] = [
-    { icon: Shield, label: "Roles", count: 4 },
+    { icon: Shield, label: "Roles", count: 4, path: "/roles" },
   ];
 
   return (
