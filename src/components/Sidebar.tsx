@@ -175,7 +175,12 @@ const Sidebar: React.FC = () => {
       count: loading ? null : equipmentCount,
       path: "/dashboard-equipment",
     },
-    { icon: Building, label: "Facilities", count: 0, path: "/facilities" },
+    {
+      icon: Building,
+      label: "Facilities",
+      count: 0,
+      path: "/dashboard-facilities",
+    },
   ];
 
   const borrowingItems: MenuItemData[] = [
