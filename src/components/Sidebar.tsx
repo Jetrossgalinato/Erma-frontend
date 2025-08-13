@@ -1,6 +1,6 @@
 "use client"; // Needed if this is in /app directory
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Home,
   Monitor,
@@ -17,6 +17,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type SectionKey =
   | "borrowing"
@@ -70,7 +71,7 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
         <span className="text-sm font-medium">{label}</span>
       </div>
       {count !== null && (
-        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full min-w-[20px] text-center">
+        <span className="text-xs bg-gray-200 text-orange-500 px-2 py-1 rounded-full min-w-[20px] text-center">
           {count}
         </span>
       )}
@@ -109,6 +110,56 @@ const Sidebar: React.FC = () => {
     filamentShield: true,
   });
 
+  const [equipmentCount, setEquipmentCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const supabase = createClientComponentClient();
+
+  // Fetch equipment count from Supabase
+  useEffect(() => {
+    const fetchEquipmentCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("equipments")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching equipment count:", error);
+          setEquipmentCount(0);
+        } else {
+          setEquipmentCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching equipment count:", error);
+        setEquipmentCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEquipmentCount();
+
+    // Optional: Set up real-time subscription to update count when equipment is added/removed
+    const subscription = supabase
+      .channel("equipments_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "equipments",
+        },
+        () => {
+          fetchEquipmentCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -120,8 +171,8 @@ const Sidebar: React.FC = () => {
     { icon: Home, label: "Dashboard", count: null, path: "/dashboard" },
     {
       icon: Monitor,
-      label: "Equipment",
-      count: 0,
+      label: "Equipments",
+      count: loading ? null : equipmentCount,
       path: "/dashboard-equipment",
     },
     { icon: Building, label: "Facilities", count: 0, path: "/facilities" },
