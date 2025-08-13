@@ -216,74 +216,187 @@ export default function DashboardEquipmentPage() {
     setNewEquipment({ name: "" });
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      processExcelFile(file);
-    }
-  };
+    if (!file) return;
 
-  const processExcelFile = async (file: File) => {
+    // Only accept CSV files
+    if (!file.name.endsWith(".csv")) {
+      alert("Please select a CSV file");
+      return;
+    }
+
+    setSelectedFile(file);
     setIsProcessing(true);
+
     try {
-      // Here you would typically use a library like SheetJS to parse the Excel file
-      // For now, we'll simulate the process
-      const reader = new FileReader();
-      reader.onload = () => {
-        // Simulate parsed data - replace this with actual Excel parsing logic
-        const simulatedData: Partial<Equipment>[] = [
-          {
-            name: "Sample Equipment 1",
-            description: "Sample description 1",
-          },
-          {
-            name: "Sample Equipment 2",
-            description: "Sample description 2",
-          },
-        ];
-        setImportData(simulatedData);
-        setIsProcessing(false);
-      };
-      reader.readAsArrayBuffer(file);
+      const text = await file.text();
+      const lines = text.split("\n").filter((line) => line.trim());
+
+      if (lines.length < 2) {
+        alert("CSV file must have at least a header row and one data row");
+        return;
+      }
+
+      // Parse CSV headers
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().replace(/"/g, ""));
+
+      // Parse data rows
+      const equipmentData: Partial<Equipment>[] = lines.slice(1).map((line) => {
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        const equipment: Partial<Equipment> = {};
+
+        headers.forEach((header, index) => {
+          const value = values[index] || "";
+
+          // Map common header variations to your equipment properties
+          switch (header.toLowerCase()) {
+            case "name":
+            case "equipment name":
+              equipment.name = value;
+              break;
+            case "po number":
+            case "po_number":
+            case "ponumber":
+              equipment.po_number = value;
+              break;
+            case "unit number":
+            case "unit_number":
+            case "unitnumber":
+              equipment.unit_number = value;
+              break;
+            case "brand name":
+            case "brand_name":
+            case "brand":
+              equipment.brand_name = value;
+              break;
+            case "description":
+              equipment.description = value;
+              break;
+            case "category":
+              equipment.category = value;
+              break;
+            case "status":
+              equipment.status = value;
+              break;
+            case "availability":
+              equipment.availability = value;
+              break;
+            case "date acquired":
+            case "date_acquired":
+            case "dateacquired":
+              equipment.date_acquired = value;
+              break;
+            case "supplier":
+              equipment.supplier = value;
+              break;
+            case "amount":
+            case "price":
+              equipment.amount = value;
+              break;
+            case "estimated life":
+            case "estimated_life":
+            case "estimatedlife":
+              equipment.estimated_life = value;
+              break;
+            case "item number":
+            case "item_number":
+            case "itemnumber":
+              equipment.item_number = value;
+              break;
+            case "property number":
+            case "property_number":
+            case "propertynumber":
+              equipment.property_number = value;
+              break;
+            case "control number":
+            case "control_number":
+            case "controlnumber":
+              equipment.control_number = value;
+              break;
+            case "serial number":
+            case "serial_number":
+            case "serialnumber":
+              equipment.serial_number = value;
+              break;
+            case "person liable":
+            case "person_liable":
+            case "personliable":
+              equipment.person_liable = value;
+              break;
+            case "facility id":
+            case "facility_id":
+            case "facilityid":
+              equipment.facility_id = value ? parseInt(value, 10) : undefined;
+              break;
+            case "remarks":
+            case "notes":
+              equipment.remarks = value;
+              break;
+          }
+        });
+
+        return equipment;
+      });
+
+      setImportData(equipmentData);
     } catch (error) {
-      console.error("Error processing file:", error);
-      alert("Failed to process Excel file");
+      console.error("Error parsing CSV file:", error);
+      alert(
+        "Error reading CSV file. Please make sure it's properly formatted."
+      );
+    } finally {
       setIsProcessing(false);
     }
   };
 
   const handleImportData = async () => {
-    if (importData.length === 0) {
-      alert("No data to import");
-      return;
-    }
+    if (importData.length === 0) return;
 
     setIsProcessing(true);
+
     try {
-      const dataToInsert = importData.map((item) => ({
-        ...item,
+      // Filter out rows without names (required field)
+      const validData = importData.filter(
+        (item) => item.name && item.name.trim()
+      );
+
+      if (validData.length === 0) {
+        alert("No valid equipment found. Make sure each row has a name.");
+        return;
+      }
+
+      // Add timestamps
+      const equipmentWithTimestamps = validData.map((equipment) => ({
+        ...equipment,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }));
 
-      const { error } = await supabase.from("equipments").insert(dataToInsert);
+      const { error } = await supabase
+        .from("equipments")
+        .insert(equipmentWithTimestamps);
 
       if (error) {
-        console.error("Error importing data:", error);
-        alert("Failed to import data");
+        console.error("Error importing equipment:", error);
+        alert("Failed to import equipment. Please try again.");
       } else {
+        alert(`Successfully imported ${validData.length} equipment records!`);
         setShowImportModal(false);
         setSelectedFile(null);
         setImportData([]);
-        fetchEquipments(false);
-        alert(`Successfully imported ${importData.length} equipment records`);
+        fetchEquipments(false); // Refresh the equipment list
       }
     } catch (error) {
-      console.error("Error during import:", error);
-      alert("Failed to import data");
+      console.error("Error importing data:", error);
+      alert("An error occurred while importing data.");
+    } finally {
+      setIsProcessing(false);
     }
-    setIsProcessing(false);
   };
 
   const handleEditClick = () => {
@@ -643,7 +756,7 @@ export default function DashboardEquipmentPage() {
                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
                               />
                             </svg>
-                            Import Data from Excel File
+                            Import Data from CSV File
                           </button>
                         </div>
                       </div>
@@ -1506,7 +1619,7 @@ export default function DashboardEquipmentPage() {
             <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl">
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-6">
-                  Import data
+                  Import Equipment Data
                 </h3>
 
                 <div className="space-y-6">
@@ -1538,7 +1651,7 @@ export default function DashboardEquipmentPage() {
                           : "Click to upload or drag and drop"}
                       </p>
                       <p className="text-xs text-gray-500">
-                        Excel files (.xlsx, .xls) up to 10MB
+                        CSV files (.csv) up to 10MB
                       </p>
                     </div>
                   </div>
@@ -1558,24 +1671,58 @@ export default function DashboardEquipmentPage() {
                       <div className="border border-gray-200 rounded-lg overflow-hidden">
                         <div className="max-h-48 overflow-y-auto">
                           <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50 border-b border-gray-200">
+                            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
                               <tr>
-                                <th className="px-4 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
                                   Name
                                 </th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-700">
-                                  Description
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Brand
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Category
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Status
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Amount
                                 </th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                               {importData.map((item, index) => (
                                 <tr key={index} className="hover:bg-gray-50">
-                                  <td className="px-4 py-2 text-gray-900">
+                                  <td className="px-3 py-2 text-gray-900 font-medium">
                                     {item.name || "—"}
                                   </td>
-                                  <td className="px-4 py-2 text-gray-600 truncate max-w-xs">
-                                    {item.description || "—"}
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.brand_name || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.category || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.status ? (
+                                      <span
+                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                          item.status === "working"
+                                            ? "bg-green-100 text-green-800"
+                                            : item.status === "for_repair"
+                                            ? "bg-red-100 text-red-800"
+                                            : item.status === "in_use"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : "bg-blue-100 text-blue-800"
+                                        }`}
+                                      >
+                                        {item.status}
+                                      </span>
+                                    ) : (
+                                      "—"
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600 font-mono">
+                                    {item.amount ? `₱${item.amount}` : "—"}
                                   </td>
                                 </tr>
                               ))}
@@ -1591,7 +1738,7 @@ export default function DashboardEquipmentPage() {
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent"></div>
                       <span className="ml-3 text-sm text-gray-600">
-                        Processing...
+                        Processing equipment data...
                       </span>
                     </div>
                   )}
@@ -1615,7 +1762,11 @@ export default function DashboardEquipmentPage() {
                     disabled={importData.length === 0 || isProcessing}
                     className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {isProcessing ? "Importing..." : "Import"}
+                    {isProcessing
+                      ? "Importing..."
+                      : `Import ${importData.length} Equipment${
+                          importData.length !== 1 ? "s" : ""
+                        }`}
                   </button>
                 </div>
               </div>
