@@ -1673,6 +1673,138 @@ export default function DashboardEquipmentPage() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplier
+                  </label>
+                  <input
+                    type="text"
+                    name="supplier"
+                    value={editingEquipment.supplier || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount
+                  </label>
+                  <input
+                    type="text"
+                    name="amount"
+                    value={editingEquipment.amount || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estimated Life
+                  </label>
+                  <input
+                    type="text"
+                    name="estimated_life"
+                    value={editingEquipment.estimated_life || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Item Number
+                  </label>
+                  <input
+                    type="text"
+                    name="item_number"
+                    value={editingEquipment.item_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Control Number
+                  </label>
+                  <input
+                    type="text"
+                    name="control_number"
+                    value={editingEquipment.control_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Serial Number
+                  </label>
+                  <input
+                    type="text"
+                    name="serial_number"
+                    value={editingEquipment.serial_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Number
+                  </label>
+                  <input
+                    type="text"
+                    name="property_number"
+                    value={editingEquipment.property_number || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Person Liable
+                  </label>
+                  <input
+                    type="text"
+                    name="person_liable"
+                    value={editingEquipment.person_liable || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Facility ID
+                  </label>
+                  <input
+                    type="number"
+                    name="facility_id"
+                    value={editingEquipment.facility_id || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    name="description"
+                    value={editingEquipment.description || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Remarks
+                  </label>
+                  <input
+                    type="text"
+                    name="remarks"
+                    value={editingEquipment.remarks || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             </div>
             <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
