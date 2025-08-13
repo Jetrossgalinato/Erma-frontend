@@ -30,6 +30,12 @@ type Equipment = {
   created_at: string;
 };
 
+type Facility = {
+  id: number;
+  name: string;
+  // Add other facility fields if needed
+};
+
 type EditingCell = {
   rowId: number;
   column: keyof Equipment;
@@ -46,6 +52,7 @@ export default function DashboardEquipmentPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showInsertForm, setShowInsertForm] = useState(false);
@@ -126,7 +133,15 @@ export default function DashboardEquipmentPage() {
 
       const { data, error } = await supabase
         .from("equipments")
-        .select("*")
+        .select(
+          `
+        *,
+        facilities (
+          id,
+          name
+        )
+      `
+        )
         .order("id", { ascending: true });
 
       if (error) {
@@ -145,6 +160,26 @@ export default function DashboardEquipmentPage() {
     },
     [supabase]
   );
+
+  // Add this function to fetch facilities
+  const fetchFacilities = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("facilities")
+      .select("id, name")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching facilities:", error);
+    } else {
+      setFacilities(data as Facility[]);
+    }
+  }, [supabase]);
+
+  const getFacilityName = (facilityId?: number) => {
+    if (!facilityId) return "-";
+    const facility = facilities.find((f) => f.id === facilityId);
+    return facility ? facility.name : `ID: ${facilityId}`;
+  };
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
@@ -322,8 +357,9 @@ export default function DashboardEquipmentPage() {
   };
 
   useEffect(() => {
+    fetchFacilities();
     fetchEquipments(false);
-  }, [fetchEquipments]);
+  }, [fetchEquipments, fetchFacilities]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -1063,10 +1099,9 @@ export default function DashboardEquipmentPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Facility ID
+                              Facility
                             </label>
-                            <input
-                              type="number"
+                            <select
                               value={newEquipment.facility_id || ""}
                               onChange={(e) =>
                                 setNewEquipment({
@@ -1077,8 +1112,14 @@ export default function DashboardEquipmentPage() {
                                 })
                               }
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Facility ID"
-                            />
+                            >
+                              <option value="">Select facility</option>
+                              {facilities.map((facility) => (
+                                <option key={facility.id} value={facility.id}>
+                                  {facility.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
 
                           <div className="md:col-span-2">
@@ -1223,7 +1264,7 @@ export default function DashboardEquipmentPage() {
                             Person Liable
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                            Facility ID
+                            Facility
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Description
@@ -1376,11 +1417,38 @@ export default function DashboardEquipmentPage() {
                                 eq.person_liable
                               )}
                             </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
-                              {renderEditableCell(
-                                eq,
-                                "facility_id",
-                                eq.facility_id
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {editingCell?.rowId === eq.id &&
+                              editingCell?.column === "facility_id" ? (
+                                <div className="relative">
+                                  <select
+                                    value={editingCell.value}
+                                    onChange={(e) =>
+                                      handleCellEdit(e.target.value)
+                                    }
+                                    onKeyDown={handleKeyDown}
+                                    onBlur={handleCancelEdit}
+                                    autoFocus
+                                    className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
+                                  >
+                                    <option value="">Select facility</option>
+                                    {facilities.map((facility) => (
+                                      <option
+                                        key={facility.id}
+                                        value={facility.id}
+                                      >
+                                        {facility.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
+                                    Press Enter to save, Esc to cancel
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+                                  {getFacilityName(eq.facility_id)}
+                                </div>
                               )}
                             </td>
                             <td className="px-3 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-100">
@@ -1771,15 +1839,21 @@ export default function DashboardEquipmentPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Facility ID
+                    Facility
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="facility_id"
                     value={editingEquipment.facility_id || ""}
                     onChange={handleEditChange}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="">Select facility</option>
+                    {facilities.map((facility) => (
+                      <option key={facility.id} value={facility.id}>
+                        {facility.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
