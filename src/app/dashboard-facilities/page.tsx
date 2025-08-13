@@ -88,7 +88,10 @@ export default function DashboardFacilitiesPage() {
         setLoading(true);
       }
 
-      const { data, error } = await supabase.from("facilities").select("*");
+      const { data, error } = await supabase
+        .from("facilities")
+        .select("*")
+        .order("id", { ascending: true });
 
       if (error) {
         console.error("Error fetching facilities:", error);
@@ -766,12 +769,12 @@ export default function DashboardFacilitiesPage() {
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="">Select status</option>
-                              <option value="active">Active</option>
-                              <option value="inactive">Inactive</option>
-                              <option value="maintenance">
+                              <option value="Active">Active</option>
+                              <option value="Inactive">Inactive</option>
+                              <option value="Maintenance">
                                 Under Maintenance
                               </option>
-                              <option value="renovation">
+                              <option value="Renovation">
                                 Under Renovation
                               </option>
                             </select>
@@ -928,7 +931,25 @@ export default function DashboardFacilitiesPage() {
                               {eq.updated_at}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
-                              {eq.status}
+                              {eq.status ? (
+                                <span
+                                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                    eq.status === "Active"
+                                      ? "bg-green-100 text-green-800 border border-green-200"
+                                      : eq.status === "Inactive"
+                                      ? "bg-gray-100 text-gray-800 border border-gray-200"
+                                      : eq.status === "Maintenance"
+                                      ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                      : eq.status === "Renovation"
+                                      ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                      : "bg-gray-100 text-gray-500 border border-gray-200"
+                                  }`}
+                                >
+                                  {eq.status}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -1094,13 +1115,13 @@ export default function DashboardFacilitiesPage() {
                                   <td className="px-3 py-2 text-gray-600">
                                     <span
                                       className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                                        item.status === "active"
+                                        item.status === "Active"
                                           ? "bg-green-100 text-green-800"
-                                          : item.status === "inactive"
+                                          : item.status === "Inactive"
                                           ? "bg-gray-100 text-gray-800"
-                                          : item.status === "maintenance"
+                                          : item.status === "Maintenance"
                                           ? "bg-yellow-100 text-yellow-800"
-                                          : item.status === "renovation"
+                                          : item.status === "Renovation"
                                           ? "bg-blue-100 text-blue-800"
                                           : "bg-gray-100 text-gray-500"
                                       }`}
@@ -1255,10 +1276,10 @@ export default function DashboardFacilitiesPage() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="renovation">Under Renovation</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Maintenance">Under Maintenance</option>
+                    <option value="Renovation">Under Renovation</option>
                   </select>
                 </div>
                 <div className="md:col-span-2">
