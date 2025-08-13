@@ -35,6 +35,11 @@ export default function DashboardFacilitiesPage() {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importData, setImportData] = useState<Partial<Facility>[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // 1. Add pagination state after your existing state declarations
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
@@ -193,6 +198,140 @@ export default function DashboardFacilitiesPage() {
   const handleCancelInsert = () => {
     setShowInsertForm(false);
     setNewFacility({ name: "" });
+  };
+
+  // CSV-only version (no external dependencies needed)
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Only accept CSV files in this version
+    if (!file.name.endsWith(".csv")) {
+      alert("Please select a CSV file");
+      return;
+    }
+
+    setSelectedFile(file);
+    setIsProcessing(true);
+
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter((line) => line.trim());
+
+      if (lines.length < 2) {
+        alert("CSV file must have at least a header row and one data row");
+        return;
+      }
+
+      // Parse CSV headers
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().replace(/"/g, ""));
+
+      // Parse data rows
+      const facilitiesData: Partial<Facility>[] = lines.slice(1).map((line) => {
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        const facility: Partial<Facility> = {};
+
+        headers.forEach((header, index) => {
+          const value = values[index] || "";
+
+          // Map common header variations to your facility properties
+          switch (header.toLowerCase()) {
+            case "name":
+            case "facility name":
+              facility.name = value;
+              break;
+            case "connection type":
+            case "connectiontype":
+              facility.connection_type = value;
+              break;
+            case "facility type":
+            case "facilitytype":
+            case "type":
+              facility.facility_type = value;
+              break;
+            case "floor level":
+            case "floor":
+            case "level":
+              facility.floor_level = value;
+              break;
+            case "cooling tools":
+            case "cooling":
+              facility.cooling_tools = value;
+              break;
+            case "building":
+              facility.building = value;
+              break;
+            case "status":
+              facility.status = value;
+              break;
+            case "remarks":
+            case "notes":
+              facility.remarks = value;
+              break;
+          }
+        });
+
+        return facility;
+      });
+
+      setImportData(facilitiesData);
+    } catch (error) {
+      console.error("Error parsing CSV file:", error);
+      alert(
+        "Error reading CSV file. Please make sure it's properly formatted."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleImportData = async () => {
+    if (importData.length === 0) return;
+
+    setIsProcessing(true);
+
+    try {
+      // Filter out rows without names (required field)
+      const validData = importData.filter(
+        (item) => item.name && item.name.trim()
+      );
+
+      if (validData.length === 0) {
+        alert("No valid facilities found. Make sure each row has a name.");
+        return;
+      }
+
+      // Add timestamps
+      const facilitiesWithTimestamps = validData.map((facility) => ({
+        ...facility,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+
+      const { error } = await supabase
+        .from("facilities")
+        .insert(facilitiesWithTimestamps);
+
+      if (error) {
+        console.error("Error importing facilities:", error);
+        alert("Failed to import facilities. Please try again.");
+      } else {
+        alert(`Successfully imported ${validData.length} facilities!`);
+        setShowImportModal(false);
+        setSelectedFile(null);
+        setImportData([]);
+        fetchFacilities(false); // Refresh the facilities list
+      }
+    } catch (error) {
+      console.error("Error importing data:", error);
+      alert("An error occurred while importing data.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleDeleteSelectedRows = async () => {
@@ -408,12 +547,12 @@ export default function DashboardFacilitiesPage() {
                           </div>
                           <div className="mt-3 text-center">
                             <h3 className="text-lg font-medium text-gray-900">
-                              Delete Selected Equipments
+                              Delete Selected Facilities
                             </h3>
                             <div className="mt-2">
                               <p className="text-sm text-gray-500">
                                 Are you sure you want to delete **
-                                {selectedRows.length}** equipment records? This
+                                {selectedRows.length}** facility records? This
                                 action cannot be undone.
                               </p>
                             </div>
@@ -481,7 +620,7 @@ export default function DashboardFacilitiesPage() {
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="text-sm font-medium text-gray-900">
-                            Add new row to equipments
+                            Add new facility
                           </h4>
                           <button
                             onClick={handleCancelInsert}
@@ -560,23 +699,6 @@ export default function DashboardFacilitiesPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
-                              Facility Type
-                            </label>
-                            <input
-                              value={newFacility.facility_type || ""}
-                              onChange={(e) =>
-                                setNewFacility({
-                                  ...newFacility,
-                                  facility_type: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Facility Type"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
                               Floor Level
                             </label>
                             <input
@@ -631,6 +753,32 @@ export default function DashboardFacilitiesPage() {
 
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Status
+                            </label>
+                            <select
+                              value={newFacility.status || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  status: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            >
+                              <option value="">Select status</option>
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                              <option value="maintenance">
+                                Under Maintenance
+                              </option>
+                              <option value="renovation">
+                                Under Renovation
+                              </option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
                               Remarks
                             </label>
                             <input
@@ -643,7 +791,7 @@ export default function DashboardFacilitiesPage() {
                                 })
                               }
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Estimated Life"
+                              placeholder="Remarks"
                             />
                           </div>
                         </div>
@@ -829,6 +977,189 @@ export default function DashboardFacilitiesPage() {
           </div>
         </main>
       </div>
+
+      {/* Import Data Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+              onClick={() => setShowImportModal(false)}
+            />
+
+            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                  Import Facilities Data
+                </h3>
+
+                <div className="space-y-6">
+                  {/* File Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Upload file
+                    </label>
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <svg
+                        className="mx-auto h-8 w-8 text-gray-400 mb-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {selectedFile
+                          ? selectedFile.name
+                          : "Click to upload or drag and drop"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        CSV files (.csv) up to 10MB
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  {importData.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Preview
+                        </label>
+                        <span className="text-xs text-gray-500">
+                          {importData.length} row
+                          {importData.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="max-h-64 overflow-y-auto">
+                          <table className="min-w-full text-sm">
+                            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                              <tr>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Name
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Connection Type
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Facility Type
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Floor Level
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Cooling Tools
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Building
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Status
+                                </th>
+                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                  Remarks
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {importData.map((item, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="px-3 py-2 text-gray-900 font-medium">
+                                    {item.name || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.connection_type || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.facility_type || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.floor_level || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.cooling_tools || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    {item.building || "—"}
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600">
+                                    <span
+                                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                        item.status === "active"
+                                          ? "bg-green-100 text-green-800"
+                                          : item.status === "inactive"
+                                          ? "bg-gray-100 text-gray-800"
+                                          : item.status === "maintenance"
+                                          ? "bg-yellow-100 text-yellow-800"
+                                          : item.status === "renovation"
+                                          ? "bg-blue-100 text-blue-800"
+                                          : "bg-gray-100 text-gray-500"
+                                      }`}
+                                    >
+                                      {item.status || "—"}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2 text-gray-600 truncate max-w-xs">
+                                    {item.remarks || "—"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Processing */}
+                  {isProcessing && (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent"></div>
+                      <span className="ml-3 text-sm text-gray-600">
+                        Processing facilities data...
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setSelectedFile(null);
+                      setImportData([]);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportData}
+                    disabled={importData.length === 0 || isProcessing}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isProcessing
+                      ? "Importing..."
+                      : `Import ${importData.length} Facilities`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showEditModal && editingFacility && (
         <div className="fixed inset-0 z-50 text-black flex items-center justify-center p-4">
           <div
@@ -964,6 +1295,13 @@ export default function DashboardFacilitiesPage() {
           </div>
         </div>
       )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </div>
   );
 }
