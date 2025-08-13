@@ -117,6 +117,55 @@ export default function DashboardFacilitiesPage() {
     }
   };
 
+  // Add these handler functions to your component
+
+  const handleEditChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditingFacility((prev) => (prev ? { ...prev, [name]: value } : null));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingFacility) return;
+
+    if (!editingFacility.name?.trim()) {
+      alert("Facility name is required");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("facilities")
+      .update({
+        ...editingFacility,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingFacility.id);
+
+    if (error) {
+      console.error("Error updating facility:", error);
+      alert("Failed to update facility");
+    } else {
+      // Update local state
+      setFacilities((prev) =>
+        prev.map((facility) =>
+          facility.id === editingFacility.id ? editingFacility : facility
+        )
+      );
+      setShowEditModal(false);
+      setEditingFacility(null);
+      setSelectedRows([]);
+      console.log("Facility updated successfully");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingFacility(null);
+  };
+
   const handleInsertFacility = async () => {
     if (!newFacility.name?.trim()) {
       alert("Facility name is required");
@@ -780,6 +829,141 @@ export default function DashboardFacilitiesPage() {
           </div>
         </main>
       </div>
+      {showEditModal && editingFacility && (
+        <div className="fixed inset-0 z-50 text-black flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
+            onClick={handleCancelEdit}
+          ></div>
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-2xl w-full z-50">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit Facility: {editingFacility.name}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editingFacility.name || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Connection Type
+                  </label>
+                  <input
+                    type="text"
+                    name="connection_type"
+                    value={editingFacility.connection_type || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Facility Type
+                  </label>
+                  <input
+                    type="text"
+                    name="facility_type"
+                    value={editingFacility.facility_type || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Floor Level
+                  </label>
+                  <input
+                    type="text"
+                    name="floor_level"
+                    value={editingFacility.floor_level || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cooling Tools
+                  </label>
+                  <input
+                    type="text"
+                    name="cooling_tools"
+                    value={editingFacility.cooling_tools || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Building
+                  </label>
+                  <input
+                    type="text"
+                    name="building"
+                    value={editingFacility.building || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={editingFacility.status || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Under Maintenance</option>
+                    <option value="renovation">Under Renovation</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Remarks
+                  </label>
+                  <textarea
+                    name="remarks"
+                    rows={3}
+                    value={editingFacility.remarks || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Additional notes or remarks..."
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                onClick={handleSaveEdit}
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
