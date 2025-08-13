@@ -111,6 +111,7 @@ const Sidebar: React.FC = () => {
   });
 
   const [equipmentCount, setEquipmentCount] = useState<number>(0);
+  const [facilityCount, setFacilityCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const supabase = createClientComponentClient();
 
@@ -160,6 +161,52 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch facility count from Supabase
+  useEffect(() => {
+    const fetchFacilityCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("facilities")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching facility count:", error);
+          setFacilityCount(0);
+        } else {
+          setFacilityCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching facility count:", error);
+        setFacilityCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFacilityCount();
+
+    // Optional: Set up real-time subscription to update count when facility is added/removed
+    const subscription = supabase
+      .channel("facilities_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "facilities",
+        },
+        () => {
+          fetchFacilityCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -178,7 +225,7 @@ const Sidebar: React.FC = () => {
     {
       icon: Building,
       label: "Facilities",
-      count: 0,
+      count: loading ? null : facilityCount,
       path: "/dashboard-facilities",
     },
   ];
