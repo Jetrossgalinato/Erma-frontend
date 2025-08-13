@@ -25,9 +25,26 @@ export default function DashboardFacilitiesPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showInsertForm, setShowInsertForm] = useState(false);
+  const [newFacility, setNewFacility] = useState<Partial<Facility>>({
+    name: "",
+  });
+
+  const [showImportModal, setShowImportModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 1. Add pagination state after your existing state declarations
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(11);
+
+  // 2. Add pagination calculations before the return statement
+  // Calculate pagination
+  const totalPages = Math.ceil(facilities.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentFacilities = facilities.slice(startIndex, endIndex);
 
   const supabase = createClientComponentClient();
 
@@ -51,6 +68,12 @@ export default function DashboardFacilitiesPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleCheckboxChange = (id: number) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
+  };
 
   const fetchFacilities = useCallback(
     async (showAnimation = false) => {
@@ -93,6 +116,63 @@ export default function DashboardFacilitiesPage() {
       setShowEditModal(true);
     }
   };
+
+  const handleInsertFacility = async () => {
+    if (!newFacility.name?.trim()) {
+      alert("Facility name is required");
+      return;
+    }
+
+    const { error } = await supabase.from("facilities").insert([
+      {
+        ...newFacility,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) {
+      console.error("Error inserting facility:", error);
+      alert("Failed to insert facility");
+    } else {
+      setShowInsertForm(false);
+      setNewFacility({ name: "" });
+      fetchFacilities(false);
+    }
+  };
+
+  const handleCancelInsert = () => {
+    setShowInsertForm(false);
+    setNewFacility({ name: "" });
+  };
+
+  const handleDeleteSelectedRows = async () => {
+    if (selectedRows.length === 0) return;
+
+    const { error } = await supabase
+      .from("facilities")
+      .delete()
+      .in("id", selectedRows);
+
+    if (error) {
+      console.error("Error deleting facilities:", error);
+      alert("Failed to delete selected facilities");
+    } else {
+      // Update local state by filtering out all selected rows
+      setFacilities((prev) =>
+        prev.filter((facility) => !selectedRows.includes(facility.id))
+      );
+      setSelectedRows([]); // Clear the selection
+      console.log(`Successfully deleted ${selectedRows.length} rows.`);
+    }
+
+    // Close the modal
+    setShowDeleteModal(false);
+  };
+
+  useEffect(() => {
+    fetchFacilities();
+  }, [fetchFacilities]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -330,6 +410,372 @@ export default function DashboardFacilitiesPage() {
                   </button>
                 </div>
               </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                  <span className="ml-3 text-gray-600">
+                    Loading facilities...
+                  </span>
+                </div>
+              ) : facilities.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-lg">
+                    No facilities found.
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                  {/* Insert Form Row */}
+                  {showInsertForm && (
+                    <div className="border-b border-gray-200 bg-green-50">
+                      <div className="px-6 py-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Add new row to equipments
+                          </h4>
+                          <button
+                            onClick={handleCancelInsert}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.name || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  name: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Facility name"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Connection Type
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.connection_type || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  connection_type: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Connection Type"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Facility Type
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.facility_type || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  facility_type: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Facility Type"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Facility Type
+                            </label>
+                            <input
+                              value={newFacility.facility_type || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  facility_type: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Facility Type"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Floor Level
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.floor_level || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  floor_level: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Floor Level"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Cooling Tools
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.cooling_tools || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  cooling_tools: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Cooling Tools"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Building
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.building || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  building: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Building"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Remarks
+                            </label>
+                            <input
+                              type="text"
+                              value={newFacility.remarks || ""}
+                              onChange={(e) =>
+                                setNewFacility({
+                                  ...newFacility,
+                                  remarks: e.target.value,
+                                })
+                              }
+                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              placeholder="Estimated Life"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCancelInsert}
+                            className="px-3 py-1.5 text-sm text-black font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleInsertFacility}
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="overflow-auto flex-1">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50 sticky top-0 z-20">
+                        <tr>
+                          {/* Add a new header for the checkbox column */}
+                          <th
+                            scope="col"
+                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {/* Optional: Add a master checkbox to select/deselect all rows */}
+                            <input
+                              type="checkbox"
+                              className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                              // Logic to check if all rows are selected
+                              checked={
+                                selectedRows.length === facilities.length &&
+                                facilities.length > 0
+                              }
+                              onChange={() => {
+                                if (selectedRows.length === facilities.length) {
+                                  setSelectedRows([]); // Deselect all
+                                } else {
+                                  setSelectedRows(
+                                    facilities.map((eq) => eq.id)
+                                  ); // Select all
+                                }
+                              }}
+                            />
+                          </th>
+
+                          <th
+                            scope="col"
+                            className="sticky left-12 z-10 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            ID
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Name
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Connection Type
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Facility Type
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Floor Level
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Cooling Tools
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Building
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Remarks
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Updated At
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentFacilities.map((eq, index) => (
+                          <tr
+                            key={eq.id}
+                            className={`hover:bg-gray-50 ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                            }`}
+                          >
+                            <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-white border-r border-gray-200">
+                              <input
+                                type="checkbox"
+                                className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                                checked={selectedRows.includes(eq.id)}
+                                onChange={() => handleCheckboxChange(eq.id)}
+                              />
+                            </td>
+                            {/* ID Data Cell (Sticky) */}
+                            <td className="sticky left-12 z-10 px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white border-r border-gray-200">
+                              {eq.id}
+                            </td>
+
+                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
+                              {eq.name}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
+                              {eq.connection_type}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
+                              {eq.facility_type}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.floor_level || "-"}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.cooling_tools || "-"}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.building || "-"}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.remarks || "-"}
+                            </td>
+
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.updated_at}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {eq.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                      Showing {startIndex + 1} to{" "}
+                      {Math.min(endIndex, facilities.length)} of{" "}
+                      {facilities.length} facilities
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm text-black border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                      >
+                        Previous
+                      </button>
+
+                      <span className="text-sm text-gray-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
+
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 text-sm text-black border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
