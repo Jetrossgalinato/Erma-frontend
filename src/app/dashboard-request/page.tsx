@@ -31,6 +31,25 @@ export default function DashboardRequestsPage() {
           <Sidebar />
         </div>
       </aside>
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+              <div className="mb-8 pt-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    Equipment Requests
+                  </h1>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Streamline your equipment request management from one
+                    convenient location.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
