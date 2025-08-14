@@ -1844,7 +1844,7 @@ export default function DashboardEquipmentPage() {
                     </table>
                   </div>
 
-                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 text-gray-800 flex items-center justify-between">
                     <div className="text-sm text-gray-500">
                       Showing{" "}
                       {Math.min(
@@ -1861,7 +1861,7 @@ export default function DashboardEquipmentPage() {
                     </div>
 
                     {getTotalPages() > 1 && (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-4">
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={currentPage === 1}
@@ -1870,24 +1870,9 @@ export default function DashboardEquipmentPage() {
                           Previous
                         </button>
 
-                        <div className="flex space-x-1">
-                          {Array.from(
-                            { length: getTotalPages() },
-                            (_, i) => i + 1
-                          ).map((page) => (
-                            <button
-                              key={page}
-                              onClick={() => handlePageChange(page)}
-                              className={`px-3 py-1 text-sm rounded-md ${
-                                currentPage === page
-                                  ? "bg-blue-600 text-white"
-                                  : "border border-gray-300 hover:bg-gray-100"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ))}
-                        </div>
+                        <span className="text-sm text-gray-700">
+                          Page {currentPage} of {getTotalPages()}
+                        </span>
 
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
