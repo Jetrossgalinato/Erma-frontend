@@ -30,10 +30,16 @@ export default function DashboardFacilitiesPage() {
     name: "",
   });
 
+  const [facilityTypeFilter, setFacilityTypeFilter] = useState<string>("");
+  const [floorLevelFilter, setFloorLevelFilter] = useState<string>("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<
+    "facility type" | "floor level" | null
+  >(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importData, setImportData] = useState<Partial<Facility>[]>([]);
@@ -44,27 +50,30 @@ export default function DashboardFacilitiesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
 
-  // 2. Add pagination calculations before the return statement
-  // Calculate pagination
-  const totalPages = Math.ceil(facilities.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentFacilities = facilities.slice(startIndex, endIndex);
-
   const supabase = createClientComponentClient();
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
 
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const actionsDropdownRef = useRef<HTMLDivElement>(null);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target as Node)
       ) {
-        setShowDropdown(false);
+        setShowFilterDropdown(false);
+      }
+      // Add this new condition for actions dropdown
+      if (
+        actionsDropdownRef.current &&
+        !actionsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowActionsDropdown(false);
       }
     };
 
@@ -73,6 +82,17 @@ export default function DashboardFacilitiesPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleFilterSelect = (filterType: "facility type" | "floor level") => {
+    setActiveFilter(filterType);
+    setShowFilterDropdown(false);
+  };
+
+  const clearFilters = () => {
+    setFacilityTypeFilter("");
+    setFloorLevelFilter("");
+    setActiveFilter(null);
+  };
 
   const handleCheckboxChange = (id: number) => {
     setSelectedRows((prev) =>
@@ -197,6 +217,49 @@ export default function DashboardFacilitiesPage() {
       fetchFacilities(false);
     }
   };
+
+  const getFilteredFacilities = () => {
+    return facilities.filter((facility) => {
+      const matchesFacilityType =
+        !facilityTypeFilter ||
+        facility.facility_type
+          ?.toLowerCase()
+          .includes(facilityTypeFilter.toLowerCase());
+
+      const matchesFloorLevel =
+        !floorLevelFilter ||
+        facility.floor_level
+          ?.toString()
+          .toLowerCase()
+          .includes(floorLevelFilter.toLowerCase());
+
+      return matchesFacilityType && matchesFloorLevel;
+    });
+  };
+
+  // Helper function to get unique facility types for dropdown
+  const getUniqueFacilityTypes = () => {
+    return [
+      ...new Set(
+        facilities.map((facility) => facility.facility_type).filter(Boolean)
+      ),
+    ].sort();
+  };
+
+  // Helper function to get unique floor levels for dropdown
+  const getUniqueFloorLevels = () => {
+    return [
+      ...new Set(
+        facilities.map((facility) => facility.floor_level).filter(Boolean)
+      ),
+    ].sort();
+  };
+
+  const filteredFacilities = getFilteredFacilities();
+  const totalPages = Math.ceil(filteredFacilities.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentFacilities = filteredFacilities.slice(startIndex, endIndex);
 
   const handleCancelInsert = () => {
     setShowInsertForm(false);
@@ -404,11 +467,15 @@ export default function DashboardFacilitiesPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  {/* Insert Dropdown Button */}
-                  <div className="relative" ref={dropdownRef}>
+                  {/* Filter Icon Dropdown */}
+                  <div className="relative" ref={filterDropdownRef}>
                     <button
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeFilter || facilityTypeFilter || floorLevelFilter
+                          ? "bg-blue-50 text-blue-700 border-blue-300"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <svg
                         className="w-4 h-4 mr-2"
@@ -420,10 +487,155 @@ export default function DashboardFacilitiesPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M12 4v16m8-8H4"
+                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"
                         />
                       </svg>
-                      Insert
+                      Filter
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Filter Dropdown Menu */}
+                    {showFilterDropdown && (
+                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleFilterSelect("facility type")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            Filter by Facility Type
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect("floor level")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                              />
+                            </svg>
+                            Filter by Floor Level
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Active Filter Dropdown for Facility Type */}
+                  {activeFilter === "facility type" && (
+                    <select
+                      value={facilityTypeFilter}
+                      onChange={(e) => {
+                        setFacilityTypeFilter(e.target.value);
+                        setCurrentPage(1); // Reset to first page when filtering
+                      }}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Facility Types</option>
+                      {getUniqueFacilityTypes().map((facilityType) => (
+                        <option key={facilityType} value={facilityType}>
+                          {facilityType}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Active Filter Dropdown for Floor Level */}
+                  {activeFilter === "floor level" && (
+                    <select
+                      value={floorLevelFilter}
+                      onChange={(e) => {
+                        setFloorLevelFilter(e.target.value);
+                        setCurrentPage(1); // Reset to first page when filtering
+                      }}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Floor Levels</option>
+                      {getUniqueFloorLevels().map((floorLevel) => (
+                        <option key={floorLevel} value={floorLevel}>
+                          {floorLevel}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Clear Filter Button */}
+                  {(facilityTypeFilter || floorLevelFilter || activeFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1 inline"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Clear
+                    </button>
+                  )}
+
+                  {/* Actions Dropdown Button */}
+                  <div className="relative" ref={actionsDropdownRef}>
+                    <button
+                      onClick={() =>
+                        setShowActionsDropdown(!showActionsDropdown)
+                      }
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                        />
+                      </svg>
+                      Actions
                       <svg
                         className="w-4 h-4 ml-2"
                         fill="none"
@@ -439,19 +651,20 @@ export default function DashboardFacilitiesPage() {
                       </svg>
                     </button>
 
-                    {/* Dropdown Menu */}
-                    {showDropdown && (
-                      <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    {/* Actions Dropdown Menu */}
+                    {showActionsDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
+                          {/* Insert Row Option */}
                           <button
                             onClick={() => {
                               setShowInsertForm(true);
-                              setShowDropdown(false);
+                              setShowActionsDropdown(false);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
                             <svg
-                              className="w-4 h-4 mr-3"
+                              className="w-4 h-4 mr-3 text-green-600"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -465,15 +678,17 @@ export default function DashboardFacilitiesPage() {
                             </svg>
                             Insert Row
                           </button>
+
+                          {/* Import Data Option */}
                           <button
                             onClick={() => {
                               setShowImportModal(true);
-                              setShowDropdown(false);
+                              setShowActionsDropdown(false);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
                             <svg
-                              className="w-4 h-4 mr-3"
+                              className="w-4 h-4 mr-3 text-green-600"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -487,44 +702,78 @@ export default function DashboardFacilitiesPage() {
                             </svg>
                             Import Data from CSV File
                           </button>
+
+                          <hr className="my-1 border-gray-100" />
+
+                          {/* Edit Selected Option */}
+                          <button
+                            onClick={() => {
+                              handleEditClick();
+                              setShowActionsDropdown(false);
+                            }}
+                            disabled={selectedRows.length !== 1}
+                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                              selectedRows.length !== 1
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            }`}
+                          >
+                            <svg
+                              className={`w-4 h-4 mr-3 ${
+                                selectedRows.length !== 1
+                                  ? "text-gray-400"
+                                  : "text-blue-600"
+                              }`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            Edit Selected (
+                            {selectedRows.length === 1
+                              ? "1"
+                              : selectedRows.length}
+                            )
+                          </button>
+
+                          {/* Delete Selected Option */}
+                          <button
+                            onClick={() => {
+                              setShowDeleteModal(true);
+                              setShowActionsDropdown(false);
+                            }}
+                            disabled={selectedRows.length === 0}
+                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                              selectedRows.length === 0
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-gray-700 hover:bg-red-50 hover:text-red-900"
+                            }`}
+                          >
+                            <svg
+                              className={`w-4 h-4 mr-3 ${
+                                selectedRows.length === 0
+                                  ? "text-gray-400"
+                                  : "text-red-600"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            Delete Selected ({selectedRows.length})
+                          </button>
                         </div>
                       </div>
                     )}
                   </div>
-                  {/* The Edit button */}
-                  <button
-                    onClick={handleEditClick}
-                    disabled={selectedRows.length !== 1}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
-                      selectedRows.length !== 1
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                    Edit Selected (
-                    {selectedRows.length === 1 ? "1" : selectedRows.length})
-                  </button>
 
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    disabled={selectedRows.length === 0}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
-                      selectedRows.length === 0
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    }`}
-                  >
-                    Delete Selected ({selectedRows.length})
-                  </button>
-
-                  {/* The new Confirmation Modal */}
+                  {/* The Delete Confirmation Modal (moved here from the original location) */}
                   {showDeleteModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                       <div
@@ -581,6 +830,7 @@ export default function DashboardFacilitiesPage() {
                     </div>
                   )}
 
+                  {/* Keep the Refresh button separate */}
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
