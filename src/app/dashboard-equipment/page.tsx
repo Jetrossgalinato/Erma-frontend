@@ -49,6 +49,11 @@ export default function DashboardEquipmentPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
     null
   );
+
+  // pagination state variables
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(11);
+
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [facilityFilter, setFacilityFilter] = useState<string>("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -64,7 +69,7 @@ export default function DashboardEquipmentPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showInsertForm, setShowInsertForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
+
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importData, setImportData] = useState<Partial<Equipment>[]>([]);
@@ -73,7 +78,6 @@ export default function DashboardEquipmentPage() {
     name: "",
   });
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
 
@@ -87,12 +91,6 @@ export default function DashboardEquipmentPage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowDropdown(false);
-      }
       if (
         filterDropdownRef.current &&
         !filterDropdownRef.current.contains(event.target as Node)
@@ -124,6 +122,27 @@ export default function DashboardEquipmentPage() {
     setFacilityFilter("");
     setActiveFilter(null);
   };
+
+  const getCurrentPageData = () => {
+    const filtered = getFilteredEquipments();
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(getFilteredEquipments().length / itemsPerPage);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Optional: scroll to top of table when page changes
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, facilityFilter]);
 
   // Remove the old handleDeleteRow function and replace it with this one
   const handleDeleteSelectedRows = async () => {
@@ -1619,7 +1638,7 @@ export default function DashboardEquipmentPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {getFilteredEquipments().map((eq, index) => (
+                        {getCurrentPageData().map((eq, index) => (
                           <tr
                             key={eq.id}
                             className={`hover:bg-gray-50 ${
@@ -1825,11 +1844,60 @@ export default function DashboardEquipmentPage() {
                     </table>
                   </div>
 
-                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
                     <div className="text-sm text-gray-500">
-                      Showing {getFilteredEquipments().length} equipment
-                      {equipments.length !== 1 ? "s" : ""}
+                      Showing{" "}
+                      {Math.min(
+                        (currentPage - 1) * itemsPerPage + 1,
+                        getFilteredEquipments().length
+                      )}{" "}
+                      to{" "}
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        getFilteredEquipments().length
+                      )}{" "}
+                      of {getFilteredEquipments().length} equipment
+                      {getFilteredEquipments().length !== 1 ? "s" : ""}
                     </div>
+
+                    {getTotalPages() > 1 && (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Previous
+                        </button>
+
+                        <div className="flex space-x-1">
+                          {Array.from(
+                            { length: getTotalPages() },
+                            (_, i) => i + 1
+                          ).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-1 text-sm rounded-md ${
+                                currentPage === page
+                                  ? "bg-blue-600 text-white"
+                                  : "border border-gray-300 hover:bg-gray-100"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === getTotalPages()}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
