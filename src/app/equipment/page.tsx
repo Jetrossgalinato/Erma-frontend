@@ -70,6 +70,15 @@ export default function EquipmentPage() {
   const ITEMS_PER_PAGE = 9;
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [showBorrowModal, setShowBorrowModal] = useState(false);
+  const [borrowFormData, setBorrowFormData] = useState({
+    purpose: "",
+    start_date: "",
+    end_date: "",
+    return_date: "",
+  });
+  const [borrowing, setBorrowing] = useState(false);
+
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("equipments").select("*");
@@ -119,6 +128,78 @@ export default function EquipmentPage() {
     const end = start + ITEMS_PER_PAGE;
     return filteredEquipment.slice(start, end);
   }, [filteredEquipment, currentPage]);
+
+  // Modify the handleBorrow function to get the bigint user ID:
+  const handleBorrow = async () => {
+    if (
+      !selectedEquipment ||
+      !borrowFormData.purpose ||
+      !borrowFormData.start_date ||
+      !borrowFormData.end_date ||
+      !borrowFormData.return_date
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setBorrowing(true);
+    try {
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("You must be logged in to borrow equipment");
+        setBorrowing(false);
+        return;
+      }
+
+      // Get the user's bigint ID from accounts table
+      const { data: accountData, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", user.id) // or whatever column links to auth
+        .single();
+
+      if (accountError || !accountData) {
+        alert("User account not found");
+        setBorrowing(false);
+        return;
+      }
+
+      const { error } = await supabase.from("borrowing").insert({
+        borrowed_item: selectedEquipment.id,
+        purpose: borrowFormData.purpose,
+        start_date: borrowFormData.start_date,
+        end_date: borrowFormData.end_date,
+        return_date: borrowFormData.return_date,
+        request_status: "Pending",
+        availability: "Unavailable",
+        borrowers_id: accountData.id,
+      });
+
+      if (error) {
+        console.error("Failed to create borrowing request:", error);
+        alert("Failed to create borrowing request");
+      } else {
+        alert("Borrowing request submitted successfully!");
+        setShowBorrowModal(false);
+        setBorrowFormData({
+          purpose: "",
+          start_date: "",
+          end_date: "",
+          return_date: "",
+        });
+        setSelectedEquipment(null);
+        fetchEquipment();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred");
+    }
+    setBorrowing(false);
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -251,8 +332,14 @@ export default function EquipmentPage() {
                       View
                     </button>
 
-                    <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-                      Edit
+                    <button
+                      className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                      onClick={() => {
+                        setSelectedEquipment(equipment);
+                        setShowBorrowModal(true);
+                      }}
+                    >
+                      Borrow
                     </button>
                   </div>
                 </div>
@@ -355,6 +442,114 @@ export default function EquipmentPage() {
               <p>
                 <strong>Remarks:</strong> {selectedEquipment.remarks || "N/A"}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBorrowModal && selectedEquipment && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
+          onClick={() => setShowBorrowModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowBorrowModal(false)}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl text-gray-800 font-bold mb-4">
+              Borrow Equipment: {selectedEquipment.name}
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Purpose *
+                </label>
+                <textarea
+                  value={borrowFormData.purpose}
+                  onChange={(e) =>
+                    setBorrowFormData({
+                      ...borrowFormData,
+                      purpose: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  rows={3}
+                  placeholder="Enter purpose for borrowing..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date *
+                </label>
+                <input
+                  type="date"
+                  value={borrowFormData.start_date}
+                  onChange={(e) =>
+                    setBorrowFormData({
+                      ...borrowFormData,
+                      start_date: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date *
+                </label>
+                <input
+                  type="date"
+                  value={borrowFormData.end_date}
+                  onChange={(e) =>
+                    setBorrowFormData({
+                      ...borrowFormData,
+                      end_date: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Expected Return Date *
+                </label>
+                <input
+                  type="date"
+                  value={borrowFormData.return_date}
+                  onChange={(e) =>
+                    setBorrowFormData({
+                      ...borrowFormData,
+                      return_date: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowBorrowModal(false)}
+                className="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBorrow}
+                disabled={borrowing}
+                className="flex-1 px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {borrowing ? "Submitting..." : "Submit Request"}
+              </button>
             </div>
           </div>
         </div>

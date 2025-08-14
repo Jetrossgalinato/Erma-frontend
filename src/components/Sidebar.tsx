@@ -235,7 +235,7 @@ const Sidebar: React.FC = () => {
       icon: FileText,
       label: "Request List",
       count: 0,
-      path: "/borrowing/requests",
+      path: "/dashboard-request",
     },
     {
       icon: ShoppingCart,
