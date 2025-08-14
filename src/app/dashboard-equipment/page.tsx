@@ -49,6 +49,13 @@ export default function DashboardEquipmentPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
     null
   );
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [facilityFilter, setFacilityFilter] = useState<string>("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<
+    "category" | "facility" | null
+  >(null);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
@@ -74,6 +81,9 @@ export default function DashboardEquipmentPage() {
     setSidebarOpen(false);
   };
 
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const actionsDropdownRef = useRef<HTMLDivElement>(null);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,6 +93,19 @@ export default function DashboardEquipmentPage() {
       ) {
         setShowDropdown(false);
       }
+      if (
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowFilterDropdown(false);
+      }
+      // Add this new condition for actions dropdown
+      if (
+        actionsDropdownRef.current &&
+        !actionsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowActionsDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -90,6 +113,17 @@ export default function DashboardEquipmentPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleFilterSelect = (filterType: "category" | "facility") => {
+    setActiveFilter(filterType);
+    setShowFilterDropdown(false);
+  };
+
+  const clearFilters = () => {
+    setCategoryFilter("");
+    setFacilityFilter("");
+    setActiveFilter(null);
+  };
 
   // Remove the old handleDeleteRow function and replace it with this one
   const handleDeleteSelectedRows = async () => {
@@ -209,6 +243,23 @@ export default function DashboardEquipmentPage() {
       setNewEquipment({ name: "" });
       fetchEquipments(false);
     }
+  };
+
+  const getFilteredEquipments = () => {
+    return equipments.filter((eq) => {
+      const matchesCategory =
+        !categoryFilter ||
+        eq.category?.toLowerCase().includes(categoryFilter.toLowerCase());
+      const matchesFacility =
+        !facilityFilter || eq.facility_id === parseInt(facilityFilter);
+      return matchesCategory && matchesFacility;
+    });
+  };
+
+  const getUniqueCategories = () => {
+    return [
+      ...new Set(equipments.map((eq) => eq.category).filter(Boolean)),
+    ].sort();
   };
 
   const handleCancelInsert = () => {
@@ -675,11 +726,15 @@ export default function DashboardEquipmentPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  {/* Insert Dropdown Button */}
-                  <div className="relative" ref={dropdownRef}>
+                  {/* Filter Icon Dropdown */}
+                  <div className="relative" ref={filterDropdownRef}>
                     <button
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeFilter || categoryFilter || facilityFilter
+                          ? "bg-blue-50 text-blue-700 border-blue-300"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
                     >
                       <svg
                         className="w-4 h-4 mr-2"
@@ -691,10 +746,148 @@ export default function DashboardEquipmentPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M12 4v16m8-8H4"
+                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"
                         />
                       </svg>
-                      Insert
+                      Filter
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Filter Dropdown Menu */}
+                    {showFilterDropdown && (
+                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleFilterSelect("category")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                              />
+                            </svg>
+                            Filter by Category
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect("facility")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <svg
+                              className="w-4 h-4 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            Filter by Facility
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Active Filter Dropdown */}
+                  {activeFilter === "category" && (
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Categories</option>
+                      {getUniqueCategories().map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {activeFilter === "facility" && (
+                    <select
+                      value={facilityFilter}
+                      onChange={(e) => setFacilityFilter(e.target.value)}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Facilities</option>
+                      {facilities.map((facility) => (
+                        <option key={facility.id} value={facility.id}>
+                          {facility.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Clear Filter Button */}
+                  {(categoryFilter || facilityFilter || activeFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1 inline"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Clear
+                    </button>
+                  )}
+
+                  {/* Actions Dropdown Button */}
+                  <div className="relative" ref={actionsDropdownRef}>
+                    <button
+                      onClick={() =>
+                        setShowActionsDropdown(!showActionsDropdown)
+                      }
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                        />
+                      </svg>
+                      Actions
                       <svg
                         className="w-4 h-4 ml-2"
                         fill="none"
@@ -710,19 +903,20 @@ export default function DashboardEquipmentPage() {
                       </svg>
                     </button>
 
-                    {/* Dropdown Menu */}
-                    {showDropdown && (
-                      <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    {/* Actions Dropdown Menu */}
+                    {showActionsDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
+                          {/* Insert Row Option */}
                           <button
                             onClick={() => {
                               setShowInsertForm(true);
-                              setShowDropdown(false);
+                              setShowActionsDropdown(false);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
                             <svg
-                              className="w-4 h-4 mr-3"
+                              className="w-4 h-4 mr-3 text-green-600"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -736,15 +930,17 @@ export default function DashboardEquipmentPage() {
                             </svg>
                             Insert Row
                           </button>
+
+                          {/* Import Data Option */}
                           <button
                             onClick={() => {
                               setShowImportModal(true);
-                              setShowDropdown(false);
+                              setShowActionsDropdown(false);
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
                             <svg
-                              className="w-4 h-4 mr-3"
+                              className="w-4 h-4 mr-3 text-green-600"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -758,44 +954,78 @@ export default function DashboardEquipmentPage() {
                             </svg>
                             Import Data from CSV File
                           </button>
+
+                          <hr className="my-1 border-gray-100" />
+
+                          {/* Edit Selected Option */}
+                          <button
+                            onClick={() => {
+                              handleEditClick();
+                              setShowActionsDropdown(false);
+                            }}
+                            disabled={selectedRows.length !== 1}
+                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                              selectedRows.length !== 1
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            }`}
+                          >
+                            <svg
+                              className={`w-4 h-4 mr-3 ${
+                                selectedRows.length !== 1
+                                  ? "text-gray-400"
+                                  : "text-blue-600"
+                              }`}
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            Edit Selected (
+                            {selectedRows.length === 1
+                              ? "1"
+                              : selectedRows.length}
+                            )
+                          </button>
+
+                          {/* Delete Selected Option */}
+                          <button
+                            onClick={() => {
+                              setShowDeleteModal(true);
+                              setShowActionsDropdown(false);
+                            }}
+                            disabled={selectedRows.length === 0}
+                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                              selectedRows.length === 0
+                                ? "text-gray-400 cursor-not-allowed"
+                                : "text-gray-700 hover:bg-red-50 hover:text-red-900"
+                            }`}
+                          >
+                            <svg
+                              className={`w-4 h-4 mr-3 ${
+                                selectedRows.length === 0
+                                  ? "text-gray-400"
+                                  : "text-red-600"
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                            Delete Selected ({selectedRows.length})
+                          </button>
                         </div>
                       </div>
                     )}
                   </div>
-                  {/* The Edit button */}
-                  <button
-                    onClick={handleEditClick}
-                    disabled={selectedRows.length !== 1}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
-                      selectedRows.length !== 1
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    }`}
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                    Edit Selected (
-                    {selectedRows.length === 1 ? "1" : selectedRows.length})
-                  </button>
 
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    disabled={selectedRows.length === 0}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-200 ${
-                      selectedRows.length === 0
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    }`}
-                  >
-                    Delete Selected ({selectedRows.length})
-                  </button>
-
-                  {/* The new Confirmation Modal */}
+                  {/* The Delete Confirmation Modal (moved here from the original location) */}
                   {showDeleteModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                       <div
@@ -852,6 +1082,7 @@ export default function DashboardEquipmentPage() {
                     </div>
                   )}
 
+                  {/* Keep the Refresh button separate */}
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
@@ -1388,7 +1619,7 @@ export default function DashboardEquipmentPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {equipments.map((eq, index) => (
+                        {getFilteredEquipments().map((eq, index) => (
                           <tr
                             key={eq.id}
                             className={`hover:bg-gray-50 ${
@@ -1596,7 +1827,7 @@ export default function DashboardEquipmentPage() {
 
                   <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
                     <div className="text-sm text-gray-500">
-                      Showing {equipments.length} equipment
+                      Showing {getFilteredEquipments().length} equipment
                       {equipments.length !== 1 ? "s" : ""}
                     </div>
                   </div>
