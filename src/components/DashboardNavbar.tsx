@@ -124,13 +124,6 @@ const DashboardNavbar: React.FC = () => {
                 </a>
                 <hr className="border-gray-200" />
                 <a
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
-                >
-                  <LayoutDashboard size={16} />
-                  My Dashboard
-                </a>
-                <a
                   href="/profile"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
