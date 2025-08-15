@@ -1,5 +1,6 @@
 "use client";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { useCallback, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -10,6 +11,16 @@ type BorrowingStatus = "Pending" | "Approved" | "Rejected";
 interface Borrowing {
   id: number;
   created_at: string;
+  request_status: BorrowingStatus;
+  availability: string;
+  purpose: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  return_date: string | null;
+  date_returned: string | null;
+  recievers_name: string | null;
+  borrowers_id: number;
+  borrowed_item: number;
 }
 
 export default function MyRequestsPage() {
@@ -56,6 +67,7 @@ export default function MyRequestsPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
