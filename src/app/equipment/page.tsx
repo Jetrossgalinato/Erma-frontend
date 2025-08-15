@@ -70,6 +70,8 @@ export default function EquipmentPage() {
   const ITEMS_PER_PAGE = 9;
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [borrowFormData, setBorrowFormData] = useState({
     purpose: "",
@@ -93,6 +95,36 @@ export default function EquipmentPage() {
   useEffect(() => {
     fetchEquipment();
   }, [fetchEquipment]);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        console.log("User found:", user.id); // Debug line
+
+        const { data: accountData, error } = await supabase
+          .from("account_requests")
+          .select("is_employee")
+          .eq("user_id", user.id)
+          .single();
+
+        console.log("Account data:", accountData, "Error:", error); // Debug line
+
+        const authorized = accountData?.is_employee === true;
+        console.log("Is authorized:", authorized); // Debug line
+
+        setIsAuthorized(authorized);
+      } else {
+        console.log("No user found"); // Debug line
+        setIsAuthorized(false);
+      }
+    };
+
+    checkUser();
+  }, [supabase]);
 
   // Generate unique categories and facilities dynamically
   const categories = useMemo(() => {
@@ -131,6 +163,10 @@ export default function EquipmentPage() {
 
   // Modify the handleBorrow function to get the bigint user ID:
   const handleBorrow = async () => {
+    if (!isAuthorized) {
+      alert("You are not authorized to borrow equipment");
+      return;
+    }
     if (
       !selectedEquipment ||
       !borrowFormData.purpose ||
@@ -333,11 +369,20 @@ export default function EquipmentPage() {
                     </button>
 
                     <button
-                      className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                      onClick={() => {
-                        setSelectedEquipment(equipment);
-                        setShowBorrowModal(true);
-                      }}
+                      className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                        isAuthorized
+                          ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                      onClick={
+                        isAuthorized
+                          ? () => {
+                              setSelectedEquipment(equipment);
+                              setShowBorrowModal(true);
+                            }
+                          : undefined
+                      }
+                      disabled={!isAuthorized}
                     >
                       Borrow
                     </button>
