@@ -122,38 +122,43 @@ export default function MyRequestsPage() {
               </p>
             </div>
             <div className="flex gap-3">
-              {selectedRequests.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowActionsDropdown(!showActionsDropdown)}
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    Actions ({selectedRequests.length})
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                  className={`px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-2 ${
+                    selectedRequests.length > 0
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  disabled={selectedRequests.length === 0}
+                >
+                  Actions ({selectedRequests.length})
+                  <ChevronDown className="w-4 h-4" />
+                </button>
 
-                  {showActionsDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                      <div className="py-1">
-                        <button
-                          onClick={handleBulkReturn}
-                          className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                        >
-                          <RotateCcw className="w-4 h-4" />
-                          Mark as Returned
-                        </button>
-                        <button
-                          onClick={handleBulkDelete}
-                          className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete Requests
-                        </button>
-                      </div>
+                {showActionsDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                    <div className="py-1">
+                      <button
+                        onClick={handleBulkReturn}
+                        className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        disabled={selectedRequests.length === 0}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Mark as Returned
+                      </button>
+                      <button
+                        onClick={handleBulkDelete}
+                        className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        disabled={selectedRequests.length === 0}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Requests
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={fetchBorrowing}
