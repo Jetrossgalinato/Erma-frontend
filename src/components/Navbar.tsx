@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   User,
   LogOut,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -159,6 +160,13 @@ const Navbar: React.FC = () => {
                   My Dashboard
                 </a>
                 <a
+                  href="/my-requests"
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                >
+                  <FileText size={16} />
+                  My Requests
+                </a>
+                <a
                   href="/profile"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
@@ -269,6 +277,13 @@ const Navbar: React.FC = () => {
                   >
                     <LayoutDashboard size={16} />
                     My Dashboard
+                  </a>
+                  <a
+                    href="/my-requests"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <FileText size={16} />
+                    My Requests
                   </a>
                   <a
                     href="/profile"
