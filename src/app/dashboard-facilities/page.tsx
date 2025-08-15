@@ -1,5 +1,5 @@
 "use client";
-import DashboardNavbar from "@/components/Navbar";
+import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
