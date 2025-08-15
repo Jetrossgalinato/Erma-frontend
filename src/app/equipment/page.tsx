@@ -504,7 +504,7 @@ export default function EquipmentPage() {
 
       {showBorrowModal && selectedEquipment && (
         <div
-          className="fixed inset-0 z-50 backdrop-blur-sm backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
           onClick={() => setShowBorrowModal(false)}
         >
           <div
