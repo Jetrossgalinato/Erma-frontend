@@ -2,7 +2,15 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCallback, useState, useEffect } from "react";
-import { RefreshCw, Calendar, User, Package } from "lucide-react";
+import {
+  RefreshCw,
+  Calendar,
+  User,
+  Package,
+  ChevronDown,
+  Trash2,
+  RotateCcw,
+} from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 
@@ -27,6 +35,8 @@ export default function MyRequestsPage() {
   const [loading, setLoading] = useState(false);
   const supabase = createClientComponentClient<Database>();
   const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
+  const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
 
   const fetchBorrowing = useCallback(async () => {
     setLoading(true);
@@ -38,6 +48,38 @@ export default function MyRequestsPage() {
     }
     setLoading(false);
   }, [supabase]);
+
+  const toggleRequestSelection = (requestId: number) => {
+    setSelectedRequests((prev) =>
+      prev.includes(requestId)
+        ? prev.filter((id) => id !== requestId)
+        : [...prev, requestId]
+    );
+  };
+
+  const toggleAllRequests = () => {
+    if (selectedRequests.length === borrowingData.length) {
+      setSelectedRequests([]);
+    } else {
+      setSelectedRequests(borrowingData.map((req) => req.id));
+    }
+  };
+
+  const handleBulkReturn = async () => {
+    // Add your return logic here
+    console.log("Returning requests:", selectedRequests);
+    // Reset selection after action
+    setSelectedRequests([]);
+    setShowActionsDropdown(false);
+  };
+
+  const handleBulkDelete = async () => {
+    // Add your delete logic here
+    console.log("Deleting requests:", selectedRequests);
+    // Reset selection after action
+    setSelectedRequests([]);
+    setShowActionsDropdown(false);
+  };
 
   useEffect(() => {
     fetchBorrowing();
@@ -80,6 +122,39 @@ export default function MyRequestsPage() {
               </p>
             </div>
             <div className="flex gap-3">
+              {selectedRequests.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    Actions ({selectedRequests.length})
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+
+                  {showActionsDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                      <div className="py-1">
+                        <button
+                          onClick={handleBulkReturn}
+                          className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          Mark as Returned
+                        </button>
+                        <button
+                          onClick={handleBulkDelete}
+                          className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete Requests
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={fetchBorrowing}
                 disabled={loading}
@@ -122,6 +197,17 @@ export default function MyRequestsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedRequests.length === borrowingData.length &&
+                            borrowingData.length > 0
+                          }
+                          onChange={toggleAllRequests}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Request ID
                       </th>
@@ -160,6 +246,16 @@ export default function MyRequestsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {borrowingData.map((borrowing) => (
                       <tr key={borrowing.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedRequests.includes(borrowing.id)}
+                            onChange={() =>
+                              toggleRequestSelection(borrowing.id)
+                            }
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           #{borrowing.id}
                         </td>
