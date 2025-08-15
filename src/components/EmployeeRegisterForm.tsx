@@ -82,6 +82,7 @@ export default function EmployeeRegisterForm() {
             phone_number: phoneNumber,
             acc_role,
             status: "Pending",
+            is_employee: "True",
           },
         ]);
 

@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 
-type FacilityStatus = "Available" | "Occupied" | "Maintenance" | "Reserved";
+type FacilityStatus = "Active" | "Inactive" | "Maintenance";
 
 interface Facility {
   id: number;
@@ -118,14 +118,12 @@ export default function FacilitiesPage() {
 
   const getStatusColor = (status: FacilityStatus): string => {
     switch (status) {
-      case "Available":
+      case "Active":
         return "bg-green-100 text-green-800";
-      case "Occupied":
+      case "Inactive":
         return "bg-red-100 text-red-800";
       case "Maintenance":
         return "bg-yellow-100 text-yellow-800";
-      case "Reserved":
-        return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -220,90 +218,102 @@ export default function FacilitiesPage() {
             </div>
           </div>
 
-          {/* Facilities Grid */}
+          {/* Facilities Content */}
           {loading ? (
-            <div className="text-center text-gray-600 py-12">
-              Loading facilities...
-            </div>
-          ) : filteredFacilities.length === 0 ? (
+            // Loading State
             <div className="text-center py-12">
-              <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No facilities found
-              </h3>
-              <p className="text-gray-600">
-                Try adjusting your search or filters
-              </p>
+              <RefreshCw className="w-8 h-8 mx-auto text-gray-400 mb-4 animate-spin" />
+              <p className="text-gray-600">Loading facilities...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {paginatedFacilities.map((facility) => (
-                <div
-                  key={facility.id}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
-                >
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
-                        {facility.name}
-                      </h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          facility.status
-                        )}`}
-                      >
-                        {facility.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Floor:</span>{" "}
-                        {facility.floor_level}
-                      </p>
-
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Building:</span>{" "}
-                        {facility.building}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
-                        onClick={() => {
-                          setSelectedFacility(facility);
-                          setShowModal(true);
-                        }}
-                      >
-                        View
-                      </button>
-                      <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-                        {facility.status === "Available" ? "Book" : "Edit"}
-                      </button>
-                    </div>
-                  </div>
+            <>
+              {/* Facilities Grid */}
+              {filteredFacilities.length === 0 ? (
+                <div className="text-center py-12">
+                  <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No facilities found
+                  </h3>
+                  <p className="text-gray-600">
+                    Try adjusting your search or filters
+                  </p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                  {paginatedFacilities.map((facility) => (
+                    <div
+                      key={facility.id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
+                            {facility.name}
+                          </h3>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              facility.status
+                            )}`}
+                          >
+                            {facility.status}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 mb-4">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Floor:</span>{" "}
+                            {facility.floor_level}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Building:</span>{" "}
+                            {facility.building}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button
+                            className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                            onClick={() => {
+                              setSelectedFacility(facility);
+                              setShowModal(true);
+                            }}
+                          >
+                            View
+                          </button>
+                          <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                            {facility.status === "Active" ? "Book" : "Edit"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination - Only show if there are items to paginate */}
+              {filteredFacilities.length > ITEMS_PER_PAGE && (
+                <div className="flex justify-center mt-2 mb-12 space-x-2">
+                  {Array.from({
+                    length: Math.ceil(
+                      filteredFacilities.length / ITEMS_PER_PAGE
+                    ),
+                  }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === i + 1
+                          ? "bg-orange-600 text-white"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
-          <div className="flex justify-center mt-2 mb-12 space-x-2">
-            {Array.from({
-              length: Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE),
-            }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       {showModal && selectedFacility && (
