@@ -251,24 +251,6 @@ export default function AccountRequestsPage() {
           ? mapRoleToSystemRole(originalRole)
           : originalRole;
 
-      // Step 2: Check and insert into accounts if not existing
-      if (!is_intern && !is_supervisor) {
-        const { data: existingAccount } = await supabase
-          .from("accounts")
-          .select("*")
-          .eq("acc_req_id", requestId)
-          .single();
-
-        if (!existingAccount) {
-          const { error: insertError } = await supabase
-            .from("accounts")
-            .insert({
-              acc_req_id: requestId,
-            });
-          if (insertError) throw insertError;
-        }
-      }
-
       // Step 3: Insert to supervisor table if applicable
       if (is_supervisor) {
         const { data: existingSupervisor } = await supabase
@@ -391,24 +373,6 @@ export default function AccountRequestsPage() {
     if (!confirmDelete) return;
 
     try {
-      // First, check if there's an associated account record
-      const { data: accountData, error: accountCheckError } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("acc_req_id", requestId);
-
-      if (accountCheckError) throw accountCheckError;
-
-      // If there's an associated account, delete it first
-      if (accountData && accountData.length > 0) {
-        const { error: accountDeleteError } = await supabase
-          .from("accounts")
-          .delete()
-          .eq("acc_req_id", requestId);
-
-        if (accountDeleteError) throw accountDeleteError;
-      }
-
       // Now delete the account request
       const { error: requestDeleteError } = await supabase
         .from("account_requests")
