@@ -326,100 +326,110 @@ export default function EquipmentPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {paginatedEquipment.map((equipment) => (
-              <div
-                key={equipment.id}
-                className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
-                      {equipment.name}
-                    </h3>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        equipment.status
-                      )}`}
-                    >
-                      {equipment.status}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Category:</span>{" "}
-                      {equipment.category}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Facility:</span>{" "}
-                      {equipment.facility}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
-                      onClick={() => {
-                        setSelectedEquipment(equipment);
-                        setShowModal(true);
-                      }}
-                    >
-                      View
-                    </button>
-
-                    <button
-                      className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
-                        isAuthorized
-                          ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                      onClick={
-                        isAuthorized
-                          ? () => {
-                              setSelectedEquipment(equipment);
-                              setShowBorrowModal(true);
-                            }
-                          : undefined
-                      }
-                      disabled={!isAuthorized}
-                    >
-                      Borrow
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center mt-2 mb-12 space-x-2">
-            {Array.from({
-              length: Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
-            }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-
-          {filteredEquipment.length === 0 && (
+          {loading ? (
+            // Loading State
             <div className="text-center py-12">
-              <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No equipment found
-              </h3>
-              <p className="text-gray-600">
-                Try adjusting your search or filters
-              </p>
+              <RefreshCw className="w-8 h-8 mx-auto text-gray-400 mb-4 animate-spin" />
+              <p className="text-gray-600">Loading equipment...</p>
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                {paginatedEquipment.map((equipment) => (
+                  <div
+                    key={equipment.id}
+                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
+                          {equipment.name}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            equipment.status
+                          )}`}
+                        >
+                          {equipment.status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Category:</span>{" "}
+                          {equipment.category}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Facility:</span>{" "}
+                          {equipment.facility}
+                        </p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                          onClick={() => {
+                            setSelectedEquipment(equipment);
+                            setShowModal(true);
+                          }}
+                        >
+                          View
+                        </button>
+
+                        <button
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                            isAuthorized
+                              ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          }`}
+                          onClick={
+                            isAuthorized
+                              ? () => {
+                                  setSelectedEquipment(equipment);
+                                  setShowBorrowModal(true);
+                                }
+                              : undefined
+                          }
+                          disabled={!isAuthorized}
+                        >
+                          Borrow
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-center mt-2 mb-12 space-x-2">
+                {Array.from({
+                  length: Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
+                }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === i + 1
+                        ? "bg-orange-600 text-white"
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              {filteredEquipment.length === 0 && (
+                <div className="text-center py-12">
+                  <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No equipment found
+                  </h3>
+                  <p className="text-gray-600">
+                    Try adjusting your search or filters
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
