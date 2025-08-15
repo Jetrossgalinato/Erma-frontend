@@ -68,6 +68,9 @@ export default function AccountRequestsPage() {
   const ITEMS_PER_PAGE = 9;
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
+
   // Generate date options dynamically
   const getDateOptions = () => {
     const today = new Date();
@@ -147,6 +150,23 @@ export default function AccountRequestsPage() {
       setLoading(false);
     }
   }, []);
+
+  const openDeleteModal = (requestId: number) => {
+    setRequestToDelete(requestId);
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setRequestToDelete(null);
+    setShowDeleteModal(false);
+  };
+
+  const confirmDelete = async () => {
+    if (requestToDelete) {
+      await handleRemove(requestToDelete);
+      closeDeleteModal();
+    }
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -365,15 +385,7 @@ export default function AccountRequestsPage() {
   };
 
   const handleRemove = async (requestId: number) => {
-    // Add confirmation dialog
-    const confirmDelete = window.confirm(
-      "Are you sure you want to remove this request? This action cannot be undone and will also remove any associated account."
-    );
-
-    if (!confirmDelete) return;
-
     try {
-      // Now delete the account request
       const { error: requestDeleteError } = await supabase
         .from("account_requests")
         .delete()
@@ -381,12 +393,11 @@ export default function AccountRequestsPage() {
 
       if (requestDeleteError) throw requestDeleteError;
 
-      // Update local state only if the delete was successful
       setRequests((prevRequests) =>
         prevRequests.filter((request) => request.id !== requestId)
       );
 
-      // Optional: Show success message
+      // Success notification (you can replace with toast if preferred)
       alert("Request removed successfully!");
     } catch (error) {
       const errorMessage = handleError(error, "remove request");
@@ -576,9 +587,9 @@ export default function AccountRequestsPage() {
               {paginatedRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow flex flex-col"
                 >
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3 flex-1">
                         <User className="w-5 h-5 text-blue-600" />
@@ -650,9 +661,9 @@ export default function AccountRequestsPage() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
-                      {request.status === "Pending" ? (
-                        <>
+                    <div className="space-y-2 mt-auto">
+                      {request.status === "Pending" && (
+                        <div className="flex gap-2">
                           <button
                             onClick={() =>
                               handleApprove(
@@ -673,18 +684,15 @@ export default function AccountRequestsPage() {
                             <UserX className="w-4 h-4" />
                             Reject
                           </button>
-                        </>
-                      ) : (
-                        <button className="flex-1 px-3 py-2 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
-                          View Details
-                        </button>
+                        </div>
                       )}
                       <button
-                        onClick={() => handleRemove(request.id)}
-                        className="px-3 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center"
+                        onClick={() => openDeleteModal(request.id)}
+                        className="w-full px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 flex items-center justify-center gap-2 group"
                         title="Remove request"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span>Remove Request</span>
                       </button>
                     </div>
                   </div>
@@ -738,6 +746,44 @@ export default function AccountRequestsPage() {
         </div>
       </div>
       <Footer />
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Remove Account Request
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Are you sure you want to remove this account request? This
+                  action cannot be undone and will permanently delete the
+                  request from the system.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeDeleteModal}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
