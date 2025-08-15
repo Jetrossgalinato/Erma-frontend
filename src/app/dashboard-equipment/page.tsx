@@ -553,9 +553,9 @@ export default function DashboardEquipmentPage() {
     if (!status) return <span className="text-gray-400">-</span>;
 
     const statusColors = {
-      working: "bg-green-100 text-green-800",
-      for_repair: "bg-red-100 text-red-800",
-      in_use: "bg-yellow-100 text-yellow-800",
+      Working: "bg-green-100 text-green-800",
+      "For Repair": "bg-red-100 text-red-800",
+      "In Use": "bg-yellow-100 text-yellow-800",
     };
 
     type StatusKey = keyof typeof statusColors;
@@ -635,9 +635,9 @@ export default function DashboardEquipmentPage() {
               className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
             >
               <option value="">Select status</option>
-              <option value="working">Working</option>
-              <option value="in_use">In Use</option>
-              <option value="for_repair">For Repair</option>
+              <option value="Working">Working</option>
+              <option value="In Use">In Use</option>
+              <option value="For Repair">For Repair</option>
             </select>
             <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
               Press Enter to save, Esc to cancel
@@ -1272,9 +1272,9 @@ export default function DashboardEquipmentPage() {
                               className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="">Select status</option>
-                              <option value="working">Working</option>
-                              <option value="in_use">In Use</option>
-                              <option value="for_repair">For Repair</option>
+                              <option value="Working">Working</option>
+                              <option value="In Use">In Use</option>
+                              <option value="For Repair">For Repair</option>
                             </select>
                           </div>
 
@@ -1990,11 +1990,11 @@ export default function DashboardEquipmentPage() {
                                     {item.status ? (
                                       <span
                                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                          item.status === "working"
+                                          item.status === "Working"
                                             ? "bg-green-100 text-green-800"
-                                            : item.status === "for_repair"
+                                            : item.status === "For Repair"
                                             ? "bg-red-100 text-red-800"
-                                            : item.status === "in_use"
+                                            : item.status === "In Use"
                                             ? "bg-yellow-100 text-yellow-800"
                                             : "bg-blue-100 text-blue-800"
                                         }`}
@@ -2143,9 +2143,9 @@ export default function DashboardEquipmentPage() {
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select status</option>
-                    <option value="working">Working</option>
-                    <option value="in_use">In Use</option>
-                    <option value="for_repair">For Repair</option>
+                    <option value="Working">Working</option>
+                    <option value="In Use">In Use</option>
+                    <option value="For Repair">For Repair</option>
                   </select>
                 </div>
                 <div>
