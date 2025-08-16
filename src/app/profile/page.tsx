@@ -163,6 +163,11 @@ export default function MyProfilePage() {
     if (!user) return;
 
     // Validation
+    if (!passwordForm.currentPassword) {
+      setPasswordError("Current password is required");
+      return;
+    }
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError("New passwords don't match");
       return;
@@ -177,6 +182,18 @@ export default function MyProfilePage() {
       setSaving(true);
       setPasswordError(null);
 
+      // First, verify the current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password: passwordForm.currentPassword,
+      });
+
+      if (signInError) {
+        setPasswordError("Current password is incorrect");
+        return;
+      }
+
+      // If current password is correct, update to new password
       const { error } = await supabase.auth.updateUser({
         password: passwordForm.newPassword,
       });
@@ -686,6 +703,24 @@ export default function MyProfilePage() {
                       </div>
                     </div>
                   )}
+
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm((prev) => ({
+                          ...prev,
+                          currentPassword: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-3 border-2 border-slate-200 text-orange-800 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80"
+                      placeholder="Enter your current password"
+                    />
+                  </div>
 
                   <div className="space-y-3">
                     <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
