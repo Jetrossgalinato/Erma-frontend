@@ -131,6 +131,7 @@ export default function MyProfilePage() {
           last_name: editForm.last_name,
           department: editForm.department,
           phone_number: editForm.phone_number,
+          acc_role: editForm.acc_role,
         })
         .eq("user_id", user.id)
         .select()
@@ -540,27 +541,23 @@ export default function MyProfilePage() {
                   <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
                     Account Role
                   </label>
-                  <div className="bg-slate-50/80 px-4 py-3 rounded-xl border-2 border-slate-100">
-                    <p className="text-slate-800 font-medium">
-                      {profile?.acc_role || "Not specified"}
-                    </p>
-                  </div>
-                  <p className="text-xs text-slate-500 flex items-center">
-                    <svg
-                      className="w-3 h-3 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    Role is assigned by administrators
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editForm.acc_role || ""}
+                      onChange={(e) =>
+                        handleInputChange("acc_role", e.target.value)
+                      }
+                      className="w-full px-4 py-3 border-2 border-slate-200 text-gray-800 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80"
+                      placeholder="Enter your account role"
+                    />
+                  ) : (
+                    <div className="bg-slate-50/80 px-4 py-3 rounded-xl border-2 border-slate-100">
+                      <p className="text-slate-800 font-medium">
+                        {profile?.acc_role || "Not specified"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
