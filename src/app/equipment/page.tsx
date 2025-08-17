@@ -18,6 +18,8 @@ interface Equipment {
   brand_name: string | null;
   description: string | null;
   facility: string | null;
+  facility_id: number | null;
+  facility_name?: string;
   category: string | null;
   status: EquipmentStatus;
   date_acquire: string | null;
@@ -81,13 +83,33 @@ export default function EquipmentPage() {
   });
   const [borrowing, setBorrowing] = useState(false);
 
+  type EquipmentWithFacility = Equipment & {
+    facilities?: {
+      name: string;
+    } | null;
+  };
+
+  // 3. Update the fetchEquipment function to include facility join
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("equipments").select("*");
+    const { data, error } = await supabase.from("equipments").select(`
+      *,
+      facilities!facility_id (
+        name
+      )
+    `);
+
     if (error) {
       console.error("Failed to fetch equipment:", error);
     } else {
-      setEquipmentData(data as Equipment[]);
+      // Transform the data to include facility_name
+      const transformedData = (data as EquipmentWithFacility[])?.map(
+        (item) => ({
+          ...item,
+          facility_name: item.facilities?.name || null,
+        })
+      ) as Equipment[];
+      setEquipmentData(transformedData);
     }
     setLoading(false);
   }, [supabase]);
@@ -361,7 +383,9 @@ export default function EquipmentPage() {
                         </p>
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Facility:</span>{" "}
-                          {equipment.facility}
+                          {equipment.facility_name ||
+                            equipment.facility ||
+                            "N/A"}
                         </p>
                       </div>
 
@@ -489,6 +513,12 @@ export default function EquipmentPage() {
               <p>
                 <strong>Control Number:</strong>{" "}
                 {selectedEquipment.control_numb || "N/A"}
+              </p>
+              <p>
+                <strong>Facility:</strong>{" "}
+                {selectedEquipment.facility_name ||
+                  selectedEquipment.facility ||
+                  "N/A"}
               </p>
               <p>
                 <strong>Person Liable:</strong>{" "}
