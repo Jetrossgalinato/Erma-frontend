@@ -27,8 +27,8 @@ interface Equipment {
   amount: string | null;
   estimated_life: string | null;
   item_number: string | null;
-  property_num: string | null;
-  control_numb: string | null;
+  property_number: string | null;
+  control_number: string | null;
   serial_number: string | null;
   person_liable: string | null;
   remarks: string | null;
@@ -508,11 +508,11 @@ export default function EquipmentPage() {
               </p>
               <p>
                 <strong>Property Number:</strong>{" "}
-                {selectedEquipment.property_num || "N/A"}
+                {selectedEquipment.property_number || "N/A"}
               </p>
               <p>
                 <strong>Control Number:</strong>{" "}
-                {selectedEquipment.control_numb || "N/A"}
+                {selectedEquipment.control_number || "N/A"}
               </p>
               <p>
                 <strong>Facility:</strong>{" "}
