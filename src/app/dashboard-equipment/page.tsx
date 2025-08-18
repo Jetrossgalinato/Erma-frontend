@@ -29,6 +29,7 @@ type Equipment = {
   facility_id?: number;
   availability?: string;
   created_at: string;
+  image?: string;
 };
 
 type Facility = {
@@ -54,6 +55,10 @@ export default function DashboardEquipmentPage() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
 
   // pagination state variables
   const [currentPage, setCurrentPage] = useState(1);
@@ -344,6 +349,48 @@ export default function DashboardEquipmentPage() {
     }
   };
 
+  const handleEditImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    // Validate file size (optional - e.g., 5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setEditImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setEditImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearEditImageSelection = () => {
+    setEditImageFile(null);
+    setEditImagePreview(null);
+    if (editImageInputRef.current) {
+      editImageInputRef.current.value = "";
+    }
+  };
+
+  const removeCurrentImage = () => {
+    if (editingEquipment) {
+      setEditingEquipment({ ...editingEquipment, image: undefined });
+    }
+  };
+
   const getFilteredEquipments = () => {
     return equipments.filter((eq) => {
       const matchesCategory =
@@ -556,6 +603,9 @@ export default function DashboardEquipmentPage() {
     if (rowToEdit) {
       setEditingEquipment(rowToEdit);
       setShowEditModal(true);
+      // Reset image states
+      setEditImageFile(null);
+      setEditImagePreview(null);
     }
   };
 
@@ -608,6 +658,7 @@ export default function DashboardEquipmentPage() {
   const handleCancelEdit = () => {
     setEditingEquipment(null);
     setShowEditModal(false);
+    clearEditImageSelection();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -2413,6 +2464,82 @@ export default function DashboardEquipmentPage() {
                     ))}
                   </select>
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image
+                  </label>
+                  <div className="space-y-3">
+                    {/* Current Image */}
+                    {editingEquipment?.image && !editImagePreview && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Current Image:
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Image
+                            src={editingEquipment.image}
+                            alt="Current equipment"
+                            className="w-16 h-16 rounded border object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={removeCurrentImage}
+                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded"
+                          >
+                            Remove Current Image
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* New Image Upload */}
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => editImageInputRef.current?.click()}
+                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          {editingEquipment?.image
+                            ? "Change Image"
+                            : "Add Image"}
+                        </button>
+                        {editImageFile && (
+                          <button
+                            type="button"
+                            onClick={clearEditImageSelection}
+                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      {editImageFile && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          New image: {editImageFile.name}
+                        </div>
+                      )}
+
+                      {editImagePreview && (
+                        <div className="mt-2">
+                          <div className="text-xs text-gray-500 mb-1">
+                            Preview:
+                          </div>
+                          <Image
+                            src={editImagePreview}
+                            alt="Preview"
+                            className="w-16 h-16 rounded border object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -2474,6 +2601,15 @@ export default function DashboardEquipmentPage() {
         ref={imageInputRef}
         accept="image/png,image/jpeg,image/jpg"
         onChange={handleImageFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden image input for edit modal */}
+      <input
+        type="file"
+        ref={editImageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleEditImageFileSelect}
         className="hidden"
       />
     </div>
