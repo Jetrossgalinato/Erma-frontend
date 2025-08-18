@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Upload } from "lucide-react";
 
 // Define the shape of one row from your equipments table
 type Equipment = {
@@ -28,6 +29,7 @@ type Equipment = {
   facility_id?: number;
   availability?: string;
   created_at: string;
+  image?: string;
 };
 
 type Facility = {
@@ -49,6 +51,18 @@ export default function DashboardEquipmentPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
     null
   );
+
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
+
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageName, setSelectedImageName] = useState<string>("");
 
   // pagination state variables
   const [currentPage, setCurrentPage] = useState(1);
@@ -184,17 +198,10 @@ export default function DashboardEquipmentPage() {
         setLoading(true);
       }
 
+      // Simple query without join - this will work
       const { data, error } = await supabase
         .from("equipments")
-        .select(
-          `
-        *,
-        facilities (
-          id,
-          name
-        )
-      `
-        )
+        .select("*")
         .order("id", { ascending: true });
 
       if (error) {
@@ -246,9 +253,47 @@ export default function DashboardEquipmentPage() {
       return;
     }
 
+    let imageUrl = null;
+
+    // Upload image if selected
+    if (selectedImageFile) {
+      try {
+        // Generate unique filename
+        const fileExt = selectedImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload the image directly since bucket already exists
+        const { error: uploadError } = await supabase.storage
+          .from("equipment-images")
+          .upload(fileName, selectedImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            `Failed to upload image: ${uploadError.message}. Equipment will be created without image.`
+          );
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from("equipment-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert(
+          "Failed to process image. Equipment will be created without image."
+        );
+      }
+    }
+
     const { error } = await supabase.from("equipments").insert([
       {
         ...newEquipment,
+        image: imageUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -260,7 +305,92 @@ export default function DashboardEquipmentPage() {
     } else {
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
+      clearImageSelection();
       fetchEquipments(false);
+    }
+  };
+
+  const handleImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    // Validate file size (optional - e.g., 5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setSelectedImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImageSelection = () => {
+    setSelectedImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const handleEditImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    // Validate file size (optional - e.g., 5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setEditImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setEditImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageClick = (imageUrl: string, equipmentName: string) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageName(equipmentName);
+    setShowImageModal(true);
+  };
+
+  const clearEditImageSelection = () => {
+    setEditImageFile(null);
+    setEditImagePreview(null);
+    if (editImageInputRef.current) {
+      editImageInputRef.current.value = "";
+    }
+  };
+
+  const removeCurrentImage = () => {
+    if (editingEquipment) {
+      setEditingEquipment({ ...editingEquipment, image: undefined });
     }
   };
 
@@ -284,6 +414,7 @@ export default function DashboardEquipmentPage() {
   const handleCancelInsert = () => {
     setShowInsertForm(false);
     setNewEquipment({ name: "" });
+    clearImageSelection();
   };
 
   const handleFileSelect = async (
@@ -475,6 +606,9 @@ export default function DashboardEquipmentPage() {
     if (rowToEdit) {
       setEditingEquipment(rowToEdit);
       setShowEditModal(true);
+      // Reset image states
+      setEditImageFile(null);
+      setEditImagePreview(null);
     }
   };
 
@@ -490,10 +624,49 @@ export default function DashboardEquipmentPage() {
   };
 
   // The new save function for the edit modal
+
   const handleSaveEdit = async () => {
     if (!editingEquipment || !editingEquipment.id) return;
 
-    const { id, ...updates } = editingEquipment;
+    const updatedEquipment = { ...editingEquipment };
+
+    // Handle image upload if a new image file is selected
+    if (editImageFile) {
+      try {
+        // Generate unique filename
+        const fileExt = editImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload to Supabase storage (bucket already exists)
+        const { error: uploadError } = await supabase.storage
+          .from("equipment-images")
+          .upload(fileName, editImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            `Failed to upload image: ${uploadError.message}. Equipment will be updated without new image.`
+          );
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from("equipment-images")
+            .getPublicUrl(fileName);
+
+          // Update the equipment object with the new image URL
+          updatedEquipment.image = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert(
+          "Failed to process image. Equipment will be updated without new image."
+        );
+      }
+    }
+
+    const { id, ...updates } = updatedEquipment;
     const { error } = await supabase
       .from("equipments")
       .update({
@@ -508,12 +681,13 @@ export default function DashboardEquipmentPage() {
     } else {
       // Update local state with the new data
       setEquipments((prev) =>
-        prev.map((eq) => (eq.id === id ? editingEquipment : eq))
+        prev.map((eq) => (eq.id === id ? updatedEquipment : eq))
       );
       // Clear the edit state and close the modal
       setEditingEquipment(null);
       setShowEditModal(false);
       setSelectedRows([]);
+      clearEditImageSelection();
       alert("Equipment updated successfully!");
     }
   };
@@ -527,6 +701,7 @@ export default function DashboardEquipmentPage() {
   const handleCancelEdit = () => {
     setEditingEquipment(null);
     setShowEditModal(false);
+    clearEditImageSelection();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1485,6 +1660,48 @@ export default function DashboardEquipmentPage() {
                             </select>
                           </div>
 
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Image
+                            </label>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => imageInputRef.current?.click()}
+                                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                >
+                                  Choose Image
+                                </button>
+                                {selectedImageFile && (
+                                  <button
+                                    type="button"
+                                    onClick={clearImageSelection}
+                                    className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              {selectedImageFile && (
+                                <div className="text-xs text-gray-500">
+                                  Selected: {selectedImageFile.name}
+                                </div>
+                              )}
+
+                              {imagePreview && (
+                                <div className="mt-2">
+                                  <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-16 h-16 rounded border object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
                           <div className="md:col-span-2">
                             <label className="block text-xs font-medium text-gray-700 mb-1">
                               Description
@@ -1582,6 +1799,9 @@ export default function DashboardEquipmentPage() {
                             Name
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Image
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             PO Number
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -1660,6 +1880,63 @@ export default function DashboardEquipmentPage() {
 
                             <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
                               {renderEditableCell(eq, "name", eq.name)}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {editingCell?.rowId === eq.id &&
+                              editingCell?.column === "image" ? (
+                                renderEditableCell(eq, "image", eq.image)
+                              ) : (
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+                                  {eq.image ? (
+                                    <div className="flex items-center justify-center">
+                                      <img
+                                        src={eq.image}
+                                        alt={`${eq.name} equipment`}
+                                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
+                                        onClick={() =>
+                                          handleImageClick(eq.image!, eq.name)
+                                        }
+                                        onError={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.display = "none";
+                                          const parent = target.parentElement;
+                                          if (parent) {
+                                            parent.innerHTML =
+                                              '<span class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Failed to load</span>';
+                                          }
+                                        }}
+                                        onLoad={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.opacity = "1";
+                                        }}
+                                        style={{
+                                          opacity: "0",
+                                          transition:
+                                            "opacity 0.3s ease-in-out, transform 0.2s ease-in-out",
+                                        }}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg">
+                                      <svg
+                                        className="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={1.5}
+                                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
                               {renderEditableCell(
@@ -1780,39 +2057,9 @@ export default function DashboardEquipmentPage() {
                                 eq.person_liable
                               )}
                             </td>
+
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "facility_id" ? (
-                                <div className="relative">
-                                  <select
-                                    value={editingCell.value}
-                                    onChange={(e) =>
-                                      handleCellEdit(e.target.value)
-                                    }
-                                    onKeyDown={handleKeyDown}
-                                    onBlur={handleCancelEdit}
-                                    autoFocus
-                                    className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
-                                  >
-                                    <option value="">Select facility</option>
-                                    {facilities.map((facility) => (
-                                      <option
-                                        key={facility.id}
-                                        value={facility.id}
-                                      >
-                                        {facility.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
-                                    Press Enter to save, Esc to cancel
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
-                                  {getFacilityName(eq.facility_id)}
-                                </div>
-                              )}
+                              {getFacilityName(eq.facility_id)}
                             </td>
                             <td className="px-3 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-100">
                               <div className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
@@ -2066,9 +2313,9 @@ export default function DashboardEquipmentPage() {
             className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
             onClick={handleCancelEdit}
           ></div>
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-2xl w-full z-50">
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full max-h-[90vh] z-50 flex flex-col">
+            <div className="p-6 overflow-y-auto flex-1">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 top-0 bg-white pb-2 border-b border-gray-200">
                 Edit Equipment: {editingEquipment.name}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2290,6 +2537,95 @@ export default function DashboardEquipmentPage() {
                     ))}
                   </select>
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image
+                  </label>
+                  <div className="space-y-3">
+                    {/* Current Image */}
+                    {editingEquipment?.image && !editImagePreview && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Current Image:
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <img
+                            src={editingEquipment.image}
+                            alt="Current equipment"
+                            className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
+                            onClick={() =>
+                              handleImageClick(
+                                editingEquipment.image!,
+                                editingEquipment.name
+                              )
+                            }
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={removeCurrentImage}
+                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded"
+                          >
+                            Remove Current Image
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* New Image Upload */}
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => editImageInputRef.current?.click()}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {editingEquipment?.image
+                            ? "Change Image"
+                            : "Add Image"}
+                        </button>
+                        {editImageFile && (
+                          <button
+                            type="button"
+                            onClick={clearEditImageSelection}
+                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      {editImageFile && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          New image: {editImageFile.name}
+                        </div>
+                      )}
+
+                      {editImagePreview && (
+                        <div className="mt-2">
+                          <div className="text-xs text-gray-500 mb-1">
+                            Preview:
+                          </div>
+                          <img
+                            src={editImagePreview}
+                            alt="Preview"
+                            className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
+                            onClick={() =>
+                              handleImageClick(
+                                editImagePreview,
+                                `${editingEquipment.name} (Preview)`
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -2316,7 +2652,7 @@ export default function DashboardEquipmentPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3 border-t border-gray-200">
               <button
                 type="button"
                 className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
@@ -2336,12 +2672,108 @@ export default function DashboardEquipmentPage() {
         </div>
       )}
 
+      {showImageModal && selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowImageModal(false);
+              setSelectedImageUrl(null);
+              setSelectedImageName("");
+            }
+          }}
+          tabIndex={0}
+          autoFocus
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+              className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              title="Close (Esc)"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Equipment name */}
+            <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+              <p className="text-white text-sm font-medium">
+                {selectedImageName}
+              </p>
+            </div>
+
+            {/* Image container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+            >
+              <img
+                src={selectedImageUrl}
+                alt={`${selectedImageName} equipment preview`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{
+                  maxWidth: "90vw",
+                  maxHeight: "90vh",
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML =
+                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hidden file input for drag and drop functionality */}
       <input
         type="file"
         ref={fileInputRef}
         accept=".xlsx,.xls"
         onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden image input */}
+      <input
+        type="file"
+        ref={imageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleImageFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden image input for edit modal */}
+      <input
+        type="file"
+        ref={editImageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleEditImageFileSelect}
         className="hidden"
       />
     </div>
