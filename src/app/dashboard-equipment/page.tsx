@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import Image from "next/image";
 
 // Define the shape of one row from your equipments table
 type Equipment = {
@@ -49,6 +50,10 @@ export default function DashboardEquipmentPage() {
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
     null
   );
+
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // pagination state variables
   const [currentPage, setCurrentPage] = useState(1);
@@ -246,9 +251,47 @@ export default function DashboardEquipmentPage() {
       return;
     }
 
+    let imageUrl = null;
+
+    // Upload image if selected
+    if (selectedImageFile) {
+      try {
+        // Generate unique filename
+        const fileExt = selectedImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload to Supabase storage
+        const { error: uploadError } = await supabase.storage
+          .from("equipment-images") // Make sure this bucket exists in your Supabase storage
+          .upload(fileName, selectedImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            "Failed to upload image. Equipment will be created without image."
+          );
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from("equipment-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert(
+          "Failed to process image. Equipment will be created without image."
+        );
+      }
+    }
+
     const { error } = await supabase.from("equipments").insert([
       {
         ...newEquipment,
+        image: imageUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -260,7 +303,44 @@ export default function DashboardEquipmentPage() {
     } else {
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
+      clearImageSelection();
       fetchEquipments(false);
+    }
+  };
+
+  const handleImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    // Validate file size (optional - e.g., 5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setSelectedImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImageSelection = () => {
+    setSelectedImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
     }
   };
 
@@ -284,6 +364,7 @@ export default function DashboardEquipmentPage() {
   const handleCancelInsert = () => {
     setShowInsertForm(false);
     setNewEquipment({ name: "" });
+    clearImageSelection();
   };
 
   const handleFileSelect = async (
@@ -1485,6 +1566,48 @@ export default function DashboardEquipmentPage() {
                             </select>
                           </div>
 
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Image
+                            </label>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => imageInputRef.current?.click()}
+                                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                >
+                                  Choose Image
+                                </button>
+                                {selectedImageFile && (
+                                  <button
+                                    type="button"
+                                    onClick={clearImageSelection}
+                                    className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              {selectedImageFile && (
+                                <div className="text-xs text-gray-500">
+                                  Selected: {selectedImageFile.name}
+                                </div>
+                              )}
+
+                              {imagePreview && (
+                                <div className="mt-2">
+                                  <Image
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-16 h-16 rounded border object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
                           <div className="md:col-span-2">
                             <label className="block text-xs font-medium text-gray-700 mb-1">
                               Description
@@ -2342,6 +2465,15 @@ export default function DashboardEquipmentPage() {
         ref={fileInputRef}
         accept=".xlsx,.xls"
         onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden image input */}
+      <input
+        type="file"
+        ref={imageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleImageFileSelect}
         className="hidden"
       />
     </div>
