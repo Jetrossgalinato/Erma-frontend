@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import Image from "next/image";
+import { Upload } from "lucide-react";
 
 // Define the shape of one row from your equipments table
 type Equipment = {
@@ -1649,7 +1649,7 @@ export default function DashboardEquipmentPage() {
 
                               {imagePreview && (
                                 <div className="mt-2">
-                                  <Image
+                                  <img
                                     src={imagePreview}
                                     alt="Preview"
                                     className="w-16 h-16 rounded border object-cover"
@@ -2240,9 +2240,9 @@ export default function DashboardEquipmentPage() {
             className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
             onClick={handleCancelEdit}
           ></div>
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-2xl w-full z-50">
-            <div className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full max-h-[90vh] z-50 flex flex-col">
+            <div className="p-6 overflow-y-auto flex-1">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 top-0 bg-white pb-2 border-b border-gray-200">
                 Edit Equipment: {editingEquipment.name}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2477,7 +2477,7 @@ export default function DashboardEquipmentPage() {
                           Current Image:
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Image
+                          <img
                             src={editingEquipment.image}
                             alt="Current equipment"
                             className="w-16 h-16 rounded border object-cover"
@@ -2502,8 +2502,9 @@ export default function DashboardEquipmentPage() {
                         <button
                           type="button"
                           onClick={() => editImageInputRef.current?.click()}
-                          className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
+                          <Upload className="w-4 h-4 mr-2" />
                           {editingEquipment?.image
                             ? "Change Image"
                             : "Add Image"}
@@ -2530,7 +2531,7 @@ export default function DashboardEquipmentPage() {
                           <div className="text-xs text-gray-500 mb-1">
                             Preview:
                           </div>
-                          <Image
+                          <img
                             src={editImagePreview}
                             alt="Preview"
                             className="w-16 h-16 rounded border object-cover"
@@ -2566,7 +2567,7 @@ export default function DashboardEquipmentPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3 border-t border-gray-200">
               <button
                 type="button"
                 className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
