@@ -67,6 +67,10 @@ export default function EquipmentPage() {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(
     null
   );
+
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
   const [loading, setLoading] = useState(false);
@@ -369,7 +373,11 @@ export default function EquipmentPage() {
                         <img
                           src={equipment.image}
                           alt={equipment.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => {
+                            setSelectedImage(equipment.image!);
+                            setShowImageModal(true);
+                          }}
                           onError={(e) => {
                             // Fallback to placeholder if image fails to load
                             const target = e.target as HTMLImageElement;
@@ -684,6 +692,44 @@ export default function EquipmentPage() {
       )}
 
       <Footer />
+
+      {showImageModal && selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-8">
+            <button
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <div
+              className="overflow-auto max-w-[70vw] max-h-[70vh] flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={selectedImage}
+                alt="Equipment preview"
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
