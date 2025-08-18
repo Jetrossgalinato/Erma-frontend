@@ -194,17 +194,10 @@ export default function DashboardEquipmentPage() {
         setLoading(true);
       }
 
+      // Simple query without join - this will work
       const { data, error } = await supabase
         .from("equipments")
-        .select(
-          `
-        *,
-        facilities (
-          id,
-          name
-        )
-      `
-        )
+        .select("*")
         .order("id", { ascending: true });
 
       if (error) {
@@ -267,15 +260,15 @@ export default function DashboardEquipmentPage() {
           .toString(36)
           .substring(7)}.${fileExt}`;
 
-        // Upload to Supabase storage
+        // Upload the image directly since bucket already exists
         const { error: uploadError } = await supabase.storage
-          .from("equipment-images") // Make sure this bucket exists in your Supabase storage
+          .from("equipment-images")
           .upload(fileName, selectedImageFile);
 
         if (uploadError) {
           console.error("Error uploading image:", uploadError);
           alert(
-            "Failed to upload image. Equipment will be created without image."
+            `Failed to upload image: ${uploadError.message}. Equipment will be created without image.`
           );
         } else {
           // Get public URL
@@ -621,10 +614,49 @@ export default function DashboardEquipmentPage() {
   };
 
   // The new save function for the edit modal
+
   const handleSaveEdit = async () => {
     if (!editingEquipment || !editingEquipment.id) return;
 
-    const { id, ...updates } = editingEquipment;
+    const updatedEquipment = { ...editingEquipment };
+
+    // Handle image upload if a new image file is selected
+    if (editImageFile) {
+      try {
+        // Generate unique filename
+        const fileExt = editImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        // Upload to Supabase storage (bucket already exists)
+        const { error: uploadError } = await supabase.storage
+          .from("equipment-images")
+          .upload(fileName, editImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            `Failed to upload image: ${uploadError.message}. Equipment will be updated without new image.`
+          );
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from("equipment-images")
+            .getPublicUrl(fileName);
+
+          // Update the equipment object with the new image URL
+          updatedEquipment.image = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert(
+          "Failed to process image. Equipment will be updated without new image."
+        );
+      }
+    }
+
+    const { id, ...updates } = updatedEquipment;
     const { error } = await supabase
       .from("equipments")
       .update({
@@ -639,12 +671,13 @@ export default function DashboardEquipmentPage() {
     } else {
       // Update local state with the new data
       setEquipments((prev) =>
-        prev.map((eq) => (eq.id === id ? editingEquipment : eq))
+        prev.map((eq) => (eq.id === id ? updatedEquipment : eq))
       );
       // Clear the edit state and close the modal
       setEditingEquipment(null);
       setShowEditModal(false);
       setSelectedRows([]);
+      clearEditImageSelection();
       alert("Equipment updated successfully!");
     }
   };
@@ -1756,6 +1789,9 @@ export default function DashboardEquipmentPage() {
                             Name
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Image
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             PO Number
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -1834,6 +1870,60 @@ export default function DashboardEquipmentPage() {
 
                             <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
                               {renderEditableCell(eq, "name", eq.name)}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              {editingCell?.rowId === eq.id &&
+                              editingCell?.column === "image" ? (
+                                renderEditableCell(eq, "image", eq.image)
+                              ) : (
+                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
+                                  {eq.image ? (
+                                    <div className="flex items-center justify-center">
+                                      <img
+                                        src={eq.image}
+                                        alt={`${eq.name} equipment`}
+                                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                                        onError={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.display = "none";
+                                          const parent = target.parentElement;
+                                          if (parent) {
+                                            parent.innerHTML =
+                                              '<span class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Failed to load</span>';
+                                          }
+                                        }}
+                                        onLoad={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.opacity = "1";
+                                        }}
+                                        style={{
+                                          opacity: "0",
+                                          transition:
+                                            "opacity 0.3s ease-in-out",
+                                        }}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg">
+                                      <svg
+                                        className="w-6 h-6 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={1.5}
+                                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 font-mono">
                               {renderEditableCell(
@@ -1954,39 +2044,9 @@ export default function DashboardEquipmentPage() {
                                 eq.person_liable
                               )}
                             </td>
+
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "facility_id" ? (
-                                <div className="relative">
-                                  <select
-                                    value={editingCell.value}
-                                    onChange={(e) =>
-                                      handleCellEdit(e.target.value)
-                                    }
-                                    onKeyDown={handleKeyDown}
-                                    onBlur={handleCancelEdit}
-                                    autoFocus
-                                    className="w-full px-2 py-1 text-sm text-black border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-sm"
-                                  >
-                                    <option value="">Select facility</option>
-                                    {facilities.map((facility) => (
-                                      <option
-                                        key={facility.id}
-                                        value={facility.id}
-                                      >
-                                        {facility.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <div className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
-                                    Press Enter to save, Esc to cancel
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
-                                  {getFacilityName(eq.facility_id)}
-                                </div>
-                              )}
+                              {getFacilityName(eq.facility_id)}
                             </td>
                             <td className="px-3 py-3 text-sm text-gray-600 max-w-xs border-r border-gray-100">
                               <div className="truncate cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors">
