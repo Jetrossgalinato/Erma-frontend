@@ -60,6 +60,10 @@ export default function DashboardEquipmentPage() {
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const editImageInputRef = useRef<HTMLInputElement>(null);
 
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageName, setSelectedImageName] = useState<string>("");
+
   // pagination state variables
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
@@ -368,6 +372,12 @@ export default function DashboardEquipmentPage() {
       setEditImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageClick = (imageUrl: string, equipmentName: string) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageName(equipmentName);
+    setShowImageModal(true);
   };
 
   const clearEditImageSelection = () => {
@@ -1882,7 +1892,10 @@ export default function DashboardEquipmentPage() {
                                       <img
                                         src={eq.image}
                                         alt={`${eq.name} equipment`}
-                                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
+                                        onClick={() =>
+                                          handleImageClick(eq.image!, eq.name)
+                                        }
                                         onError={(e) => {
                                           const target =
                                             e.target as HTMLImageElement;
@@ -1901,7 +1914,7 @@ export default function DashboardEquipmentPage() {
                                         style={{
                                           opacity: "0",
                                           transition:
-                                            "opacity 0.3s ease-in-out",
+                                            "opacity 0.3s ease-in-out, transform 0.2s ease-in-out",
                                         }}
                                       />
                                     </div>
@@ -2642,6 +2655,97 @@ export default function DashboardEquipmentPage() {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showImageModal && selectedImageUrl && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75">
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+              className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Equipment name */}
+            <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+              <p className="text-white text-sm font-medium">
+                {selectedImageName}
+              </p>
+            </div>
+
+            {/* Image container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+            >
+              <img
+                src={selectedImageUrl}
+                alt={`${selectedImageName} equipment preview`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{
+                  maxWidth: "90vw",
+                  maxHeight: "90vh",
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML =
+                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
+                  }
+                }}
+              />
+            </div>
+
+            {/* Download button */}
+            <div className="absolute bottom-4 right-4 z-10">
+              <a
+                href={selectedImageUrl}
+                download={`${selectedImageName}-equipment-image`}
+                className="inline-flex items-center px-3 py-2 bg-black bg-opacity-50 rounded-lg text-white text-sm hover:bg-opacity-70 transition-all"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Download
+              </a>
             </div>
           </div>
         </div>
