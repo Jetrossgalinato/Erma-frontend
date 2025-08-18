@@ -695,13 +695,21 @@ export default function EquipmentPage() {
 
       {showImageModal && selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
           onClick={() => setShowImageModal(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowImageModal(false);
+            }
+          }}
+          tabIndex={0}
+          autoFocus
         >
-          <div className="relative w-full h-full flex items-center justify-center p-8">
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-colors"
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all"
+              title="Close (Esc)"
             >
               <svg
                 className="w-6 h-6"
@@ -717,14 +725,28 @@ export default function EquipmentPage() {
                 />
               </svg>
             </button>
+
             <div
-              className="overflow-auto max-w-[70vw] max-h-[70vh] flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
+              className="relative w-full h-full flex items-center justify-center cursor-pointer"
+              onClick={() => setShowImageModal(false)}
             >
               <img
                 src={selectedImage}
                 alt="Equipment preview"
-                className="max-w-full max-h-full object-contain rounded-lg"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{
+                  maxWidth: "90vw",
+                  maxHeight: "90vh",
+                }}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML =
+                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
+                  }
+                }}
               />
             </div>
           </div>
