@@ -238,7 +238,7 @@ export default function EquipmentPage() {
         end_date: borrowFormData.end_date,
         return_date: borrowFormData.return_date,
         request_status: "Pending",
-        availability: "Unavailable",
+        availability: "Available",
         borrowers_id: accountData.id,
       });
 

@@ -159,11 +159,33 @@ export default function MyRequestsPage() {
   };
 
   const handleBulkDelete = async () => {
-    // Add your delete logic here
-    console.log("Deleting requests:", selectedRequests);
-    // Reset selection after action
-    setSelectedRequests([]);
-    setShowActionsDropdown(false);
+    if (selectedRequests.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("borrowing")
+        .delete()
+        .in("id", selectedRequests);
+
+      if (error) {
+        console.error("Failed to delete requests:", error);
+        // You might want to show a user-friendly error message here
+        return;
+      }
+
+      // Remove deleted items from local state
+      setBorrowingData((prev) =>
+        prev.filter((borrowing) => !selectedRequests.includes(borrowing.id))
+      );
+
+      // Reset selection after successful deletion
+      setSelectedRequests([]);
+      setShowActionsDropdown(false);
+
+      console.log("Successfully deleted requests:", selectedRequests);
+    } catch (error) {
+      console.error("Error deleting requests:", error);
+    }
   };
 
   useEffect(() => {
