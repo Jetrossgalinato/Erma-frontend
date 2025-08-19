@@ -5,6 +5,9 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Upload } from "lucide-react";
 
+import { useRouter } from "next/navigation";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+
 // Define the shape of one row from your equipments table
 type Equipment = {
   id: number;
@@ -94,6 +97,57 @@ export default function DashboardEquipmentPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
+
+  const [, setUser] = useState<SupabaseUser | null>(null);
+  const [, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Auth error:", error);
+          router.push("/login");
+          return;
+        }
+
+        if (!session?.user) {
+          router.push("/login");
+          return;
+        }
+
+        setUser(session.user);
+
+        // Allow all authenticated users for now
+        // TODO: Add role-based restrictions if needed
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/login");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login");
+      } else if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, supabase]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
