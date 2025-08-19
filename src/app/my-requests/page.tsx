@@ -40,7 +40,38 @@ export default function MyRequestsPage() {
 
   const fetchBorrowing = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("borrowing").select("*");
+
+    // Get the current user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Failed to get current user:", userError);
+      setLoading(false);
+      return;
+    }
+
+    // First, get the user's account_requests ID
+    const { data: accountRequest, error: accountError } = await supabase
+      .from("account_requests")
+      .select("id")
+      .eq("user_id", user.id) // Assuming auth_id links to the authenticated user
+      .single();
+
+    if (accountError || !accountRequest) {
+      console.error("Failed to get account request:", accountError);
+      setLoading(false);
+      return;
+    }
+
+    // Filter borrowing data by the account_requests ID
+    const { data, error } = await supabase
+      .from("borrowing")
+      .select("*")
+      .eq("borrowers_id", accountRequest.id);
+
     if (error) {
       console.error("Failed to fetch borrowing data:", error);
     } else {
