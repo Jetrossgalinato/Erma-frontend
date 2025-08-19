@@ -14,6 +14,9 @@ import {
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 
+import { useRouter } from "next/navigation";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+
 type BorrowingStatus = "Pending" | "Approved" | "Rejected";
 
 interface Borrowing {
@@ -37,6 +40,57 @@ export default function MyRequestsPage() {
   const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
   const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Auth error:", error);
+          router.push("/login");
+          return;
+        }
+
+        if (!session?.user) {
+          router.push("/login");
+          return;
+        }
+
+        setUser(session.user);
+
+        // Allow all authenticated users for now
+        // TODO: Add role-based restrictions if needed
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/login");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login");
+      } else if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const fetchBorrowing = useCallback(async () => {
     setLoading(true);
@@ -113,8 +167,10 @@ export default function MyRequestsPage() {
   };
 
   useEffect(() => {
-    fetchBorrowing();
-  }, [fetchBorrowing]);
+    if (!authLoading && user) {
+      fetchBorrowing();
+    }
+  }, [fetchBorrowing, authLoading, user]);
 
   const getStatusColor = (status: BorrowingStatus): string => {
     switch (status) {
@@ -213,10 +269,14 @@ export default function MyRequestsPage() {
               </h2>
             </div>
 
-            {loading ? (
+            {loading || authLoading ? (
               <div className="p-8 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500">Loading borrowing requests...</p>
+                <p className="text-gray-500">
+                  {authLoading
+                    ? "Checking authentication..."
+                    : "Loading borrowing requests..."}
+                </p>
               </div>
             ) : borrowingData.length === 0 ? (
               <div className="p-8 text-center">
