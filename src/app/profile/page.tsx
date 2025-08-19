@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/auth-helpers-nextjs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useRouter } from "next/navigation";
 
 interface ProfileData {
   first_name: string;
@@ -37,55 +38,82 @@ export default function MyProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
   const supabase = createClientComponentClient();
 
-  const fetchUserData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // Get the current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) throw userError;
-      if (!user) throw new Error("No user found");
-
-      setUser(user);
-
-      // Fetch profile data from account_requests table
-      const { data: profileData, error: profileError } = await supabase
-        .from("account_requests")
-        .select("first_name, last_name, department, phone_number, acc_role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      setProfile(profileData);
-      setEditForm(
-        profileData || {
-          first_name: "",
-          last_name: "",
-          department: "",
-          phone_number: "",
-          acc_role: "",
-        }
-      );
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [supabase]);
-
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    const checkAuthAndFetchData = async () => {
+      try {
+        setLoading(true);
+        setAuthLoading(true);
+
+        // Check authentication first
+        const {
+          data: { session },
+          error: authError,
+        } = await supabase.auth.getSession();
+
+        if (authError) {
+          console.error("Auth error:", authError);
+          router.push("/login");
+          return;
+        }
+
+        if (!session?.user) {
+          router.push("/login");
+          return;
+        }
+
+        // Set the user from session
+        setUser(session.user);
+
+        // Fetch profile data from account_requests table
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name, department, phone_number, acc_role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        setProfile(profileData);
+        setEditForm(
+          profileData || {
+            first_name: "",
+            last_name: "",
+            department: "",
+            phone_number: "",
+            acc_role: "",
+          }
+        );
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
+      } finally {
+        setLoading(false);
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuthAndFetchData();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login");
+      } else if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, supabase]);
 
   // Auto-hide success message after 5 seconds
   useEffect(() => {
@@ -229,7 +257,7 @@ export default function MyProfilePage() {
   };
 
   // Loading State
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 flex flex-col">
         <Navbar />
@@ -239,7 +267,9 @@ export default function MyProfilePage() {
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-orange-200 mx-auto"></div>
             </div>
             <p className="text-slate-600 mt-6 text-lg font-medium">
-              Loading your profile...
+              {authLoading
+                ? "Checking authentication..."
+                : "Loading your profile..."}
             </p>
           </div>
         </div>
@@ -276,7 +306,7 @@ export default function MyProfilePage() {
                   </h3>
                   <p className="text-red-700 mt-1">{error}</p>
                   <button
-                    onClick={fetchUserData}
+                    onClick={() => window.location.reload()}
                     className="mt-4 text-red-800 underline hover:text-red-900 font-medium"
                   >
                     Try Again

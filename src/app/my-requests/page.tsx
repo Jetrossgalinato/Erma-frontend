@@ -90,7 +90,7 @@ export default function MyRequestsPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, supabase]);
 
   const fetchBorrowing = useCallback(async () => {
     setLoading(true);

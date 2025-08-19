@@ -74,7 +74,7 @@ export default function AccountRequestsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
 
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
 
