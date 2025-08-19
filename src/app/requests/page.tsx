@@ -17,6 +17,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils"; // Import the helper function
 
+import { useRouter } from "next/navigation";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+
 // Define types for better TypeScript support
 type RequestStatus = "Pending" | "Approved" | "Rejected";
 
@@ -71,6 +74,10 @@ export default function AccountRequestsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
 
+  const [, setUser] = useState<SupabaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
   // Generate date options dynamically
   const getDateOptions = () => {
     const today = new Date();
@@ -89,6 +96,58 @@ export default function AccountRequestsPage() {
     options.push("This Week", "This Month");
     return options;
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Auth error:", error);
+          router.push("/login");
+          return;
+        }
+
+        if (!session?.user) {
+          router.push("/login");
+          return;
+        }
+
+        setUser(session.user);
+
+        // Optional: Check if user has admin privileges
+        const userRole = session.user.user_metadata?.acc_role;
+        console.log("User role from metadata:", userRole); // Debug log
+        console.log("Full user metadata:", session.user.user_metadata); // Debug log
+
+        // Allow all authenticated users for now
+        // TODO: Re-enable role check once we confirm the role structure
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        router.push("/login");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT" || !session) {
+        router.push("/login");
+      } else if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const [requestedAtOptions] = useState(getDateOptions());
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
@@ -574,10 +633,16 @@ export default function AccountRequestsPage() {
           </div>
 
           {/* Loading State */}
-          {loading && (
+          {(loading || authLoading) && (
             <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 mx-auto text-gray-400 mb-4 animate-spin" />
-              <p className="text-gray-600">Loading requests...</p>
+              <RefreshCw
+                className={`w-8 h-8 mx-auto text-gray-400 mb-4 animate-spin`}
+              />
+              <p className="text-gray-600">
+                {authLoading
+                  ? "Checking authentication..."
+                  : "Loading requests..."}
+              </p>
             </div>
           )}
 
