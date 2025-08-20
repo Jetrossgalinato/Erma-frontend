@@ -32,6 +32,10 @@ interface Borrowing {
   recievers_name: string | null;
   borrowers_id: number;
   borrowed_item: number;
+  equipments?: {
+    id: number;
+    name: string;
+  };
 }
 
 interface Booking {
@@ -143,7 +147,15 @@ export default function MyRequestsPage() {
     // Filter borrowing data by the account_requests ID
     const { data, error } = await supabase
       .from("borrowing")
-      .select("*")
+      .select(
+        `
+        *,
+        equipments!borrowed_item (
+          id,
+          name
+        )
+        `
+      )
       .eq("borrowers_id", accountRequest.id);
 
     if (error) {
@@ -425,7 +437,7 @@ export default function MyRequestsPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Item ID
+                        Item
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Purpose
@@ -477,7 +489,8 @@ export default function MyRequestsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          #{borrowing.borrowed_item}
+                          {borrowing.equipments?.name ||
+                            `#${borrowing.borrowed_item}`}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                           <div
