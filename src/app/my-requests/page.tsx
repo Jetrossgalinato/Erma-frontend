@@ -561,7 +561,7 @@ export default function MyRequestsPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Facility ID
+                        Facility
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Purpose
@@ -599,7 +599,7 @@ export default function MyRequestsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          #{booking.facility_id}
+                          {booking.facilities?.name}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                           <div
