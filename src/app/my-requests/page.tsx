@@ -32,6 +32,25 @@ interface Borrowing {
   recievers_name: string | null;
   borrowers_id: number;
   borrowed_item: number;
+  equipments?: {
+    id: number;
+    name: string;
+  };
+}
+
+interface Booking {
+  id: number;
+  created_at: string;
+  status: string;
+  purpose: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  bookers_id: number;
+  facility_id: number;
+  facilities?: {
+    id: number;
+    name: string;
+  };
 }
 
 export default function MyRequestsPage() {
@@ -40,6 +59,11 @@ export default function MyRequestsPage() {
   const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
   const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+
+  const [requestType, setRequestType] = useState<"borrowing" | "booking">(
+    "borrowing"
+  );
+  const [bookingData, setBookingData] = useState<Booking[]>([]);
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -123,13 +147,68 @@ export default function MyRequestsPage() {
     // Filter borrowing data by the account_requests ID
     const { data, error } = await supabase
       .from("borrowing")
-      .select("*")
+      .select(
+        `
+        *,
+        equipments!borrowed_item (
+          id,
+          name
+        )
+        `
+      )
       .eq("borrowers_id", accountRequest.id);
 
     if (error) {
       console.error("Failed to fetch borrowing data:", error);
     } else {
       setBorrowingData(data as Borrowing[]);
+    }
+    setLoading(false);
+  }, [supabase]);
+
+  const fetchBooking = useCallback(async () => {
+    setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Failed to get current user:", userError);
+      setLoading(false);
+      return;
+    }
+
+    const { data: accountRequest, error: accountError } = await supabase
+      .from("account_requests")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (accountError || !accountRequest) {
+      console.error("Failed to get account request:", accountError);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("booking")
+      .select(
+        `
+    *,
+    facilities (
+      id,
+      name
+    )
+  `
+      )
+      .eq("bookers_id", accountRequest.id);
+
+    if (error) {
+      console.error("Failed to fetch booking data:", error);
+    } else {
+      setBookingData(data as Booking[]);
     }
     setLoading(false);
   }, [supabase]);
@@ -190,9 +269,13 @@ export default function MyRequestsPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      fetchBorrowing();
+      if (requestType === "borrowing") {
+        fetchBorrowing();
+      } else {
+        fetchBooking();
+      }
     }
-  }, [fetchBorrowing, authLoading, user]);
+  }, [fetchBorrowing, fetchBooking, authLoading, user, requestType]);
 
   const getStatusColor = (status: BorrowingStatus): string => {
     switch (status) {
@@ -270,7 +353,11 @@ export default function MyRequestsPage() {
               </div>
 
               <button
-                onClick={fetchBorrowing}
+                onClick={() =>
+                  requestType === "borrowing"
+                    ? fetchBorrowing()
+                    : fetchBooking()
+                }
                 disabled={loading}
                 className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
@@ -282,13 +369,29 @@ export default function MyRequestsPage() {
             </div>
           </div>
 
-          {/* Borrowing Requests Table */}
+          {/* Requests Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Borrowing Requests ({borrowingData.length})
-              </h2>
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="relative">
+                <select
+                  value={requestType}
+                  onChange={(e) =>
+                    setRequestType(e.target.value as "borrowing" | "booking")
+                  }
+                  className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
+                >
+                  <option value="borrowing">Borrowing Requests</option>
+                  <option value="booking">Booking Requests</option>
+                </select>
+                <span className="text-lg font-semibold text-gray-900">
+                  (
+                  {requestType === "borrowing"
+                    ? borrowingData.length
+                    : bookingData.length}
+                  )
+                </span>
+              </div>
+              <Package className="w-5 h-5 text-gray-500" />
             </div>
 
             {loading || authLoading ? (
@@ -297,20 +400,23 @@ export default function MyRequestsPage() {
                 <p className="text-gray-500">
                   {authLoading
                     ? "Checking authentication..."
-                    : "Loading borrowing requests..."}
+                    : `Loading ${requestType} requests...`}
                 </p>
               </div>
-            ) : borrowingData.length === 0 ? (
+            ) : (requestType === "borrowing"
+                ? borrowingData.length
+                : bookingData.length) === 0 ? (
               <div className="p-8 text-center">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500 text-lg mb-2">
-                  No borrowing requests found
+                  No {requestType} requests found
                 </p>
                 <p className="text-gray-400">
-                  Your borrowing requests will appear here once you make them.
+                  Your {requestType} requests will appear here once you make
+                  them.
                 </p>
               </div>
-            ) : (
+            ) : requestType === "borrowing" ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -326,14 +432,12 @@ export default function MyRequestsPage() {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Request ID
-                      </th>
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Item ID
+                        Item
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Purpose
@@ -374,9 +478,7 @@ export default function MyRequestsPage() {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          #{borrowing.id}
-                        </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
@@ -387,7 +489,8 @@ export default function MyRequestsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          #{borrowing.borrowed_item}
+                          {borrowing.equipments?.name ||
+                            `#${borrowing.borrowed_item}`}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                           <div
@@ -444,6 +547,95 @@ export default function MyRequestsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(borrowing.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedRequests.length === bookingData.length &&
+                            bookingData.length > 0
+                          }
+                          onChange={toggleAllRequests}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Facility
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Purpose
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Start Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        End Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {bookingData.map((booking) => (
+                      <tr key={booking.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedRequests.includes(booking.id)}
+                            onChange={() => toggleRequestSelection(booking.id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              booking.status as BorrowingStatus
+                            )}`}
+                          >
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {booking.facilities?.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                          <div
+                            className="truncate"
+                            title={booking.purpose || "-"}
+                          >
+                            {booking.purpose || "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            {formatDate(booking.start_date)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            {formatDate(booking.end_date)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(booking.created_at)}
                         </td>
                       </tr>
                     ))}
