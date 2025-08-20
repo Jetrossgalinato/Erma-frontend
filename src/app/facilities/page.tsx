@@ -45,6 +45,15 @@ export default function FacilitiesPage() {
     null
   );
 
+  // booking modal state
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    purpose: "",
+    start_date: "",
+    end_date: "",
+  });
+  const [bookingLoading, setBookingLoading] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFacilityType, setSelectedFacilityType] =
     useState("All Facility Types");
@@ -104,6 +113,70 @@ export default function FacilitiesPage() {
     selectedFloorLevel,
     selectedStatus,
   ]);
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFacility) return;
+
+    setBookingLoading(true);
+
+    try {
+      // Get the current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("Failed to get current user:", userError);
+        setBookingLoading(false);
+        return;
+      }
+
+      // Get the user's account_requests ID
+      const { data: accountRequest, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (accountError || !accountRequest) {
+        console.error("Failed to get account request:", accountError);
+        setBookingLoading(false);
+        return;
+      }
+
+      // Insert booking request
+      const { error } = await supabase.from("booking").insert({
+        bookers_id: accountRequest.id,
+        facility_id: selectedFacility.id,
+        purpose: bookingData.purpose,
+        start_date: bookingData.start_date,
+        end_date: bookingData.end_date,
+        status: "Pending",
+      });
+
+      if (error) {
+        console.error("Failed to create booking:", error);
+      } else {
+        // Reset form and close modal
+        setBookingData({ purpose: "", start_date: "", end_date: "" });
+        setShowBookingModal(false);
+        setSelectedFacility(null);
+        console.log("Booking request created successfully!");
+        // You might want to show a success message here
+      }
+    } catch (error) {
+      console.error("Error creating booking:", error);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const resetBookingModal = () => {
+    setShowBookingModal(false);
+    setBookingData({ purpose: "", start_date: "", end_date: "" });
+  };
 
   // Pagination logic
   const paginatedFacilities = useMemo(() => {
@@ -280,7 +353,15 @@ export default function FacilitiesPage() {
                           >
                             View
                           </button>
-                          <button className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                          <button
+                            className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                            onClick={() => {
+                              if (facility.status === "Active") {
+                                setSelectedFacility(facility);
+                                setShowBookingModal(true);
+                              }
+                            }}
+                          >
                             {facility.status === "Active" ? "Book" : "Edit"}
                           </button>
                         </div>
@@ -365,6 +446,100 @@ export default function FacilitiesPage() {
         </div>
       )}
       <Footer />
+      {showBookingModal && selectedFacility && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center"
+          onClick={resetBookingModal}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={resetBookingModal}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+              Book {selectedFacility.name}
+            </h2>
+
+            <form onSubmit={handleBookingSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Purpose <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={bookingData.purpose}
+                  onChange={(e) =>
+                    setBookingData({ ...bookingData, purpose: e.target.value })
+                  }
+                  placeholder="Describe the purpose of your booking..."
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Start Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={bookingData.start_date}
+                  onChange={(e) =>
+                    setBookingData({
+                      ...bookingData,
+                      start_date: e.target.value,
+                    })
+                  }
+                  required
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  End Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={bookingData.end_date}
+                  onChange={(e) =>
+                    setBookingData({ ...bookingData, end_date: e.target.value })
+                  }
+                  required
+                  min={
+                    bookingData.start_date ||
+                    new Date().toISOString().slice(0, 16)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={resetBookingModal}
+                  className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={bookingLoading}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                >
+                  {bookingLoading ? "Booking..." : "Submit Booking"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
