@@ -29,6 +29,7 @@ export default function BorrowingRequests() {
   const [requests, setRequests] = useState<BorrowingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRequests();
@@ -78,6 +79,47 @@ export default function BorrowingRequests() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0) return;
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase
+        .from("borrowing")
+        .delete()
+        .in("id", selectedItems);
+
+      if (error) throw error;
+
+      // Refresh the data and clear selection
+      await fetchRequests();
+      setSelectedItems([]);
+    } catch (err) {
+      console.error("Error deleting requests:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to delete requests"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. Add toggle functions for checkboxes
+  const toggleSelectAll = () => {
+    if (selectedItems.length === requests.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(requests.map((request) => request.id));
+    }
+  };
+
+  const toggleSelectItem = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   const getStatusBadge = (status: string | undefined) => {
@@ -157,15 +199,33 @@ export default function BorrowingRequests() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-6">
-        <span className="text-sm text-gray-700">
-          {requests.length} request{requests.length !== 1 ? "s" : ""} found
-        </span>
-        <button
-          onClick={fetchRequests}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            {requests.length} request{requests.length !== 1 ? "s" : ""} found
+          </span>
+          {selectedItems.length > 0 && (
+            <span className="text-sm text-blue-600">
+              {selectedItems.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {selectedItems.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Delete Selected ({selectedItems.length})
+            </button>
+          )}
+          <button
+            onClick={fetchRequests}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {requests.length === 0 ? (
@@ -196,6 +256,17 @@ export default function BorrowingRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left border-r border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedItems.length === requests.length &&
+                        requests.length > 0
+                      }
+                      onChange={toggleSelectAll}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
                     Item
                   </th>
@@ -220,6 +291,14 @@ export default function BorrowingRequests() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(request.id)}
+                        onChange={() => toggleSelectItem(request.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
