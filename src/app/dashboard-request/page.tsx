@@ -2,10 +2,14 @@
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import BorrowingRequests from "@/components/BorrowingRequests";
+import BookingRequests from "@/components/BookingRequests";
+import AcquiringRequests from "@/components/AcquiringRequests";
 import { useState } from "react";
 
 export default function DashboardRequestsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedRequestType, setSelectedRequestType] =
+    useState("Borrowing Requests");
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
@@ -46,8 +50,33 @@ export default function DashboardRequestsPage() {
                     facilities, and acquiring supplies—all in one place.
                   </p>
                 </div>
+                <div className="mb-6">
+                  <div className="relative inline-block text-left">
+                    <select
+                      value={selectedRequestType}
+                      onChange={(e) => setSelectedRequestType(e.target.value)}
+                      className="block w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="Borrowing Requests">
+                        Borrowing Requests
+                      </option>
+                      <option value="Booking Requests">Booking Requests</option>
+                      <option value="Acquiring Requests">
+                        Acquiring Requests
+                      </option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <BorrowingRequests />
+              {selectedRequestType === "Borrowing Requests" && (
+                <BorrowingRequests />
+              )}
+              {selectedRequestType === "Booking Requests" && (
+                <BookingRequests />
+              )}
+              {selectedRequestType === "Acquiring Requests" && (
+                <AcquiringRequests />
+              )}
             </div>
           </div>
         </main>
