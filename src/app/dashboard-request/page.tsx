@@ -38,11 +38,11 @@ export default function DashboardRequestsPage() {
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                    Equipment Requests
+                    Requests List
                   </h1>
                   <p className="mt-2 text-sm text-gray-600">
-                    Streamline your equipment request management from one
-                    convenient location.
+                    Monitor requests for borrowing equipment, booking
+                    facilities, and acquiring supplies—all in one place.
                   </p>
                 </div>
               </div>
