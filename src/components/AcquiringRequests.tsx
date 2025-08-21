@@ -1,0 +1,285 @@
+"use client";
+import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
+// Define the AcquiringRequest type
+interface AcquiringRequest {
+  id: string;
+  item_name?: string;
+  user_name?: string;
+  user_id?: string;
+  status?: string;
+  quantity?: number;
+  purpose?: string;
+  priority?: string;
+  estimated_cost?: number;
+  supplier?: string;
+  needed_by?: string;
+  created_at?: string;
+}
+
+// Initialize Supabase client
+const supabase = createClientComponentClient();
+
+export default function AcquiringRequests() {
+  const [requests, setRequests] = useState<AcquiringRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
+        .from("acquiring")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setRequests(data || []);
+    } catch (err) {
+      console.error("Error fetching acquiring requests:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status?: string) => {
+    const statusColors = {
+      pending: "bg-yellow-100 text-yellow-800",
+      approved: "bg-green-100 text-green-800",
+      rejected: "bg-red-100 text-red-800",
+      ordered: "bg-blue-100 text-blue-800",
+      received: "bg-purple-100 text-purple-800",
+      default: "bg-gray-100 text-gray-800",
+    };
+
+    const colorClass =
+      statusColors[status?.toLowerCase() as keyof typeof statusColors] ||
+      statusColors.default;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+      >
+        {status || "Unknown"}
+      </span>
+    );
+  };
+
+  const getPriorityBadge = (priority?: string) => {
+    const priorityColors = {
+      low: "bg-gray-100 text-gray-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      high: "bg-orange-100 text-orange-800",
+      urgent: "bg-red-100 text-red-800",
+      default: "bg-gray-100 text-gray-800",
+    };
+
+    const colorClass =
+      priorityColors[priority?.toLowerCase() as keyof typeof priorityColors] ||
+      priorityColors.default;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+      >
+        {priority || "N/A"}
+      </span>
+    );
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return "N/A";
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">
+            Loading acquiring requests...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error loading acquiring requests
+              </h3>
+              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <button
+                onClick={fetchRequests}
+                className="mt-2 bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm font-medium transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+      <div className="flex items-center justify-between mb-6">
+        <span className="text-sm text-gray-700">
+          {requests.length} acquiring request{requests.length !== 1 ? "s" : ""}{" "}
+          found
+        </span>
+        <button
+          onClick={fetchRequests}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {requests.length === 0 ? (
+        <div className="text-center py-12">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 11V7a4 4 0 00-8 0v4M8 11v6a2 2 0 002 2h8a2 2 0 002-2v-6a2 2 0 00-2-2H10a2 2 0 00-2 2z"
+            />
+          </svg>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">
+            No acquiring requests found
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            No supply acquisition requests have been submitted yet.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Item
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Requester
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quantity
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Priority
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Est. Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Needed By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Requested
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {requests.map((request, index) => (
+                  <tr key={request.id || index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {request.item_name || "N/A"}
+                        </div>
+                        {request.purpose && (
+                          <div
+                            className="text-sm text-gray-500 truncate max-w-xs"
+                            title={request.purpose}
+                          >
+                            {request.purpose}
+                          </div>
+                        )}
+                        {request.supplier && (
+                          <div className="text-xs text-gray-400">
+                            Supplier: {request.supplier}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {request.user_name || request.user_id || "Unknown"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {request.quantity || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getPriorityBadge(request.priority)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(request.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatCurrency(request.estimated_cost)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(request.needed_by)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(request.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
