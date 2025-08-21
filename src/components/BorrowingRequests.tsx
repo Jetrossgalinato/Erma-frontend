@@ -14,6 +14,9 @@ interface BorrowingRequest {
   start_date?: string;
   end_date?: string;
   created_at?: string;
+  equipments?: {
+    name: string;
+  };
 }
 
 // Initialize Supabase client
@@ -35,12 +38,26 @@ export default function BorrowingRequests() {
 
       const { data, error } = await supabase
         .from("borrowing")
-        .select("*")
+        .select(
+          `
+        *,
+        equipments!borrowed_item (
+          name
+        )
+      `
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setRequests(data || []);
+      // Transform the data to flatten the equipment name
+      const transformedData =
+        data?.map((request) => ({
+          ...request,
+          item_name: request.equipments?.name,
+        })) || [];
+
+      setRequests(transformedData);
     } catch (err) {
       console.error("Error fetching requests:", err);
       setError(
