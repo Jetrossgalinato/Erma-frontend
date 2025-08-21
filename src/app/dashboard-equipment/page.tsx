@@ -2740,14 +2740,14 @@ export default function DashboardEquipmentPage() {
           autoFocus
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            {/* Close button */}
+            {/* Close button - Fixed to top-right */}
             <button
               onClick={() => {
                 setShowImageModal(false);
                 setSelectedImageUrl(null);
                 setSelectedImageName("");
               }}
-              className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
               title="Close (Esc)"
             >
               <svg
@@ -2765,8 +2765,8 @@ export default function DashboardEquipmentPage() {
               </svg>
             </button>
 
-            {/* Equipment name */}
-            <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+            {/* Equipment name - Fixed to top-left */}
+            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
               <p className="text-white text-sm font-medium">
                 {selectedImageName}
               </p>
