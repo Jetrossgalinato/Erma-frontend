@@ -35,6 +35,8 @@ export default function BorrowingRequests() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   // 2. Add pagination calculations before the loading check
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -145,7 +147,13 @@ export default function BorrowingRequests() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
+    if (selectedItems.length === 0) return;
+    setShowDeleteModal(true);
+    setShowActionDropdown(false);
+  };
+
+  const handleDeleteSelectedRows = async () => {
     if (selectedItems.length === 0) return;
 
     try {
@@ -161,6 +169,7 @@ export default function BorrowingRequests() {
       // Refresh the data and clear selection
       await fetchRequests();
       setSelectedItems([]);
+      setShowDeleteModal(false);
     } catch (err) {
       console.error("Error deleting requests:", err);
       setError(
@@ -580,6 +589,62 @@ export default function BorrowingRequests() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 backdrop-blur-sm  bg-opacity-50"
+            onClick={() => setShowDeleteModal(false)}
+          ></div>
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
+            <div className="p-6">
+              <div className="flex items-center justify-center">
+                <svg
+                  className="h-10 w-10 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete Selected Requests
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    Are you sure you want to delete{" "}
+                    <strong>{selectedItems.length}</strong> borrowing request
+                    {selectedItems.length !== 1 ? "s" : ""}? This action cannot
+                    be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                onClick={handleDeleteSelectedRows}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
