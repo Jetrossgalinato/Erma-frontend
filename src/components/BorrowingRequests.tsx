@@ -449,7 +449,11 @@ export default function BorrowingRequests() {
                     Item
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
-                    Requester
+                    Borrower
+                  </th>
+
+                  <th className="px-6 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                    Purpose
                   </th>
 
                   <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
@@ -482,18 +486,19 @@ export default function BorrowingRequests() {
                         <div className="text-sm font-medium text-gray-900">
                           {request.item_name || "N/A"}
                         </div>
-                        {request.purpose && (
-                          <div
-                            className="text-sm text-gray-500 truncate max-w-xs"
-                            title={request.purpose}
-                          >
-                            {request.purpose}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 text-sm text-gray-900">
                       {request.user_name || request.user_id || "Unknown"}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <div
+                        className="text-sm text-gray-500 truncate max-w-xs"
+                        title={request.purpose || "N/A"}
+                      >
+                        {request.purpose || "N/A"}
+                      </div>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
