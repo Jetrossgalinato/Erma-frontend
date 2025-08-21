@@ -1,6 +1,7 @@
 "use client";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
+import BorrowingRequests from "@/components/BorrowingRequests";
 import { useState } from "react";
 
 export default function DashboardRequestsPage() {
@@ -46,6 +47,7 @@ export default function DashboardRequestsPage() {
                   </p>
                 </div>
               </div>
+              <BorrowingRequests />
             </div>
           </div>
         </main>

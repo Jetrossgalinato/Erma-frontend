@@ -19,7 +19,7 @@ interface BorrowingRequest {
 // Initialize Supabase client
 const supabase = createClientComponentClient();
 
-export default function RequestsList() {
+export default function BorrowingRequests() {
   const [requests, setRequests] = useState<BorrowingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
