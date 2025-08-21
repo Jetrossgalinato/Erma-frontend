@@ -22,6 +22,7 @@ interface Equipment {
   facility_name?: string;
   category: string | null;
   status: EquipmentStatus;
+  availability?: string;
   date_acquire: string | null;
   supplier: string | null;
   amount: string | null;
@@ -35,6 +36,15 @@ interface Equipment {
   updated_at?: string;
   image?: string | null;
 }
+
+type EquipmentWithJoins = Equipment & {
+  facilities?: {
+    name: string;
+  } | null;
+  borrowing?: Array<{
+    request_status: string;
+  }> | null;
+};
 
 const facility = [
   "All Facilities",
@@ -88,32 +98,35 @@ export default function EquipmentPage() {
   });
   const [borrowing, setBorrowing] = useState(false);
 
-  type EquipmentWithFacility = Equipment & {
-    facilities?: {
-      name: string;
-    } | null;
-  };
-
   // 3. Update the fetchEquipment function to include facility join
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("equipments").select(`
-      *,
-      facilities!facility_id (
-        name
-      )
-    `);
+    *,
+    facilities!facility_id (
+      name
+    ),
+    borrowing!borrowed_item (
+      request_status
+    )
+  `);
 
     if (error) {
       console.error("Failed to fetch equipment:", error);
     } else {
-      // Transform the data to include facility_name
-      const transformedData = (data as EquipmentWithFacility[])?.map(
-        (item) => ({
+      // Transform the data to include facility_name and availability
+      const transformedData = (data as EquipmentWithJoins[])?.map((item) => {
+        // Check if there's an approved borrowing request
+        const approvedBorrowing = item.borrowing?.find(
+          (b) => b.request_status === "Approved"
+        );
+
+        return {
           ...item,
           facility_name: item.facilities?.name || null,
-        })
-      ) as Equipment[];
+          availability: approvedBorrowing ? "Borrowed" : "Available",
+        };
+      }) as Equipment[];
       setEquipmentData(transformedData);
     }
     setLoading(false);
@@ -268,7 +281,15 @@ export default function EquipmentPage() {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, selectedFacility]);
 
-  const getStatusColor = (status: EquipmentStatus): string => {
+  const getStatusColor = (
+    status: EquipmentStatus,
+    availability?: string
+  ): string => {
+    // If equipment is borrowed, show different color
+    if (availability === "Borrowed") {
+      return "bg-red-100 text-red-800";
+    }
+
     switch (status) {
       case "Working":
         return "bg-green-100 text-green-800";
@@ -421,10 +442,13 @@ export default function EquipmentPage() {
                         </h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            equipment.status
+                            equipment.status,
+                            equipment.availability
                           )}`}
                         >
-                          {equipment.status}
+                          {equipment.status === "Working"
+                            ? equipment.availability || "Available"
+                            : equipment.status}
                         </span>
                       </div>
 
@@ -454,21 +478,35 @@ export default function EquipmentPage() {
 
                         <button
                           className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
-                            isAuthorized
+                            isAuthorized &&
+                            equipment.availability !== "Borrowed"
                               ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
                               : "bg-gray-300 text-gray-500 cursor-not-allowed"
                           }`}
                           onClick={
-                            isAuthorized
+                            isAuthorized &&
+                            equipment.availability !== "Borrowed"
                               ? () => {
                                   setSelectedEquipment(equipment);
                                   setShowBorrowModal(true);
                                 }
                               : undefined
                           }
-                          disabled={!isAuthorized}
+                          disabled={
+                            !isAuthorized ||
+                            equipment.availability === "Borrowed"
+                          }
+                          title={
+                            equipment.availability === "Borrowed"
+                              ? "This equipment is currently borrowed"
+                              : !isAuthorized
+                              ? "You are not authorized to borrow equipment"
+                              : "Borrow this equipment"
+                          }
                         >
-                          Borrow
+                          {equipment.availability === "Borrowed"
+                            ? "Borrowed"
+                            : "Borrow"}
                         </button>
                       </div>
                     </div>
