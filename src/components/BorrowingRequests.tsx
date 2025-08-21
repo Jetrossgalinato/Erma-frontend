@@ -17,6 +17,10 @@ interface BorrowingRequest {
   equipments?: {
     name: string;
   };
+  account_requests?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 // Initialize Supabase client
@@ -43,6 +47,10 @@ export default function BorrowingRequests() {
         *,
         equipments!borrowed_item (
           name
+        ),
+        account_requests!borrowers_id (
+          first_name,
+          last_name
         )
       `
         )
@@ -50,11 +58,16 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
-      // Transform the data to flatten the equipment name
+      // Transform the data to flatten the equipment and user names
       const transformedData =
         data?.map((request) => ({
           ...request,
           item_name: request.equipments?.name,
+          user_name: request.account_requests
+            ? `${request.account_requests.first_name || ""} ${
+                request.account_requests.last_name || ""
+              }`.trim()
+            : undefined,
         })) || [];
 
       setRequests(transformedData);
