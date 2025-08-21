@@ -376,6 +376,7 @@ export default function EquipmentPage() {
                           className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() => {
                             setSelectedImage(equipment.image!);
+                            setSelectedEquipment(equipment);
                             setShowImageModal(true);
                           }}
                           onError={(e) => {
@@ -705,27 +706,35 @@ export default function EquipmentPage() {
           tabIndex={0}
           autoFocus
         >
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button
-              onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all"
-              title="Close (Esc)"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+          {/* Equipment name - Fixed to top-left of screen */}
+          <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+            <h3 className="text-white text-lg font-semibold">
+              {selectedEquipment?.name}
+            </h3>
+          </div>
 
+          {/* Close button - Fixed to top-right of screen */}
+          <button
+            onClick={() => setShowImageModal(false)}
+            className="fixed top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all"
+            title="Close (Esc)"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
             <div
               className="relative w-full h-full flex items-center justify-center cursor-pointer"
               onClick={() => setShowImageModal(false)}

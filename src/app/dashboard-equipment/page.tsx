@@ -1820,7 +1820,7 @@ export default function DashboardEquipmentPage() {
                           {/* Add a new header for the checkbox column */}
                           <th
                             scope="col"
-                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-r border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
                           >
                             {/* Optional: Add a master checkbox to select/deselect all rows */}
                             <input
@@ -1843,13 +1843,7 @@ export default function DashboardEquipmentPage() {
                             />
                           </th>
 
-                          <th
-                            scope="col"
-                            className="sticky left-12 z-10 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            ID
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="sticky left-12 z-10 px-3 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Name
                           </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -1927,12 +1921,8 @@ export default function DashboardEquipmentPage() {
                                 onChange={() => handleCheckboxChange(eq.id)}
                               />
                             </td>
-                            {/* ID Data Cell (Sticky) */}
-                            <td className="sticky left-12 z-10 px-6 py-4 whitespace-nowrap text-sm text-gray-500 bg-white border-r border-gray-200">
-                              {eq.id}
-                            </td>
 
-                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
+                            <td className="sticky left-12 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 bg-white border-r border-gray-100">
                               {renderEditableCell(eq, "name", eq.name)}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
@@ -2740,14 +2730,14 @@ export default function DashboardEquipmentPage() {
           autoFocus
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            {/* Close button */}
+            {/* Close button - Fixed to top-right */}
             <button
               onClick={() => {
                 setShowImageModal(false);
                 setSelectedImageUrl(null);
                 setSelectedImageName("");
               }}
-              className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
               title="Close (Esc)"
             >
               <svg
@@ -2765,8 +2755,8 @@ export default function DashboardEquipmentPage() {
               </svg>
             </button>
 
-            {/* Equipment name */}
-            <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+            {/* Equipment name - Fixed to top-left */}
+            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
               <p className="text-white text-sm font-medium">
                 {selectedImageName}
               </p>
