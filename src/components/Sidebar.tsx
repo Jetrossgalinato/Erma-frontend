@@ -112,6 +112,7 @@ const Sidebar: React.FC = () => {
 
   const [equipmentCount, setEquipmentCount] = useState<number>(0);
   const [facilityCount, setFacilityCount] = useState<number>(0);
+  const [requestCount, setRequestCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const supabase = createClientComponentClient();
 
@@ -207,6 +208,44 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  useEffect(() => {
+    const fetchRequestCount = async () => {
+      try {
+        const tables = ["borrowing", "booking", "acquiring"];
+        let total = 0;
+
+        for (const table of tables) {
+          const { count, error } = await supabase
+            .from(table)
+            .select("*", { count: "exact", head: true });
+
+          if (!error) total += count || 0;
+        }
+
+        setRequestCount(total);
+      } catch (error) {
+        console.error("Error fetching request count:", error);
+        setRequestCount(0);
+      }
+    };
+
+    fetchRequestCount();
+
+    // Optional: real-time update if any table changes
+    const channels = ["borrowing", "booking", "acquiring"].map((table) =>
+      supabase
+        .channel(`${table}_changes`)
+        .on("postgres_changes", { event: "*", schema: "public", table }, () => {
+          fetchRequestCount();
+        })
+        .subscribe()
+    );
+
+    return () => {
+      channels.forEach((ch) => ch.unsubscribe());
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -234,7 +273,7 @@ const Sidebar: React.FC = () => {
     {
       icon: FileText,
       label: "Request List",
-      count: 0,
+      count: loading ? null : requestCount,
       path: "/dashboard-request",
     },
     {
