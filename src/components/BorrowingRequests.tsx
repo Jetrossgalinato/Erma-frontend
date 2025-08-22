@@ -11,6 +11,7 @@ import {
   RefreshCw,
   FileText,
   AlertTriangle,
+  Bell,
 } from "lucide-react";
 
 // Define the Request type
@@ -521,7 +522,7 @@ export default function BorrowingRequests() {
             onClick={() => setShowReturnNotifications(!showReturnNotifications)}
             className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 relative"
           >
-            <AlertTriangle className="w-4 h-4" />
+            <Bell className="w-4 h-4" />
             Return Notifications
             {returnNotifications.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -778,7 +779,7 @@ export default function BorrowingRequests() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  <Bell className="h-5 w-5 text-orange-600" />
                   Return Notifications ({returnNotifications.length})
                 </h3>
                 <button
