@@ -112,7 +112,10 @@ export default function BorrowingRequests() {
 
       const { error } = await supabase
         .from("borrowing")
-        .update({ request_status: "Approved" })
+        .update({
+          request_status: "Approved",
+          availability: "Borrowed",
+        })
         .in("id", selectedItems);
 
       if (error) throw error;
