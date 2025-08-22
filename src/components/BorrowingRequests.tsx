@@ -25,6 +25,7 @@ interface BorrowingRequest {
   purpose?: string;
   start_date?: string;
   end_date?: string;
+  date_returned?: string;
   created_at?: string;
   equipments?: {
     name: string;
@@ -32,6 +33,27 @@ interface BorrowingRequest {
   account_requests?: {
     first_name: string;
     last_name: string;
+  };
+}
+
+interface ReturnNotification {
+  id: number;
+  borrowing_id: number;
+  receiver_name: string;
+  status: string;
+  message: string;
+  created_at: string;
+  confirmed_at?: string;
+  confirmed_by?: string;
+  borrowing?: {
+    id: number;
+    equipments?: {
+      name: string;
+    };
+    account_requests?: {
+      first_name: string;
+      last_name: string;
+    };
   };
 }
 
@@ -44,6 +66,11 @@ export default function BorrowingRequests() {
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
+
+  const [returnNotifications, setReturnNotifications] = useState<
+    ReturnNotification[]
+  >([]);
+  const [showReturnNotifications, setShowReturnNotifications] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
@@ -58,6 +85,7 @@ export default function BorrowingRequests() {
 
   useEffect(() => {
     fetchRequests();
+    fetchReturnNotifications();
   }, []);
 
   const fetchRequests = async () => {
@@ -106,8 +134,21 @@ export default function BorrowingRequests() {
     }
   };
 
-  const getReturnStatusBadge = (requestStatus: string | undefined) => {
+  const getReturnStatusBadge = (
+    requestStatus: string | undefined,
+    dateReturned?: string | null
+  ) => {
     const status = requestStatus?.toLowerCase();
+
+    // If there's a date_returned value, show as returned
+    if (dateReturned) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Returned
+        </span>
+      );
+    }
+
     if (status === "pending" || status === "rejected") {
       return "-";
     } else if (status === "approved") {
@@ -118,6 +159,92 @@ export default function BorrowingRequests() {
       );
     }
     return "-";
+  };
+
+  const fetchReturnNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("return_notifications")
+        .select(
+          `
+        *,
+        borrowing!borrowing_id (
+          id,
+          equipments!borrowed_item (
+            name
+          ),
+          account_requests!borrowers_id (
+            first_name,
+            last_name
+          )
+        )
+      `
+        )
+        .eq("status", "pending_confirmation")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setReturnNotifications((data as ReturnNotification[]) || []);
+    } catch (err) {
+      console.error("Error fetching return notifications:", err);
+    }
+  };
+
+  const handleConfirmReturn = async (
+    notificationId: number,
+    borrowingId: number
+  ) => {
+    try {
+      // Update borrowing record
+      const { error: borrowingError } = await supabase
+        .from("borrowing")
+        .update({
+          date_returned: new Date().toISOString(),
+          availability: "Available",
+          return_status: "Returned",
+        })
+        .eq("id", borrowingId);
+
+      if (borrowingError) throw borrowingError;
+
+      // Update notification status
+      const { error: notificationError } = await supabase
+        .from("return_notifications")
+        .update({
+          status: "confirmed",
+          confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", notificationId);
+
+      if (notificationError) throw notificationError;
+
+      // Refresh data
+      fetchRequests();
+      fetchReturnNotifications();
+    } catch (err) {
+      console.error("Error confirming return:", err);
+      setError("Failed to confirm return");
+    }
+  };
+
+  const handleRejectReturn = async (notificationId: number) => {
+    try {
+      const { error } = await supabase
+        .from("return_notifications")
+        .update({
+          status: "rejected",
+          confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      fetchReturnNotifications();
+    } catch (err) {
+      console.error("Error rejecting return:", err);
+      setError("Failed to reject return");
+    }
   };
 
   const handleBulkApprove = async () => {
@@ -390,6 +517,18 @@ export default function BorrowingRequests() {
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
+          <button
+            onClick={() => setShowReturnNotifications(!showReturnNotifications)}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 relative"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Return Notifications
+            {returnNotifications.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {returnNotifications.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -487,7 +626,10 @@ export default function BorrowingRequests() {
                       {getStatusBadge(request.availability)}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
-                      {getReturnStatusBadge(request.request_status)}
+                      {getReturnStatusBadge(
+                        request.request_status,
+                        request.date_returned
+                      )}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
                       {formatDate(request.start_date)}
@@ -620,6 +762,105 @@ export default function BorrowingRequests() {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Return Notifications Modal */}
+      {showReturnNotifications && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 backdrop-blur-sm  bg-opacity-50"
+            onClick={() => setShowReturnNotifications(false)}
+          ></div>
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-4xl w-full max-h-[80vh] overflow-y-auto z-50">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  Return Notifications ({returnNotifications.length})
+                </h3>
+                <button
+                  onClick={() => setShowReturnNotifications(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {returnNotifications.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No return notifications
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    All return requests have been processed.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {returnNotifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {notification.borrowing?.equipments?.name ||
+                                "Unknown Item"}
+                            </h4>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              Return Request
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Borrower:</strong>{" "}
+                            {notification.borrowing?.account_requests
+                              ? `${notification.borrowing.account_requests.first_name} ${notification.borrowing.account_requests.last_name}`
+                              : "Unknown"}
+                          </p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Receiver:</strong>{" "}
+                            {notification.receiver_name}
+                          </p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Message:</strong> {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            <strong>Requested:</strong>{" "}
+                            {formatDate(notification.created_at)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() =>
+                              handleConfirmReturn(
+                                notification.id,
+                                notification.borrowing_id
+                              )
+                            }
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
+                          >
+                            <Check className="w-3 h-3" />
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => handleRejectReturn(notification.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
+                          >
+                            <X className="w-3 h-3" />
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
