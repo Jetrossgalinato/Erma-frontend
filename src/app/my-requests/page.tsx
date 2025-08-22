@@ -6,6 +6,8 @@ import {
   RefreshCw,
   Calendar,
   User,
+  X,
+  Send,
   Package,
   ChevronDown,
   Trash2,
@@ -59,6 +61,11 @@ export default function MyRequestsPage() {
   const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
   const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+
+  // Add modal state
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [receiverName, setReceiverName] = useState("");
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
   const [requestType, setRequestType] = useState<"borrowing" | "booking">(
     "borrowing"
@@ -230,11 +237,51 @@ export default function MyRequestsPage() {
   };
 
   const handleBulkReturn = async () => {
-    // Add your return logic here
-    console.log("Returning requests:", selectedRequests);
-    // Reset selection after action
-    setSelectedRequests([]);
+    setShowReturnModal(true);
     setShowActionsDropdown(false);
+  };
+
+  const handleSubmitReturn = async () => {
+    if (!receiverName.trim()) {
+      alert("Please enter the receiver's name");
+      return;
+    }
+
+    setIsSubmittingReturn(true);
+
+    try {
+      // Create return notifications for super admin
+      const returnNotifications = selectedRequests.map((requestId) => ({
+        borrowing_id: requestId,
+        receiver_name: receiverName.trim(),
+        status: "pending_confirmation",
+        created_at: new Date().toISOString(),
+        message: `User has marked items as returned. Receiver: ${receiverName.trim()}`,
+      }));
+
+      // Insert notifications into a return_notifications table
+      const { error } = await supabase
+        .from("return_notifications")
+        .insert(returnNotifications);
+
+      if (error) {
+        console.error("Failed to create return notifications:", error);
+        alert("Failed to submit return notification. Please try again.");
+        return;
+      }
+
+      // Reset modal state
+      setShowReturnModal(false);
+      setReceiverName("");
+      setSelectedRequests([]);
+
+      alert("Return notification sent to admin for confirmation!");
+    } catch (error) {
+      console.error("Error submitting return:", error);
+      alert("Failed to submit return notification. Please try again.");
+    } finally {
+      setIsSubmittingReturn(false);
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -647,6 +694,71 @@ export default function MyRequestsPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Return Modal */}
+      {showReturnModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Mark Items as Returned
+              </h3>
+              <button
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReceiverName("");
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">
+                You are about to mark {selectedRequests.length} item(s) as
+                returned.
+              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {"Receiver's"} Name *
+              </label>
+              <input
+                type="text"
+                value={receiverName}
+                onChange={(e) => setReceiverName(e.target.value)}
+                placeholder="Enter the name of person who received the items"
+                className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmittingReturn}
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReceiverName("");
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                disabled={isSubmittingReturn}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitReturn}
+                disabled={isSubmittingReturn || !receiverName.trim()}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingReturn ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                {isSubmittingReturn ? "Sending..." : "Send Notification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
