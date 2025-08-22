@@ -68,16 +68,14 @@ export default function DashboardRequestsPage() {
                   </div>
                 </div>
               </div>
-              {selectedRequestType === "Borrowing Requests" && (
-                <BorrowingRequests />
-              )}
-              {selectedRequestType === "Booking Requests" && (
-                <BookingRequests />
-              )}
-              {selectedRequestType === "Acquiring Requests" && (
-                <AcquiringRequests />
-              )}
             </div>
+            {selectedRequestType === "Borrowing Requests" && (
+              <BorrowingRequests />
+            )}
+            {selectedRequestType === "Booking Requests" && <BookingRequests />}
+            {selectedRequestType === "Acquiring Requests" && (
+              <AcquiringRequests />
+            )}
           </div>
         </main>
       </div>

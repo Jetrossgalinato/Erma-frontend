@@ -21,6 +21,7 @@ interface BorrowingRequest {
   user_id?: string;
   availability?: string;
   request_status?: string;
+  return_status?: string;
   purpose?: string;
   start_date?: string;
   end_date?: string;
@@ -103,6 +104,20 @@ export default function BorrowingRequests() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getReturnStatusBadge = (requestStatus: string | undefined) => {
+    const status = requestStatus?.toLowerCase();
+    if (status === "pending" || status === "rejected") {
+      return "-";
+    } else if (status === "approved") {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          Not Returned
+        </span>
+      );
+    }
+    return "-";
   };
 
   const handleBulkApprove = async () => {
@@ -394,7 +409,7 @@ export default function BorrowingRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="z-10 w-12 px-6 py-3 text-left border-r border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="sticky left-0 z-10 w-12 px-6 py-3 text-left border-r border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">
                     <input
                       type="checkbox"
                       checked={
@@ -407,27 +422,28 @@ export default function BorrowingRequests() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Item
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Borrower
                   </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Purpose
                   </th>
-
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Status
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Availability
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Return Status
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Start Date
                   </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     End Date
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -438,7 +454,7 @@ export default function BorrowingRequests() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentRequests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-white border-r border-gray-200">
                       <input
                         type="checkbox"
                         checked={selectedItems.includes(request.id)}
@@ -446,18 +462,17 @@ export default function BorrowingRequests() {
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {request.item_name || "N/A"}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
                       {request.user_name || request.user_id || "Unknown"}
                     </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100">
                       <div
                         className="text-sm text-gray-500 truncate max-w-xs"
                         title={request.purpose || "N/A"}
@@ -465,20 +480,22 @@ export default function BorrowingRequests() {
                         {request.purpose || "N/A"}
                       </div>
                     </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100">
                       {getStatusBadge(request.request_status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100">
                       {getStatusBadge(request.availability)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
+                      {getReturnStatusBadge(request.request_status)}
+                    </td>
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
                       {formatDate(request.start_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap border-r border-gray-100 text-sm text-gray-900">
                       {formatDate(request.end_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(request.created_at)}
                     </td>
                   </tr>
