@@ -19,6 +19,7 @@ interface BorrowingRequest {
   item_name?: string;
   user_name?: string;
   user_id?: string;
+  availability?: string;
   request_status?: string;
   purpose?: string;
   start_date?: string;
@@ -142,7 +143,7 @@ export default function BorrowingRequests() {
 
       const { error } = await supabase
         .from("borrowing")
-        .update({ request_status: "Rejected" })
+        .update({ request_status: "Rejected", availability: "Available" })
         .in("id", selectedItems);
 
       if (error) throw error;
@@ -237,12 +238,16 @@ export default function BorrowingRequests() {
       pending: "bg-yellow-100 text-yellow-800",
       approved: "bg-green-100 text-green-800",
       rejected: "bg-red-100 text-red-800",
+      available: "bg-green-100 text-green-800",
+      borrowed: "bg-red-100 text-red-800",
       default: "bg-gray-100 text-gray-800",
     };
 
+    const normalizedStatus = status?.toLowerCase();
     const colorClass =
-      status && statusColors[status.toLowerCase() as keyof typeof statusColors]
-        ? statusColors[status.toLowerCase() as keyof typeof statusColors]
+      normalizedStatus &&
+      statusColors[normalizedStatus as keyof typeof statusColors]
+        ? statusColors[normalizedStatus as keyof typeof statusColors]
         : statusColors.default;
 
     return (
@@ -417,6 +422,9 @@ export default function BorrowingRequests() {
                     Status
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
+                    Availability
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
                     Start Date
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium border-r border-gray-200 text-gray-500 uppercase tracking-wider">
@@ -460,6 +468,9 @@ export default function BorrowingRequests() {
 
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       {getStatusBadge(request.request_status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      {getStatusBadge(request.availability)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 text-sm text-gray-900">
                       {formatDate(request.start_date)}
