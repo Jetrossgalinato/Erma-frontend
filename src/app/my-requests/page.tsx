@@ -31,7 +31,15 @@ interface Borrowing {
   end_date: string | null;
   return_date: string | null;
   date_returned: string | null;
-  recievers_name: string | null;
+  return_notifications?: {
+    id: number;
+    borrowing_id: number;
+    receiver_name: string;
+    status: string;
+    created_at: string;
+    message: string;
+  }[];
+
   borrowers_id: number;
   borrowed_item: number;
   equipments?: {
@@ -156,12 +164,20 @@ export default function MyRequestsPage() {
       .from("borrowing")
       .select(
         `
-        *,
-        equipments!borrowed_item (
-          id,
-          name
-        )
-        `
+    *,
+    equipments!borrowed_item (
+      id,
+      name
+    ),
+    return_notifications!borrowing_id (
+      id,
+      borrowing_id,
+      receiver_name,
+      status,
+      created_at,
+      message
+    )
+    `
       )
       .eq("borrowers_id", accountRequest.id);
 
@@ -550,7 +566,10 @@ export default function MyRequestsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <User className="w-4 h-4 text-gray-400" />
-                            {borrowing.recievers_name || "-"}
+                            {borrowing.return_notifications &&
+                            borrowing.return_notifications.length > 0
+                              ? borrowing.return_notifications[0].receiver_name
+                              : "-"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
