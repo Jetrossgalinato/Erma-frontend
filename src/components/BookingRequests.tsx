@@ -85,20 +85,16 @@ export default function BookingRequests() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return "N/A";
-    // If it's already in HH:MM format, return as is
-    if (/^\d{2}:\d{2}$/.test(timeString)) {
-      return timeString;
-    }
-    // If it's a full datetime string, extract time
+  const formatTime = (dateString?: string) => {
+    if (!dateString) return "N/A";
     try {
-      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
     } catch {
-      return timeString;
+      return "N/A";
     }
   };
 
@@ -212,9 +208,6 @@ export default function BookingRequests() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Requested
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -246,13 +239,10 @@ export default function BookingRequests() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div>
-                          {formatTime(request.start_time)} -{" "}
-                          {formatTime(request.end_time)}
+                          {formatTime(request.start_date)} -{" "}
+                          {formatTime(request.end_date)}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.created_at)}
                     </td>
                   </tr>
                 ))}
