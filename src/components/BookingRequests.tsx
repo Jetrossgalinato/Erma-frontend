@@ -5,7 +5,10 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 // Define the BookingRequest type
 interface BookingRequest {
   id: string;
-  facility_name?: string;
+  facilities?: {
+    id?: string;
+    name?: string;
+  };
   user_name?: string;
   user_id?: string;
   status?: string;
@@ -36,7 +39,7 @@ export default function BookingRequests() {
 
       const { data, error } = await supabase
         .from("booking")
-        .select("*")
+        .select("*, facilities(name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -216,7 +219,7 @@ export default function BookingRequests() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {request.facility_name || "N/A"}
+                          {request.facilities?.name || "N/A"}
                         </div>
                         {request.purpose && (
                           <div
