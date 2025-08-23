@@ -9,7 +9,11 @@ interface BookingRequest {
     id?: string;
     name?: string;
   };
-  user_name?: string;
+  account_requests?: {
+    id?: string;
+    first_name?: string;
+    last_name?: string;
+  };
   user_id?: string;
   status?: string;
   purpose?: string;
@@ -39,7 +43,7 @@ export default function BookingRequests() {
 
       const { data, error } = await supabase
         .from("booking")
-        .select("*, facilities(name)")
+        .select("*, facilities(name), account_requests(first_name, last_name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -221,18 +225,14 @@ export default function BookingRequests() {
                         <div className="text-sm font-medium text-gray-900">
                           {request.facilities?.name || "N/A"}
                         </div>
-                        {request.purpose && (
-                          <div
-                            className="text-sm text-gray-500 truncate max-w-xs"
-                            title={request.purpose}
-                          >
-                            {request.purpose}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.user_name || request.user_id || "Unknown"}
+                      {request.account_requests
+                        ? `${
+                            request.account_requests.first_name || "Unknown"
+                          } ${request.account_requests.last_name || ""}`.trim()
+                        : "Unknown"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(request.status)}
