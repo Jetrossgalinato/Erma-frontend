@@ -5,8 +5,15 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 // Define the BookingRequest type
 interface BookingRequest {
   id: string;
-  facility_name?: string;
-  user_name?: string;
+  facilities?: {
+    id?: string;
+    name?: string;
+  };
+  account_requests?: {
+    id?: string;
+    first_name?: string;
+    last_name?: string;
+  };
   user_id?: string;
   status?: string;
   purpose?: string;
@@ -36,7 +43,7 @@ export default function BookingRequests() {
 
       const { data, error } = await supabase
         .from("booking")
-        .select("*")
+        .select("*, facilities(name), account_requests(first_name, last_name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -78,20 +85,16 @@ export default function BookingRequests() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return "N/A";
-    // If it's already in HH:MM format, return as is
-    if (/^\d{2}:\d{2}$/.test(timeString)) {
-      return timeString;
-    }
-    // If it's a full datetime string, extract time
+  const formatTime = (dateString?: string) => {
+    if (!dateString) return "N/A";
     try {
-      return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
     } catch {
-      return timeString;
+      return "N/A";
     }
   };
 
@@ -187,69 +190,59 @@ export default function BookingRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Facility
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Requester
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Start Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     End Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Requested
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {request.facility_name || "N/A"}
+                          {request.facilities?.name || "N/A"}
                         </div>
-                        {request.purpose && (
-                          <div
-                            className="text-sm text-gray-500 truncate max-w-xs"
-                            title={request.purpose}
-                          >
-                            {request.purpose}
-                          </div>
-                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.user_name || request.user_id || "Unknown"}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      {request.account_requests
+                        ? `${
+                            request.account_requests.first_name || "Unknown"
+                          } ${request.account_requests.last_name || ""}`.trim()
+                        : "Unknown"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       {getStatusBadge(request.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                       {formatDate(request.start_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                       {formatDate(request.end_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div>
-                          {formatTime(request.start_time)} -{" "}
-                          {formatTime(request.end_time)}
+                          {formatTime(request.start_date)} -{" "}
+                          {formatTime(request.end_date)}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.created_at)}
                     </td>
                   </tr>
                 ))}
