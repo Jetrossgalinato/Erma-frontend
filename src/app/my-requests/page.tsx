@@ -634,7 +634,7 @@ export default function MyRequestsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
                         <input
                           type="checkbox"
                           checked={
@@ -646,16 +646,16 @@ export default function MyRequestsPage() {
                         />
                       </th>
 
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Facility
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Start Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -666,7 +666,7 @@ export default function MyRequestsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {bookingData.map((booking) => (
                       <tr key={booking.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedRequests.includes(booking.id)}
@@ -675,7 +675,7 @@ export default function MyRequestsPage() {
                           />
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               booking.status as BorrowingStatus
@@ -684,10 +684,10 @@ export default function MyRequestsPage() {
                             {booking.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {booking.facilities?.name}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={booking.purpose || "-"}
@@ -695,7 +695,7 @@ export default function MyRequestsPage() {
                             {booking.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.start_date)}
