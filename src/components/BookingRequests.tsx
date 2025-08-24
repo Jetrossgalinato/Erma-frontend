@@ -8,6 +8,7 @@ import {
   Trash2,
   Loader2,
   RefreshCw,
+  Bell,
 } from "lucide-react";
 
 // Define the BookingRequest type
@@ -32,6 +33,28 @@ interface BookingRequest {
   created_at?: string;
 }
 
+interface DoneNotification {
+  id: string;
+  booking_id: string;
+  completion_notes?: string;
+  status: string;
+  message: string;
+  created_at: string;
+  updated_at: string;
+  booking?: {
+    id: string;
+    facilities?: {
+      id: string;
+      name: string;
+    };
+    account_requests?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
+}
+
 // Initialize Supabase client
 const supabase = createClientComponentClient();
 
@@ -42,9 +65,15 @@ export default function BookingRequests() {
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
   const [, setIsDropdownOpen] = useState(false);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [doneNotifications, setDoneNotifications] = useState<
+    DoneNotification[]
+  >([]);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     fetchRequests();
+    fetchDoneNotifications();
   }, []);
 
   const fetchRequests = async () => {
@@ -67,6 +96,32 @@ export default function BookingRequests() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDoneNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("done_notifications")
+        .select(
+          `
+        *,
+        booking!inner(
+          id,
+          facilities(name),
+          account_requests(first_name, last_name)
+        )
+      `
+        )
+        .eq("status", "pending_confirmation")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setDoneNotifications((data as DoneNotification[]) || []);
+      setNotificationCount(data?.length || 0);
+    } catch (err) {
+      console.error("Error fetching done notifications:", err);
     }
   };
 
@@ -117,6 +172,45 @@ export default function BookingRequests() {
     }
   };
 
+  const handleNotificationAction = async (
+    notificationId: string,
+    action: "confirm" | "dismiss"
+  ) => {
+    try {
+      if (action === "confirm") {
+        // Update the booking status to completed
+        const notification = doneNotifications.find(
+          (n) => n.id === notificationId
+        );
+        if (notification) {
+          const { error: bookingError } = await supabase
+            .from("booking")
+            .update({ status: "Completed" })
+            .eq("id", notification.booking_id);
+
+          if (bookingError) throw bookingError;
+        }
+      }
+
+      // Update notification status
+      const { error } = await supabase
+        .from("done_notifications")
+        .update({
+          status: action === "confirm" ? "confirmed" : "dismissed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      // Refresh data
+      await fetchDoneNotifications();
+      await fetchRequests();
+    } catch (err) {
+      console.error(`Error ${action}ing notification:`, err);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -125,13 +219,19 @@ export default function BookingRequests() {
       ) {
         setShowActionDropdown(false);
       }
+      if (
+        showNotifications &&
+        !(event.target as Element).closest(".relative")
+      ) {
+        setShowNotifications(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showActionDropdown]);
+  }, [showActionDropdown, showNotifications]); // Add showNotifications to dependencies
 
   const handleSelectRequest = (requestId: string, checked: boolean) => {
     if (checked) {
@@ -298,6 +398,95 @@ export default function BookingRequests() {
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 relative"
+            >
+              <Bell className="w-4 h-4" />
+              Notifications
+              {notificationCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-md shadow-lg z-20 max-h-96 overflow-y-auto">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Completion Notifications
+                  </h3>
+                </div>
+                {doneNotifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    No pending notifications
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {doneNotifications.map((notification) => (
+                      <div key={notification.id} className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              {notification.booking?.facilities?.name ||
+                                "Unknown Facility"}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              By:{" "}
+                              {
+                                notification.booking?.account_requests
+                                  ?.first_name
+                              }{" "}
+                              {
+                                notification.booking?.account_requests
+                                  ?.last_name
+                              }
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">
+                          {notification.message}
+                        </p>
+                        {notification.completion_notes && (
+                          <p className="text-xs text-gray-600 italic mb-3">
+                            Notes: {notification.completion_notes}
+                          </p>
+                        )}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              handleNotificationAction(
+                                notification.id,
+                                "confirm"
+                              )
+                            }
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
+                          >
+                            <Check className="w-3 h-3" />
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleNotificationAction(
+                                notification.id,
+                                "dismiss"
+                              )
+                            }
+                            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1"
+                          >
+                            <X className="w-3 h-3" />
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
