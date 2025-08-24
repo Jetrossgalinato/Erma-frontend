@@ -32,6 +32,7 @@ export default function BookingRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -69,6 +70,60 @@ export default function BookingRequests() {
       setSelectedRequests([]);
     }
   };
+
+  const handleAction = async (action: "approve" | "reject" | "delete") => {
+    if (selectedRequests.length === 0) return;
+
+    try {
+      setLoading(true);
+
+      if (action === "delete") {
+        const { error } = await supabase
+          .from("booking")
+          .delete()
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      } else {
+        const status = action === "approve" ? "approved" : "rejected";
+        const { error } = await supabase
+          .from("booking")
+          .update({ status })
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      }
+
+      // Refresh the data and clear selections
+      await fetchRequests();
+      setSelectedRequests([]);
+      setIsDropdownOpen(false);
+    } catch (err) {
+      console.error(`Error performing ${action}:`, err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".relative")) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const handleSelectRequest = (requestId: string, checked: boolean) => {
     if (checked) {
@@ -174,16 +229,113 @@ export default function BookingRequests() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-6">
-        <span className="text-sm text-gray-700">
-          {requests.length} booking request{requests.length !== 1 ? "s" : ""}{" "}
-          found
-        </span>
-        <button
-          onClick={fetchRequests}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            {requests.length} booking request{requests.length !== 1 ? "s" : ""}{" "}
+            found
+          </span>
+          {selectedRequests.length > 0 && (
+            <span className="text-sm text-blue-600 font-medium">
+              {selectedRequests.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {selectedRequests.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Actions
+                <svg
+                  className="-mr-1 ml-2 h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              {isDropdownOpen && (
+                <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={() => handleAction("approve")}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                    >
+                      <svg
+                        className="mr-3 h-5 w-5 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        ></path>
+                      </svg>
+                      Approve ({selectedRequests.length})
+                    </button>
+                    <button
+                      onClick={() => handleAction("reject")}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                    >
+                      <svg
+                        className="mr-3 h-5 w-5 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                      Reject ({selectedRequests.length})
+                    </button>
+                    <button
+                      onClick={() => handleAction("delete")}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                    >
+                      <svg
+                        className="mr-3 h-5 w-5 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        ></path>
+                      </svg>
+                      Delete ({selectedRequests.length})
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={fetchRequests}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {requests.length === 0 ? (
