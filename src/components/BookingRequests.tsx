@@ -80,13 +80,13 @@ export default function BookingRequests() {
     }
   };
 
-  const handleAction = async (action: "approve" | "reject" | "delete") => {
+  const handleAction = async (action: "Approve" | "Reject" | "Delete") => {
     if (selectedRequests.length === 0) return;
 
     try {
       setLoading(true);
 
-      if (action === "delete") {
+      if (action === "Delete") {
         const { error } = await supabase
           .from("booking")
           .delete()
@@ -94,7 +94,7 @@ export default function BookingRequests() {
 
         if (error) throw error;
       } else {
-        const status = action === "approve" ? "approved" : "rejected";
+        const status = action === "Approve" ? "Approved" : "Rejected";
         const { error } = await supabase
           .from("booking")
           .update({ status })
@@ -264,14 +264,14 @@ export default function BookingRequests() {
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                 <div className="py-1">
                   <button
-                    onClick={() => handleAction("approve")}
+                    onClick={() => handleAction("Approve")}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
                   >
                     <Check className="w-4 h-4 text-green-600" />
                     Approve Selected
                   </button>
                   <button
-                    onClick={() => handleAction("reject")}
+                    onClick={() => handleAction("Reject")}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 flex items-center gap-2"
                   >
                     <X className="w-4 h-4 text-red-600" />
@@ -279,7 +279,7 @@ export default function BookingRequests() {
                   </button>
                   <div className="border-t mt-1">
                     <button
-                      onClick={() => handleAction("delete")}
+                      onClick={() => handleAction("Delete")}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
