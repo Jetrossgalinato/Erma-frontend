@@ -236,6 +236,22 @@ export default function MyRequestsPage() {
     setLoading(false);
   }, [supabase]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showActionsDropdown &&
+        !(event.target as Element).closest(".relative")
+      ) {
+        setShowActionsDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showActionsDropdown]);
+
   const toggleRequestSelection = (requestId: number) => {
     setSelectedRequests((prev) =>
       prev.includes(requestId)
