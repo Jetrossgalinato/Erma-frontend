@@ -75,6 +75,10 @@ export default function MyRequestsPage() {
   const [receiverName, setReceiverName] = useState("");
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
+  const [showDoneModal, setShowDoneModal] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState("");
+  const [isSubmittingDone, setIsSubmittingDone] = useState(false);
+
   const [requestType, setRequestType] = useState<"borrowing" | "booking">(
     "borrowing"
   );
@@ -236,6 +240,47 @@ export default function MyRequestsPage() {
     setLoading(false);
   }, [supabase]);
 
+  const handleBulkDone = async () => {
+    setShowDoneModal(true);
+    setShowActionsDropdown(false);
+  };
+
+  const handleSubmitDone = async () => {
+    setIsSubmittingDone(true);
+
+    try {
+      // Update booking status to completed
+      const { error } = await supabase
+        .from("booking")
+        .update({
+          status: "Completed",
+          completion_notes: completionNotes.trim() || null,
+        })
+        .in("id", selectedRequests);
+
+      if (error) {
+        console.error("Failed to mark bookings as done:", error);
+        alert("Failed to mark bookings as done. Please try again.");
+        return;
+      }
+
+      // Reset modal state
+      setShowDoneModal(false);
+      setCompletionNotes("");
+      setSelectedRequests([]);
+
+      // Refresh booking data
+      fetchBooking();
+
+      alert("Bookings marked as completed successfully!");
+    } catch (error) {
+      console.error("Error marking bookings as done:", error);
+      alert("Failed to mark bookings as done. Please try again.");
+    } finally {
+      setIsSubmittingDone(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -261,12 +306,21 @@ export default function MyRequestsPage() {
   };
 
   const toggleAllRequests = () => {
-    if (selectedRequests.length === borrowingData.length) {
+    const currentData =
+      requestType === "borrowing" ? borrowingData : bookingData;
+    if (
+      selectedRequests.length === currentData.length &&
+      currentData.length > 0
+    ) {
       setSelectedRequests([]);
     } else {
-      setSelectedRequests(borrowingData.map((req) => req.id));
+      setSelectedRequests(currentData.map((req) => req.id));
     }
   };
+  useEffect(() => {
+    setSelectedRequests([]);
+    setShowActionsDropdown(false);
+  }, [requestType]);
 
   const handleBulkReturn = async () => {
     setShowReturnModal(true);
@@ -410,22 +464,45 @@ export default function MyRequestsPage() {
                 {showActionsDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                     <div className="py-1">
-                      <button
-                        onClick={handleBulkReturn}
-                        className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                        disabled={selectedRequests.length === 0}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        Mark as Returned
-                      </button>
-                      <button
-                        onClick={handleBulkDelete}
-                        className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        disabled={selectedRequests.length === 0}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete Requests
-                      </button>
+                      {requestType === "borrowing" ? (
+                        <>
+                          <button
+                            onClick={handleBulkReturn}
+                            className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            Mark as Returned
+                          </button>
+                          <button
+                            onClick={handleBulkDelete}
+                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Requests
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={handleBulkDone}
+                            className="w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            Mark as Done
+                          </button>
+                          <button
+                            onClick={handleBulkDelete}
+                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Requests
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -454,9 +531,9 @@ export default function MyRequestsPage() {
               <div className="relative">
                 <select
                   value={requestType}
-                  onChange={(e) =>
-                    setRequestType(e.target.value as "borrowing" | "booking")
-                  }
+                  onChange={(e) => {
+                    setRequestType(e.target.value as "borrowing" | "booking");
+                  }}
                   className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
                 >
                   <option value="borrowing">Borrowing Requests</option>
@@ -504,8 +581,11 @@ export default function MyRequestsPage() {
                         <input
                           type="checkbox"
                           checked={
+                            borrowingData.length > 0 &&
                             selectedRequests.length === borrowingData.length &&
-                            borrowingData.length > 0
+                            borrowingData.every((item) =>
+                              selectedRequests.includes(item.id)
+                            )
                           }
                           onChange={toggleAllRequests}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -547,11 +627,15 @@ export default function MyRequestsPage() {
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap ">
                           <input
                             type="checkbox"
-                            checked={selectedRequests.includes(borrowing.id)}
-                            onChange={() =>
-                              toggleRequestSelection(borrowing.id)
+                            checked={
+                              bookingData.length > 0 &&
+                              selectedRequests.length === bookingData.length &&
+                              bookingData.every((item) =>
+                                selectedRequests.includes(item.id)
+                              )
                             }
-                            className="rounded border-gray-300 text-blue-600  focus:ring-blue-500"
+                            onChange={toggleAllRequests}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
 
@@ -777,6 +861,70 @@ export default function MyRequestsPage() {
                   <Send className="w-4 h-4" />
                 )}
                 {isSubmittingReturn ? "Sending..." : "Send Notification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDoneModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Mark Booking(s) as Done
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDoneModal(false);
+                  setCompletionNotes("");
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">
+                You are about to mark {selectedRequests.length} booking(s) as
+                completed.
+              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Completion Notes (Optional)
+              </label>
+              <textarea
+                value={completionNotes}
+                onChange={(e) => setCompletionNotes(e.target.value)}
+                placeholder="Add any completion notes or feedback..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                disabled={isSubmittingDone}
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDoneModal(false);
+                  setCompletionNotes("");
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                disabled={isSubmittingDone}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitDone}
+                disabled={isSubmittingDone}
+                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingDone ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+                {isSubmittingDone ? "Updating..." : "Mark as Done"}
               </button>
             </div>
           </div>
