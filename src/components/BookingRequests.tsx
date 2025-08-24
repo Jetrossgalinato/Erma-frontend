@@ -31,6 +31,7 @@ export default function BookingRequests() {
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRequests();
@@ -58,6 +59,29 @@ export default function BookingRequests() {
       setLoading(false);
     }
   };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRequests(
+        requests.map((request) => request.id).filter(Boolean)
+      );
+    } else {
+      setSelectedRequests([]);
+    }
+  };
+
+  const handleSelectRequest = (requestId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRequests((prev) => [...prev, requestId]);
+    } else {
+      setSelectedRequests((prev) => prev.filter((id) => id !== requestId));
+    }
+  };
+
+  const isAllSelected =
+    requests.length > 0 && selectedRequests.length === requests.length;
+  const isSomeSelected =
+    selectedRequests.length > 0 && selectedRequests.length < requests.length;
 
   const getStatusBadge = (status?: string) => {
     const statusColors = {
@@ -190,6 +214,17 @@ export default function BookingRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-12">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={(input) => {
+                        if (input) input.indeterminate = isSomeSelected;
+                      }}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Facility
                   </th>
@@ -213,6 +248,19 @@ export default function BookingRequests() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={selectedRequests.includes(request.id || "")}
+                        onChange={(e) =>
+                          handleSelectRequest(
+                            request.id || "",
+                            e.target.checked
+                          )
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
