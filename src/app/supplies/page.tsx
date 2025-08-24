@@ -52,11 +52,11 @@ export default function SuppliesPage() {
           <div className="mb-8 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Facilities
+                Supplies
               </h1>
               <p className="text-gray-600">
-                View all facility records, filter by type, floor level, or
-                building, and search for specific facilities.
+                View all supply records, filter by category, or search for
+                specific supplies.
               </p>
             </div>
             <div className="flex gap-3">
