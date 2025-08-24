@@ -23,7 +23,7 @@ type BorrowingStatus = "Pending" | "Approved" | "Rejected";
 
 interface Borrowing {
   id: number;
-  created_at: string;
+
   request_status: BorrowingStatus;
   availability: string;
   purpose: string | null;
@@ -36,7 +36,7 @@ interface Borrowing {
     borrowing_id: number;
     receiver_name: string;
     status: string;
-    created_at: string;
+
     message: string;
   }[];
 
@@ -50,7 +50,7 @@ interface Borrowing {
 
 interface Booking {
   id: number;
-  created_at: string;
+
   status: string;
   purpose: string | null;
   start_date: string | null;
@@ -74,6 +74,10 @@ export default function MyRequestsPage() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [receiverName, setReceiverName] = useState("");
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+
+  const [showDoneModal, setShowDoneModal] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState("");
+  const [isSubmittingDone, setIsSubmittingDone] = useState(false);
 
   const [requestType, setRequestType] = useState<"borrowing" | "booking">(
     "borrowing"
@@ -174,7 +178,7 @@ export default function MyRequestsPage() {
       borrowing_id,
       receiver_name,
       status,
-      created_at,
+      
       message
     )
     `
@@ -236,6 +240,72 @@ export default function MyRequestsPage() {
     setLoading(false);
   }, [supabase]);
 
+  const handleBulkDone = async () => {
+    setShowDoneModal(true);
+    setShowActionsDropdown(false);
+  };
+
+  const handleSubmitDone = async () => {
+    setIsSubmittingDone(true);
+
+    try {
+      // Create done notifications for admin
+      const doneNotifications = selectedRequests.map((requestId) => ({
+        booking_id: requestId,
+        completion_notes: completionNotes.trim() || null,
+        status: "pending_confirmation",
+        message: `User has marked booking as completed.${
+          completionNotes.trim() ? ` Notes: ${completionNotes.trim()}` : ""
+        }`,
+      }));
+
+      // Insert notifications into done_notifications table
+      const { error: notificationError } = await supabase
+        .from("done_notifications")
+        .insert(doneNotifications);
+
+      if (notificationError) {
+        console.error(
+          "Failed to create done notifications:",
+          notificationError
+        );
+        alert("Failed to submit completion notification. Please try again.");
+        return;
+      }
+
+      // Reset modal state
+      setShowDoneModal(false);
+      setCompletionNotes("");
+      setSelectedRequests([]);
+
+      // Refresh booking data
+      fetchBooking();
+
+      alert("Completion notification sent to admin for confirmation!");
+    } catch (error) {
+      console.error("Error submitting completion notification:", error);
+      alert("Failed to submit completion notification. Please try again.");
+    } finally {
+      setIsSubmittingDone(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showActionsDropdown &&
+        !(event.target as Element).closest(".relative")
+      ) {
+        setShowActionsDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showActionsDropdown]);
+
   const toggleRequestSelection = (requestId: number) => {
     setSelectedRequests((prev) =>
       prev.includes(requestId)
@@ -245,12 +315,21 @@ export default function MyRequestsPage() {
   };
 
   const toggleAllRequests = () => {
-    if (selectedRequests.length === borrowingData.length) {
+    const currentData =
+      requestType === "borrowing" ? borrowingData : bookingData;
+    if (
+      selectedRequests.length === currentData.length &&
+      currentData.length > 0
+    ) {
       setSelectedRequests([]);
     } else {
-      setSelectedRequests(borrowingData.map((req) => req.id));
+      setSelectedRequests(currentData.map((req) => req.id));
     }
   };
+  useEffect(() => {
+    setSelectedRequests([]);
+    setShowActionsDropdown(false);
+  }, [requestType]);
 
   const handleBulkReturn = async () => {
     setShowReturnModal(true);
@@ -271,7 +350,7 @@ export default function MyRequestsPage() {
         borrowing_id: requestId,
         receiver_name: receiverName.trim(),
         status: "pending_confirmation",
-        created_at: new Date().toISOString(),
+
         message: `User has marked items as returned. Receiver: ${receiverName.trim()}`,
       }));
 
@@ -394,22 +473,45 @@ export default function MyRequestsPage() {
                 {showActionsDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                     <div className="py-1">
-                      <button
-                        onClick={handleBulkReturn}
-                        className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                        disabled={selectedRequests.length === 0}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        Mark as Returned
-                      </button>
-                      <button
-                        onClick={handleBulkDelete}
-                        className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        disabled={selectedRequests.length === 0}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete Requests
-                      </button>
+                      {requestType === "borrowing" ? (
+                        <>
+                          <button
+                            onClick={handleBulkReturn}
+                            className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            Mark as Returned
+                          </button>
+                          <button
+                            onClick={handleBulkDelete}
+                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Requests
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={handleBulkDone}
+                            className="w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            Mark as Done
+                          </button>
+                          <button
+                            onClick={handleBulkDelete}
+                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Requests
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -438,9 +540,9 @@ export default function MyRequestsPage() {
               <div className="relative">
                 <select
                   value={requestType}
-                  onChange={(e) =>
-                    setRequestType(e.target.value as "borrowing" | "booking")
-                  }
+                  onChange={(e) => {
+                    setRequestType(e.target.value as "borrowing" | "booking");
+                  }}
                   className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
                 >
                   <option value="borrowing">Borrowing Requests</option>
@@ -484,65 +586,69 @@ export default function MyRequestsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
                         <input
                           type="checkbox"
                           checked={
+                            borrowingData.length > 0 &&
                             selectedRequests.length === borrowingData.length &&
-                            borrowingData.length > 0
+                            borrowingData.every((item) =>
+                              selectedRequests.includes(item.id)
+                            )
                           }
                           onChange={toggleAllRequests}
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
 
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Item
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Receiver
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Start Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         End Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Return Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Date Returned
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Availability
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {borrowingData.map((borrowing) => (
                       <tr key={borrowing.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap ">
                           <input
                             type="checkbox"
-                            checked={selectedRequests.includes(borrowing.id)}
-                            onChange={() =>
-                              toggleRequestSelection(borrowing.id)
+                            checked={
+                              bookingData.length > 0 &&
+                              selectedRequests.length === bookingData.length &&
+                              bookingData.every((item) =>
+                                selectedRequests.includes(item.id)
+                              )
                             }
+                            onChange={toggleAllRequests}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               borrowing.request_status
@@ -551,11 +657,11 @@ export default function MyRequestsPage() {
                             {borrowing.request_status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {borrowing.equipments?.name ||
                             `#${borrowing.borrowed_item}`}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={borrowing.purpose || "-"}
@@ -563,7 +669,7 @@ export default function MyRequestsPage() {
                             {borrowing.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <User className="w-4 h-4 text-gray-400" />
                             {borrowing.return_notifications &&
@@ -572,25 +678,25 @@ export default function MyRequestsPage() {
                               : "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.start_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.end_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.return_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {borrowing.date_returned ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4 text-green-500" />
@@ -611,9 +717,6 @@ export default function MyRequestsPage() {
                             {borrowing.availability}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(borrowing.created_at)}
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -624,7 +727,7 @@ export default function MyRequestsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
                         <input
                           type="checkbox"
                           checked={
@@ -636,30 +739,27 @@ export default function MyRequestsPage() {
                         />
                       </th>
 
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Facility
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Start Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         End Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {bookingData.map((booking) => (
                       <tr key={booking.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedRequests.includes(booking.id)}
@@ -668,7 +768,7 @@ export default function MyRequestsPage() {
                           />
                         </td>
 
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               booking.status as BorrowingStatus
@@ -677,10 +777,10 @@ export default function MyRequestsPage() {
                             {booking.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {booking.facilities?.name}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={booking.purpose || "-"}
@@ -688,7 +788,7 @@ export default function MyRequestsPage() {
                             {booking.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.start_date)}
@@ -699,9 +799,6 @@ export default function MyRequestsPage() {
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.end_date)}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(booking.created_at)}
                         </td>
                       </tr>
                     ))}
@@ -773,6 +870,70 @@ export default function MyRequestsPage() {
                   <Send className="w-4 h-4" />
                 )}
                 {isSubmittingReturn ? "Sending..." : "Send Notification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDoneModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Mark Booking(s) as Done
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDoneModal(false);
+                  setCompletionNotes("");
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">
+                You are about to mark {selectedRequests.length} booking(s) as
+                completed.
+              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Completion Notes (Optional)
+              </label>
+              <textarea
+                value={completionNotes}
+                onChange={(e) => setCompletionNotes(e.target.value)}
+                placeholder="Add any completion notes or feedback..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                disabled={isSubmittingDone}
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDoneModal(false);
+                  setCompletionNotes("");
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                disabled={isSubmittingDone}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitDone}
+                disabled={isSubmittingDone}
+                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingDone ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+                {isSubmittingDone ? "Updating..." : "Mark as Done"}
               </button>
             </div>
           </div>

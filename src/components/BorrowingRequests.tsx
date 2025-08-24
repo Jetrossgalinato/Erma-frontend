@@ -411,7 +411,7 @@ export default function BorrowingRequests() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+          <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
           <span className="ml-3 text-gray-600">Loading requests...</span>
         </div>
       </div>
