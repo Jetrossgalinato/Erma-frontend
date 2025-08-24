@@ -126,6 +126,14 @@ const Navbar: React.FC = () => {
               >
                 Facilities
               </a>
+              <a
+                href="/supplies"
+                className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
+                  pathname.startsWith("/facilities") ? "text-orange-500" : ""
+                }`}
+              >
+                Supplies
+              </a>
             </div>
           )}
         </div>
@@ -244,6 +252,14 @@ const Navbar: React.FC = () => {
                   }`}
                 >
                   Facilities
+                </a>
+                <a
+                  href="/supplies"
+                  className={`py-1 text-gray-600 ${
+                    pathname.startsWith("/facilities") ? "text-orange-500" : ""
+                  }`}
+                >
+                  Supplies
                 </a>
               </div>
             )}
