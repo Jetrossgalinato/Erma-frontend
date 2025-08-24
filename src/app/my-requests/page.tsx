@@ -249,6 +249,30 @@ export default function MyRequestsPage() {
     setIsSubmittingDone(true);
 
     try {
+      // Create done notifications for admin
+      const doneNotifications = selectedRequests.map((requestId) => ({
+        booking_id: requestId,
+        completion_notes: completionNotes.trim() || null,
+        status: "pending_confirmation",
+        message: `User has marked booking as completed.${
+          completionNotes.trim() ? ` Notes: ${completionNotes.trim()}` : ""
+        }`,
+      }));
+
+      // Insert notifications into done_notifications table
+      const { error: notificationError } = await supabase
+        .from("done_notifications")
+        .insert(doneNotifications);
+
+      if (notificationError) {
+        console.error(
+          "Failed to create done notifications:",
+          notificationError
+        );
+        alert("Failed to submit completion notification. Please try again.");
+        return;
+      }
+
       // Update booking status to completed
       const { error } = await supabase
         .from("booking")
@@ -272,7 +296,7 @@ export default function MyRequestsPage() {
       // Refresh booking data
       fetchBooking();
 
-      alert("Bookings marked as completed successfully!");
+      alert("Bookings marked as completed and notification sent to admin!");
     } catch (error) {
       console.error("Error marking bookings as done:", error);
       alert("Failed to mark bookings as done. Please try again.");
