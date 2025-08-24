@@ -273,21 +273,6 @@ export default function MyRequestsPage() {
         return;
       }
 
-      // Update booking status to completed
-      const { error } = await supabase
-        .from("booking")
-        .update({
-          status: "Completed",
-          completion_notes: completionNotes.trim() || null,
-        })
-        .in("id", selectedRequests);
-
-      if (error) {
-        console.error("Failed to mark bookings as done:", error);
-        alert("Failed to mark bookings as done. Please try again.");
-        return;
-      }
-
       // Reset modal state
       setShowDoneModal(false);
       setCompletionNotes("");
@@ -296,10 +281,10 @@ export default function MyRequestsPage() {
       // Refresh booking data
       fetchBooking();
 
-      alert("Bookings marked as completed and notification sent to admin!");
+      alert("Completion notification sent to admin for confirmation!");
     } catch (error) {
-      console.error("Error marking bookings as done:", error);
-      alert("Failed to mark bookings as done. Please try again.");
+      console.error("Error submitting completion notification:", error);
+      alert("Failed to submit completion notification. Please try again.");
     } finally {
       setIsSubmittingDone(false);
     }
