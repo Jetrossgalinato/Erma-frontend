@@ -1,7 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { ChevronDown, Check, X, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Check,
+  X,
+  Trash2,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 
 // Define the BookingRequest type
 interface BookingRequest {
@@ -182,7 +189,7 @@ export default function BookingRequests() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
           <span className="ml-3 text-gray-600">
             Loading booking requests...
           </span>
@@ -286,8 +293,9 @@ export default function BookingRequests() {
 
           <button
             onClick={fetchRequests}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex font-medium transition-colors gap-2 items-center"
           >
+            <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
         </div>
