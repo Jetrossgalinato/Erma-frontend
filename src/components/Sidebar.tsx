@@ -8,7 +8,6 @@ import {
   Package,
   FileText,
   ShoppingCart,
-  Truck,
   Activity,
   Users,
   Shield,
@@ -115,6 +114,7 @@ const Sidebar: React.FC = () => {
   const [requestCount, setRequestCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const supabase = createClientComponentClient();
+  const [supplyCount, setSupplyCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -246,6 +246,52 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch supply count from Supabase
+  useEffect(() => {
+    const fetchSupplyCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("supplies")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching supply count:", error);
+          setSupplyCount(0);
+        } else {
+          setSupplyCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching supply count:", error);
+        setSupplyCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSupplyCount();
+
+    // Optional: Set up real-time subscription to update count when supply is added/removed
+    const subscription = supabase
+      .channel("supplies_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "supplies",
+        },
+        () => {
+          fetchSupplyCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -267,6 +313,12 @@ const Sidebar: React.FC = () => {
       count: loading ? null : facilityCount,
       path: "/dashboard-facilities",
     },
+    {
+      icon: Package,
+      label: "Supplies",
+      count: loading ? null : supplyCount,
+      path: "/dashboard-supplies",
+    },
   ];
 
   const borrowingItems: MenuItemData[] = [
@@ -282,16 +334,6 @@ const Sidebar: React.FC = () => {
       count: 0,
       path: "/borrowing/borrowed",
     },
-  ];
-
-  const suppliesItems: MenuItemData[] = [
-    {
-      icon: Package,
-      label: "Supplies And Materials",
-      count: 0,
-      path: "/supplies/materials",
-    },
-    { icon: Truck, label: "Supplies Cart", count: 0, path: "/supplies/cart" },
   ];
 
   const monitoringItems: MenuItemData[] = [
@@ -343,22 +385,6 @@ const Sidebar: React.FC = () => {
           {expandedSections.borrowing && (
             <div className="space-y-1">
               {borrowingItems.map((item, index) => (
-                <SidebarMenuItem key={index} {...item} isSubItem />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Supplies */}
-        <div className="mt-4">
-          <SidebarSectionHeader
-            label="Supplies And Materials"
-            isExpanded={expandedSections.supplies}
-            onToggle={() => toggleSection("supplies")}
-          />
-          {expandedSections.supplies && (
-            <div className="space-y-1">
-              {suppliesItems.map((item, index) => (
                 <SidebarMenuItem key={index} {...item} isSubItem />
               ))}
             </div>
