@@ -53,6 +53,9 @@ export default function SuppliesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedSupply, setSelectedSupply] = useState<Supplies | null>(null);
+
   // Add these states after your existing useState declarations
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -105,8 +108,8 @@ export default function SuppliesPage() {
   }, [supplies, searchTerm, selectedCategory, selectedFacility]);
 
   const handleView = (supply: Supplies) => {
-    // Add your view logic here
-    console.log("View supply:", supply);
+    setSelectedSupply(supply);
+    setShowViewModal(true);
   };
 
   const handleAcquire = (supply: Supplies) => {
@@ -233,26 +236,9 @@ export default function SuppliesPage() {
                     </div>
                   )}
                   <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900 text-lg">
-                        {supply.name}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          supply.quantity <= supply.stocking_point
-                            ? "bg-red-100 text-red-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {supply.quantity} {supply.stock_unit}
-                      </span>
-                    </div>
-
-                    {supply.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {supply.description}
-                      </p>
-                    )}
+                    <h3 className="font-semibold text-gray-900 text-lg mb-3">
+                      {supply.name}
+                    </h3>
 
                     <div className="space-y-2 mb-4 text-sm">
                       <div className="flex justify-between">
@@ -265,21 +251,7 @@ export default function SuppliesPage() {
                           {supply.facilities.name}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Stocking Point:</span>
-                        <span className="text-gray-900">
-                          {supply.stocking_point} {supply.stock_unit}
-                        </span>
-                      </div>
                     </div>
-
-                    {supply.remarks && (
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                          <strong>Remarks:</strong> {supply.remarks}
-                        </p>
-                      </div>
-                    )}
 
                     <div className="flex gap-2">
                       <button
@@ -367,6 +339,79 @@ export default function SuppliesPage() {
                 style={{ maxWidth: "90vw", maxHeight: "90vh" }}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {showViewModal && selectedSupply && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
+          onClick={() => {
+            setShowViewModal(false);
+            setSelectedSupply(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-2xl p-6 relative shadow-lg max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowViewModal(false);
+                setSelectedSupply(null);
+              }}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+
+            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+              {selectedSupply.name}
+            </h2>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Description:</strong>{" "}
+                {selectedSupply.description || "N/A"}
+              </p>
+              <p>
+                <strong>Category:</strong> {selectedSupply.category || "N/A"}
+              </p>
+              <p>
+                <strong>Facility:</strong>{" "}
+                {selectedSupply.facilities.name || "N/A"}
+              </p>
+              <p>
+                <strong>Current Stock:</strong>{" "}
+                <span
+                  className={
+                    selectedSupply.quantity <= selectedSupply.stocking_point
+                      ? "text-red-600 font-medium"
+                      : "text-green-600 font-medium"
+                  }
+                >
+                  {selectedSupply.quantity} {selectedSupply.stock_unit}
+                </span>
+              </p>
+              <p>
+                <strong>Stocking Point:</strong> {selectedSupply.stocking_point}{" "}
+                {selectedSupply.stock_unit}
+              </p>
+              <p>
+                <strong>Remarks:</strong> {selectedSupply.remarks || "N/A"}
+              </p>
+            </div>
+
+            {selectedSupply.quantity <= selectedSupply.stocking_point && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-sm font-medium">
+                  ⚠️ Low Stock Alert
+                </p>
+                <p className="text-red-700 text-xs">
+                  Current stock is at or below the stocking point.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
