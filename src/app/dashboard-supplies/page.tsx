@@ -43,6 +43,21 @@ export default function DashboardSuppliesPage() {
     stock_unit: "",
   });
 
+  // Add these image-related states after your existing state declarations
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Image states for editing supplies
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const editImageInputRef = useRef<HTMLInputElement>(null);
+
+  // Image modal states
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageName, setSelectedImageName] = useState<string>("");
+
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [facilityFilter, setFacilityFilter] = useState<string>("");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -216,12 +231,16 @@ export default function DashboardSuppliesPage() {
     }
   }, [isRefreshing, fetchSupplies]);
 
+  // Replace the existing handleEditClick function
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
     const rowToEdit = supplies.find((supply) => supply.id === selectedRows[0]);
     if (rowToEdit) {
       setEditingSupply(rowToEdit);
       setShowEditModal(true);
+      // Reset image states
+      setEditImageFile(null);
+      setEditImagePreview(null);
     }
   };
 
@@ -254,6 +273,86 @@ export default function DashboardSuppliesPage() {
     });
   };
 
+  // Add these functions after your existing handler functions
+  const handleImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setSelectedImageFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleEditImageFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
+      alert("Please select a PNG or JPG image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size must be less than 5MB");
+      return;
+    }
+
+    setEditImageFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setEditImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImageSelection = () => {
+    setSelectedImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const clearEditImageSelection = () => {
+    setEditImageFile(null);
+    setEditImagePreview(null);
+    if (editImageInputRef.current) {
+      editImageInputRef.current.value = "";
+    }
+  };
+
+  const handleImageClick = (imageUrl: string, supplyName: string) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageName(supplyName);
+    setShowImageModal(true);
+  };
+
+  const removeCurrentImage = () => {
+    if (editingSupply) {
+      setEditingSupply({ ...editingSupply, image: undefined });
+    }
+  };
+
+  // Replace the existing handleSaveEdit function
   const handleSaveEdit = async () => {
     if (!editingSupply) return;
 
@@ -272,20 +371,54 @@ export default function DashboardSuppliesPage() {
       return;
     }
 
+    const updatedSupply = { ...editingSupply };
+
+    // Handle image upload if a new image file is selected
+    if (editImageFile) {
+      try {
+        const fileExt = editImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("supply-images")
+          .upload(fileName, editImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            `Failed to upload image: ${uploadError.message}. Supply will be updated without new image.`
+          );
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("supply-images")
+            .getPublicUrl(fileName);
+          updatedSupply.image = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert(
+          "Failed to process image. Supply will be updated without new image."
+        );
+      }
+    }
+
     const { error } = await supabase
       .from("supplies")
       .update({
-        name: editingSupply.name,
-        description: editingSupply.description,
-        category: editingSupply.category,
-        quantity: editingSupply.quantity,
-        stocking_point: editingSupply.stocking_point,
-        stock_unit: editingSupply.stock_unit,
-        facility_id: editingSupply.facilities.id,
-        remarks: editingSupply.remarks,
+        name: updatedSupply.name,
+        description: updatedSupply.description,
+        category: updatedSupply.category,
+        quantity: updatedSupply.quantity,
+        stocking_point: updatedSupply.stocking_point,
+        stock_unit: updatedSupply.stock_unit,
+        facility_id: updatedSupply.facilities.id,
+        image: updatedSupply.image,
+        remarks: updatedSupply.remarks,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", editingSupply.id);
+      .eq("id", updatedSupply.id);
 
     if (error) {
       console.error("Error updating supply:", error);
@@ -293,12 +426,13 @@ export default function DashboardSuppliesPage() {
     } else {
       setSupplies((prev) =>
         prev.map((supply) =>
-          supply.id === editingSupply.id ? editingSupply : supply
+          supply.id === updatedSupply.id ? updatedSupply : supply
         )
       );
       setShowEditModal(false);
       setEditingSupply(null);
       setSelectedRows([]);
+      clearEditImageSelection();
       console.log("Supply updated successfully");
     }
   };
@@ -306,8 +440,10 @@ export default function DashboardSuppliesPage() {
   const handleCancelEdit = () => {
     setShowEditModal(false);
     setEditingSupply(null);
+    clearEditImageSelection();
   };
 
+  // Replace the existing handleInsertSupply function
   const handleInsertSupply = async () => {
     if (!newSupply.name?.trim()) {
       alert("Supply name is required");
@@ -324,9 +460,41 @@ export default function DashboardSuppliesPage() {
       return;
     }
 
+    let imageUrl = null;
+
+    // Upload image if selected
+    if (selectedImageFile) {
+      try {
+        const fileExt = selectedImageFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("supply-images") // Create this bucket in Supabase
+          .upload(fileName, selectedImageFile);
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert(
+            `Failed to upload image: ${uploadError.message}. Supply will be created without image.`
+          );
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("supply-images")
+            .getPublicUrl(fileName);
+          imageUrl = urlData.publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing image:", error);
+        alert("Failed to process image. Supply will be created without image.");
+      }
+    }
+
     const { error } = await supabase.from("supplies").insert([
       {
         ...newSupply,
+        image: imageUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -344,6 +512,7 @@ export default function DashboardSuppliesPage() {
         stocking_point: 0,
         stock_unit: "",
       });
+      clearImageSelection();
       fetchSupplies(false);
     }
   };
@@ -393,6 +562,7 @@ export default function DashboardSuppliesPage() {
       stocking_point: 0,
       stock_unit: "",
     });
+    clearImageSelection();
   };
 
   const handleFileSelect = async (
@@ -1077,6 +1247,49 @@ export default function DashboardSuppliesPage() {
                             />
                           </div>
 
+                          {/* Add this in the insert form grid, after the facility field */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              Image
+                            </label>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={() => imageInputRef.current?.click()}
+                                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                >
+                                  Choose Image
+                                </button>
+                                {selectedImageFile && (
+                                  <button
+                                    type="button"
+                                    onClick={clearImageSelection}
+                                    className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+
+                              {selectedImageFile && (
+                                <div className="text-xs text-gray-500">
+                                  Selected: {selectedImageFile.name}
+                                </div>
+                              )}
+
+                              {imagePreview && (
+                                <div className="mt-2">
+                                  <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-16 h-16 rounded border object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">
                               Category <span className="text-red-500">*</span>
@@ -1252,6 +1465,10 @@ export default function DashboardSuppliesPage() {
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Description
                           </th>
+
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                            Image
+                          </th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                             Category
                           </th>
@@ -1306,6 +1523,50 @@ export default function DashboardSuppliesPage() {
                                 <div className="max-w-xs truncate">
                                   {supply.description || "-"}
                                 </div>
+                              </td>
+                              {/* Add this after the checkbox cell, before the name cell */}
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                                {supply.image ? (
+                                  <div className="flex items-center justify-center">
+                                    <img
+                                      src={supply.image}
+                                      alt={`${supply.name} supply`}
+                                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
+                                      onClick={() =>
+                                        handleImageClick(
+                                          supply.image!,
+                                          supply.name
+                                        )
+                                      }
+                                      onError={(e) => {
+                                        const target =
+                                          e.target as HTMLImageElement;
+                                        target.style.display = "none";
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                          parent.innerHTML =
+                                            '<span class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Failed to load</span>';
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg">
+                                    <svg
+                                      className="w-6 h-6 text-gray-400"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={1.5}
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                  </div>
+                                )}
                               </td>
                               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
                                 <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 border border-gray-200">
@@ -1687,6 +1948,92 @@ export default function DashboardSuppliesPage() {
                     />
                   </div>
 
+                  {/* Add this in the edit modal grid, after the facility field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Image
+                    </label>
+                    <div className="space-y-3">
+                      {/* Current Image Display */}
+                      {editingSupply?.image && !editImagePreview && (
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">
+                            Current Image:
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <img
+                              src={editingSupply.image}
+                              alt="Current supply"
+                              className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105"
+                              onClick={() =>
+                                handleImageClick(
+                                  editingSupply.image!,
+                                  editingSupply.name
+                                )
+                              }
+                            />
+                            <button
+                              type="button"
+                              onClick={removeCurrentImage}
+                              className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded"
+                            >
+                              Remove Current Image
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* New Image Upload Section */}
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => editImageInputRef.current?.click()}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                          {editingSupply?.image ? "Change Image" : "Add Image"}
+                        </button>
+
+                        {editImageFile && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            New image: {editImageFile.name}
+                          </div>
+                        )}
+
+                        {editImagePreview && (
+                          <div className="mt-2">
+                            <div className="text-xs text-gray-500 mb-1">
+                              Preview:
+                            </div>
+                            <img
+                              src={editImagePreview}
+                              alt="Preview"
+                              className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105"
+                              onClick={() =>
+                                handleImageClick(
+                                  editImagePreview,
+                                  `${editingSupply.name} (Preview)`
+                                )
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Remarks
@@ -1723,6 +2070,92 @@ export default function DashboardSuppliesPage() {
           </div>
         </div>
       )}
+
+      {/* Add this before the closing div of the main component */}
+      {showImageModal && selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowImageModal(false);
+              setSelectedImageUrl(null);
+              setSelectedImageName("");
+            }
+          }}
+          tabIndex={0}
+          autoFocus
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              title="Close (Esc)"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Supply name */}
+            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+              <p className="text-white text-sm font-medium">
+                {selectedImageName}
+              </p>
+            </div>
+
+            {/* Image container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+            >
+              <img
+                src={selectedImageUrl}
+                alt={`${selectedImageName} supply preview`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add these before the closing div of the main component */}
+      {/* Hidden image input for new supply */}
+      <input
+        type="file"
+        ref={imageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleImageFileSelect}
+        className="hidden"
+      />
+
+      {/* Hidden image input for edit modal */}
+      <input
+        type="file"
+        ref={editImageInputRef}
+        accept="image/png,image/jpeg,image/jpg"
+        onChange={handleEditImageFileSelect}
+        className="hidden"
+      />
     </div>
   );
 }
