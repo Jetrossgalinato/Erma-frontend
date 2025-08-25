@@ -83,6 +83,32 @@ export default function SuppliesPage() {
     return ["All Categories", ...unique];
   }, [supplies]);
 
+  const filteredSupplies = useMemo(() => {
+    return supplies.filter((supply) => {
+      const matchesSearch =
+        supply.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        supply.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "All Categories" ||
+        supply.category === selectedCategory;
+      const matchesFacility =
+        selectedFacility === "All Facilities" ||
+        supply.facilities.name === selectedFacility;
+
+      return matchesSearch && matchesCategory && matchesFacility;
+    });
+  }, [supplies, searchTerm, selectedCategory, selectedFacility]);
+
+  const handleView = (supply: Supplies) => {
+    // Add your view logic here
+    console.log("View supply:", supply);
+  };
+
+  const handleAcquire = (supply: Supplies) => {
+    // Add your acquire logic here
+    console.log("Acquire supply:", supply);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
@@ -152,6 +178,104 @@ export default function SuppliesPage() {
                 </select>
               </div>
             </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+              <div className="col-span-full flex justify-center items-center py-12">
+                <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
+                <span className="ml-2 text-gray-600">Loading supplies...</span>
+              </div>
+            ) : filteredSupplies.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <div className="text-gray-500 text-lg mb-2">
+                  No supplies found
+                </div>
+                <p className="text-gray-400">
+                  Try adjusting your search or filter criteria
+                </p>
+              </div>
+            ) : (
+              filteredSupplies.map((supply) => (
+                <div
+                  key={supply.id}
+                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
+                >
+                  {supply.image && (
+                    <div className="h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+                      <img
+                        src={supply.image}
+                        alt={supply.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-900 text-lg">
+                        {supply.name}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          supply.quantity <= supply.stocking_point
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {supply.quantity} {supply.stock_unit}
+                      </span>
+                    </div>
+
+                    {supply.description && (
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {supply.description}
+                      </p>
+                    )}
+
+                    <div className="space-y-2 mb-4 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Category:</span>
+                        <span className="text-gray-900">{supply.category}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Facility:</span>
+                        <span className="text-gray-900">
+                          {supply.facilities.name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Stocking Point:</span>
+                        <span className="text-gray-900">
+                          {supply.stocking_point} {supply.stock_unit}
+                        </span>
+                      </div>
+                    </div>
+
+                    {supply.remarks && (
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                          <strong>Remarks:</strong> {supply.remarks}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleView(supply)}
+                        className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleAcquire(supply)}
+                        className="flex-1 px-3 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                      >
+                        Acquire
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
