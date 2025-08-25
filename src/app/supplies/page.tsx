@@ -53,6 +53,11 @@ export default function SuppliesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
+  // Add these states after your existing useState declarations
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageName, setSelectedImageName] = useState<string>("");
+
   const fetchSupplies = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -107,6 +112,12 @@ export default function SuppliesPage() {
   const handleAcquire = (supply: Supplies) => {
     // Add your acquire logic here
     console.log("Acquire supply:", supply);
+  };
+
+  const handleImageClick = (imageUrl: string, supplyName: string) => {
+    setSelectedImageUrl(imageUrl);
+    setSelectedImageName(supplyName);
+    setShowImageModal(true);
   };
 
   return (
@@ -205,7 +216,19 @@ export default function SuppliesPage() {
                       <img
                         src={supply.image}
                         alt={supply.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                        onClick={() =>
+                          handleImageClick(supply.image!, supply.name)
+                        }
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML =
+                              '<div class="flex items-center justify-center h-full text-red-500 text-sm">Failed to load image</div>';
+                          }
+                        }}
                       />
                     </div>
                   )}
@@ -280,6 +303,73 @@ export default function SuppliesPage() {
         </div>
       </div>
       <Footer />
+
+      {/* Image Modal */}
+      {showImageModal && selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowImageModal(false);
+              setSelectedImageUrl(null);
+              setSelectedImageName("");
+            }
+          }}
+          tabIndex={0}
+          autoFocus
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              title="Close (Esc)"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Supply name */}
+            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
+              <p className="text-white text-sm font-medium">
+                {selectedImageName}
+              </p>
+            </div>
+
+            {/* Image container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                setShowImageModal(false);
+                setSelectedImageUrl(null);
+                setSelectedImageName("");
+              }}
+            >
+              <img
+                src={selectedImageUrl}
+                alt={`${selectedImageName} supply preview`}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
