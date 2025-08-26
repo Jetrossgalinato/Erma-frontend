@@ -561,7 +561,7 @@ export default function MyRequestsPage() {
 
             {loading || authLoading ? (
               <div className="p-8 text-center">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
                 <p className="text-gray-500">
                   {authLoading
                     ? "Checking authentication..."
