@@ -61,6 +61,9 @@ export default function SuppliesPage() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
 
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const fetchSupplies = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -122,6 +125,12 @@ export default function SuppliesPage() {
     setSelectedImageName(supplyName);
     setShowImageModal(true);
   };
+
+  const paginatedSupply = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredSupplies.slice(start, end);
+  }, [filteredSupplies, currentPage]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -209,7 +218,7 @@ export default function SuppliesPage() {
                 </p>
               </div>
             ) : (
-              filteredSupplies.map((supply) => (
+              paginatedSupply.map((supply) => (
                 <div
                   key={supply.id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
@@ -271,6 +280,23 @@ export default function SuppliesPage() {
                 </div>
               ))
             )}
+          </div>
+          <div className="flex justify-center mt-2 mb-12 space-x-2">
+            {Array.from({
+              length: Math.ceil(filteredSupplies.length / ITEMS_PER_PAGE),
+            }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === i + 1
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
           </div>
         </div>
       </div>
