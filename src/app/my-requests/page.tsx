@@ -102,6 +102,9 @@ export default function MyRequestsPage() {
     "borrowing" | "booking" | "acquiring"
   >("borrowing");
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [bookingData, setBookingData] = useState<Booking[]>([]);
   const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
 
@@ -458,33 +461,8 @@ export default function MyRequestsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedRequests.length === 0) return;
-
-    try {
-      const { error } = await supabase
-        .from("borrowing")
-        .delete()
-        .in("id", selectedRequests);
-
-      if (error) {
-        console.error("Failed to delete requests:", error);
-        // You might want to show a user-friendly error message here
-        return;
-      }
-
-      // Remove deleted items from local state
-      setBorrowingData((prev) =>
-        prev.filter((borrowing) => !selectedRequests.includes(borrowing.id))
-      );
-
-      // Reset selection after successful deletion
-      setSelectedRequests([]);
-      setShowActionsDropdown(false);
-
-      console.log("Successfully deleted requests:", selectedRequests);
-    } catch (error) {
-      console.error("Error deleting requests:", error);
-    }
+    setShowDeleteModal(true);
+    setShowActionsDropdown(false);
   };
 
   useEffect(() => {
@@ -526,6 +504,59 @@ export default function MyRequestsPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedRequests.length === 0) return;
+
+    setIsDeleting(true);
+
+    try {
+      const tableName =
+        requestType === "borrowing"
+          ? "borrowing"
+          : requestType === "booking"
+          ? "booking"
+          : "acquiring";
+
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .in("id", selectedRequests);
+
+      if (error) {
+        console.error("Failed to delete requests:", error);
+        alert("Failed to delete requests. Please try again.");
+        return;
+      }
+
+      // Update the appropriate state
+      if (requestType === "borrowing") {
+        setBorrowingData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      } else if (requestType === "booking") {
+        setBookingData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      } else {
+        setAcquiringData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      }
+
+      // Reset selection and close modal
+      setSelectedRequests([]);
+      setShowDeleteModal(false);
+      setShowActionsDropdown(false);
+
+      console.log("Successfully deleted requests:", selectedRequests);
+    } catch (error) {
+      console.error("Error deleting requests:", error);
+      alert("Failed to delete requests. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -579,7 +610,7 @@ export default function MyRequestsPage() {
                             Delete Requests
                           </button>
                         </>
-                      ) : (
+                      ) : requestType === "booking" ? (
                         <>
                           <button
                             onClick={handleBulkDone}
@@ -598,6 +629,19 @@ export default function MyRequestsPage() {
                             Delete Requests
                           </button>
                         </>
+                      ) : (
+                        // For acquiring requests - only show delete
+                        <button
+                          onClick={() => {
+                            setShowDeleteModal(true);
+                            setShowActionsDropdown(false);
+                          }}
+                          className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          disabled={selectedRequests.length === 0}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete Requests
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1121,6 +1165,54 @@ export default function MyRequestsPage() {
                   <RotateCcw className="w-4 h-4" />
                 )}
                 {isSubmittingDone ? "Updating..." : "Mark as Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete Requests
+              </h3>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete {selectedRequests.length}{" "}
+                selected request(s)? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
