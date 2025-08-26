@@ -961,9 +961,7 @@ export default function MyRequestsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Requested By
-                      </th>
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Supply
                       </th>
@@ -1001,14 +999,7 @@ export default function MyRequestsPage() {
                             {acquiring.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <User className="w-4 h-4 text-gray-400" />
-                            {acquiring.account_requests
-                              ? `${acquiring.account_requests.first_name} ${acquiring.account_requests.last_name}`
-                              : "-"}
-                          </div>
-                        </td>
+
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {acquiring.supplies?.name ||
                             `#${acquiring.supply_id}`}
