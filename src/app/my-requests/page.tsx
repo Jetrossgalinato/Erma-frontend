@@ -63,6 +63,20 @@ interface Booking {
   };
 }
 
+interface Acquiring {
+  id: number;
+  created_at: string;
+  purpose: string | null;
+  quantity: number;
+  status: string;
+  acquirers_id: number;
+  supply_id: number;
+  supplies?: {
+    id: number;
+    name: string;
+  };
+}
+
 export default function MyRequestsPage() {
   const [loading, setLoading] = useState(false);
   const supabase = createClientComponentClient<Database>();
@@ -79,10 +93,12 @@ export default function MyRequestsPage() {
   const [completionNotes, setCompletionNotes] = useState("");
   const [isSubmittingDone, setIsSubmittingDone] = useState(false);
 
-  const [requestType, setRequestType] = useState<"borrowing" | "booking">(
-    "borrowing"
-  );
+  const [requestType, setRequestType] = useState<
+    "borrowing" | "booking" | "acquiring"
+  >("borrowing");
+
   const [bookingData, setBookingData] = useState<Booking[]>([]);
+  const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -240,6 +256,53 @@ export default function MyRequestsPage() {
     setLoading(false);
   }, [supabase]);
 
+  const fetchAcquiring = useCallback(async () => {
+    setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Failed to get current user:", userError);
+      setLoading(false);
+      return;
+    }
+
+    const { data: accountRequest, error: accountError } = await supabase
+      .from("account_requests")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (accountError || !accountRequest) {
+      console.error("Failed to get account request:", accountError);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("acquiring")
+      .select(
+        `
+    *,
+    supplies (
+      id,
+      name
+    )
+  `
+      )
+      .eq("acquirers_id", accountRequest.id);
+
+    if (error) {
+      console.error("Failed to fetch acquiring data:", error);
+    } else {
+      setAcquiringData(data as Acquiring[]);
+    }
+    setLoading(false);
+  }, [supabase]);
+
   const handleBulkDone = async () => {
     setShowDoneModal(true);
     setShowActionsDropdown(false);
@@ -316,7 +379,11 @@ export default function MyRequestsPage() {
 
   const toggleAllRequests = () => {
     const currentData =
-      requestType === "borrowing" ? borrowingData : bookingData;
+      requestType === "borrowing"
+        ? borrowingData
+        : requestType === "booking"
+        ? bookingData
+        : acquiringData;
     if (
       selectedRequests.length === currentData.length &&
       currentData.length > 0
@@ -326,6 +393,7 @@ export default function MyRequestsPage() {
       setSelectedRequests(currentData.map((req) => req.id));
     }
   };
+
   useEffect(() => {
     setSelectedRequests([]);
     setShowActionsDropdown(false);
@@ -413,11 +481,20 @@ export default function MyRequestsPage() {
     if (!authLoading && user) {
       if (requestType === "borrowing") {
         fetchBorrowing();
-      } else {
+      } else if (requestType === "booking") {
         fetchBooking();
+      } else {
+        fetchAcquiring();
       }
     }
-  }, [fetchBorrowing, fetchBooking, authLoading, user, requestType]);
+  }, [
+    fetchBorrowing,
+    fetchBooking,
+    fetchAcquiring,
+    authLoading,
+    user,
+    requestType,
+  ]);
 
   const getStatusColor = (status: BorrowingStatus): string => {
     switch (status) {
@@ -521,7 +598,9 @@ export default function MyRequestsPage() {
                 onClick={() =>
                   requestType === "borrowing"
                     ? fetchBorrowing()
-                    : fetchBooking()
+                    : requestType === "booking"
+                    ? fetchBooking()
+                    : fetchAcquiring()
                 }
                 disabled={loading}
                 className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
@@ -541,18 +620,24 @@ export default function MyRequestsPage() {
                 <select
                   value={requestType}
                   onChange={(e) => {
-                    setRequestType(e.target.value as "borrowing" | "booking");
+                    setRequestType(
+                      e.target.value as "borrowing" | "booking" | "acquiring"
+                    );
                   }}
                   className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
                 >
                   <option value="borrowing">Borrowing Requests</option>
                   <option value="booking">Booking Requests</option>
+                  <option value="acquiring">Acquiring Requests</option>
                 </select>
+
                 <span className="text-lg font-semibold text-gray-900">
                   (
                   {requestType === "borrowing"
                     ? borrowingData.length
-                    : bookingData.length}
+                    : requestType === "booking"
+                    ? bookingData.length
+                    : acquiringData.length}
                   )
                 </span>
               </div>
@@ -570,7 +655,9 @@ export default function MyRequestsPage() {
               </div>
             ) : (requestType === "borrowing"
                 ? borrowingData.length
-                : bookingData.length) === 0 ? (
+                : requestType === "booking"
+                ? bookingData.length
+                : acquiringData.length) === 0 ? (
               <div className="p-8 text-center">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500 text-lg mb-2">
@@ -718,7 +805,7 @@ export default function MyRequestsPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : requestType === "booking" ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -794,6 +881,87 @@ export default function MyRequestsPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.end_date)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedRequests.length === acquiringData.length &&
+                            acquiringData.length > 0
+                          }
+                          onChange={toggleAllRequests}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Supply
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Quantity
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Purpose
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {acquiringData.map((acquiring) => (
+                      <tr key={acquiring.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedRequests.includes(acquiring.id)}
+                            onChange={() =>
+                              toggleRequestSelection(acquiring.id)
+                            }
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              acquiring.status as BorrowingStatus
+                            )}`}
+                          >
+                            {acquiring.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                          {acquiring.supplies?.name ||
+                            `#${acquiring.supply_id}`}
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                          {acquiring.quantity}
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
+                          <div
+                            className="truncate"
+                            title={acquiring.purpose || "-"}
+                          >
+                            {acquiring.purpose || "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            {formatDate(acquiring.created_at)}
                           </div>
                         </td>
                       </tr>
