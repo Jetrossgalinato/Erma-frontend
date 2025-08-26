@@ -63,6 +63,25 @@ interface Booking {
   };
 }
 
+interface Acquiring {
+  id: number;
+  created_at: string;
+  purpose: string | null;
+  quantity: number;
+  status: string;
+  acquirers_id: number;
+  supply_id: number;
+  supplies?: {
+    id: number;
+    name: string;
+  };
+  account_requests?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export default function MyRequestsPage() {
   const [loading, setLoading] = useState(false);
   const supabase = createClientComponentClient<Database>();
@@ -79,10 +98,15 @@ export default function MyRequestsPage() {
   const [completionNotes, setCompletionNotes] = useState("");
   const [isSubmittingDone, setIsSubmittingDone] = useState(false);
 
-  const [requestType, setRequestType] = useState<"borrowing" | "booking">(
-    "borrowing"
-  );
+  const [requestType, setRequestType] = useState<
+    "borrowing" | "booking" | "acquiring"
+  >("borrowing");
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [bookingData, setBookingData] = useState<Booking[]>([]);
+  const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -240,6 +264,58 @@ export default function MyRequestsPage() {
     setLoading(false);
   }, [supabase]);
 
+  const fetchAcquiring = useCallback(async () => {
+    setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Failed to get current user:", userError);
+      setLoading(false);
+      return;
+    }
+
+    const { data: accountRequest, error: accountError } = await supabase
+      .from("account_requests")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (accountError || !accountRequest) {
+      console.error("Failed to get account request:", accountError);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("acquiring")
+      .select(
+        `
+    *,
+    supplies (
+      id,
+      name
+    ),
+    account_requests!acquirers_id (
+      id,
+      first_name,
+      last_name
+    )
+  `
+      )
+      .eq("acquirers_id", accountRequest.id);
+
+    if (error) {
+      console.error("Failed to fetch acquiring data:", error);
+    } else {
+      setAcquiringData(data as Acquiring[]);
+    }
+    setLoading(false);
+  }, [supabase]);
+
   const handleBulkDone = async () => {
     setShowDoneModal(true);
     setShowActionsDropdown(false);
@@ -316,7 +392,11 @@ export default function MyRequestsPage() {
 
   const toggleAllRequests = () => {
     const currentData =
-      requestType === "borrowing" ? borrowingData : bookingData;
+      requestType === "borrowing"
+        ? borrowingData
+        : requestType === "booking"
+        ? bookingData
+        : acquiringData;
     if (
       selectedRequests.length === currentData.length &&
       currentData.length > 0
@@ -326,6 +406,7 @@ export default function MyRequestsPage() {
       setSelectedRequests(currentData.map((req) => req.id));
     }
   };
+
   useEffect(() => {
     setSelectedRequests([]);
     setShowActionsDropdown(false);
@@ -380,44 +461,28 @@ export default function MyRequestsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedRequests.length === 0) return;
-
-    try {
-      const { error } = await supabase
-        .from("borrowing")
-        .delete()
-        .in("id", selectedRequests);
-
-      if (error) {
-        console.error("Failed to delete requests:", error);
-        // You might want to show a user-friendly error message here
-        return;
-      }
-
-      // Remove deleted items from local state
-      setBorrowingData((prev) =>
-        prev.filter((borrowing) => !selectedRequests.includes(borrowing.id))
-      );
-
-      // Reset selection after successful deletion
-      setSelectedRequests([]);
-      setShowActionsDropdown(false);
-
-      console.log("Successfully deleted requests:", selectedRequests);
-    } catch (error) {
-      console.error("Error deleting requests:", error);
-    }
+    setShowDeleteModal(true);
+    setShowActionsDropdown(false);
   };
 
   useEffect(() => {
     if (!authLoading && user) {
       if (requestType === "borrowing") {
         fetchBorrowing();
-      } else {
+      } else if (requestType === "booking") {
         fetchBooking();
+      } else {
+        fetchAcquiring();
       }
     }
-  }, [fetchBorrowing, fetchBooking, authLoading, user, requestType]);
+  }, [
+    fetchBorrowing,
+    fetchBooking,
+    fetchAcquiring,
+    authLoading,
+    user,
+    requestType,
+  ]);
 
   const getStatusColor = (status: BorrowingStatus): string => {
     switch (status) {
@@ -439,6 +504,59 @@ export default function MyRequestsPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedRequests.length === 0) return;
+
+    setIsDeleting(true);
+
+    try {
+      const tableName =
+        requestType === "borrowing"
+          ? "borrowing"
+          : requestType === "booking"
+          ? "booking"
+          : "acquiring";
+
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .in("id", selectedRequests);
+
+      if (error) {
+        console.error("Failed to delete requests:", error);
+        alert("Failed to delete requests. Please try again.");
+        return;
+      }
+
+      // Update the appropriate state
+      if (requestType === "borrowing") {
+        setBorrowingData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      } else if (requestType === "booking") {
+        setBookingData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      } else {
+        setAcquiringData((prev) =>
+          prev.filter((item) => !selectedRequests.includes(item.id))
+        );
+      }
+
+      // Reset selection and close modal
+      setSelectedRequests([]);
+      setShowDeleteModal(false);
+      setShowActionsDropdown(false);
+
+      console.log("Successfully deleted requests:", selectedRequests);
+    } catch (error) {
+      console.error("Error deleting requests:", error);
+      alert("Failed to delete requests. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -492,7 +610,7 @@ export default function MyRequestsPage() {
                             Delete Requests
                           </button>
                         </>
-                      ) : (
+                      ) : requestType === "booking" ? (
                         <>
                           <button
                             onClick={handleBulkDone}
@@ -511,6 +629,19 @@ export default function MyRequestsPage() {
                             Delete Requests
                           </button>
                         </>
+                      ) : (
+                        // For acquiring requests - only show delete
+                        <button
+                          onClick={() => {
+                            setShowDeleteModal(true);
+                            setShowActionsDropdown(false);
+                          }}
+                          className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          disabled={selectedRequests.length === 0}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete Requests
+                        </button>
                       )}
                     </div>
                   </div>
@@ -521,7 +652,9 @@ export default function MyRequestsPage() {
                 onClick={() =>
                   requestType === "borrowing"
                     ? fetchBorrowing()
-                    : fetchBooking()
+                    : requestType === "booking"
+                    ? fetchBooking()
+                    : fetchAcquiring()
                 }
                 disabled={loading}
                 className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
@@ -541,18 +674,24 @@ export default function MyRequestsPage() {
                 <select
                   value={requestType}
                   onChange={(e) => {
-                    setRequestType(e.target.value as "borrowing" | "booking");
+                    setRequestType(
+                      e.target.value as "borrowing" | "booking" | "acquiring"
+                    );
                   }}
                   className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
                 >
                   <option value="borrowing">Borrowing Requests</option>
                   <option value="booking">Booking Requests</option>
+                  <option value="acquiring">Acquiring Requests</option>
                 </select>
+
                 <span className="text-lg font-semibold text-gray-900">
                   (
                   {requestType === "borrowing"
                     ? borrowingData.length
-                    : bookingData.length}
+                    : requestType === "booking"
+                    ? bookingData.length
+                    : acquiringData.length}
                   )
                 </span>
               </div>
@@ -561,7 +700,7 @@ export default function MyRequestsPage() {
 
             {loading || authLoading ? (
               <div className="p-8 text-center">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
                 <p className="text-gray-500">
                   {authLoading
                     ? "Checking authentication..."
@@ -570,7 +709,9 @@ export default function MyRequestsPage() {
               </div>
             ) : (requestType === "borrowing"
                 ? borrowingData.length
-                : bookingData.length) === 0 ? (
+                : requestType === "booking"
+                ? bookingData.length
+                : acquiringData.length) === 0 ? (
               <div className="p-8 text-center">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500 text-lg mb-2">
@@ -636,14 +777,10 @@ export default function MyRequestsPage() {
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap ">
                           <input
                             type="checkbox"
-                            checked={
-                              bookingData.length > 0 &&
-                              selectedRequests.length === bookingData.length &&
-                              bookingData.every((item) =>
-                                selectedRequests.includes(item.id)
-                              )
+                            checked={selectedRequests.includes(borrowing.id)}
+                            onChange={() =>
+                              toggleRequestSelection(borrowing.id)
                             }
-                            onChange={toggleAllRequests}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
@@ -722,7 +859,7 @@ export default function MyRequestsPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : requestType === "booking" ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
@@ -798,6 +935,91 @@ export default function MyRequestsPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.end_date)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedRequests.length === acquiringData.length &&
+                            acquiringData.length > 0
+                          }
+                          onChange={toggleAllRequests}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Status
+                      </th>
+
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Supply
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Quantity
+                      </th>
+
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Purpose
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {acquiringData.map((acquiring) => (
+                      <tr key={acquiring.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedRequests.includes(acquiring.id)}
+                            onChange={() =>
+                              toggleRequestSelection(acquiring.id)
+                            }
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              acquiring.status as BorrowingStatus
+                            )}`}
+                          >
+                            {acquiring.status}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                          {acquiring.supplies?.name ||
+                            `#${acquiring.supply_id}`}
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                          {acquiring.quantity}
+                        </td>
+
+                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
+                          <div
+                            className="truncate"
+                            title={acquiring.purpose || "-"}
+                          >
+                            {acquiring.purpose || "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            {formatDate(acquiring.created_at)}
                           </div>
                         </td>
                       </tr>
@@ -934,6 +1156,54 @@ export default function MyRequestsPage() {
                   <RotateCcw className="w-4 h-4" />
                 )}
                 {isSubmittingDone ? "Updating..." : "Mark as Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Delete Requests
+              </h3>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete {selectedRequests.length}{" "}
+                selected request(s)? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {isDeleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
