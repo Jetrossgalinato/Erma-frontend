@@ -129,7 +129,7 @@ const Navbar: React.FC = () => {
               <a
                 href="/supplies"
                 className={`block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition-colors duration-300 ${
-                  pathname.startsWith("/facilities") ? "text-orange-500" : ""
+                  pathname.startsWith("/supplies") ? "text-orange-500" : ""
                 }`}
               >
                 Supplies

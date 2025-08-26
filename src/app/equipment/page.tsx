@@ -377,7 +377,7 @@ export default function EquipmentPage() {
           {loading ? (
             // Loading State
             <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 mx-auto text-gray-400 mb-4 animate-spin" />
+              <RefreshCw className="w-8 h-8 mx-auto text-orange-500 mb-4 animate-spin" />
               <p className="text-gray-600">Loading equipment...</p>
             </div>
           ) : (
