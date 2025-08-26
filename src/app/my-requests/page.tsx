@@ -75,6 +75,11 @@ interface Acquiring {
     id: number;
     name: string;
   };
+  account_requests?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 export default function MyRequestsPage() {
@@ -290,6 +295,11 @@ export default function MyRequestsPage() {
     supplies (
       id,
       name
+    ),
+    account_requests!acquirers_id (
+      id,
+      first_name,
+      last_name
     )
   `
       )
@@ -908,11 +918,15 @@ export default function MyRequestsPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                        Requested By
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Supply
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Quantity
                       </th>
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
@@ -944,12 +958,21 @@ export default function MyRequestsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center gap-1">
+                            <User className="w-4 h-4 text-gray-400" />
+                            {acquiring.account_requests
+                              ? `${acquiring.account_requests.first_name} ${acquiring.account_requests.last_name}`
+                              : "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {acquiring.supplies?.name ||
                             `#${acquiring.supply_id}`}
                         </td>
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
                           {acquiring.quantity}
                         </td>
+
                         <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
                           <div
                             className="truncate"
