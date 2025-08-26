@@ -56,6 +56,16 @@ export default function SuppliesPage() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedSupply, setSelectedSupply] = useState<Supplies | null>(null);
 
+  const [showAcquireModal, setShowAcquireModal] = useState(false);
+  const [acquireQuantity, setAcquireQuantity] = useState(1);
+  const [acquireReason, setAcquireReason] = useState("");
+  const [isSubmittingAcquire, setIsSubmittingAcquire] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{
+    id: number;
+    name?: string;
+    email?: string;
+  } | null>(null);
+
   // Add these states after your existing useState declarations
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -98,6 +108,26 @@ export default function SuppliesPage() {
     return ["All Categories", ...unique];
   }, [supplies]);
 
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        // Fetch user details from your user table (adjust table name as needed)
+        const { data: userData } = await supabase
+          .from("account_requests") // or whatever your user table is called
+          .select("*")
+          .eq("user_id", user.id) // adjust this field name to match your schema
+          .single();
+
+        setCurrentUser(userData);
+      }
+    };
+
+    getCurrentUser();
+  }, [supabase]);
+
   const filteredSupplies = useMemo(() => {
     return supplies.filter((supply) => {
       const matchesSearch =
@@ -120,8 +150,46 @@ export default function SuppliesPage() {
   };
 
   const handleAcquire = (supply: Supplies) => {
-    // Add your acquire logic here
-    console.log("Acquire supply:", supply);
+    setSelectedSupply(supply);
+    setAcquireQuantity(1);
+    setAcquireReason("");
+    setShowAcquireModal(true);
+  };
+
+  const submitAcquireRequest = async () => {
+    if (!selectedSupply || acquireQuantity <= 0 || !currentUser) return;
+
+    setIsSubmittingAcquire(true);
+
+    try {
+      // Insert acquire request into database
+      const { error } = await supabase.from("acquiring").insert([
+        {
+          supply_id: selectedSupply.id,
+          acquirers_id: currentUser.id,
+          quantity: acquireQuantity,
+          purpose: acquireReason || null,
+          status: "Pending",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) {
+        console.error("Error submitting acquire request:", error);
+        alert("Failed to submit acquire request. Please try again.");
+      } else {
+        alert("Acquire request submitted successfully!");
+        setShowAcquireModal(false);
+        setSelectedSupply(null);
+        setAcquireQuantity(1);
+        setAcquireReason("");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsSubmittingAcquire(false);
+    }
   };
 
   const handleImageClick = (imageUrl: string, supplyName: string) => {
@@ -368,6 +436,119 @@ export default function SuppliesPage() {
                 className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                 style={{ maxWidth: "90vw", maxHeight: "90vh" }}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAcquireModal && selectedSupply && (
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center p-4"
+          onClick={() => {
+            setShowAcquireModal(false);
+            setSelectedSupply(null);
+            setAcquireQuantity(1);
+            setAcquireReason("");
+          }}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setShowAcquireModal(false);
+                setSelectedSupply(null);
+                setAcquireQuantity(1);
+                setAcquireReason("");
+              }}
+              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
+            >
+              &times;
+            </button>
+
+            <h2 className="text-xl text-gray-800 font-bold mb-4">
+              Acquire Supply
+            </h2>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Supply: <strong>{selectedSupply.name}</strong>
+              </p>
+              <p className="text-sm text-gray-600 mb-2">
+                Available Stock:{" "}
+                <span className="font-medium">
+                  {selectedSupply.quantity} {selectedSupply.stock_unit}
+                </span>
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label
+                  htmlFor="quantity"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Quantity to Acquire
+                </label>
+                <input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  max={selectedSupply.quantity}
+                  value={acquireQuantity}
+                  onChange={(e) =>
+                    setAcquireQuantity(parseInt(e.target.value) || 1)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="reason"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Reason (Optional)
+                </label>
+                <textarea
+                  id="reason"
+                  value={acquireReason}
+                  onChange={(e) => setAcquireReason(e.target.value)}
+                  placeholder="Enter reason for acquiring this supply..."
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-20 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowAcquireModal(false);
+                  setSelectedSupply(null);
+                  setAcquireQuantity(1);
+                  setAcquireReason("");
+                }}
+                className="flex-1 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled={isSubmittingAcquire}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitAcquireRequest}
+                disabled={
+                  isSubmittingAcquire ||
+                  acquireQuantity <= 0 ||
+                  acquireQuantity > selectedSupply.quantity ||
+                  !currentUser
+                }
+                className="flex-1 px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmittingAcquire && (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                )}
+                {isSubmittingAcquire ? "Submitting..." : "Submit Request"}
+              </button>
             </div>
           </div>
         </div>
