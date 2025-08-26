@@ -636,14 +636,10 @@ export default function MyRequestsPage() {
                         <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap ">
                           <input
                             type="checkbox"
-                            checked={
-                              bookingData.length > 0 &&
-                              selectedRequests.length === bookingData.length &&
-                              bookingData.every((item) =>
-                                selectedRequests.includes(item.id)
-                              )
+                            checked={selectedRequests.includes(borrowing.id)}
+                            onChange={() =>
+                              toggleRequestSelection(borrowing.id)
                             }
-                            onChange={toggleAllRequests}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
