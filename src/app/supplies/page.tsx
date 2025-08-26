@@ -83,6 +83,10 @@ export default function SuppliesPage() {
     fetchSupplies();
   }, [fetchSupplies]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedFacility]);
+
   const categories = useMemo(() => {
     const unique = Array.from(
       new Set(
