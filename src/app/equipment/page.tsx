@@ -43,6 +43,7 @@ type EquipmentWithJoins = Equipment & {
   } | null;
   borrowing?: Array<{
     request_status: string;
+    return_status?: string; // Add this line
   }> | null;
 };
 
@@ -102,29 +103,31 @@ export default function EquipmentPage() {
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("equipments").select(`
-    *,
-    facilities!facility_id (
-      name
-    ),
-    borrowing!borrowed_item (
-      request_status
-    )
-  `);
+  *,
+  facilities!facility_id (
+    name
+  ),
+  borrowing!borrowed_item (
+    request_status,
+    return_status
+  )
+`);
 
     if (error) {
       console.error("Failed to fetch equipment:", error);
     } else {
       // Transform the data to include facility_name and availability
       const transformedData = (data as EquipmentWithJoins[])?.map((item) => {
-        // Check if there's an approved borrowing request
-        const approvedBorrowing = item.borrowing?.find(
-          (b) => b.request_status === "Approved"
+        // Check if there's an approved borrowing request that hasn't been returned
+        const activeBorrowing = item.borrowing?.find(
+          (b) =>
+            b.request_status === "Approved" && b.return_status !== "Returned"
         );
 
         return {
           ...item,
           facility_name: item.facilities?.name || null,
-          availability: approvedBorrowing ? "Borrowed" : "Available",
+          availability: activeBorrowing ? "Borrowed" : "Available",
         };
       }) as Equipment[];
       setEquipmentData(transformedData);
