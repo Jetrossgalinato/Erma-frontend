@@ -1,6 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  ChevronDown,
+  Check,
+  X,
+  Trash2,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 
 // Define the AcquiringRequest type
 interface AcquiringRequest {
@@ -34,6 +42,7 @@ export default function AcquiringRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -86,12 +95,12 @@ export default function AcquiringRequests() {
       rejected: "bg-red-100 text-red-800",
       ordered: "bg-blue-100 text-blue-800",
       received: "bg-purple-100 text-purple-800",
-      default: "bg-gray-100 text-gray-800",
     };
 
+    const normalizedStatus = status?.toLowerCase();
     const colorClass =
-      statusColors[status?.toLowerCase() as keyof typeof statusColors] ||
-      statusColors.default;
+      statusColors[normalizedStatus as keyof typeof statusColors] ||
+      "bg-gray-100 text-gray-800";
 
     return (
       <span
@@ -109,7 +118,9 @@ export default function AcquiringRequests() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRequests(requests.map((request) => request.id));
+      setSelectedRequests(
+        requests.map((request) => request.id).filter(Boolean)
+      );
     } else {
       setSelectedRequests([]);
     }
@@ -123,19 +134,65 @@ export default function AcquiringRequests() {
     }
   };
 
-  const handleBulkApprove = async () => {
-    // Your bulk approve logic here
-    console.log("Bulk approving:", selectedRequests);
-    // Reset selection after operation
-    setSelectedRequests([]);
+  const handleAction = async (action: "Approve" | "Reject" | "Delete") => {
+    if (selectedRequests.length === 0) return;
+
+    try {
+      setLoading(true);
+
+      if (action === "Delete") {
+        const { error } = await supabase
+          .from("acquiring")
+          .delete()
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      } else {
+        const status = action === "Approve" ? "Approved" : "Rejected";
+        const { error } = await supabase
+          .from("acquiring")
+          .update({ status })
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      }
+
+      // Refresh the data and clear selections
+      await fetchRequests();
+      setSelectedRequests([]);
+      setShowActionDropdown(false);
+    } catch (err) {
+      console.error(`Error performing ${action}:`, err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleBulkDelete = async () => {
-    // Your bulk delete logic here
-    console.log("Bulk deleting:", selectedRequests);
-    // Reset selection after operation
-    setSelectedRequests([]);
-  };
+  // Add useEffect for handling click outside:
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showActionDropdown &&
+        !(event.target as Element).closest(".relative")
+      ) {
+        setShowActionDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showActionDropdown]);
+
+  // Add these helper variables:
+  const isAllSelected =
+    requests.length > 0 && selectedRequests.length === requests.length;
+  const isSomeSelected =
+    selectedRequests.length > 0 && selectedRequests.length < requests.length;
 
   if (loading) {
     return (
@@ -189,32 +246,68 @@ export default function AcquiringRequests() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-6">
-        <span className="text-sm text-gray-700">
-          {requests.length} acquiring request{requests.length !== 1 ? "s" : ""}{" "}
-          found
-        </span>
-        {selectedRequests.length > 0 && (
-          <div className="flex gap-2">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            {requests.length} acquiring request
+            {requests.length !== 1 ? "s" : ""} found
+          </span>
+          {selectedRequests.length > 0 && (
+            <span className="text-sm text-blue-600 font-medium">
+              {selectedRequests.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="relative">
             <button
-              onClick={handleBulkApprove}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              onClick={() => setShowActionDropdown(!showActionDropdown)}
+              disabled={selectedRequests.length === 0}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Approve Selected ({selectedRequests.length})
+              Actions ({selectedRequests.length})
+              <ChevronDown className="w-4 h-4" />
             </button>
-            <button
-              onClick={handleBulkDelete}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Delete Selected ({selectedRequests.length})
-            </button>
+
+            {showActionDropdown && selectedRequests.length > 0 && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleAction("Approve")}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4 text-green-600" />
+                    Approve Selected
+                  </button>
+                  <button
+                    onClick={() => handleAction("Reject")}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <X className="w-4 h-4 text-red-600" />
+                    Reject Selected
+                  </button>
+                  <div className="border-t mt-1">
+                    <button
+                      onClick={() => handleAction("Delete")}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Selected
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        <button
-          onClick={fetchRequests}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
-          Refresh
-        </button>
+
+          <button
+            onClick={fetchRequests}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex font-medium transition-colors gap-2 items-center"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {requests.length === 0 ? (
@@ -245,13 +338,13 @@ export default function AcquiringRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-12">
                     <input
                       type="checkbox"
-                      checked={
-                        selectedRequests.length === requests.length &&
-                        requests.length > 0
-                      }
+                      checked={isAllSelected}
+                      ref={(input) => {
+                        if (input) input.indeterminate = isSomeSelected;
+                      }}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
@@ -285,9 +378,12 @@ export default function AcquiringRequests() {
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <input
                         type="checkbox"
-                        checked={selectedRequests.includes(request.id)}
+                        checked={selectedRequests.includes(request.id || "")}
                         onChange={(e) =>
-                          handleSelectRequest(request.id, e.target.checked)
+                          handleSelectRequest(
+                            request.id || "",
+                            e.target.checked
+                          )
                         }
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
