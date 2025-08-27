@@ -10,7 +10,7 @@ interface AcquiringRequest {
   quantity?: number;
   purpose?: string;
   created_at?: string;
-  account_requested?: {
+  account_requests?: {
     id: string;
     first_name: string;
     last_name: string;
@@ -47,7 +47,9 @@ export default function AcquiringRequests() {
 
       const { data, error } = await supabase
         .from("acquiring")
-        .select("*, supplies( id, name)")
+        .select(
+          "*, supplies( id, name), account_requests(id, first_name, last_name )"
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -263,7 +265,9 @@ export default function AcquiringRequests() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.user_name || request.user_id || "Unknown"}
+                      {request.account_requests
+                        ? `${request.account_requests.first_name} ${request.account_requests.last_name}`
+                        : request.user_id || "Unknown"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(request.status)}
