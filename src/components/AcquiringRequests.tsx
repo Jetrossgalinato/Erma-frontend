@@ -5,17 +5,27 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 // Define the AcquiringRequest type
 interface AcquiringRequest {
   id: string;
-  item_name?: string;
-  user_name?: string;
   user_id?: string;
   status?: string;
   quantity?: number;
   purpose?: string;
-  priority?: string;
-  estimated_cost?: number;
-  supplier?: string;
-  needed_by?: string;
   created_at?: string;
+  account_requested?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  supplies?: {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    remarks?: string;
+  };
+  facilities?: {
+    id: string;
+    name: string;
+  };
 }
 
 // Initialize Supabase client
@@ -207,16 +217,16 @@ export default function AcquiringRequests() {
                     Item
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Requester
+                    Requested By
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Est. Cost
@@ -255,15 +265,16 @@ export default function AcquiringRequests() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {request.user_name || request.user_id || "Unknown"}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(request.status)}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {request.quantity || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getPriorityBadge(request.priority)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(request.status)}
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(request.estimated_cost)}
                     </td>
