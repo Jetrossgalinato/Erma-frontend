@@ -88,39 +88,9 @@ export default function AcquiringRequests() {
     );
   };
 
-  const getPriorityBadge = (priority?: string) => {
-    const priorityColors = {
-      low: "bg-gray-100 text-gray-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      high: "bg-orange-100 text-orange-800",
-      urgent: "bg-red-100 text-red-800",
-      default: "bg-gray-100 text-gray-800",
-    };
-
-    const colorClass =
-      priorityColors[priority?.toLowerCase() as keyof typeof priorityColors] ||
-      priorityColors.default;
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
-      >
-        {priority || "N/A"}
-      </span>
-    );
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatCurrency = (amount?: number) => {
-    if (!amount) return "N/A";
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-    }).format(amount);
   };
 
   if (loading) {
@@ -227,15 +197,7 @@ export default function AcquiringRequests() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Est. Cost
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Needed By
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Requested
                   </th>
@@ -275,16 +237,7 @@ export default function AcquiringRequests() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {request.quantity || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getPriorityBadge(request.priority)}
-                    </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(request.estimated_cost)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.needed_by)}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(request.created_at)}
                     </td>
