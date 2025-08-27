@@ -18,13 +18,11 @@ interface AcquiringRequest {
   supplies?: {
     id: string;
     name: string;
-    category: string;
     quantity: number;
-    remarks?: string;
-  };
-  facilities?: {
-    id: string;
-    name: string;
+    facilities?: {
+      id: string;
+      name: string;
+    };
   };
 }
 
@@ -48,7 +46,22 @@ export default function AcquiringRequests() {
       const { data, error } = await supabase
         .from("acquiring")
         .select(
-          "*, supplies( id, name), account_requests(id, first_name, last_name )"
+          `
+        *, 
+        supplies( 
+          id, 
+          name, 
+          facilities(
+            id, 
+            name
+          )
+        ), 
+        account_requests(
+          id, 
+          first_name, 
+          last_name 
+        )
+      `
         )
         .order("created_at", { ascending: false });
 
@@ -197,7 +210,9 @@ export default function AcquiringRequests() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantity
                   </th>
-
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Requested
                   </th>
@@ -219,11 +234,6 @@ export default function AcquiringRequests() {
                             {request.purpose}
                           </div>
                         )}
-                        {request.supplier && (
-                          <div className="text-xs text-gray-400">
-                            Supplier: {request.supplier}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -236,6 +246,10 @@ export default function AcquiringRequests() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {request.quantity || "N/A"}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {request.supplies?.facilities?.name || "N/A"}
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
