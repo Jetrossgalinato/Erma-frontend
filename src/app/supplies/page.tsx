@@ -355,7 +355,7 @@ export default function SuppliesPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleView(supply)}
-                        className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
                       >
                         View
                       </button>
