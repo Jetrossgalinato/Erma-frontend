@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  createClientComponentClient,
+  User,
+} from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 
 type FacilityStatus =
@@ -49,6 +52,9 @@ export default function FacilitiesPage() {
     null
   );
 
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+
   // booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingData, setBookingData] = useState({
@@ -66,6 +72,18 @@ export default function FacilitiesPage() {
   const [selectedStatus, setSelectedStatus] = useState<
     FacilityStatus | "All Statuses"
   >("All Statuses");
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      setUserLoading(false);
+    };
+
+    getUser();
+  }, [supabase]);
 
   // Fetch data from Supabase
   const fetchFacilities = useCallback(async () => {
@@ -357,17 +375,35 @@ export default function FacilitiesPage() {
                           >
                             View
                           </button>
-                          <button
-                            className="flex-1 px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                            onClick={() => {
-                              if (facility.status === "Available") {
-                                setSelectedFacility(facility);
-                                setShowBookingModal(true);
+                          {userLoading ? (
+                            <div className="flex-1 px-3 py-2 text-sm bg-gray-200 rounded-lg animate-pulse">
+                              <div className="h-4 bg-gray-300 rounded"></div>
+                            </div>
+                          ) : (
+                            <button
+                              className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                                facility.status === "Available" && user
+                                  ? "bg-orange-600 text-white hover:bg-orange-700"
+                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              }`}
+                              onClick={() => {
+                                if (facility.status === "Available" && user) {
+                                  setSelectedFacility(facility);
+                                  setShowBookingModal(true);
+                                }
+                              }}
+                              disabled={
+                                facility.status !== "Available" || !user
                               }
-                            }}
-                          >
-                            {facility.status === "Available" ? "Book" : "Edit"}
-                          </button>
+                              title={
+                                !user ? "Please log in to book facilities" : ""
+                              }
+                            >
+                              {facility.status === "Available"
+                                ? "Book"
+                                : "Edit"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
