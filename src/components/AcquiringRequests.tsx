@@ -47,7 +47,7 @@ export default function AcquiringRequests() {
 
       const { data, error } = await supabase
         .from("acquiring")
-        .select("*")
+        .select("*, supplies( id, name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -245,7 +245,7 @@ export default function AcquiringRequests() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {request.item_name || "N/A"}
+                          {request.supplies?.name || "N/A"}
                         </div>
                         {request.purpose && (
                           <div
