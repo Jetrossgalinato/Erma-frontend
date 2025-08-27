@@ -1,21 +1,37 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  ChevronDown,
+  Check,
+  X,
+  Trash2,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 
 // Define the AcquiringRequest type
 interface AcquiringRequest {
   id: string;
-  item_name?: string;
-  user_name?: string;
   user_id?: string;
   status?: string;
   quantity?: number;
   purpose?: string;
-  priority?: string;
-  estimated_cost?: number;
-  supplier?: string;
-  needed_by?: string;
   created_at?: string;
+  account_requests?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  supplies?: {
+    id: string;
+    name: string;
+    quantity: number;
+    facilities?: {
+      id: string;
+      name: string;
+    };
+  };
 }
 
 // Initialize Supabase client
@@ -25,6 +41,8 @@ export default function AcquiringRequests() {
   const [requests, setRequests] = useState<AcquiringRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
+  const [showActionDropdown, setShowActionDropdown] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -37,7 +55,24 @@ export default function AcquiringRequests() {
 
       const { data, error } = await supabase
         .from("acquiring")
-        .select("*")
+        .select(
+          `
+        *, 
+        supplies( 
+          id, 
+          name, 
+          facilities(
+            id, 
+            name
+          )
+        ), 
+        account_requests(
+          id, 
+          first_name, 
+          last_name 
+        )
+      `
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -60,12 +95,12 @@ export default function AcquiringRequests() {
       rejected: "bg-red-100 text-red-800",
       ordered: "bg-blue-100 text-blue-800",
       received: "bg-purple-100 text-purple-800",
-      default: "bg-gray-100 text-gray-800",
     };
 
+    const normalizedStatus = status?.toLowerCase();
     const colorClass =
-      statusColors[status?.toLowerCase() as keyof typeof statusColors] ||
-      statusColors.default;
+      statusColors[normalizedStatus as keyof typeof statusColors] ||
+      "bg-gray-100 text-gray-800";
 
     return (
       <span
@@ -76,46 +111,94 @@ export default function AcquiringRequests() {
     );
   };
 
-  const getPriorityBadge = (priority?: string) => {
-    const priorityColors = {
-      low: "bg-gray-100 text-gray-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      high: "bg-orange-100 text-orange-800",
-      urgent: "bg-red-100 text-red-800",
-      default: "bg-gray-100 text-gray-800",
-    };
-
-    const colorClass =
-      priorityColors[priority?.toLowerCase() as keyof typeof priorityColors] ||
-      priorityColors.default;
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
-      >
-        {priority || "N/A"}
-      </span>
-    );
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatCurrency = (amount?: number) => {
-    if (!amount) return "N/A";
-    return new Intl.NumberFormat("en-PH", {
-      style: "currency",
-      currency: "PHP",
-    }).format(amount);
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRequests(
+        requests.map((request) => request.id).filter(Boolean)
+      );
+    } else {
+      setSelectedRequests([]);
+    }
   };
+
+  const handleSelectRequest = (requestId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRequests((prev) => [...prev, requestId]);
+    } else {
+      setSelectedRequests((prev) => prev.filter((id) => id !== requestId));
+    }
+  };
+
+  const handleAction = async (action: "Approve" | "Reject" | "Delete") => {
+    if (selectedRequests.length === 0) return;
+
+    try {
+      setLoading(true);
+
+      if (action === "Delete") {
+        const { error } = await supabase
+          .from("acquiring")
+          .delete()
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      } else {
+        const status = action === "Approve" ? "Approved" : "Rejected";
+        const { error } = await supabase
+          .from("acquiring")
+          .update({ status })
+          .in("id", selectedRequests);
+
+        if (error) throw error;
+      }
+
+      // Refresh the data and clear selections
+      await fetchRequests();
+      setSelectedRequests([]);
+      setShowActionDropdown(false);
+    } catch (err) {
+      console.error(`Error performing ${action}:`, err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add useEffect for handling click outside:
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showActionDropdown &&
+        !(event.target as Element).closest(".relative")
+      ) {
+        setShowActionDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showActionDropdown]);
+
+  // Add these helper variables:
+  const isAllSelected =
+    requests.length > 0 && selectedRequests.length === requests.length;
+  const isSomeSelected =
+    selectedRequests.length > 0 && selectedRequests.length < requests.length;
 
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
           <span className="ml-3 text-gray-600">
             Loading acquiring requests...
           </span>
@@ -163,16 +246,68 @@ export default function AcquiringRequests() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-6">
-        <span className="text-sm text-gray-700">
-          {requests.length} acquiring request{requests.length !== 1 ? "s" : ""}{" "}
-          found
-        </span>
-        <button
-          onClick={fetchRequests}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-700">
+            {requests.length} acquiring request
+            {requests.length !== 1 ? "s" : ""} found
+          </span>
+          {selectedRequests.length > 0 && (
+            <span className="text-sm text-blue-600 font-medium">
+              {selectedRequests.length} selected
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowActionDropdown(!showActionDropdown)}
+              disabled={selectedRequests.length === 0}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Actions ({selectedRequests.length})
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {showActionDropdown && selectedRequests.length > 0 && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleAction("Approve")}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4 text-green-600" />
+                    Approve Selected
+                  </button>
+                  <button
+                    onClick={() => handleAction("Reject")}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <X className="w-4 h-4 text-red-600" />
+                    Reject Selected
+                  </button>
+                  <div className="border-t mt-1">
+                    <button
+                      onClick={() => handleAction("Delete")}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Selected
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={fetchRequests}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex font-medium transition-colors gap-2 items-center"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {requests.length === 0 ? (
@@ -203,26 +338,34 @@ export default function AcquiringRequests() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-12">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={(input) => {
+                        if (input) input.indeterminate = isSomeSelected;
+                      }}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Item
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Requester
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Requested By
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantity
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Est. Cost
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Needed By
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Purpose
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Location
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Requested
@@ -232,10 +375,23 @@ export default function AcquiringRequests() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={selectedRequests.includes(request.id || "")}
+                        onChange={(e) =>
+                          handleSelectRequest(
+                            request.id || "",
+                            e.target.checked
+                          )
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {request.item_name || "N/A"}
+                          {request.supplies?.name || "N/A"}
                         </div>
                         {request.purpose && (
                           <div
@@ -245,31 +401,28 @@ export default function AcquiringRequests() {
                             {request.purpose}
                           </div>
                         )}
-                        {request.supplier && (
-                          <div className="text-xs text-gray-400">
-                            Supplier: {request.supplier}
-                          </div>
-                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.user_name || request.user_id || "Unknown"}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      {request.account_requests
+                        ? `${request.account_requests.first_name} ${request.account_requests.last_name}`
+                        : request.user_id || "Unknown"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {request.quantity || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getPriorityBadge(request.priority)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       {getStatusBadge(request.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(request.estimated_cost)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      {request.quantity || "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(request.needed_by)}
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      {request.purpose || "N/A"}
                     </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                      {request.supplies?.facilities?.name || "N/A"}
+                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(request.created_at)}
                     </td>
