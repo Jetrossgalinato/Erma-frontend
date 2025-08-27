@@ -33,6 +33,7 @@ export default function AcquiringRequests() {
   const [requests, setRequests] = useState<AcquiringRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
 
   useEffect(() => {
     fetchRequests();
@@ -106,6 +107,36 @@ export default function AcquiringRequests() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRequests(requests.map((request) => request.id));
+    } else {
+      setSelectedRequests([]);
+    }
+  };
+
+  const handleSelectRequest = (requestId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedRequests((prev) => [...prev, requestId]);
+    } else {
+      setSelectedRequests((prev) => prev.filter((id) => id !== requestId));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    // Your bulk approve logic here
+    console.log("Bulk approving:", selectedRequests);
+    // Reset selection after operation
+    setSelectedRequests([]);
+  };
+
+  const handleBulkDelete = async () => {
+    // Your bulk delete logic here
+    console.log("Bulk deleting:", selectedRequests);
+    // Reset selection after operation
+    setSelectedRequests([]);
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
@@ -162,6 +193,22 @@ export default function AcquiringRequests() {
           {requests.length} acquiring request{requests.length !== 1 ? "s" : ""}{" "}
           found
         </span>
+        {selectedRequests.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleBulkApprove}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Approve Selected ({selectedRequests.length})
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Delete Selected ({selectedRequests.length})
+            </button>
+          </div>
+        )}
         <button
           onClick={fetchRequests}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
@@ -199,6 +246,17 @@ export default function AcquiringRequests() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedRequests.length === requests.length &&
+                        requests.length > 0
+                      }
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                     Item
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
@@ -224,6 +282,16 @@ export default function AcquiringRequests() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {requests.map((request, index) => (
                   <tr key={request.id || index} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={selectedRequests.includes(request.id)}
+                        onChange={(e) =>
+                          handleSelectRequest(request.id, e.target.checked)
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
