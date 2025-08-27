@@ -3,7 +3,10 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import {
+  createClientComponentClient,
+  User,
+} from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
 
 interface Supplies {
@@ -48,6 +51,9 @@ const facility = [
 export default function SuppliesPage() {
   const supabase = createClientComponentClient<Database>();
   const [loading, setLoading] = useState(false);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [supplies, setSupplies] = useState<Supplies[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -87,6 +93,18 @@ export default function SuppliesPage() {
     }
 
     setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      setUserLoading(false);
+    };
+
+    getUser();
   }, [supabase]);
 
   useEffect(() => {
@@ -341,12 +359,28 @@ export default function SuppliesPage() {
                       >
                         View
                       </button>
-                      <button
-                        onClick={() => handleAcquire(supply)}
-                        className="flex-1 px-3 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-                      >
-                        Acquire
-                      </button>
+                      {userLoading ? (
+                        <div className="flex-1 px-3 py-2 text-sm bg-gray-200 rounded-lg animate-pulse">
+                          <div className="h-4 bg-gray-300 rounded"></div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAcquire(supply)}
+                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                            user
+                              ? "bg-orange-500 text-white hover:bg-orange-600"
+                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          }`}
+                          disabled={!user}
+                          title={
+                            !user
+                              ? "You must be logged in to acquire supplies"
+                              : ""
+                          }
+                        >
+                          Acquire
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
