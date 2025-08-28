@@ -147,8 +147,56 @@ export default function AcquiringRequests() {
           .in("id", selectedRequests);
 
         if (error) throw error;
+      } else if (action === "Approve") {
+        // First, get the requests to approve with their supply info
+        const { data: requestsToApprove, error: fetchError } = await supabase
+          .from("acquiring")
+          .select(
+            `
+          id,
+          quantity,
+          supplies!inner (
+            id,
+            quantity
+          )
+        `
+          )
+          .in("id", selectedRequests);
+
+        if (fetchError) throw fetchError;
+
+        // Update the acquiring requests status
+        const { error: updateError } = await supabase
+          .from("acquiring")
+          .update({ status: "Approved" })
+          .in("id", selectedRequests);
+
+        if (updateError) throw updateError;
+
+        // Update supplies quantities
+        for (const request of requestsToApprove || []) {
+          const supply = Array.isArray(request.supplies)
+            ? request.supplies[0]
+            : request.supplies;
+          const newQuantity = (supply?.quantity || 0) - (request.quantity || 0);
+
+          // Optional: Add validation to prevent negative quantities
+          if (newQuantity < 0) {
+            throw new Error(
+              `Insufficient quantity for supply. Available: ${supply?.quantity}, Requested: ${request.quantity}`
+            );
+          }
+
+          const { error: supplyError } = await supabase
+            .from("supplies")
+            .update({ quantity: newQuantity })
+            .eq("id", supply.id);
+
+          if (supplyError) throw supplyError;
+        }
       } else {
-        const status = action === "Approve" ? "Approved" : "Rejected";
+        // Reject case
+        const status = "Rejected";
         const { error } = await supabase
           .from("acquiring")
           .update({ status })
