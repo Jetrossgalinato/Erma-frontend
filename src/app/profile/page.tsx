@@ -5,6 +5,7 @@ import { User } from "@supabase/auth-helpers-nextjs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 interface ProfileData {
   first_name: string;
@@ -264,7 +265,7 @@ export default function MyProfilePage() {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
             <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-orange-200 mx-auto"></div>
+              <RefreshCw className="w-8 h-8 mx-auto text-orange-500 mb-4 animate-spin" />
             </div>
             <p className="text-slate-600 mt-6 text-lg font-medium">
               {authLoading
