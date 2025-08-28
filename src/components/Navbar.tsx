@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Menu,
   X,
@@ -9,6 +9,7 @@ import {
   User,
   LogOut,
   FileText,
+  Bell,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,6 +23,20 @@ const Navbar: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const supabase = createClientComponentClient();
   const pathname = usePathname();
+
+  type Notification = {
+    id: string;
+    title: string;
+    user_id: string;
+    message: string;
+    is_read: boolean;
+    created_at: string;
+  };
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
+    useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
@@ -57,6 +72,7 @@ const Navbar: React.FC = () => {
       if (!target.closest(".dropdown-container")) {
         setIsResourcesOpen(false);
         setIsAvatarDropdownOpen(false);
+        setIsNotificationDropdownOpen(false); // Add this line
       }
     };
 
@@ -70,6 +86,52 @@ const Navbar: React.FC = () => {
     const name = session?.user?.user_metadata?.name || session?.user?.email;
     return name ? name.charAt(0).toUpperCase() : "?";
   };
+
+  const toggleNotificationDropdown = () =>
+    setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
+
+  const fetchNotifications = useCallback(async () => {
+    if (session?.user) {
+      try {
+        // First, get the account_request id for the current user
+        const { data: accountData, error: accountError } = await supabase
+          .from("account_requests")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (accountError) {
+          console.error("Error fetching account request:", accountError);
+          return;
+        }
+
+        if (accountData) {
+          // Then fetch notifications using the account_request id
+          const { data, error } = await supabase
+            .from("notifications")
+            .select("*")
+            .eq("user_id", accountData.id)
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            console.error("Error fetching notifications:", error);
+          } else {
+            setNotifications(data || []);
+            setUnreadCount(data?.filter((notif) => !notif.is_read).length || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+  }, [session, supabase]);
+
+  // 4. Add this useEffect after your existing useEffects
+  useEffect(() => {
+    if (session) {
+      fetchNotifications();
+    }
+  }, [session, fetchNotifications]);
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -198,6 +260,54 @@ const Navbar: React.FC = () => {
               Sign In
             </button>
           </a>
+        )}
+
+        {session && (
+          <div className="relative dropdown-container">
+            <button
+              onClick={toggleNotificationDropdown}
+              className="relative p-2 text-gray-600 hover:text-black transition-colors duration-300"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isNotificationDropdownOpen && (
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[300px] max-h-[400px] overflow-y-auto z-50">
+                <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
+                  Notifications
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-3 text-gray-500 text-center">
+                    No notifications yet
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${
+                        !notification.is_read ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <div className="text-sm font-medium text-gray-800">
+                        {notification.title}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {notification.message}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(notification.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -328,6 +438,57 @@ const Navbar: React.FC = () => {
                 Sign In
               </button>
             </a>
+          )}
+
+          {session && (
+            <div className="relative dropdown-container w-full">
+              <button
+                onClick={toggleNotificationDropdown}
+                className="relative flex items-center py-2 text-gray-700"
+              >
+                <Bell size={20} className="mr-2" />
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotificationDropdownOpen && (
+                <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg min-w-[280px] max-h-[300px] overflow-y-auto">
+                  <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
+                    Notifications
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-3 text-gray-500 text-center">
+                      No notifications yet
+                    </div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`px-4 py-3 border-b border-gray-100 ${
+                          !notification.is_read ? "bg-blue-50" : ""
+                        }`}
+                      >
+                        <div className="text-sm font-medium text-gray-800">
+                          {notification.title}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {new Date(
+                            notification.created_at
+                          ).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
