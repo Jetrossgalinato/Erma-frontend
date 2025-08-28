@@ -108,6 +108,8 @@ export default function MyRequestsPage() {
   const [bookingData, setBookingData] = useState<Booking[]>([]);
   const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
 
+  const [showRequestTypeDropdown, setShowRequestTypeDropdown] = useState(false);
+
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
@@ -369,10 +371,10 @@ export default function MyRequestsPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        showActionsDropdown &&
-        !(event.target as Element).closest(".relative")
+        showRequestTypeDropdown &&
+        !(event.target as Element).closest(".request-type-dropdown")
       ) {
-        setShowActionsDropdown(false);
+        setShowRequestTypeDropdown(false);
       }
     };
 
@@ -380,7 +382,7 @@ export default function MyRequestsPage() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showActionsDropdown]);
+  }, [showRequestTypeDropdown]);
 
   const toggleRequestSelection = (requestId: number) => {
     setSelectedRequests((prev) =>
@@ -573,131 +575,154 @@ export default function MyRequestsPage() {
                 Track your equipment borrowing requests and their current status
               </p>
             </div>
-            <div className="flex gap-3">
-              <div className="relative">
-                <button
-                  onClick={() => setShowActionsDropdown(!showActionsDropdown)}
-                  className={`px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-2 ${
-                    selectedRequests.length > 0
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                  disabled={selectedRequests.length === 0}
-                >
-                  Actions ({selectedRequests.length})
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-end mb-6">
+                <div className="relative inline-block text-left request-type-dropdown">
+                  <button
+                    onClick={() =>
+                      setShowRequestTypeDropdown(!showRequestTypeDropdown)
+                    }
+                    className="inline-flex items-center justify-between w-48 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {
+                      {
+                        borrowing: "Borrowing Requests",
+                        booking: "Booking Requests",
+                        acquiring: "Acquiring Requests",
+                      }[requestType]
+                    }
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </button>
 
-                {showActionsDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                    <div className="py-1">
-                      {requestType === "borrowing" ? (
-                        <>
+                  {showRequestTypeDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                      <div className="py-1">
+                        {[
+                          { key: "borrowing", label: "Borrowing Requests" },
+                          { key: "booking", label: "Booking Requests" },
+                          { key: "acquiring", label: "Acquiring Requests" },
+                        ].map((type) => (
                           <button
-                            onClick={handleBulkReturn}
-                            className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                            disabled={selectedRequests.length === 0}
+                            key={type.key}
+                            onClick={() => {
+                              setRequestType(
+                                type.key as
+                                  | "borrowing"
+                                  | "booking"
+                                  | "acquiring"
+                              );
+                              setShowRequestTypeDropdown(false);
+                            }}
+                            className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                              requestType === type.key
+                                ? "bg-blue-50 text-blue-600 font-medium"
+                                : "text-gray-700"
+                            }`}
                           >
-                            <RotateCcw className="w-4 h-4" />
-                            Mark as Returned
+                            {type.label}
                           </button>
-                          <button
-                            onClick={handleBulkDelete}
-                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            disabled={selectedRequests.length === 0}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete Requests
-                          </button>
-                        </>
-                      ) : requestType === "booking" ? (
-                        <>
-                          <button
-                            onClick={handleBulkDone}
-                            className="w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
-                            disabled={selectedRequests.length === 0}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                            Mark as Done
-                          </button>
-                          <button
-                            onClick={handleBulkDelete}
-                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                            disabled={selectedRequests.length === 0}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete Requests
-                          </button>
-                        </>
-                      ) : (
-                        // For acquiring requests - only show delete
-                        <button
-                          onClick={() => {
-                            setShowDeleteModal(true);
-                            setShowActionsDropdown(false);
-                          }}
-                          className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
-                          disabled={selectedRequests.length === 0}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete Requests
-                        </button>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+              <div className="flex gap-3">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                    className={`px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-2 ${
+                      selectedRequests.length > 0
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
+                    disabled={selectedRequests.length === 0}
+                  >
+                    Actions ({selectedRequests.length})
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
 
-              <button
-                onClick={() =>
-                  requestType === "borrowing"
-                    ? fetchBorrowing()
-                    : requestType === "booking"
-                    ? fetchBooking()
-                    : fetchAcquiring()
-                }
-                disabled={loading}
-                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
+                  {showActionsDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                      <div className="py-1">
+                        {requestType === "borrowing" ? (
+                          <>
+                            <button
+                              onClick={handleBulkReturn}
+                              className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              disabled={selectedRequests.length === 0}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Mark as Returned
+                            </button>
+                            <button
+                              onClick={handleBulkDelete}
+                              className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              disabled={selectedRequests.length === 0}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete Requests
+                            </button>
+                          </>
+                        ) : requestType === "booking" ? (
+                          <>
+                            <button
+                              onClick={handleBulkDone}
+                              className="w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
+                              disabled={selectedRequests.length === 0}
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Mark as Done
+                            </button>
+                            <button
+                              onClick={handleBulkDelete}
+                              className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              disabled={selectedRequests.length === 0}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete Requests
+                            </button>
+                          </>
+                        ) : (
+                          // For acquiring requests - only show delete
+                          <button
+                            onClick={() => {
+                              setShowDeleteModal(true);
+                              setShowActionsDropdown(false);
+                            }}
+                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            disabled={selectedRequests.length === 0}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Requests
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() =>
+                    requestType === "borrowing"
+                      ? fetchBorrowing()
+                      : requestType === "booking"
+                      ? fetchBooking()
+                      : fetchAcquiring()
+                  }
+                  disabled={loading}
+                  className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Requests Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="relative">
-                <select
-                  value={requestType}
-                  onChange={(e) => {
-                    setRequestType(
-                      e.target.value as "borrowing" | "booking" | "acquiring"
-                    );
-                  }}
-                  className="text-lg font-semibold text-gray-900 bg-transparent border-none focus:ring-0 cursor-pointer"
-                >
-                  <option value="borrowing">Borrowing Requests</option>
-                  <option value="booking">Booking Requests</option>
-                  <option value="acquiring">Acquiring Requests</option>
-                </select>
-
-                <span className="text-lg font-semibold text-gray-900">
-                  (
-                  {requestType === "borrowing"
-                    ? borrowingData.length
-                    : requestType === "booking"
-                    ? bookingData.length
-                    : acquiringData.length}
-                  )
-                </span>
-              </div>
-              <Package className="w-5 h-5 text-gray-500" />
-            </div>
-
             {loading || authLoading ? (
               <div className="p-8 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
