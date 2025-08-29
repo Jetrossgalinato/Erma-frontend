@@ -93,7 +93,6 @@ const Navbar: React.FC = () => {
   const fetchNotifications = useCallback(async () => {
     if (session?.user) {
       try {
-        // First, get the account_request id for the current user
         const { data: accountData, error: accountError } = await supabase
           .from("account_requests")
           .select("id")
@@ -106,7 +105,6 @@ const Navbar: React.FC = () => {
         }
 
         if (accountData) {
-          // Then fetch notifications using the account_request id
           const { data, error } = await supabase
             .from("notifications")
             .select("*")
@@ -117,7 +115,12 @@ const Navbar: React.FC = () => {
             console.error("Error fetching notifications:", error);
           } else {
             setNotifications(data || []);
-            setUnreadCount(data?.filter((notif) => !notif.is_read).length || 0);
+            // Ensure unreadCount is calculated correctly
+            const unread = (data || []).filter(
+              (notif) => !notif.is_read
+            ).length;
+            setUnreadCount(unread);
+            console.log("Notifications:", data?.length, "Unread:", unread); // Debug log
           }
         }
       } catch (error) {
@@ -126,12 +129,61 @@ const Navbar: React.FC = () => {
     }
   }, [session, supabase]);
 
-  // 4. Add this useEffect after your existing useEffects
   useEffect(() => {
-    if (session) {
+    if (session?.user) {
+      fetchNotifications();
+
+      // Set up real-time subscription
+      const channel = supabase
+        .channel("notifications-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notifications",
+          },
+          (payload) => {
+            console.log("Real-time notification change:", payload); // Debug log
+            fetchNotifications(); // Refetch when notifications change
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [session, fetchNotifications, supabase]);
+
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+
+      // Immediately update the local state instead of refetching
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
+        )
+      );
+
+      // Update unread count immediately
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      // Fallback to refetch if update fails
       fetchNotifications();
     }
-  }, [session, fetchNotifications]);
+  };
+  useEffect(() => {
+    console.log("Unread count updated:", unreadCount);
+    console.log("Total notifications:", notifications.length);
+  }, [unreadCount, notifications]);
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -266,9 +318,9 @@ const Navbar: React.FC = () => {
           <div className="relative dropdown-container">
             <button
               onClick={toggleNotificationDropdown}
-              className="relative p-2 text-gray-600 hover:text-black transition-colors duration-300"
+              className="relative p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-full cursor-pointer transition-colors duration-300"
             >
-              <Bell size={20} />
+              <Bell size={25} />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount > 99 ? "99+" : unreadCount}
@@ -289,7 +341,8 @@ const Navbar: React.FC = () => {
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${
+                      onClick={() => markNotificationAsRead(notification.id)}
+                      className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
                         !notification.is_read ? "bg-blue-50" : ""
                       }`}
                     >
@@ -468,7 +521,8 @@ const Navbar: React.FC = () => {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`px-4 py-3 border-b border-gray-100 ${
+                        onClick={() => markNotificationAsRead(notification.id)}
+                        className={`px-4 py-3 border-b border-gray-100 cursor-pointer ${
                           !notification.is_read ? "bg-blue-50" : ""
                         }`}
                       >

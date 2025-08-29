@@ -28,6 +28,7 @@ interface BorrowingRequest {
   end_date?: string;
   date_returned?: string;
   created_at?: string;
+  borrowers_id?: string;
   equipments?: {
     name: string;
   };
@@ -58,7 +59,6 @@ interface ReturnNotification {
   };
 }
 
-// Initialize Supabase client
 const supabase = createClientComponentClient();
 
 export default function BorrowingRequests() {
@@ -135,6 +135,45 @@ export default function BorrowingRequests() {
     }
   };
 
+  const createNotificationForBorrowers = async (
+    title: string,
+    message: string,
+    borrowingIds: string[]
+  ) => {
+    try {
+      // Get the borrower IDs for the selected requests
+      const { data: borrowingData, error: borrowingError } = await supabase
+        .from("borrowing")
+        .select("borrowers_id")
+        .in("id", borrowingIds);
+
+      if (borrowingError) throw borrowingError;
+
+      // Create unique borrower IDs (in case same user has multiple requests)
+      const uniqueBorrowerIds = [
+        ...new Set(borrowingData?.map((b) => b.borrowers_id) || []),
+      ];
+
+      if (uniqueBorrowerIds.length > 0) {
+        const notifications = uniqueBorrowerIds.map((borrowerId) => ({
+          title,
+          message,
+          user_id: borrowerId,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error("Error creating notification:", err);
+    }
+  };
+
   const getReturnStatusBadge = (
     requestStatus: string | undefined,
     dateReturned?: string | null
@@ -192,11 +231,21 @@ export default function BorrowingRequests() {
     }
   };
 
+  // In handleConfirmReturn
   const handleConfirmReturn = async (
     notificationId: number,
     borrowingId: number
   ) => {
     try {
+      // Get borrower ID first
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select("borrowers_id")
+        .eq("id", borrowingId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       // Update borrowing record
       const { error: borrowingError } = await supabase
         .from("borrowing")
@@ -220,6 +269,17 @@ export default function BorrowingRequests() {
 
       if (notificationError) throw notificationError;
 
+      // Create notification for specific borrower
+      if (borrowingData?.borrowers_id) {
+        await supabase.from("notifications").insert({
+          title: "Item Return Confirmed",
+          message: "Your item return has been confirmed by admin.",
+          user_id: borrowingData.borrowers_id,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
+
       // Refresh data
       fetchRequests();
       fetchReturnNotifications();
@@ -231,6 +291,22 @@ export default function BorrowingRequests() {
 
   const handleRejectReturn = async (notificationId: number) => {
     try {
+      // Get borrowing info first
+      const { data: returnNotifData, error: fetchError } = await supabase
+        .from("return_notifications")
+        .select(
+          `
+        borrowing_id,
+        borrowing!borrowing_id (
+          borrowers_id
+        )
+      `
+        )
+        .eq("id", notificationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("return_notifications")
         .update({
@@ -240,6 +316,21 @@ export default function BorrowingRequests() {
         .eq("id", notificationId);
 
       if (error) throw error;
+
+      // Create notification for specific borrower
+      if (
+        returnNotifData?.borrowing &&
+        Array.isArray(returnNotifData.borrowing) &&
+        returnNotifData.borrowing[0]?.borrowers_id
+      ) {
+        await supabase.from("notifications").insert({
+          title: "Item Return Rejected",
+          message: "Your item return request has been rejected by admin.",
+          user_id: returnNotifData.borrowing[0].borrowers_id,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
 
       fetchReturnNotifications();
     } catch (err) {
@@ -263,6 +354,12 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      await createNotificationForBorrowers(
+        "Borrowing Request Approved",
+        `Your borrowing request has been approved by admin.`,
+        selectedItems
+      );
 
       // Refresh the data and clear selection
       await fetchRequests();
@@ -291,6 +388,12 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
+      await createNotificationForBorrowers(
+        "Borrowing Request Rejected",
+        `Your borrowing request has been rejected by admin.`,
+        selectedItems
+      );
+
       // Refresh the data and clear selection
       await fetchRequests();
       setSelectedItems([]);
@@ -317,15 +420,32 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
-      const { error } = await supabase
+      // CREATE NOTIFICATIONS BEFORE DELETING THE RECORDS
+      await createNotificationForBorrowers(
+        "Borrowing Request Deleted",
+        `Your borrowing request has been deleted by admin.`,
+        selectedItems
+      );
+
+      // First, delete related return_notifications to avoid foreign key constraint
+      const { error: returnNotifError } = await supabase
+        .from("return_notifications")
+        .delete()
+        .in("borrowing_id", selectedItems);
+
+      if (returnNotifError) throw returnNotifError;
+
+      // Then delete the borrowing requests
+      const { error: borrowingError } = await supabase
         .from("borrowing")
         .delete()
         .in("id", selectedItems);
 
-      if (error) throw error;
+      if (borrowingError) throw borrowingError;
 
       // Refresh the data and clear selection
       await fetchRequests();
+      fetchReturnNotifications(); // Also refresh return notifications
       setSelectedItems([]);
       setShowDeleteModal(false);
     } catch (err) {

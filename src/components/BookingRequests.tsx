@@ -125,6 +125,45 @@ export default function BookingRequests() {
     }
   };
 
+  const createNotificationForBookers = async (
+    title: string,
+    message: string,
+    bookingIds: string[]
+  ) => {
+    try {
+      // Get the booker IDs for the selected requests
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("booking")
+        .select("bookers_id")
+        .in("id", bookingIds);
+
+      if (bookingError) throw bookingError;
+
+      // Create unique booker IDs (in case same user has multiple requests)
+      const uniqueBookerIds = [
+        ...new Set(bookingData?.map((b) => b.bookers_id) || []),
+      ];
+
+      if (uniqueBookerIds.length > 0) {
+        const notifications = uniqueBookerIds.map((bookerId) => ({
+          title,
+          message,
+          user_id: bookerId,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error("Error creating notification:", err);
+    }
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedRequests(
@@ -142,6 +181,13 @@ export default function BookingRequests() {
       setLoading(true);
 
       if (action === "Delete") {
+        // CREATE NOTIFICATIONS BEFORE DELETING
+        await createNotificationForBookers(
+          "Booking Request Deleted",
+          `Your booking request has been deleted by admin.`,
+          selectedRequests
+        );
+
         const { error } = await supabase
           .from("booking")
           .delete()
@@ -156,6 +202,13 @@ export default function BookingRequests() {
           .in("id", selectedRequests);
 
         if (error) throw error;
+
+        // CREATE NOTIFICATIONS AFTER UPDATING STATUS
+        await createNotificationForBookers(
+          `Booking Request ${action}d`,
+          `Your booking request has been ${action.toLowerCase()}d by admin.`,
+          selectedRequests
+        );
       }
 
       // Refresh the data and clear selections
@@ -177,11 +230,12 @@ export default function BookingRequests() {
     action: "confirm" | "dismiss"
   ) => {
     try {
+      const notification = doneNotifications.find(
+        (n) => n.id === notificationId
+      );
+
       if (action === "confirm") {
         // Update the booking status to completed
-        const notification = doneNotifications.find(
-          (n) => n.id === notificationId
-        );
         if (notification) {
           const { error: bookingError } = await supabase
             .from("booking")
@@ -202,6 +256,22 @@ export default function BookingRequests() {
         .eq("id", notificationId);
 
       if (error) throw error;
+
+      // SEND NOTIFICATION TO THE BOOKER
+      if (notification?.booking_id) {
+        const title =
+          action === "confirm"
+            ? "Booking Completion Confirmed"
+            : "Booking Completion Dismissed";
+        const message =
+          action === "confirm"
+            ? "Your booking completion has been confirmed by admin."
+            : "Your booking completion notification has been dismissed by admin.";
+
+        await createNotificationForBookers(title, message, [
+          notification.booking_id,
+        ]);
+      }
 
       // Refresh data
       await fetchDoneNotifications();
