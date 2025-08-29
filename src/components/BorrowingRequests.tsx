@@ -58,7 +58,6 @@ interface ReturnNotification {
   };
 }
 
-// Initialize Supabase client
 const supabase = createClientComponentClient();
 
 export default function BorrowingRequests() {
@@ -132,6 +131,26 @@ export default function BorrowingRequests() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createNotification = async (
+    title: string,
+    message: string,
+    userId?: string
+  ) => {
+    try {
+      const { error } = await supabase.from("notifications").insert({
+        title,
+        message,
+        user_id: userId || null, // null for system-wide notifications
+        is_read: false,
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Error creating notification:", err);
     }
   };
 
@@ -220,6 +239,11 @@ export default function BorrowingRequests() {
 
       if (notificationError) throw notificationError;
 
+      await createNotification(
+        "Item Return Confirmed",
+        "An item return has been confirmed by admin."
+      );
+
       // Refresh data
       fetchRequests();
       fetchReturnNotifications();
@@ -240,6 +264,11 @@ export default function BorrowingRequests() {
         .eq("id", notificationId);
 
       if (error) throw error;
+
+      await createNotification(
+        "Item Return Rejected",
+        "An item return request has been rejected by admin."
+      );
 
       fetchReturnNotifications();
     } catch (err) {
@@ -263,6 +292,13 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      await createNotification(
+        "Borrowing Requests Approved",
+        `${selectedItems.length} borrowing request${
+          selectedItems.length !== 1 ? "s have" : " has"
+        } been approved by admin.`
+      );
 
       // Refresh the data and clear selection
       await fetchRequests();
@@ -290,6 +326,13 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      await createNotification(
+        "Borrowing Requests Rejected",
+        `${selectedItems.length} borrowing request${
+          selectedItems.length !== 1 ? "s have" : " has"
+        } been rejected by admin.`
+      );
 
       // Refresh the data and clear selection
       await fetchRequests();
@@ -323,6 +366,13 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      await createNotification(
+        "Borrowing Requests Deleted",
+        `${selectedItems.length} borrowing request${
+          selectedItems.length !== 1 ? "s have" : " has"
+        } been deleted by admin.`
+      );
 
       // Refresh the data and clear selection
       await fetchRequests();
