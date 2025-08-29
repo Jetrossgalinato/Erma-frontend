@@ -266,9 +266,9 @@ const Navbar: React.FC = () => {
           <div className="relative dropdown-container">
             <button
               onClick={toggleNotificationDropdown}
-              className="relative p-2 text-gray-600 hover:text-black transition-colors duration-300"
+              className="relative p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-full cursor-pointer transition-colors duration-300"
             >
-              <Bell size={20} />
+              <Bell size={25} />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount > 99 ? "99+" : unreadCount}
