@@ -7,7 +7,6 @@ import {
   Building,
   Package,
   FileText,
-  ShoppingCart,
   Activity,
   Users,
   Shield,
@@ -327,12 +326,6 @@ const Sidebar: React.FC = () => {
       label: "Request List",
       count: loading ? null : requestCount,
       path: "/dashboard-request",
-    },
-    {
-      icon: ShoppingCart,
-      label: "Borrowed Items",
-      count: 0,
-      path: "/borrowing/borrowed",
     },
   ];
 
