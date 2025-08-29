@@ -19,7 +19,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 type SectionKey =
-  | "borrowing"
+  | "requests"
   | "supplies"
   | "monitoring"
   | "userManagement"
@@ -102,7 +102,7 @@ const Sidebar: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<
     Record<SectionKey, boolean>
   >({
-    borrowing: true,
+    requests: true,
     supplies: true,
     monitoring: true,
     userManagement: true,
@@ -321,7 +321,7 @@ const Sidebar: React.FC = () => {
     },
   ];
 
-  const borrowingItems: MenuItemData[] = [
+  const requestItems: MenuItemData[] = [
     {
       icon: FileText,
       label: "Request List",
@@ -375,16 +375,16 @@ const Sidebar: React.FC = () => {
           ))}
         </div>
 
-        {/* Borrowing */}
+        {/* Requests */}
         <div className="mt-6">
           <SidebarSectionHeader
-            label="Borrowing"
-            isExpanded={expandedSections.borrowing}
-            onToggle={() => toggleSection("borrowing")}
+            label="Requests"
+            isExpanded={expandedSections.requests}
+            onToggle={() => toggleSection("requests")}
           />
-          {expandedSections.borrowing && (
+          {expandedSections.requests && (
             <div className="space-y-1">
-              {borrowingItems.map((item, index) => (
+              {requestItems.map((item, index) => (
                 <SidebarMenuItem key={index} {...item} isSubItem />
               ))}
             </div>
