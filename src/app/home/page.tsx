@@ -2,6 +2,7 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -30,22 +31,24 @@ export default function Home() {
               tracking your OJT attendance with ease.
             </p>
 
-            <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2 mt-8">
-              Get started
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+            <Link href="/login">
+              <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer hover:shadow-lg text-white px-8 py-4 rounded-lg font-semibold text-lg transition duration-300 flex items-center gap-2 mt-8">
+                Get started
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </Link>
           </div>
 
           {/* Right Content - Phone Mockup */}
