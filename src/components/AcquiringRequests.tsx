@@ -88,6 +88,45 @@ export default function AcquiringRequests() {
     }
   };
 
+  const createNotificationForAcquirers = async (
+    title: string,
+    message: string,
+    acquiringIds: string[]
+  ) => {
+    try {
+      // Get the user IDs for the selected requests
+      const { data: acquiringData, error: acquiringError } = await supabase
+        .from("acquiring")
+        .select("acquirers_id")
+        .in("id", acquiringIds);
+
+      if (acquiringError) throw acquiringError;
+
+      // Create unique user IDs (in case same user has multiple requests)
+      const uniqueUserIds = [
+        ...new Set(acquiringData?.map((a) => a.acquirers_id) || []),
+      ];
+
+      if (uniqueUserIds.length > 0) {
+        const notifications = uniqueUserIds.map((userId) => ({
+          title,
+          message,
+          user_id: userId,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (error) throw error;
+      }
+    } catch (err) {
+      console.error("Error creating notification:", err);
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     const statusColors = {
       pending: "bg-yellow-100 text-yellow-800",
@@ -141,6 +180,13 @@ export default function AcquiringRequests() {
       setLoading(true);
 
       if (action === "Delete") {
+        // CREATE NOTIFICATIONS BEFORE DELETING
+        await createNotificationForAcquirers(
+          "Acquiring Request Deleted",
+          `Your supply acquiring request has been deleted by admin.`,
+          selectedRequests
+        );
+
         const { error } = await supabase
           .from("acquiring")
           .delete()
@@ -153,13 +199,13 @@ export default function AcquiringRequests() {
           .from("acquiring")
           .select(
             `
+        id,
+        quantity,
+        supplies!inner (
           id,
-          quantity,
-          supplies!inner (
-            id,
-            quantity
-          )
-        `
+          quantity
+        )
+      `
           )
           .in("id", selectedRequests);
 
@@ -194,6 +240,13 @@ export default function AcquiringRequests() {
 
           if (supplyError) throw supplyError;
         }
+
+        // CREATE NOTIFICATIONS AFTER APPROVAL
+        await createNotificationForAcquirers(
+          "Acquiring Request Approved",
+          `Your supply acquiring request has been approved by admin.`,
+          selectedRequests
+        );
       } else {
         // Reject case
         const status = "Rejected";
@@ -203,6 +256,13 @@ export default function AcquiringRequests() {
           .in("id", selectedRequests);
 
         if (error) throw error;
+
+        // CREATE NOTIFICATIONS AFTER REJECTION
+        await createNotificationForAcquirers(
+          "Acquiring Request Rejected",
+          `Your supply acquiring request has been rejected by admin.`,
+          selectedRequests
+        );
       }
 
       // Refresh the data and clear selections
