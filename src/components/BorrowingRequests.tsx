@@ -420,6 +420,13 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // CREATE NOTIFICATIONS BEFORE DELETING THE RECORDS
+      await createNotificationForBorrowers(
+        "Borrowing Request Deleted",
+        `Your borrowing request has been deleted by admin.`,
+        selectedItems
+      );
+
       // First, delete related return_notifications to avoid foreign key constraint
       const { error: returnNotifError } = await supabase
         .from("return_notifications")
@@ -435,13 +442,6 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (borrowingError) throw borrowingError;
-
-      // Create notifications for affected borrowers
-      await createNotificationForBorrowers(
-        "Borrowing Request Deleted",
-        `Your borrowing request has been deleted by admin.`,
-        selectedItems
-      );
 
       // Refresh the data and clear selection
       await fetchRequests();
