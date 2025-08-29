@@ -28,6 +28,7 @@ interface BorrowingRequest {
   end_date?: string;
   date_returned?: string;
   created_at?: string;
+  borrowers_id?: string;
   equipments?: {
     name: string;
   };
@@ -134,21 +135,40 @@ export default function BorrowingRequests() {
     }
   };
 
-  const createNotification = async (
+  const createNotificationForBorrowers = async (
     title: string,
     message: string,
-    userId?: string
+    borrowingIds: string[]
   ) => {
     try {
-      const { error } = await supabase.from("notifications").insert({
-        title,
-        message,
-        user_id: userId || null, // null for system-wide notifications
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
+      // Get the borrower IDs for the selected requests
+      const { data: borrowingData, error: borrowingError } = await supabase
+        .from("borrowing")
+        .select("borrowers_id")
+        .in("id", borrowingIds);
 
-      if (error) throw error;
+      if (borrowingError) throw borrowingError;
+
+      // Create unique borrower IDs (in case same user has multiple requests)
+      const uniqueBorrowerIds = [
+        ...new Set(borrowingData?.map((b) => b.borrowers_id) || []),
+      ];
+
+      if (uniqueBorrowerIds.length > 0) {
+        const notifications = uniqueBorrowerIds.map((borrowerId) => ({
+          title,
+          message,
+          user_id: borrowerId,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }));
+
+        const { error } = await supabase
+          .from("notifications")
+          .insert(notifications);
+
+        if (error) throw error;
+      }
     } catch (err) {
       console.error("Error creating notification:", err);
     }
@@ -211,11 +231,21 @@ export default function BorrowingRequests() {
     }
   };
 
+  // In handleConfirmReturn
   const handleConfirmReturn = async (
     notificationId: number,
     borrowingId: number
   ) => {
     try {
+      // Get borrower ID first
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select("borrowers_id")
+        .eq("id", borrowingId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       // Update borrowing record
       const { error: borrowingError } = await supabase
         .from("borrowing")
@@ -239,10 +269,16 @@ export default function BorrowingRequests() {
 
       if (notificationError) throw notificationError;
 
-      await createNotification(
-        "Item Return Confirmed",
-        "An item return has been confirmed by admin."
-      );
+      // Create notification for specific borrower
+      if (borrowingData?.borrowers_id) {
+        await supabase.from("notifications").insert({
+          title: "Item Return Confirmed",
+          message: "Your item return has been confirmed by admin.",
+          user_id: borrowingData.borrowers_id,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
 
       // Refresh data
       fetchRequests();
@@ -255,6 +291,22 @@ export default function BorrowingRequests() {
 
   const handleRejectReturn = async (notificationId: number) => {
     try {
+      // Get borrowing info first
+      const { data: returnNotifData, error: fetchError } = await supabase
+        .from("return_notifications")
+        .select(
+          `
+        borrowing_id,
+        borrowing!borrowing_id (
+          borrowers_id
+        )
+      `
+        )
+        .eq("id", notificationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("return_notifications")
         .update({
@@ -265,10 +317,20 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
-      await createNotification(
-        "Item Return Rejected",
-        "An item return request has been rejected by admin."
-      );
+      // Create notification for specific borrower
+      if (
+        returnNotifData?.borrowing &&
+        Array.isArray(returnNotifData.borrowing) &&
+        returnNotifData.borrowing[0]?.borrowers_id
+      ) {
+        await supabase.from("notifications").insert({
+          title: "Item Return Rejected",
+          message: "Your item return request has been rejected by admin.",
+          user_id: returnNotifData.borrowing[0].borrowers_id,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
+      }
 
       fetchReturnNotifications();
     } catch (err) {
@@ -293,11 +355,10 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
-      await createNotification(
-        "Borrowing Requests Approved",
-        `${selectedItems.length} borrowing request${
-          selectedItems.length !== 1 ? "s have" : " has"
-        } been approved by admin.`
+      await createNotificationForBorrowers(
+        "Borrowing Request Approved",
+        `Your borrowing request has been approved by admin.`,
+        selectedItems
       );
 
       // Refresh the data and clear selection
@@ -327,11 +388,10 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
-      await createNotification(
-        "Borrowing Requests Rejected",
-        `${selectedItems.length} borrowing request${
-          selectedItems.length !== 1 ? "s have" : " has"
-        } been rejected by admin.`
+      await createNotificationForBorrowers(
+        "Borrowing Request Rejected",
+        `Your borrowing request has been rejected by admin.`,
+        selectedItems
       );
 
       // Refresh the data and clear selection
@@ -367,11 +427,10 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
-      await createNotification(
-        "Borrowing Requests Deleted",
-        `${selectedItems.length} borrowing request${
-          selectedItems.length !== 1 ? "s have" : " has"
-        } been deleted by admin.`
+      await createNotificationForBorrowers(
+        "Borrowing Request Deleted",
+        `Your borrowing request has been deleted by admin.`,
+        selectedItems
       );
 
       // Refresh the data and clear selection
