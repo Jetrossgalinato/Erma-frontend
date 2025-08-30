@@ -3,7 +3,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Upload } from "lucide-react";
+import {
+  Upload,
+  Loader2,
+  Filter,
+  ChevronDown,
+  Settings,
+  Plus,
+  Download,
+  Edit,
+  Trash2,
+  X,
+  AlertTriangle,
+  Building,
+  Tag,
+  RefreshCw,
+} from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -984,33 +999,9 @@ export default function DashboardEquipmentPage() {
                           : "bg-white text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"
-                        />
-                      </svg>
+                      <Filter className="w-4 h-4 mr-2" />
                       Filter
-                      <svg
-                        className="w-4 h-4 ml-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <ChevronDown className="w-4 h-4 ml-1" />
                     </button>
 
                     {/* Filter Dropdown Menu */}
@@ -1021,38 +1012,14 @@ export default function DashboardEquipmentPage() {
                             onClick={() => handleFilterSelect("category")}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
-                            <svg
-                              className="w-4 h-4 mr-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                              />
-                            </svg>
+                            <Tag className="w-4 h-4 mr-3" />
                             Filter by Category
                           </button>
                           <button
                             onClick={() => handleFilterSelect("facility")}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
-                            <svg
-                              className="w-4 h-4 mr-3"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                              />
-                            </svg>
+                            <Building className="w-4 h-4 mr-3" />
                             Filter by Facility
                           </button>
                         </div>
@@ -1097,19 +1064,7 @@ export default function DashboardEquipmentPage() {
                       onClick={clearFilters}
                       className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                     >
-                      <svg
-                        className="w-4 h-4 mr-1 inline"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <X className="w-4 h-4 mr-1 inline" />
                       Clear
                     </button>
                   )}
@@ -1122,33 +1077,9 @@ export default function DashboardEquipmentPage() {
                       }
                       className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                     >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
-                        />
-                      </svg>
+                      <Settings className="w-4 h-4 mr-2" />
                       Actions
-                      <svg
-                        className="w-4 h-4 ml-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <ChevronDown className="w-4 h-4 ml-2" />
                     </button>
 
                     {/* Actions Dropdown Menu */}
@@ -1163,19 +1094,7 @@ export default function DashboardEquipmentPage() {
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
-                            <svg
-                              className="w-4 h-4 mr-3 text-green-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4v16m8-8H4"
-                              />
-                            </svg>
+                            <Plus className="w-4 h-4 mr-3 text-green-600" />
                             Insert Row
                           </button>
 
@@ -1187,19 +1106,7 @@ export default function DashboardEquipmentPage() {
                             }}
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
-                            <svg
-                              className="w-4 h-4 mr-3 text-green-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-                              />
-                            </svg>
+                            <Download className="w-4 h-4 mr-3 text-green-600" />
                             Import Data from CSV File
                           </button>
 
@@ -1218,17 +1125,13 @@ export default function DashboardEquipmentPage() {
                                 : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                             }`}
                           >
-                            <svg
+                            <Edit
                               className={`w-4 h-4 mr-3 ${
                                 selectedRows.length !== 1
                                   ? "text-gray-400"
                                   : "text-blue-600"
                               }`}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
+                            />
                             Edit Selected (
                             {selectedRows.length === 1
                               ? "1"
@@ -1249,23 +1152,13 @@ export default function DashboardEquipmentPage() {
                                 : "text-gray-700 hover:bg-red-50 hover:text-red-900"
                             }`}
                           >
-                            <svg
+                            <Trash2
                               className={`w-4 h-4 mr-3 ${
                                 selectedRows.length === 0
                                   ? "text-gray-400"
                                   : "text-red-600"
                               }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
+                            />
                             Delete Selected ({selectedRows.length})
                           </button>
                         </div>
@@ -1283,19 +1176,7 @@ export default function DashboardEquipmentPage() {
                       <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
                         <div className="p-6">
                           <div className="flex items-center justify-center">
-                            <svg
-                              className="h-10 w-10 text-red-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
+                            <AlertTriangle className="h-10 w-10 text-red-600" />
                           </div>
                           <div className="mt-3 text-center">
                             <h3 className="text-lg font-medium text-gray-900">
@@ -1340,13 +1221,11 @@ export default function DashboardEquipmentPage() {
                         : "hover:shadow-md"
                     }`}
                   >
-                    <span
-                      className={`inline-block mr-2 transition-transform duration-300 ${
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 transition-transform duration-300 ${
                         isRefreshing ? "animate-spin" : ""
                       }`}
-                    >
-                      ⟳
-                    </span>
+                    />
                     {isRefreshing ? "Refreshing..." : "Refresh"}
                   </button>
                 </div>
@@ -1354,7 +1233,7 @@ export default function DashboardEquipmentPage() {
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                  <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
                   <span className="ml-3 text-gray-600">
                     Loading equipments...
                   </span>
@@ -2207,19 +2086,7 @@ export default function DashboardEquipmentPage() {
                       className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <svg
-                        className="mx-auto h-8 w-8 text-gray-400 mb-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
+                      <Upload className="mx-auto h-8 w-8 text-gray-400 mb-3" />
                       <p className="text-sm text-gray-600 mb-1">
                         {selectedFile
                           ? selectedFile.name
@@ -2740,19 +2607,7 @@ export default function DashboardEquipmentPage() {
               className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
               title="Close (Esc)"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-6 h-6" />
             </button>
 
             {/* Equipment name - Fixed to top-left */}
