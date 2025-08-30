@@ -343,7 +343,7 @@ const Navbar: React.FC = () => {
                       key={notification.id}
                       onClick={() => markNotificationAsRead(notification.id)}
                       className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                        !notification.is_read ? "bg-blue-50" : ""
+                        !notification.is_read ? "bg-orange-50" : ""
                       }`}
                     >
                       <div className="text-sm font-medium text-gray-800">
@@ -523,7 +523,7 @@ const Navbar: React.FC = () => {
                         key={notification.id}
                         onClick={() => markNotificationAsRead(notification.id)}
                         className={`px-4 py-3 border-b border-gray-100 cursor-pointer ${
-                          !notification.is_read ? "bg-blue-50" : ""
+                          !notification.is_read ? "bg-orange-50" : ""
                         }`}
                       >
                         <div className="text-sm font-medium text-gray-800">
