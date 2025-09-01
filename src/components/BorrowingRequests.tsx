@@ -492,12 +492,66 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get equipment details for selected requests
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select(
+          `
+        id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
+        .in("id", selectedItems);
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("borrowing")
         .update({ request_status: "Rejected", availability: "Available" })
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      // Create equipment logs for each rejected request
+      if (borrowingData) {
+        for (const request of borrowingData as BorrowingDataWithRelations[]) {
+          // Handle equipment name with proper type checking
+          let equipmentName = "Unknown Item";
+          if (request.equipments) {
+            if (Array.isArray(request.equipments)) {
+              equipmentName = request.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = request.equipments.name || "Unknown Item";
+            }
+          }
+
+          // Handle borrower name with proper type checking
+          let borrowerName = "Unknown Borrower";
+          if (request.account_requests) {
+            if (Array.isArray(request.account_requests)) {
+              const borrower = request.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${request.account_requests.first_name || ""} ${
+                  request.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `BORROWING REJECTED: Equipment "${equipmentName}" borrowing request rejected by admin ${adminName} for borrower ${borrowerName}. `
+          );
+        }
+      }
 
       await createNotificationForBorrowers(
         "Borrowing Request Rejected",
