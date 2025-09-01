@@ -4,30 +4,10 @@ import Sidebar from "@/components/Sidebar";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-interface AccountRequest {
-  id: number;
-  first_name: string;
-  last_name: string;
-}
-
-interface EquipmentLogRaw {
-  id: number;
-  log_message: string;
-  created_at: string;
-  requesters_id: number | null;
-  admin_id: number | null;
-  requester: AccountRequest[] | null;
-  admin: AccountRequest[] | null;
-}
-
 interface EquipmentLog {
   id: number;
   log_message: string;
   created_at: string;
-  requesters_id: number | null;
-  admin_id: number | null;
-  requester: AccountRequest | null;
-  admin: AccountRequest | null;
 }
 
 export default function MonitorEquipmentPage() {
@@ -47,26 +27,17 @@ export default function MonitorEquipmentPage() {
           .from("equipment_logs")
           .select(
             `
-      id,
-      log_message,
-      created_at,
-      requesters_id,
-      admin_id,
-      requester:account_requests!requesters_id(id, first_name, last_name),
-      admin:account_requests!admin_id(id, first_name, last_name)
-    `
+    id,
+    log_message,
+    created_at
+  `
           )
           .order("created_at", { ascending: false });
 
         if (error) throw error;
 
-        setEquipmentLogs(
-          (data || []).map((log: EquipmentLogRaw) => ({
-            ...log,
-            requester: log.requester?.[0] || null,
-            admin: log.admin?.[0] || null,
-          }))
-        );
+        // Add this line to actually use the fetched data
+        setEquipmentLogs(data || []);
       } catch (error) {
         console.error("Error fetching equipment logs:", error);
       } finally {
