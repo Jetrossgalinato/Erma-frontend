@@ -2,6 +2,7 @@
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import { useState, useEffect, useCallback } from "react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface EquipmentLog {
@@ -106,8 +107,16 @@ export default function MonitorEquipmentPage() {
                     rejections, modifications, and deletions.
                   </p>
                 </div>
+                <button
+                  onClick={() => fetchEquipmentLogs(currentPage)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </button>
               </div>
             </div>
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="bg-white shadow-sm rounded-lg border border-gray-200">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -117,10 +126,11 @@ export default function MonitorEquipmentPage() {
                 </div>
                 <div className="overflow-x-auto">
                   {loading ? (
-                    <div className="flex justify-center items-center py-8">
-                      <div className="text-gray-500">
-                        Loading equipment logs...
-                      </div>
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
+                      <span className="ml-3 text-gray-600">
+                        Loading requests...
+                      </span>
                     </div>
                   ) : (
                     <table className="min-w-full divide-y divide-gray-200">
