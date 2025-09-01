@@ -59,6 +59,23 @@ interface ReturnNotification {
   };
 }
 
+interface EquipmentData {
+  name: string;
+}
+
+interface AccountData {
+  first_name: string;
+  last_name: string;
+}
+
+interface BorrowingDataWithRelations {
+  id: string;
+  borrowed_item: string;
+  equipments: EquipmentData | EquipmentData[] | null;
+  account_requests: AccountData | AccountData[] | null;
+  borrowers_id?: string;
+}
+
 const supabase = createClientComponentClient();
 
 export default function BorrowingRequests() {
@@ -132,6 +149,46 @@ export default function BorrowingRequests() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createEquipmentLog = async (logMessage: string) => {
+    try {
+      const logEntry = {
+        log_message: logMessage,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from("equipment_logs").insert(logEntry);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Error creating equipment log:", err);
+    }
+  };
+
+  const getCurrentAdminUser = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return "Unknown Admin";
+
+      const { data: adminData, error } = await supabase
+        .from("account_requests")
+        .select("first_name, last_name")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error || !adminData) return "Unknown Admin";
+
+      return (
+        `${adminData.first_name || ""} ${adminData.last_name || ""}`.trim() ||
+        "Unknown Admin"
+      );
+    } catch (err) {
+      console.error("Error getting admin user:", err);
+      return "Unknown Admin";
     }
   };
 
@@ -345,6 +402,24 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get equipment details for selected requests
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select(
+          `
+        id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
+        .in("id", selectedItems);
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("borrowing")
         .update({
@@ -354,6 +429,42 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      // Create equipment logs for each approved request
+      if (borrowingData) {
+        for (const request of borrowingData as BorrowingDataWithRelations[]) {
+          // Handle equipment name with proper type checking
+          let equipmentName = "Unknown Item";
+          if (request.equipments) {
+            if (Array.isArray(request.equipments)) {
+              equipmentName = request.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = request.equipments.name || "Unknown Item";
+            }
+          }
+
+          // Handle borrower name with proper type checking
+          let borrowerName = "Unknown Borrower";
+          if (request.account_requests) {
+            if (Array.isArray(request.account_requests)) {
+              const borrower = request.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${request.account_requests.first_name || ""} ${
+                  request.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `BORROWING APPROVED: Equipment "${equipmentName}" borrowing request approved by admin ${adminName} for borrower ${borrowerName}.`
+          );
+        }
+      }
 
       await createNotificationForBorrowers(
         "Borrowing Request Approved",
