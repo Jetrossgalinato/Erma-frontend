@@ -80,6 +80,18 @@ interface BorrowingDataSingle extends BorrowingDataWithRelations {
   borrowers_id: string;
 }
 
+interface ReturnNotificationBorrowing {
+  borrowers_id: string;
+  borrowed_item: string;
+  equipments: EquipmentData | EquipmentData[] | null;
+  account_requests: AccountData | AccountData[] | null;
+}
+
+interface ReturnNotificationData {
+  borrowing_id: number;
+  borrowing: ReturnNotificationBorrowing | ReturnNotificationBorrowing[] | null;
+}
+
 const supabase = createClientComponentClient();
 
 export default function BorrowingRequests() {
@@ -361,7 +373,7 @@ export default function BorrowingRequests() {
         }
 
         await createEquipmentLog(
-          `ITEM RETURNED: Equipment "${equipmentName}" (ID: ${typedData.borrowed_item}) return confirmed by admin ${adminName}. Returned by borrower ${borrowerName}. Borrowing ID: ${borrowingId}`
+          `ITEM RETURNED: Equipment "${equipmentName}" return confirmed by admin ${adminName}. Returned by borrower ${borrowerName}.`
         );
       }
 
@@ -398,6 +410,9 @@ export default function BorrowingRequests() {
 
   const handleRejectReturn = async (notificationId: number) => {
     try {
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
       // Get borrowing info first
       const { data: returnNotifData, error: fetchError } = await supabase
         .from("return_notifications")
@@ -405,7 +420,10 @@ export default function BorrowingRequests() {
           `
         borrowing_id,
         borrowing!borrowing_id (
-          borrowers_id
+          borrowers_id,
+          borrowed_item,
+          equipments!borrowed_item(name),
+          account_requests!borrowers_id(first_name, last_name)
         )
       `
         )
@@ -424,19 +442,62 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
+      // Create equipment log
+      if (returnNotifData) {
+        const typedData = returnNotifData as ReturnNotificationData;
+
+        if (typedData.borrowing && !Array.isArray(typedData.borrowing)) {
+          const borrowingInfo = typedData.borrowing;
+
+          let equipmentName = "Unknown Item";
+          if (borrowingInfo.equipments) {
+            if (Array.isArray(borrowingInfo.equipments)) {
+              equipmentName =
+                borrowingInfo.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = borrowingInfo.equipments.name || "Unknown Item";
+            }
+          }
+
+          let borrowerName = "Unknown Borrower";
+          if (borrowingInfo.account_requests) {
+            if (Array.isArray(borrowingInfo.account_requests)) {
+              const borrower = borrowingInfo.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${borrowingInfo.account_requests.first_name || ""} ${
+                  borrowingInfo.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `RETURN REQUEST REJECTED: Equipment "${equipmentName}" return request rejected by admin ${adminName}. Request from borrower ${borrowerName}.`
+          );
+        }
+      }
+
       // Create notification for specific borrower
-      if (
-        returnNotifData?.borrowing &&
-        Array.isArray(returnNotifData.borrowing) &&
-        returnNotifData.borrowing[0]?.borrowers_id
-      ) {
-        await supabase.from("notifications").insert({
-          title: "Item Return Rejected",
-          message: "Your item return request has been rejected by admin.",
-          user_id: returnNotifData.borrowing[0].borrowers_id,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        });
+      if (returnNotifData) {
+        const typedData = returnNotifData as ReturnNotificationData;
+
+        if (
+          typedData.borrowing &&
+          !Array.isArray(typedData.borrowing) &&
+          typedData.borrowing.borrowers_id
+        ) {
+          await supabase.from("notifications").insert({
+            title: "Item Return Rejected",
+            message: "Your item return request has been rejected by admin.",
+            user_id: typedData.borrowing.borrowers_id,
+            is_read: false,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
 
       fetchReturnNotifications();
