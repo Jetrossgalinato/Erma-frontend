@@ -27,10 +27,10 @@ export default function MonitorEquipmentPage() {
           .from("equipment_logs")
           .select(
             `
-    id,
-    log_message,
-    created_at
-  `
+              id,
+              log_message,
+              created_at
+            `
           )
           .order("created_at", { ascending: false });
 
@@ -109,7 +109,7 @@ export default function MonitorEquipmentPage() {
                         {equipmentLogs.length === 0 ? (
                           <tr>
                             <td
-                              colSpan={5}
+                              colSpan={1}
                               className="px-6 py-8 text-center text-gray-500"
                             >
                               No equipment logs found
@@ -118,9 +118,19 @@ export default function MonitorEquipmentPage() {
                         ) : (
                           equipmentLogs.map((log) => (
                             <tr key={log.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 text-sm text-gray-900">
-                                <div className="max-w-full break-words ">
-                                  {log.log_message}
+                              <td className="px-6 py-4 text-sm">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1 text-gray-900 break-words pr-4">
+                                    {log.log_message}
+                                  </div>
+                                  <div className="text-xs text-gray-500 whitespace-nowrap">
+                                    {new Date(
+                                      log.created_at
+                                    ).toLocaleDateString()}{" "}
+                                    {new Date(
+                                      log.created_at
+                                    ).toLocaleTimeString()}
+                                  </div>
                                 </div>
                               </td>
                             </tr>
