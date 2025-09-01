@@ -103,13 +103,7 @@ export default function MonitorEquipmentPage() {
                     </div>
                   ) : (
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Log Message
-                          </th>
-                        </tr>
-                      </thead>
+                      <thead className="bg-gray-50"></thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {equipmentLogs.length === 0 ? (
                           <tr>
@@ -124,7 +118,7 @@ export default function MonitorEquipmentPage() {
                           equipmentLogs.map((log) => (
                             <tr key={log.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 text-sm text-gray-900">
-                                <div className="max-w-xs truncate">
+                                <div className="max-w-full break-words ">
                                   {log.log_message}
                                 </div>
                               </td>
