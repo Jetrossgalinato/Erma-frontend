@@ -17,6 +17,7 @@ import {
   Edit,
   Trash2,
   RotateCcw,
+  RefreshCw,
   AlertTriangle,
 } from "lucide-react";
 
@@ -1023,13 +1024,11 @@ export default function DashboardSuppliesPage() {
                         : "hover:shadow-md"
                     }`}
                   >
-                    <span
-                      className={`inline-block mr-2 transition-transform duration-300 ${
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 transition-transform duration-300 ${
                         isRefreshing ? "animate-spin" : ""
                       }`}
-                    >
-                      ⟳
-                    </span>
+                    />
                     {isRefreshing ? "Refreshing..." : "Refresh"}
                   </button>
                 </div>
