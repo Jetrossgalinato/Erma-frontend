@@ -1,7 +1,7 @@
 "use client";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface EquipmentLog {
@@ -19,34 +19,54 @@ export default function MonitorEquipmentPage() {
   const [loading, setLoading] = useState(true);
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    const fetchEquipmentLogs = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
+
+  const fetchEquipmentLogs = useCallback(
+    async (page = 1) => {
       try {
         setLoading(true);
+
+        // Calculate offset for pagination
+        const offset = (page - 1) * itemsPerPage;
+
+        // First, get the total count
+        const { count, error: countError } = await supabase
+          .from("equipment_logs")
+          .select("*", { count: "exact", head: true });
+
+        if (countError) throw countError;
+        setTotalCount(count || 0);
+
+        // Then get the paginated data
         const { data, error } = await supabase
           .from("equipment_logs")
           .select(
             `
-              id,
-              log_message,
-              created_at
-            `
+        id,
+        log_message,
+        created_at
+      `
           )
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .range(offset, offset + itemsPerPage - 1);
 
         if (error) throw error;
-
-        // Add this line to actually use the fetched data
         setEquipmentLogs(data || []);
       } catch (error) {
         console.error("Error fetching equipment logs:", error);
       } finally {
         setLoading(false);
       }
-    };
+    },
+    [supabase, itemsPerPage]
+  ); // Add dependencies for useCallback
 
-    fetchEquipmentLogs();
-  }, [supabase]);
+  // 4. Update the useEffect dependencies
+  useEffect(() => {
+    fetchEquipmentLogs(currentPage);
+  }, [fetchEquipmentLogs, currentPage]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -140,6 +160,82 @@ export default function MonitorEquipmentPage() {
                     </table>
                   )}
                 </div>
+                {/* Pagination Controls */}
+                {!loading && equipmentLogs.length > 0 && (
+                  <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                      {Math.min(currentPage * itemsPerPage, totalCount)} of{" "}
+                      {totalCount} results
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm border border-gray-300 text-gray-800 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+
+                      {/* Page numbers */}
+                      {Array.from(
+                        { length: Math.ceil(totalCount / itemsPerPage) },
+                        (_, i) => i + 1
+                      )
+                        .filter((page) => {
+                          const totalPages = Math.ceil(
+                            totalCount / itemsPerPage
+                          );
+                          if (totalPages <= 7) return true;
+                          if (page <= 3) return true;
+                          if (page >= totalPages - 2) return true;
+                          if (Math.abs(page - currentPage) <= 1) return true;
+                          return false;
+                        })
+                        .map((page, index, array) => {
+                          const prevPage = array[index - 1];
+                          const showEllipsis = prevPage && page - prevPage > 1;
+
+                          return (
+                            <div key={page} className="flex items-center">
+                              {showEllipsis && (
+                                <span className="px-2 text-gray-500">...</span>
+                              )}
+                              <button
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-3 py-1 text-sm border rounded-md ${
+                                  currentPage === page
+                                    ? "bg-blue-500 text-white border-blue-500"
+                                    : "border-gray-300 hover:bg-gray-50"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                      <button
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(
+                              prev + 1,
+                              Math.ceil(totalCount / itemsPerPage)
+                            )
+                          )
+                        }
+                        disabled={
+                          currentPage >= Math.ceil(totalCount / itemsPerPage)
+                        }
+                        className="px-3 py-1 text-sm border border-gray-300 text-gray-800 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
