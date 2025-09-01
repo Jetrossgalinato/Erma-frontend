@@ -81,8 +81,9 @@ export default function MonitorEquipmentPage() {
                     Equipment Monitoring
                   </h1>
                   <p className="mt-2 text-sm text-gray-600">
-                    View and track the status of all equipment in real time,
-                    including availability, usage, and maintenance updates.
+                    View detailed logs of all user interactions with equipment
+                    records and borrowing requests, including approvals,
+                    rejections, modifications, and deletions.
                   </p>
                 </div>
               </div>
