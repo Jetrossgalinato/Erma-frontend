@@ -113,6 +113,12 @@ export default function DashboardEquipmentPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
 
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    full_name?: string;
+  } | null>(null);
+
   const [, setUser] = useState<SupabaseUser | null>(null);
   const [, setAuthLoading] = useState(true);
   const router = useRouter();
@@ -137,6 +143,12 @@ export default function DashboardEquipmentPage() {
         }
 
         setUser(session.user);
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          full_name:
+            session.user.user_metadata?.full_name || session.user.email,
+        });
 
         // Allow all authenticated users for now
         // TODO: Add role-based restrictions if needed
@@ -163,6 +175,35 @@ export default function DashboardEquipmentPage() {
 
     return () => subscription.unsubscribe();
   }, [router, supabase]);
+
+  const logEquipmentAction = async (
+    action: string,
+    equipmentName?: string,
+    details?: string
+  ) => {
+    if (!currentUser) return;
+
+    const logMessage = equipmentName
+      ? `${
+          currentUser.full_name || currentUser.email
+        } ${action} equipment: ${equipmentName}${
+          details ? ` - ${details}` : ""
+        }`
+      : `${currentUser.full_name || currentUser.email} ${action}${
+          details ? ` - ${details}` : ""
+        }`;
+
+    try {
+      await supabase.from("equipment_logs").insert([
+        {
+          log_message: logMessage,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error logging equipment action:", error);
+    }
+  };
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -240,6 +281,17 @@ export default function DashboardEquipmentPage() {
       console.error("Error deleting equipments:", error);
       alert("Failed to delete selected equipments");
     } else {
+      const deletedNames = equipments
+        .filter((eq) => selectedRows.includes(eq.id))
+        .map((eq) => eq.name)
+        .join(", ");
+
+      await logEquipmentAction(
+        `deleted ${selectedRows.length} equipment(s)`,
+        undefined,
+        `Items: ${deletedNames}`
+      );
+
       // Update local state by filtering out all selected rows
       setEquipments((prev) =>
         prev.filter((eq) => !selectedRows.includes(eq.id))
@@ -372,6 +424,7 @@ export default function DashboardEquipmentPage() {
       console.error("Error inserting equipment:", error);
       alert("Failed to insert equipment");
     } else {
+      await logEquipmentAction("added", newEquipment.name);
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
       clearImageSelection();
@@ -655,6 +708,12 @@ export default function DashboardEquipmentPage() {
         console.error("Error importing equipment:", error);
         alert("Failed to import equipment. Please try again.");
       } else {
+        await logEquipmentAction(
+          `imported ${validData.length} equipment(s) from CSV`,
+          undefined,
+          `File: ${selectedFile?.name}`
+        );
+
         alert(`Successfully imported ${validData.length} equipment records!`);
         setShowImportModal(false);
         setSelectedFile(null);
@@ -748,6 +807,7 @@ export default function DashboardEquipmentPage() {
       console.error("Error updating equipment:", error);
       alert("Failed to update equipment");
     } else {
+      await logEquipmentAction("updated", updatedEquipment.name);
       // Update local state with the new data
       setEquipments((prev) =>
         prev.map((eq) => (eq.id === id ? updatedEquipment : eq))

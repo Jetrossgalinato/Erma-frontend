@@ -59,6 +59,39 @@ interface ReturnNotification {
   };
 }
 
+interface EquipmentData {
+  name: string;
+}
+
+interface AccountData {
+  first_name: string;
+  last_name: string;
+}
+
+interface BorrowingDataWithRelations {
+  id: string;
+  borrowed_item: string;
+  equipments: EquipmentData | EquipmentData[] | null;
+  account_requests: AccountData | AccountData[] | null;
+  borrowers_id?: string;
+}
+
+interface BorrowingDataSingle extends BorrowingDataWithRelations {
+  borrowers_id: string;
+}
+
+interface ReturnNotificationBorrowing {
+  borrowers_id: string;
+  borrowed_item: string;
+  equipments: EquipmentData | EquipmentData[] | null;
+  account_requests: AccountData | AccountData[] | null;
+}
+
+interface ReturnNotificationData {
+  borrowing_id: number;
+  borrowing: ReturnNotificationBorrowing | ReturnNotificationBorrowing[] | null;
+}
+
 const supabase = createClientComponentClient();
 
 export default function BorrowingRequests() {
@@ -132,6 +165,46 @@ export default function BorrowingRequests() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createEquipmentLog = async (logMessage: string) => {
+    try {
+      const logEntry = {
+        log_message: logMessage,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from("equipment_logs").insert(logEntry);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Error creating equipment log:", err);
+    }
+  };
+
+  const getCurrentAdminUser = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return "Unknown Admin";
+
+      const { data: adminData, error } = await supabase
+        .from("account_requests")
+        .select("first_name, last_name")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error || !adminData) return "Unknown Admin";
+
+      return (
+        `${adminData.first_name || ""} ${adminData.last_name || ""}`.trim() ||
+        "Unknown Admin"
+      );
+    } catch (err) {
+      console.error("Error getting admin user:", err);
+      return "Unknown Admin";
     }
   };
 
@@ -237,10 +310,20 @@ export default function BorrowingRequests() {
     borrowingId: number
   ) => {
     try {
-      // Get borrower ID first
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get borrower ID and equipment details first
       const { data: borrowingData, error: fetchError } = await supabase
         .from("borrowing")
-        .select("borrowers_id")
+        .select(
+          `
+        borrowers_id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
         .eq("id", borrowingId)
         .single();
 
@@ -257,6 +340,42 @@ export default function BorrowingRequests() {
         .eq("id", borrowingId);
 
       if (borrowingError) throw borrowingError;
+
+      // Create equipment log
+      if (borrowingData) {
+        const typedData = borrowingData as BorrowingDataSingle;
+
+        // Handle equipment name with proper type checking
+        let equipmentName = "Unknown Item";
+        if (typedData.equipments) {
+          if (Array.isArray(typedData.equipments)) {
+            equipmentName = typedData.equipments[0]?.name || "Unknown Item";
+          } else {
+            equipmentName = typedData.equipments.name || "Unknown Item";
+          }
+        }
+
+        // Handle borrower name with proper type checking
+        let borrowerName = "Unknown Borrower";
+        if (typedData.account_requests) {
+          if (Array.isArray(typedData.account_requests)) {
+            const borrower = typedData.account_requests[0];
+            borrowerName =
+              `${borrower?.first_name || ""} ${
+                borrower?.last_name || ""
+              }`.trim() || "Unknown Borrower";
+          } else {
+            borrowerName =
+              `${typedData.account_requests.first_name || ""} ${
+                typedData.account_requests.last_name || ""
+              }`.trim() || "Unknown Borrower";
+          }
+        }
+
+        await createEquipmentLog(
+          `ITEM RETURNED: Equipment "${equipmentName}" return confirmed by admin ${adminName}. Returned by borrower ${borrowerName}.`
+        );
+      }
 
       // Update notification status
       const { error: notificationError } = await supabase
@@ -291,6 +410,9 @@ export default function BorrowingRequests() {
 
   const handleRejectReturn = async (notificationId: number) => {
     try {
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
       // Get borrowing info first
       const { data: returnNotifData, error: fetchError } = await supabase
         .from("return_notifications")
@@ -298,7 +420,10 @@ export default function BorrowingRequests() {
           `
         borrowing_id,
         borrowing!borrowing_id (
-          borrowers_id
+          borrowers_id,
+          borrowed_item,
+          equipments!borrowed_item(name),
+          account_requests!borrowers_id(first_name, last_name)
         )
       `
         )
@@ -317,19 +442,62 @@ export default function BorrowingRequests() {
 
       if (error) throw error;
 
+      // Create equipment log
+      if (returnNotifData) {
+        const typedData = returnNotifData as ReturnNotificationData;
+
+        if (typedData.borrowing && !Array.isArray(typedData.borrowing)) {
+          const borrowingInfo = typedData.borrowing;
+
+          let equipmentName = "Unknown Item";
+          if (borrowingInfo.equipments) {
+            if (Array.isArray(borrowingInfo.equipments)) {
+              equipmentName =
+                borrowingInfo.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = borrowingInfo.equipments.name || "Unknown Item";
+            }
+          }
+
+          let borrowerName = "Unknown Borrower";
+          if (borrowingInfo.account_requests) {
+            if (Array.isArray(borrowingInfo.account_requests)) {
+              const borrower = borrowingInfo.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${borrowingInfo.account_requests.first_name || ""} ${
+                  borrowingInfo.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `RETURN REQUEST REJECTED: Equipment "${equipmentName}" return request rejected by admin ${adminName}. Request from borrower ${borrowerName}.`
+          );
+        }
+      }
+
       // Create notification for specific borrower
-      if (
-        returnNotifData?.borrowing &&
-        Array.isArray(returnNotifData.borrowing) &&
-        returnNotifData.borrowing[0]?.borrowers_id
-      ) {
-        await supabase.from("notifications").insert({
-          title: "Item Return Rejected",
-          message: "Your item return request has been rejected by admin.",
-          user_id: returnNotifData.borrowing[0].borrowers_id,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        });
+      if (returnNotifData) {
+        const typedData = returnNotifData as ReturnNotificationData;
+
+        if (
+          typedData.borrowing &&
+          !Array.isArray(typedData.borrowing) &&
+          typedData.borrowing.borrowers_id
+        ) {
+          await supabase.from("notifications").insert({
+            title: "Item Return Rejected",
+            message: "Your item return request has been rejected by admin.",
+            user_id: typedData.borrowing.borrowers_id,
+            is_read: false,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
 
       fetchReturnNotifications();
@@ -345,6 +513,24 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get equipment details for selected requests
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select(
+          `
+        id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
+        .in("id", selectedItems);
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("borrowing")
         .update({
@@ -354,6 +540,42 @@ export default function BorrowingRequests() {
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      // Create equipment logs for each approved request
+      if (borrowingData) {
+        for (const request of borrowingData as BorrowingDataWithRelations[]) {
+          // Handle equipment name with proper type checking
+          let equipmentName = "Unknown Item";
+          if (request.equipments) {
+            if (Array.isArray(request.equipments)) {
+              equipmentName = request.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = request.equipments.name || "Unknown Item";
+            }
+          }
+
+          // Handle borrower name with proper type checking
+          let borrowerName = "Unknown Borrower";
+          if (request.account_requests) {
+            if (Array.isArray(request.account_requests)) {
+              const borrower = request.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${request.account_requests.first_name || ""} ${
+                  request.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `BORROWING APPROVED: Equipment "${equipmentName}" borrowing request approved by admin ${adminName} for borrower ${borrowerName}.`
+          );
+        }
+      }
 
       await createNotificationForBorrowers(
         "Borrowing Request Approved",
@@ -381,12 +603,66 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get equipment details for selected requests
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select(
+          `
+        id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
+        .in("id", selectedItems);
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("borrowing")
         .update({ request_status: "Rejected", availability: "Available" })
         .in("id", selectedItems);
 
       if (error) throw error;
+
+      // Create equipment logs for each rejected request
+      if (borrowingData) {
+        for (const request of borrowingData as BorrowingDataWithRelations[]) {
+          // Handle equipment name with proper type checking
+          let equipmentName = "Unknown Item";
+          if (request.equipments) {
+            if (Array.isArray(request.equipments)) {
+              equipmentName = request.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = request.equipments.name || "Unknown Item";
+            }
+          }
+
+          // Handle borrower name with proper type checking
+          let borrowerName = "Unknown Borrower";
+          if (request.account_requests) {
+            if (Array.isArray(request.account_requests)) {
+              const borrower = request.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${request.account_requests.first_name || ""} ${
+                  request.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `BORROWING REJECTED: Equipment "${equipmentName}" borrowing request rejected by admin ${adminName} for borrower ${borrowerName}. `
+          );
+        }
+      }
 
       await createNotificationForBorrowers(
         "Borrowing Request Rejected",
@@ -420,12 +696,66 @@ export default function BorrowingRequests() {
     try {
       setLoading(true);
 
+      // Get current admin user
+      const adminName = await getCurrentAdminUser();
+
+      // Get equipment details for selected requests before deletion
+      const { data: borrowingData, error: fetchError } = await supabase
+        .from("borrowing")
+        .select(
+          `
+        id, 
+        borrowed_item, 
+        equipments!borrowed_item(name),
+        account_requests!borrowers_id(first_name, last_name)
+      `
+        )
+        .in("id", selectedItems);
+
+      if (fetchError) throw fetchError;
+
       // CREATE NOTIFICATIONS BEFORE DELETING THE RECORDS
       await createNotificationForBorrowers(
         "Borrowing Request Deleted",
         `Your borrowing request has been deleted by admin.`,
         selectedItems
       );
+
+      // Create equipment logs before deletion
+      if (borrowingData) {
+        for (const request of borrowingData as BorrowingDataWithRelations[]) {
+          // Handle equipment name with proper type checking
+          let equipmentName = "Unknown Item";
+          if (request.equipments) {
+            if (Array.isArray(request.equipments)) {
+              equipmentName = request.equipments[0]?.name || "Unknown Item";
+            } else {
+              equipmentName = request.equipments.name || "Unknown Item";
+            }
+          }
+
+          // Handle borrower name with proper type checking
+          let borrowerName = "Unknown Borrower";
+          if (request.account_requests) {
+            if (Array.isArray(request.account_requests)) {
+              const borrower = request.account_requests[0];
+              borrowerName =
+                `${borrower?.first_name || ""} ${
+                  borrower?.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            } else {
+              borrowerName =
+                `${request.account_requests.first_name || ""} ${
+                  request.account_requests.last_name || ""
+                }`.trim() || "Unknown Borrower";
+            }
+          }
+
+          await createEquipmentLog(
+            `BORROWING REQUEST DELETED: Equipment "${equipmentName}" borrowing request deleted by admin ${adminName} for borrower ${borrowerName}.`
+          );
+        }
+      }
 
       // First, delete related return_notifications to avoid foreign key constraint
       const { error: returnNotifError } = await supabase

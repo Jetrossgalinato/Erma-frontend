@@ -114,6 +114,7 @@ const Sidebar: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const supabase = createClientComponentClient();
   const [supplyCount, setSupplyCount] = useState<number>(0);
+  const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -291,6 +292,52 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch equipment logs count from Supabase
+  useEffect(() => {
+    const fetchEquipmentLogsCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("equipment_logs")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching equipment logs count:", error);
+          setEquipmentLogsCount(0);
+        } else {
+          setEquipmentLogsCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching equipment logs count:", error);
+        setEquipmentLogsCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEquipmentLogsCount();
+
+    // Optional: Set up real-time subscription to update count when equipment logs are added/removed
+    const subscription = supabase
+      .channel("equipment_logs_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "equipment_logs",
+        },
+        () => {
+          fetchEquipmentLogsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -333,7 +380,7 @@ const Sidebar: React.FC = () => {
     {
       icon: Monitor,
       label: "Equipment Monitoring",
-      count: 0,
+      count: loading ? null : equipmentLogsCount,
       path: "monitor-equipment",
     },
     {
