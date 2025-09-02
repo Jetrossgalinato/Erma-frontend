@@ -68,6 +68,10 @@ export default function DashboardFacilitiesPage() {
   const [itemsPerPage] = useState(11);
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    first_name: string;
+    last_name: string;
+  } | null>(null);
 
   const supabase = createClientComponentClient();
 
@@ -95,6 +99,19 @@ export default function DashboardFacilitiesPage() {
 
         setUser(session.user);
 
+        // Fetch user profile from account_requests table
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
+
         // Allow all authenticated users for now
         // TODO: Add role-based restrictions if needed
       } catch (error) {
@@ -115,6 +132,19 @@ export default function DashboardFacilitiesPage() {
         router.push("/login");
       } else if (session?.user) {
         setUser(session.user);
+
+        // Fetch user profile when auth state changes
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
       }
     });
 
@@ -530,13 +560,15 @@ export default function DashboardFacilitiesPage() {
     facilityName?: string,
     additionalInfo?: string
   ) => {
-    if (!user) return;
+    if (!user || !userProfile) return;
 
+    const adminName =
+      `${userProfile.first_name} ${userProfile.last_name}`.trim();
     const logMessage = additionalInfo
-      ? `Admin ${user.email} ${action}${
+      ? `Admin ${adminName} ${action}${
           facilityName ? ` facility "${facilityName}"` : ""
         }. ${additionalInfo}`
-      : `Admin ${user.email} ${action}${
+      : `Admin ${adminName} ${action}${
           facilityName ? ` facility "${facilityName}"` : ""
         }`;
 
