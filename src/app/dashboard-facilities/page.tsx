@@ -478,6 +478,11 @@ export default function DashboardFacilitiesPage() {
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
 
+    // Get the names of facilities being deleted for logging
+    const facilityNames = facilities
+      .filter((facility) => selectedRows.includes(facility.id))
+      .map((facility) => facility.name);
+
     const { error } = await supabase
       .from("facilities")
       .delete()
@@ -487,6 +492,13 @@ export default function DashboardFacilitiesPage() {
       console.error("Error deleting facilities:", error);
       alert("Failed to delete selected facilities");
     } else {
+      // Log the delete action
+      await logFacilityAction(
+        "deleted",
+        undefined,
+        `Deleted ${selectedRows.length} facilities: ${facilityNames.join(", ")}`
+      );
+
       // Update local state by filtering out all selected rows
       setFacilities((prev) =>
         prev.filter((facility) => !selectedRows.includes(facility.id))
