@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Bell,
 } from "lucide-react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 // Define the BookingRequest type
 interface BookingRequest {
@@ -70,6 +71,67 @@ export default function BookingRequests() {
     DoneNotification[]
   >([]);
   const [notificationCount, setNotificationCount] = useState(0);
+
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    first_name: string;
+    last_name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error || !session?.user) {
+          console.error("Auth error:", error);
+          return;
+        }
+
+        setUser(session.user);
+
+        // Fetch user profile from account_requests table
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      }
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!profileError) {
+          setUserProfile(profileData);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     fetchRequests();
