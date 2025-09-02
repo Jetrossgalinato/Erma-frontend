@@ -67,9 +67,10 @@ export default function DashboardFacilitiesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
 
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+
   const supabase = createClientComponentClient();
 
-  const [, setUser] = useState<SupabaseUser | null>(null);
   const [, setAuthLoading] = useState(true);
   const router = useRouter();
 
@@ -244,6 +245,9 @@ export default function DashboardFacilitiesPage() {
       console.error("Error updating facility:", error);
       alert("Failed to update facility");
     } else {
+      // Log the edit action
+      await logFacilityAction("updated", editingFacility.name);
+
       // Update local state
       setFacilities((prev) =>
         prev.map((facility) =>
@@ -495,6 +499,33 @@ export default function DashboardFacilitiesPage() {
   useEffect(() => {
     fetchFacilities();
   }, [fetchFacilities]);
+
+  const logFacilityAction = async (
+    action: string,
+    facilityName?: string,
+    additionalInfo?: string
+  ) => {
+    if (!user) return;
+
+    const logMessage = additionalInfo
+      ? `Admin ${user.email} ${action}${
+          facilityName ? ` facility "${facilityName}"` : ""
+        }. ${additionalInfo}`
+      : `Admin ${user.email} ${action}${
+          facilityName ? ` facility "${facilityName}"` : ""
+        }`;
+
+    try {
+      await supabase.from("facility_logs").insert([
+        {
+          log_message: logMessage,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error logging facility action:", error);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
