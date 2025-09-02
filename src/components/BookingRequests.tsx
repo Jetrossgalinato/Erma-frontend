@@ -314,6 +314,22 @@ export default function BookingRequests() {
             .eq("id", notification.booking_id);
 
           if (bookingError) throw bookingError;
+
+          // Log the completion confirmation
+          await logFacilityBookingAction(
+            "confirmed completion of",
+            [notification.booking_id],
+            "Booking marked as completed"
+          );
+        }
+      } else {
+        // Log the dismissal action
+        if (notification) {
+          await logFacilityBookingAction(
+            "dismissed completion notification for",
+            [notification.booking_id],
+            "Completion notification dismissed"
+          );
         }
       }
 
