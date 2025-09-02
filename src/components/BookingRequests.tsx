@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Bell,
 } from "lucide-react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 // Define the BookingRequest type
 interface BookingRequest {
@@ -55,6 +56,17 @@ interface DoneNotification {
   };
 }
 
+interface BookingWithRelations {
+  id: string;
+  facilities: {
+    name: string;
+  } | null;
+  account_requests: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
 // Initialize Supabase client
 const supabase = createClientComponentClient();
 
@@ -70,6 +82,67 @@ export default function BookingRequests() {
     DoneNotification[]
   >([]);
   const [notificationCount, setNotificationCount] = useState(0);
+
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    first_name: string;
+    last_name: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error || !session?.user) {
+          console.error("Auth error:", error);
+          return;
+        }
+
+        setUser(session.user);
+
+        // Fetch user profile from account_requests table
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      }
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!profileError) {
+          setUserProfile(profileData);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     fetchRequests();
@@ -181,6 +254,9 @@ export default function BookingRequests() {
       setLoading(true);
 
       if (action === "Delete") {
+        // Log the delete action BEFORE deleting
+        await logFacilityBookingAction("deleted", selectedRequests);
+
         // CREATE NOTIFICATIONS BEFORE DELETING
         await createNotificationForBookers(
           "Booking Request Deleted",
@@ -202,6 +278,12 @@ export default function BookingRequests() {
           .in("id", selectedRequests);
 
         if (error) throw error;
+
+        // Log the approve/reject action AFTER updating status
+        await logFacilityBookingAction(
+          action.toLowerCase() + "d",
+          selectedRequests
+        );
 
         // CREATE NOTIFICATIONS AFTER UPDATING STATUS
         await createNotificationForBookers(
@@ -243,6 +325,22 @@ export default function BookingRequests() {
             .eq("id", notification.booking_id);
 
           if (bookingError) throw bookingError;
+
+          // Log the completion confirmation
+          await logFacilityBookingAction(
+            "confirmed completion of",
+            [notification.booking_id],
+            "Booking marked as completed"
+          );
+        }
+      } else {
+        // Log the dismissal action
+        if (notification) {
+          await logFacilityBookingAction(
+            "dismissed completion notification for",
+            [notification.booking_id],
+            "Completion notification dismissed"
+          );
         }
       }
 
@@ -352,6 +450,76 @@ export default function BookingRequests() {
       });
     } catch {
       return "N/A";
+    }
+  };
+
+  const logFacilityBookingAction = async (
+    action: string,
+    bookingIds: string[],
+    additionalInfo?: string
+  ) => {
+    if (!user || !userProfile) return;
+
+    try {
+      // Get booking details for logging
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("booking")
+        .select(
+          `
+        id,
+        facilities(name),
+        account_requests(first_name, last_name)
+      `
+        )
+        .in("id", bookingIds);
+
+      if (bookingError) throw bookingError;
+
+      // Add this debug log to see the actual structure
+      console.log(
+        "Booking data structure:",
+        JSON.stringify(bookingData, null, 2)
+      );
+
+      const adminName =
+        `${userProfile.first_name} ${userProfile.last_name}`.trim();
+
+      // Create individual log entries for each booking
+      const logPromises = (bookingData as BookingWithRelations[])?.map(
+        async (booking) => {
+          console.log("Individual booking:", JSON.stringify(booking, null, 2));
+
+          // Access the first element of the arrays since they should contain single objects
+          const accountRequest = booking.account_requests;
+          const facility = booking.facilities;
+
+          console.log("Account request:", accountRequest);
+          console.log("Facility:", facility);
+
+          const bookerName = accountRequest
+            ? `${accountRequest.first_name} ${accountRequest.last_name}`.trim()
+            : "Unknown User";
+
+          const facilityName = facility?.name || "Unknown Facility";
+
+          const logMessage = additionalInfo
+            ? `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}. ${additionalInfo}`
+            : `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}`;
+
+          return supabase.from("facility_logs").insert([
+            {
+              log_message: logMessage,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+        }
+      );
+
+      if (logPromises) {
+        await Promise.all(logPromises);
+      }
+    } catch (error) {
+      console.error("Error logging facility booking action:", error);
     }
   };
 

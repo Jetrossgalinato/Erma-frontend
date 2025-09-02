@@ -67,9 +67,14 @@ export default function DashboardFacilitiesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(11);
 
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    first_name: string;
+    last_name: string;
+  } | null>(null);
+
   const supabase = createClientComponentClient();
 
-  const [, setUser] = useState<SupabaseUser | null>(null);
   const [, setAuthLoading] = useState(true);
   const router = useRouter();
 
@@ -94,6 +99,19 @@ export default function DashboardFacilitiesPage() {
 
         setUser(session.user);
 
+        // Fetch user profile from account_requests table
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
+
         // Allow all authenticated users for now
         // TODO: Add role-based restrictions if needed
       } catch (error) {
@@ -114,6 +132,19 @@ export default function DashboardFacilitiesPage() {
         router.push("/login");
       } else if (session?.user) {
         setUser(session.user);
+
+        // Fetch user profile when auth state changes
+        const { data: profileData, error: profileError } = await supabase
+          .from("account_requests")
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        } else {
+          setUserProfile(profileData);
+        }
       }
     });
 
@@ -244,6 +275,9 @@ export default function DashboardFacilitiesPage() {
       console.error("Error updating facility:", error);
       alert("Failed to update facility");
     } else {
+      // Log the edit action
+      await logFacilityAction("updated", editingFacility.name);
+
       // Update local state
       setFacilities((prev) =>
         prev.map((facility) =>
@@ -280,6 +314,9 @@ export default function DashboardFacilitiesPage() {
       console.error("Error inserting facility:", error);
       alert("Failed to insert facility");
     } else {
+      // Log the insert action
+      await logFacilityAction("created", newFacility.name);
+
       setShowInsertForm(false);
       setNewFacility({ name: "" });
       fetchFacilities(false);
@@ -454,6 +491,16 @@ export default function DashboardFacilitiesPage() {
         console.error("Error importing facilities:", error);
         alert("Failed to import facilities. Please try again.");
       } else {
+        // Log the import action
+        const facilityNames = validData
+          .map((facility) => facility.name)
+          .join(", ");
+        await logFacilityAction(
+          "imported",
+          undefined,
+          `Imported ${validData.length} facilities: ${facilityNames}`
+        );
+
         alert(`Successfully imported ${validData.length} facilities!`);
         setShowImportModal(false);
         setSelectedFile(null);
@@ -471,6 +518,11 @@ export default function DashboardFacilitiesPage() {
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
 
+    // Get the names of facilities being deleted for logging
+    const facilityNames = facilities
+      .filter((facility) => selectedRows.includes(facility.id))
+      .map((facility) => facility.name);
+
     const { error } = await supabase
       .from("facilities")
       .delete()
@@ -480,6 +532,13 @@ export default function DashboardFacilitiesPage() {
       console.error("Error deleting facilities:", error);
       alert("Failed to delete selected facilities");
     } else {
+      // Log the delete action
+      await logFacilityAction(
+        "deleted",
+        undefined,
+        `Deleted ${selectedRows.length} facilities: ${facilityNames.join(", ")}`
+      );
+
       // Update local state by filtering out all selected rows
       setFacilities((prev) =>
         prev.filter((facility) => !selectedRows.includes(facility.id))
@@ -495,6 +554,35 @@ export default function DashboardFacilitiesPage() {
   useEffect(() => {
     fetchFacilities();
   }, [fetchFacilities]);
+
+  const logFacilityAction = async (
+    action: string,
+    facilityName?: string,
+    additionalInfo?: string
+  ) => {
+    if (!user || !userProfile) return;
+
+    const adminName =
+      `${userProfile.first_name} ${userProfile.last_name}`.trim();
+    const logMessage = additionalInfo
+      ? `Admin ${adminName} ${action}${
+          facilityName ? ` facility "${facilityName}"` : ""
+        }. ${additionalInfo}`
+      : `Admin ${adminName} ${action}${
+          facilityName ? ` facility "${facilityName}"` : ""
+        }`;
+
+    try {
+      await supabase.from("facility_logs").insert([
+        {
+          log_message: logMessage,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error logging facility action:", error);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
