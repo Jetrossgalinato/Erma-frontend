@@ -417,6 +417,60 @@ export default function BookingRequests() {
     }
   };
 
+  // Add this logging function after your other functions
+  const logFacilityBookingAction = async (
+    action: string,
+    bookingIds: string[],
+    additionalInfo?: string
+  ) => {
+    if (!user || !userProfile) return;
+
+    try {
+      // Get booking details for logging
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("booking")
+        .select(
+          `
+        id,
+        facilities(name),
+        account_requests(first_name, last_name)
+      `
+        )
+        .in("id", bookingIds);
+
+      if (bookingError) throw bookingError;
+
+      const adminName =
+        `${userProfile.first_name} ${userProfile.last_name}`.trim();
+
+      // Create individual log entries for each booking
+      const logPromises = bookingData?.map(async (booking) => {
+        const bookerName = booking.account_requests
+          ? `${booking.account_requests.first_name} ${booking.account_requests.last_name}`.trim()
+          : "Unknown User";
+
+        const facilityName = booking.facilities?.name || "Unknown Facility";
+
+        const logMessage = additionalInfo
+          ? `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}. ${additionalInfo}`
+          : `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}`;
+
+        return supabase.from("facility_logs").insert([
+          {
+            log_message: logMessage,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      });
+
+      if (logPromises) {
+        await Promise.all(logPromises);
+      }
+    } catch (error) {
+      console.error("Error logging facility booking action:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
