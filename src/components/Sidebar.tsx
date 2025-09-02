@@ -115,6 +115,7 @@ const Sidebar: React.FC = () => {
   const supabase = createClientComponentClient();
   const [supplyCount, setSupplyCount] = useState<number>(0);
   const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
+  const [facilityLogsCount, setFacilityLogsCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -338,6 +339,52 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch facility logs count from Supabase
+  useEffect(() => {
+    const fetchFacilityLogsCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("facility_logs")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching facility logs count:", error);
+          setFacilityLogsCount(0);
+        } else {
+          setFacilityLogsCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching facility logs count:", error);
+        setFacilityLogsCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFacilityLogsCount();
+
+    // Optional: Set up real-time subscription to update count when facility logs are added/removed
+    const subscription = supabase
+      .channel("facility_logs_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "facility_logs",
+        },
+        () => {
+          fetchFacilityLogsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -386,7 +433,7 @@ const Sidebar: React.FC = () => {
     {
       icon: Building,
       label: "Facility Monitoring",
-      count: 0,
+      count: loading ? null : facilityLogsCount,
       path: "/monitor-facilities",
     },
     {
