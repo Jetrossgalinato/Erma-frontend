@@ -381,13 +381,13 @@ const Sidebar: React.FC = () => {
       icon: Monitor,
       label: "Equipment Monitoring",
       count: loading ? null : equipmentLogsCount,
-      path: "monitor-equipment",
+      path: "/monitor-equipment",
     },
     {
       icon: Building,
       label: "Facility Monitoring",
       count: 0,
-      path: "/monitoring/facility",
+      path: "/monitor-facilities",
     },
     {
       icon: Activity,
