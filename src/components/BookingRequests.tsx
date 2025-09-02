@@ -56,6 +56,17 @@ interface DoneNotification {
   };
 }
 
+interface BookingWithRelations {
+  id: string;
+  facilities: {
+    name: string;
+  } | null;
+  account_requests: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
 // Initialize Supabase client
 const supabase = createClientComponentClient();
 
@@ -442,7 +453,6 @@ export default function BookingRequests() {
     }
   };
 
-  // Add this logging function after your other functions
   const logFacilityBookingAction = async (
     action: string,
     bookingIds: string[],
@@ -465,28 +475,45 @@ export default function BookingRequests() {
 
       if (bookingError) throw bookingError;
 
+      // Add this debug log to see the actual structure
+      console.log(
+        "Booking data structure:",
+        JSON.stringify(bookingData, null, 2)
+      );
+
       const adminName =
         `${userProfile.first_name} ${userProfile.last_name}`.trim();
 
       // Create individual log entries for each booking
-      const logPromises = bookingData?.map(async (booking) => {
-        const bookerName = booking.account_requests
-          ? `${booking.account_requests.first_name} ${booking.account_requests.last_name}`.trim()
-          : "Unknown User";
+      const logPromises = (bookingData as BookingWithRelations[])?.map(
+        async (booking) => {
+          console.log("Individual booking:", JSON.stringify(booking, null, 2));
 
-        const facilityName = booking.facilities?.name || "Unknown Facility";
+          // Access the first element of the arrays since they should contain single objects
+          const accountRequest = booking.account_requests;
+          const facility = booking.facilities;
 
-        const logMessage = additionalInfo
-          ? `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}. ${additionalInfo}`
-          : `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}`;
+          console.log("Account request:", accountRequest);
+          console.log("Facility:", facility);
 
-        return supabase.from("facility_logs").insert([
-          {
-            log_message: logMessage,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-      });
+          const bookerName = accountRequest
+            ? `${accountRequest.first_name} ${accountRequest.last_name}`.trim()
+            : "Unknown User";
+
+          const facilityName = facility?.name || "Unknown Facility";
+
+          const logMessage = additionalInfo
+            ? `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}. ${additionalInfo}`
+            : `Admin ${adminName} ${action} booking request for facility "${facilityName}" by ${bookerName}`;
+
+          return supabase.from("facility_logs").insert([
+            {
+              log_message: logMessage,
+              created_at: new Date().toISOString(),
+            },
+          ]);
+        }
+      );
 
       if (logPromises) {
         await Promise.all(logPromises);
