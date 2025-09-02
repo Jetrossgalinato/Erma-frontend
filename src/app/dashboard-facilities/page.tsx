@@ -284,6 +284,9 @@ export default function DashboardFacilitiesPage() {
       console.error("Error inserting facility:", error);
       alert("Failed to insert facility");
     } else {
+      // Log the insert action
+      await logFacilityAction("created", newFacility.name);
+
       setShowInsertForm(false);
       setNewFacility({ name: "" });
       fetchFacilities(false);
