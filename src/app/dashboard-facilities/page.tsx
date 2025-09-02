@@ -461,6 +461,16 @@ export default function DashboardFacilitiesPage() {
         console.error("Error importing facilities:", error);
         alert("Failed to import facilities. Please try again.");
       } else {
+        // Log the import action
+        const facilityNames = validData
+          .map((facility) => facility.name)
+          .join(", ");
+        await logFacilityAction(
+          "imported",
+          undefined,
+          `Imported ${validData.length} facilities: ${facilityNames}`
+        );
+
         alert(`Successfully imported ${validData.length} facilities!`);
         setShowImportModal(false);
         setSelectedFile(null);
