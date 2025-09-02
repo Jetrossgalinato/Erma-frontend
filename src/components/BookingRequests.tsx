@@ -243,6 +243,9 @@ export default function BookingRequests() {
       setLoading(true);
 
       if (action === "Delete") {
+        // Log the delete action BEFORE deleting
+        await logFacilityBookingAction("deleted", selectedRequests);
+
         // CREATE NOTIFICATIONS BEFORE DELETING
         await createNotificationForBookers(
           "Booking Request Deleted",
@@ -264,6 +267,12 @@ export default function BookingRequests() {
           .in("id", selectedRequests);
 
         if (error) throw error;
+
+        // Log the approve/reject action AFTER updating status
+        await logFacilityBookingAction(
+          action.toLowerCase() + "d",
+          selectedRequests
+        );
 
         // CREATE NOTIFICATIONS AFTER UPDATING STATUS
         await createNotificationForBookers(
