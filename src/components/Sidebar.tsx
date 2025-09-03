@@ -116,6 +116,7 @@ const Sidebar: React.FC = () => {
   const [supplyCount, setSupplyCount] = useState<number>(0);
   const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
   const [facilityLogsCount, setFacilityLogsCount] = useState<number>(0);
+  const [supplyLogsCount, setSupplyLogsCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -385,6 +386,51 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  useEffect(() => {
+    const fetchSupplyLogsCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("supply_logs")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching supply logs count:", error);
+          setSupplyLogsCount(0);
+        } else {
+          setSupplyLogsCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching supply logs count:", error);
+        setSupplyLogsCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSupplyLogsCount();
+
+    // Optional: Set up real-time subscription to update count when supply logs are added/removed
+    const subscription = supabase
+      .channel("supply_logs_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "supply_logs",
+        },
+        () => {
+          fetchSupplyLogsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -426,21 +472,21 @@ const Sidebar: React.FC = () => {
   const monitoringItems: MenuItemData[] = [
     {
       icon: Monitor,
-      label: "Equipment Monitoring",
+      label: "Equipment Logs",
       count: loading ? null : equipmentLogsCount,
       path: "/monitor-equipment",
     },
     {
       icon: Building,
-      label: "Facility Monitoring",
+      label: "Facility Logs",
       count: loading ? null : facilityLogsCount,
       path: "/monitor-facilities",
     },
     {
       icon: Activity,
-      label: "Stock Monitoring",
-      count: 0,
-      path: "/monitoring/stock",
+      label: "Supply Logs",
+      count: loading ? null : supplyLogsCount,
+      path: "/monitor-supplies",
     },
   ];
 
@@ -481,7 +527,7 @@ const Sidebar: React.FC = () => {
         {/* Monitoring */}
         <div className="mt-4">
           <SidebarSectionHeader
-            label="Monitoring History"
+            label="Transaction Logs"
             isExpanded={expandedSections.monitoring}
             onToggle={() => toggleSection("monitoring")}
           />

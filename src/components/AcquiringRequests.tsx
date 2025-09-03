@@ -14,6 +14,7 @@ import {
 interface AcquiringRequest {
   id: string;
   user_id?: string;
+  acquirers_id?: string; // Added this field that's used in notifications
   status?: string;
   quantity?: number;
   purpose?: string;
@@ -44,8 +45,63 @@ export default function AcquiringRequests() {
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);
   const [showActionDropdown, setShowActionDropdown] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState<{
+    first_name?: string;
+    last_name?: string;
+  } | null>(null);
+
+  // Add logging function
+  const logSupplyAction = async (action: string, details: string) => {
+    try {
+      const adminName =
+        currentUser?.first_name && currentUser?.last_name
+          ? `${currentUser.first_name} ${currentUser.last_name}`
+          : "Unknown Admin";
+
+      const logMessage = `${action} by ${adminName} ${details}`;
+
+      const {
+        data: {},
+      } = await supabase.auth.getUser();
+
+      await supabase.from("supply_logs").insert([
+        {
+          log_message: logMessage,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error logging supply action:", error);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+  }, []);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("account_requests")
+            .select("first_name, last_name")
+            .eq("user_id", user.id)
+            .single();
+
+          if (profile) {
+            setCurrentUser(profile);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
   }, []);
 
   const fetchRequests = async () => {
@@ -57,21 +113,19 @@ export default function AcquiringRequests() {
         .from("acquiring")
         .select(
           `
-        *, 
-        supplies( 
-          id, 
-          name, 
-          facilities(
-            id, 
-            name
+          *,
+          supplies(
+            id,
+            name,
+            quantity,
+            facilities(id, name)
+          ),
+          account_requests:account_requests!acquiring_acquirers_id_fkey (
+            user_id,
+            first_name,
+            last_name
           )
-        ), 
-        account_requests(
-          id, 
-          first_name, 
-          last_name 
-        )
-      `
+        `
         )
         .order("created_at", { ascending: false });
 
@@ -97,14 +151,18 @@ export default function AcquiringRequests() {
       // Get the user IDs for the selected requests
       const { data: acquiringData, error: acquiringError } = await supabase
         .from("acquiring")
-        .select("acquirers_id")
+        .select("acquirers_id") // Include both possible user ID fields
         .in("id", acquiringIds);
 
       if (acquiringError) throw acquiringError;
 
-      // Create unique user IDs (in case same user has multiple requests)
+      // Create unique user IDs (use acquirers_id if available, fallback to user_id)
       const uniqueUserIds = [
-        ...new Set(acquiringData?.map((a) => a.acquirers_id) || []),
+        ...new Set(
+          acquiringData
+            ?.map((a) => a.acquirers_id || a.acquirers_id)
+            .filter(Boolean) || []
+        ),
       ];
 
       if (uniqueUserIds.length > 0) {
@@ -187,6 +245,26 @@ export default function AcquiringRequests() {
           selectedRequests
         );
 
+        const requestsToDelete = requests.filter((req) =>
+          selectedRequests.includes(req.id)
+        );
+
+        const deletedRequestsInfo = requestsToDelete
+          .map(
+            (req) =>
+              `${req.supplies?.name || "Unknown Supply"} (requested by ${
+                req.account_requests
+                  ? `${req.account_requests.first_name} ${req.account_requests.last_name}`
+                  : "Unknown User"
+              })`
+          )
+          .join(", ");
+
+        await logSupplyAction(
+          `${selectedRequests.length} acquiring request(s) were deleted:`,
+          `${deletedRequestsInfo}`
+        );
+
         const { error } = await supabase
           .from("acquiring")
           .delete()
@@ -199,19 +277,20 @@ export default function AcquiringRequests() {
           .from("acquiring")
           .select(
             `
-        id,
-        quantity,
-        supplies!inner (
           id,
-          quantity
-        )
-      `
+          quantity,
+          acquirers_id,
+          supplies!inner (
+            id,
+            quantity
+          )
+        `
           )
           .in("id", selectedRequests);
 
         if (fetchError) throw fetchError;
 
-        // Update the acquiring requests status
+        // Update acquiring requests status
         const { error: updateError } = await supabase
           .from("acquiring")
           .update({ status: "Approved" })
@@ -221,12 +300,13 @@ export default function AcquiringRequests() {
 
         // Update supplies quantities
         for (const request of requestsToApprove || []) {
+          if (!request.supplies) continue;
+
           const supply = Array.isArray(request.supplies)
             ? request.supplies[0]
             : request.supplies;
           const newQuantity = (supply?.quantity || 0) - (request.quantity || 0);
 
-          // Optional: Add validation to prevent negative quantities
           if (newQuantity < 0) {
             throw new Error(
               `Insufficient quantity for supply. Available: ${supply?.quantity}, Requested: ${request.quantity}`
@@ -240,6 +320,28 @@ export default function AcquiringRequests() {
 
           if (supplyError) throw supplyError;
         }
+
+        const requestsForApproval = requests.filter((req) =>
+          selectedRequests.includes(req.id)
+        );
+
+        const approvedRequestsInfo = requestsForApproval
+          .map(
+            (req) =>
+              `${req.supplies?.name || "Unknown Supply"} (quantity: ${
+                req.quantity
+              }, requested by ${
+                req.account_requests
+                  ? `${req.account_requests.first_name} ${req.account_requests.last_name}`
+                  : "Unknown User"
+              })`
+          )
+          .join(", ");
+
+        await logSupplyAction(
+          `${selectedRequests.length} acquiring request(s) were approved:`,
+          `${approvedRequestsInfo}`
+        );
 
         // CREATE NOTIFICATIONS AFTER APPROVAL
         await createNotificationForAcquirers(
@@ -262,6 +364,26 @@ export default function AcquiringRequests() {
           "Acquiring Request Rejected",
           `Your supply acquiring request has been rejected by admin.`,
           selectedRequests
+        );
+
+        const requestsToReject = requests.filter((req) =>
+          selectedRequests.includes(req.id)
+        );
+
+        const rejectedRequestsInfo = requestsToReject
+          .map(
+            (req) =>
+              `${req.supplies?.name || "Unknown Supply"} (requested by ${
+                req.account_requests
+                  ? `${req.account_requests.first_name} ${req.account_requests.last_name}`
+                  : "Unknown User"
+              })`
+          )
+          .join(", ");
+
+        await logSupplyAction(
+          `${selectedRequests.length} acquiring request(s) were rejected:`,
+          `${rejectedRequestsInfo}`
         );
       }
 
@@ -514,7 +636,7 @@ export default function AcquiringRequests() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                       {request.account_requests
                         ? `${request.account_requests.first_name} ${request.account_requests.last_name}`
-                        : request.user_id || "Unknown"}
+                        : request.acquirers_id || "Unknown"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
                       {getStatusBadge(request.status)}
