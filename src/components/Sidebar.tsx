@@ -426,19 +426,19 @@ const Sidebar: React.FC = () => {
   const monitoringItems: MenuItemData[] = [
     {
       icon: Monitor,
-      label: "Equipment Monitoring",
+      label: "Equipment Logs",
       count: loading ? null : equipmentLogsCount,
       path: "/monitor-equipment",
     },
     {
       icon: Building,
-      label: "Facility Monitoring",
+      label: "Facility Logs",
       count: loading ? null : facilityLogsCount,
       path: "/monitor-facilities",
     },
     {
       icon: Activity,
-      label: "Stock Monitoring",
+      label: "Stock Logs",
       count: 0,
       path: "/monitoring/stock",
     },
@@ -481,7 +481,7 @@ const Sidebar: React.FC = () => {
         {/* Monitoring */}
         <div className="mt-4">
           <SidebarSectionHeader
-            label="Monitoring History"
+            label="Transaction Logs"
             isExpanded={expandedSections.monitoring}
             onToggle={() => toggleSection("monitoring")}
           />
