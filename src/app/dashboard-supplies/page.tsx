@@ -59,7 +59,7 @@ export default function DashboardSuppliesPage() {
   });
 
   const [currentUser, setCurrentUser] = useState<{
-    full_name?: string;
+    first_name?: string;
     last_name?: string;
   } | null>(null);
 
@@ -810,8 +810,8 @@ export default function DashboardSuppliesPage() {
   const logSupplyAction = async (action: string, details: string) => {
     try {
       const adminName =
-        currentUser?.full_name && currentUser?.last_name
-          ? `${currentUser.full_name} ${currentUser.last_name}`
+        currentUser?.first_name && currentUser?.last_name
+          ? `${currentUser.first_name} ${currentUser.last_name}`
           : "Unknown Admin";
 
       const logMessage = `${action} by ${adminName} ${details}`;
