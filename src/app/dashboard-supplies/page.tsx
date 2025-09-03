@@ -16,7 +16,7 @@ import {
   Upload,
   Edit,
   Trash2,
-  RotateCcw,
+  Loader2,
   RefreshCw,
   AlertTriangle,
 } from "lucide-react";
@@ -1109,11 +1109,7 @@ export default function DashboardSuppliesPage() {
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <RotateCcw
-                    className={`inline-block mr-2 transition-transform duration-300 ${
-                      isRefreshing ? "animate-spin" : ""
-                    }`}
-                  />
+                  <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
                   <span className="ml-3 text-gray-600">
                     Loading supplies...
                   </span>
