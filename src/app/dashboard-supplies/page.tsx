@@ -58,6 +58,11 @@ export default function DashboardSuppliesPage() {
     stock_unit: "",
   });
 
+  const [currentUser, setCurrentUser] = useState<{
+    full_name?: string;
+    last_name?: string;
+  } | null>(null);
+
   // Add these image-related states after your existing state declarations
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -119,6 +124,17 @@ export default function DashboardSuppliesPage() {
         }
 
         setUser(session.user);
+
+        // Fetch user profile information
+        const { data: profile, error: profileError } = await supabase
+          .from("account_requests") // or whatever your user profile table is called
+          .select("first_name, last_name")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!profileError && profile) {
+          setCurrentUser(profile);
+        }
       } catch (error) {
         console.error("Auth check failed:", error);
         router.push("/login");
@@ -439,6 +455,14 @@ export default function DashboardSuppliesPage() {
       console.error("Error updating supply:", error);
       alert("Failed to update supply");
     } else {
+      await logSupplyAction(
+        `Supply "${updatedSupply.name}" was updated`,
+        `- Category: ${updatedSupply.category}, Quantity: ${
+          updatedSupply.quantity
+        } ${updatedSupply.stock_unit}, Facility: ${
+          updatedSupply.facilities?.name || "None"
+        }`
+      );
       setSupplies((prev) =>
         prev.map((supply) =>
           supply.id === updatedSupply.id ? updatedSupply : supply
@@ -519,6 +543,11 @@ export default function DashboardSuppliesPage() {
       console.error("Error inserting supply:", error);
       alert("Failed to insert supply");
     } else {
+      await logSupplyAction(
+        `Supply "${newSupply.name}" was created`,
+        `with category "${newSupply.category}" and quantity ${newSupply.quantity} ${newSupply.stock_unit}`
+      );
+
       setShowInsertForm(false);
       setNewSupply({
         name: "",
@@ -700,6 +729,19 @@ export default function DashboardSuppliesPage() {
         console.error("Error importing supplies:", error);
         alert("Failed to import supplies. Please try again.");
       } else {
+        const importedSupplyNames = validData
+          .map((supply) => supply.name)
+          .slice(0, 5)
+          .join(", ");
+        const remainingCount = Math.max(0, validData.length - 5);
+        const namesList =
+          remainingCount > 0
+            ? `${importedSupplyNames} and ${remainingCount} more`
+            : importedSupplyNames;
+        await logSupplyAction(
+          `${validData.length} supplies were imported from CSV:`,
+          `${namesList}`
+        );
         alert(`Successfully imported ${validData.length} supplies!`);
         setShowImportModal(false);
         setSelectedFile(null);
@@ -726,6 +768,17 @@ export default function DashboardSuppliesPage() {
       console.error("Error deleting supplies:", error);
       alert("Failed to delete selected supplies");
     } else {
+      const suppliesToDelete = supplies.filter((supply) =>
+        selectedRows.includes(supply.id)
+      );
+      const supplyNames = suppliesToDelete
+        .map((supply) => supply.name)
+        .join(", ");
+
+      await logSupplyAction(
+        `${selectedRows.length} supply/supplies were deleted:`,
+        `${supplyNames}`
+      );
       setSupplies((prev) =>
         prev.filter((supply) => !selectedRows.includes(supply.id))
       );
@@ -752,6 +805,26 @@ export default function DashboardSuppliesPage() {
       status: "In Stock",
       color: "bg-green-100 text-green-800 border-green-200",
     };
+  };
+
+  const logSupplyAction = async (action: string, details: string) => {
+    try {
+      const adminName =
+        currentUser?.full_name && currentUser?.last_name
+          ? `${currentUser.full_name} ${currentUser.last_name}`
+          : "Unknown Admin";
+
+      const logMessage = `${action} by ${adminName} ${details}`;
+
+      await supabase.from("supply_logs").insert([
+        {
+          log_message: logMessage,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error logging supply action:", error);
+    }
   };
 
   useEffect(() => {
