@@ -41,15 +41,10 @@ export default function MonitorSuppliesPage() {
         setTotalCount(count || 0);
 
         // Then get the paginated data
+
         const { data, error } = await supabase
           .from("supply_logs")
-          .select(
-            `
-        id,
-        log_message,
-        created_at
-      `
-          )
+          .select("id, log_message, created_at") // Remove the multiline template literal
           .order("created_at", { ascending: false })
           .range(offset, offset + itemsPerPage - 1);
 
