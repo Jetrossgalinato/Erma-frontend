@@ -542,7 +542,7 @@ const Sidebar: React.FC = () => {
       icon: Users,
       label: "Users",
       count: loading ? null : accountRequestsCount,
-      path: "/users",
+      path: "/dashboard-users",
     },
   ];
 
