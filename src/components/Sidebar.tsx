@@ -432,14 +432,16 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch account requests count from Supabase
+  // Fetch account requests count from Supabase - ONLY NULL users
   useEffect(() => {
     const fetchAccountRequestsCount = async () => {
       try {
         setLoading(true);
         const { count, error } = await supabase
           .from("account_requests")
-          .select("*", { count: "exact", head: true });
+          .select("*", { count: "exact", head: true })
+          .is("is_intern", null)
+          .is("is_supervisor", null); // Only count users where both are NULL
 
         if (error) {
           console.error("Error fetching account requests count:", error);
