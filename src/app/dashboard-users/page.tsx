@@ -15,6 +15,11 @@ import {
   Trash2,
   RefreshCw,
   AlertTriangle,
+  Filter,
+  Tag,
+  Building,
+  X,
+  Users,
 } from "lucide-react";
 import { useRef } from "react";
 
@@ -39,11 +44,21 @@ const UsersPage: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<AccountRequest | null>(null);
+
+  // Filter states
+  const [departmentFilter, setDepartmentFilter] = useState<string>("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<
+    "department" | "role" | null
+  >(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [itemsPerPage] = useState<number>(10); // You can make this configurable
+  const [itemsPerPage] = useState<number>(10);
 
   const supabase = createClientComponentClient();
   const [, setUser] = useState<SupabaseUser | null>(null);
@@ -51,6 +66,7 @@ const UsersPage: React.FC = () => {
   const router = useRouter();
 
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -60,6 +76,12 @@ const UsersPage: React.FC = () => {
         !actionsDropdownRef.current.contains(event.target as Node)
       ) {
         setShowActionsDropdown(false);
+      }
+      if (
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowFilterDropdown(false);
       }
     };
 
@@ -115,6 +137,52 @@ const UsersPage: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, [router, supabase]);
+
+  // Filter functions
+  const handleFilterSelect = (filterType: "department" | "role") => {
+    setActiveFilter(filterType);
+    setShowFilterDropdown(false);
+  };
+
+  const clearFilters = () => {
+    setDepartmentFilter("");
+    setRoleFilter("");
+    setActiveFilter(null);
+    setCurrentPage(1);
+  };
+
+  const getFilteredUsers = () => {
+    return accountRequests.filter((user) => {
+      const matchesDepartment =
+        !departmentFilter ||
+        user.department?.toLowerCase().includes(departmentFilter.toLowerCase());
+
+      const matchesRole =
+        !roleFilter ||
+        user.acc_role?.toLowerCase().includes(roleFilter.toLowerCase()) ||
+        user.approved_acc_role
+          ?.toLowerCase()
+          .includes(roleFilter.toLowerCase());
+
+      return matchesDepartment && matchesRole;
+    });
+  };
+
+  const getUniqueDepartments = () => {
+    return [
+      ...new Set(
+        accountRequests.map((user) => user.department).filter(Boolean)
+      ),
+    ].sort();
+  };
+
+  const getUniqueRoles = () => {
+    const allRoles = [
+      ...accountRequests.map((user) => user.acc_role),
+      ...accountRequests.map((user) => user.approved_acc_role).filter(Boolean),
+    ].filter(Boolean);
+    return [...new Set(allRoles)].sort();
+  };
 
   // Fetch total count for pagination
   const fetchTotalCount = useCallback(async () => {
@@ -211,9 +279,76 @@ const UsersPage: React.FC = () => {
 
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
-    // Add your edit functionality here
-    console.log("Edit user:", selectedRows[0]);
+    const userToEdit = accountRequests.find(
+      (user) => user.id === selectedRows[0]
+    );
+    if (userToEdit) {
+      setEditingUser(userToEdit);
+      setShowEditModal(true);
+    }
     setShowActionsDropdown(false);
+  };
+
+  const handleEditChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditingUser((prev) => {
+      if (!prev) return null;
+      return { ...prev, [name]: value };
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return;
+
+    if (!editingUser.first_name?.trim()) {
+      alert("First name is required");
+      return;
+    }
+
+    if (!editingUser.last_name?.trim()) {
+      alert("Last name is required");
+      return;
+    }
+
+    if (!editingUser.department?.trim()) {
+      alert("Department is required");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("account_requests")
+      .update({
+        first_name: editingUser.first_name,
+        last_name: editingUser.last_name,
+        department: editingUser.department,
+        phone_number: editingUser.phone_number,
+        acc_role: editingUser.acc_role,
+        approved_acc_role: editingUser.approved_acc_role,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingUser.id);
+
+    if (error) {
+      console.error("Error updating user:", error);
+      alert("Failed to update user");
+    } else {
+      setAccountRequests((prev) =>
+        prev.map((user) => (user.id === editingUser.id ? editingUser : user))
+      );
+      setShowEditModal(false);
+      setEditingUser(null);
+      setSelectedRows([]);
+      console.log("User updated successfully");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingUser(null);
   };
 
   const handleDeleteSelectedRows = async () => {
@@ -267,6 +402,13 @@ const UsersPage: React.FC = () => {
   const handleOverlayClick = () => {
     setSidebarOpen(false);
   };
+
+  // Get filtered users for display
+  const filteredUsers = getFilteredUsers();
+  const totalFilteredPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
   // Pagination calculations
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -371,6 +513,92 @@ const UsersPage: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3">
+                  {/* Filter Dropdown */}
+                  <div className="relative" ref={filterDropdownRef}>
+                    <button
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeFilter || departmentFilter || roleFilter
+                          ? "bg-blue-50 text-blue-700 border-blue-300"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      Filter
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </button>
+
+                    {showFilterDropdown && (
+                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleFilterSelect("department")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <Building className="w-4 h-4 mr-3" />
+                            Filter by Department
+                          </button>
+                          <button
+                            onClick={() => handleFilterSelect("role")}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          >
+                            <Users className="w-4 h-4 mr-3" />
+                            Filter by Role
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Active Filter Dropdown for Department */}
+                  {activeFilter === "department" && (
+                    <select
+                      value={departmentFilter}
+                      onChange={(e) => {
+                        setDepartmentFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Departments</option>
+                      {getUniqueDepartments().map((department) => (
+                        <option key={department} value={department}>
+                          {department}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Active Filter Dropdown for Role */}
+                  {activeFilter === "role" && (
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => {
+                        setRoleFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Roles</option>
+                      {getUniqueRoles().map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* Clear Filter Button */}
+                  {(departmentFilter || roleFilter || activeFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      <X className="w-4 h-4 mr-1 inline" />
+                      Clear
+                    </button>
+                  )}
+
                   {/* Actions Dropdown Button */}
                   <div className="relative" ref={actionsDropdownRef}>
                     <button
@@ -454,11 +682,16 @@ const UsersPage: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                   <p className="text-sm text-gray-500">
-                    {totalCount} total users
+                    {filteredUsers.length} total users{" "}
+                    {departmentFilter || roleFilter
+                      ? `(filtered from ${totalCount})`
+                      : ""}
                   </p>
-                  {totalCount > 0 && (
+                  {filteredUsers.length > 0 && (
                     <p className="text-sm text-gray-500">
-                      Showing {startItem} to {endItem} of {totalCount} results
+                      Showing {startIndex + 1} to{" "}
+                      {Math.min(endIndex, filteredUsers.length)} of{" "}
+                      {filteredUsers.length} results
                     </p>
                   )}
                 </div>
@@ -475,10 +708,12 @@ const UsersPage: React.FC = () => {
                         <span className="font-semibold">Error:</span> {error}
                       </div>
                     </div>
-                  ) : accountRequests.length === 0 ? (
+                  ) : currentUsers.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <span className="text-gray-500">
-                        No account requests found
+                        No users found{" "}
+                        {(departmentFilter || roleFilter) &&
+                          "matching the current filters"}
                       </span>
                     </div>
                   ) : (
@@ -490,18 +725,17 @@ const UsersPage: React.FC = () => {
                               type="checkbox"
                               className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
                               checked={
-                                selectedRows.length ===
-                                  accountRequests.length &&
-                                accountRequests.length > 0
+                                selectedRows.length === currentUsers.length &&
+                                currentUsers.length > 0
                               }
                               onChange={() => {
                                 if (
-                                  selectedRows.length === accountRequests.length
+                                  selectedRows.length === currentUsers.length
                                 ) {
                                   setSelectedRows([]);
                                 } else {
                                   setSelectedRows(
-                                    accountRequests.map((request) => request.id)
+                                    currentUsers.map((request) => request.id)
                                   );
                                 }
                               }}
@@ -531,7 +765,7 @@ const UsersPage: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {accountRequests.map((request) => (
+                        {currentUsers.map((request) => (
                           <tr key={request.id} className="hover:bg-gray-50">
                             <td className="w-12 px-6 py-4 whitespace-nowrap">
                               <input
@@ -582,7 +816,7 @@ const UsersPage: React.FC = () => {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {totalFilteredPages > 1 && (
                   <div className="px-6 py-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -624,9 +858,9 @@ const UsersPage: React.FC = () => {
 
                         <button
                           onClick={goToNext}
-                          disabled={currentPage === totalPages}
+                          disabled={currentPage === totalFilteredPages}
                           className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium ${
-                            currentPage === totalPages
+                            currentPage === totalFilteredPages
                               ? "text-gray-400 bg-gray-50 cursor-not-allowed"
                               : "text-gray-700 bg-white hover:bg-gray-50"
                           }`}
@@ -637,7 +871,7 @@ const UsersPage: React.FC = () => {
                       </div>
 
                       <div className="text-sm text-gray-500">
-                        Page {currentPage} of {totalPages}
+                        Page {currentPage} of {totalFilteredPages}
                       </div>
                     </div>
                   </div>
@@ -647,6 +881,155 @@ const UsersPage: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4">
+            <div
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+              onClick={handleCancelEdit}
+            />
+
+            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Edit User
+                  </h3>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="first_name"
+                        value={editingUser.first_name || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="First name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="last_name"
+                        value={editingUser.last_name || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Last name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={editingUser.email || ""}
+                        className="w-full px-3 py-2 text-gray-500 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
+                        disabled
+                        placeholder="Email (read-only)"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Email cannot be edited
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Department <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="department"
+                        value={editingUser.department || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Department"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        type="text"
+                        name="phone_number"
+                        value={editingUser.phone_number || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Account Role
+                      </label>
+                      <input
+                        type="text"
+                        name="acc_role"
+                        value={editingUser.acc_role || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Account role"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Approved Role
+                      </label>
+                      <input
+                        type="text"
+                        name="approved_acc_role"
+                        value={editingUser.approved_acc_role || ""}
+                        onChange={handleEditChange}
+                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Approved role (leave empty if not approved)"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEdit}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
