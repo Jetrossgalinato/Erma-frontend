@@ -9,7 +9,6 @@ import {
   FileText,
   Activity,
   Users,
-  Shield,
   ChevronDown,
   ChevronRight,
   LucideIcon,
@@ -117,6 +116,7 @@ const Sidebar: React.FC = () => {
   const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
   const [facilityLogsCount, setFacilityLogsCount] = useState<number>(0);
   const [supplyLogsCount, setSupplyLogsCount] = useState<number>(0);
+  const [accountRequestsCount, setAccountRequestsCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -431,6 +431,54 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch account requests count from Supabase - ONLY NULL users
+  useEffect(() => {
+    const fetchAccountRequestsCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("account_requests")
+          .select("*", { count: "exact", head: true })
+          .is("is_intern", null)
+          .is("is_supervisor", null); // Only count users where both are NULL
+
+        if (error) {
+          console.error("Error fetching account requests count:", error);
+          setAccountRequestsCount(0);
+        } else {
+          setAccountRequestsCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching account requests count:", error);
+        setAccountRequestsCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccountRequestsCount();
+
+    // Optional: Set up real-time subscription to update count when account requests are added/removed
+    const subscription = supabase
+      .channel("account_requests_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "account_requests",
+        },
+        () => {
+          fetchAccountRequestsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -491,11 +539,12 @@ const Sidebar: React.FC = () => {
   ];
 
   const userManagementItems: MenuItemData[] = [
-    { icon: Users, label: "Users", count: 1, path: "/users" },
-  ];
-
-  const filamentShieldItems: MenuItemData[] = [
-    { icon: Shield, label: "Roles", count: 4, path: "/roles" },
+    {
+      icon: Users,
+      label: "Users",
+      count: loading ? null : accountRequestsCount,
+      path: "/dashboard-users",
+    },
   ];
 
   return (
@@ -550,22 +599,6 @@ const Sidebar: React.FC = () => {
           {expandedSections.userManagement && (
             <div className="space-y-1">
               {userManagementItems.map((item, index) => (
-                <SidebarMenuItem key={index} {...item} isSubItem />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Filament Shield */}
-        <div className="mt-4">
-          <SidebarSectionHeader
-            label="Filament Shield"
-            isExpanded={expandedSections.filamentShield}
-            onToggle={() => toggleSection("filamentShield")}
-          />
-          {expandedSections.filamentShield && (
-            <div className="space-y-1">
-              {filamentShieldItems.map((item, index) => (
                 <SidebarMenuItem key={index} {...item} isSubItem />
               ))}
             </div>
