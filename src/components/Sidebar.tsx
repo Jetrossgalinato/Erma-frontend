@@ -117,6 +117,7 @@ const Sidebar: React.FC = () => {
   const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
   const [facilityLogsCount, setFacilityLogsCount] = useState<number>(0);
   const [supplyLogsCount, setSupplyLogsCount] = useState<number>(0);
+  const [accountRequestsCount, setAccountRequestsCount] = useState<number>(0);
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -431,6 +432,52 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
+  // Fetch account requests count from Supabase
+  useEffect(() => {
+    const fetchAccountRequestsCount = async () => {
+      try {
+        setLoading(true);
+        const { count, error } = await supabase
+          .from("account_requests")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching account requests count:", error);
+          setAccountRequestsCount(0);
+        } else {
+          setAccountRequestsCount(count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching account requests count:", error);
+        setAccountRequestsCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccountRequestsCount();
+
+    // Optional: Set up real-time subscription to update count when account requests are added/removed
+    const subscription = supabase
+      .channel("account_requests_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "account_requests",
+        },
+        () => {
+          fetchAccountRequestsCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -491,7 +538,12 @@ const Sidebar: React.FC = () => {
   ];
 
   const userManagementItems: MenuItemData[] = [
-    { icon: Users, label: "Users", count: 1, path: "/users" },
+    {
+      icon: Users,
+      label: "Users",
+      count: loading ? null : accountRequestsCount,
+      path: "/users",
+    },
   ];
 
   const filamentShieldItems: MenuItemData[] = [
