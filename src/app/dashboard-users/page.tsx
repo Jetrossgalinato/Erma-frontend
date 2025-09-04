@@ -15,6 +15,7 @@ interface AccountRequest {
   phone_number: string;
   acc_role: string;
   approved_acc_role: string | null;
+  email: string;
 }
 
 const UsersPage: React.FC = () => {
@@ -81,13 +82,25 @@ const UsersPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from("account_requests")
-        .select(
-          "id, first_name, last_name, department, phone_number, acc_role, approved_acc_role"
-        )
-        .is("is_intern", null)
-        .is("is_supervisor", null); // Include only rows where both are NULL
+      // Use raw SQL query to join account_requests with auth.users
+      const { data, error } = await supabase.rpc("execute_sql", {
+        query: `
+          SELECT 
+            ar.id,
+            ar.first_name,
+            ar.last_name,
+            ar.department,
+            ar.phone_number,
+            ar.acc_role,
+            ar.approved_acc_role,
+            au.email
+          FROM account_requests ar
+          INNER JOIN auth.users au ON ar.user_id = au.id
+          WHERE ar.is_intern IS NULL 
+            AND ar.is_supervisor IS NULL
+          ORDER BY ar.first_name, ar.last_name
+        `,
+      });
 
       if (error) {
         console.error("Error fetching account requests:", error);
@@ -224,6 +237,9 @@ const UsersPage: React.FC = () => {
                             Last Name
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Department
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -245,6 +261,9 @@ const UsersPage: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {request.last_name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {request.email}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {request.department}
