@@ -16,7 +16,6 @@ import {
   RefreshCw,
   AlertTriangle,
   Filter,
-  Tag,
   Building,
   X,
   Users,
@@ -159,10 +158,7 @@ const UsersPage: React.FC = () => {
 
       const matchesRole =
         !roleFilter ||
-        user.acc_role?.toLowerCase().includes(roleFilter.toLowerCase()) ||
-        user.approved_acc_role
-          ?.toLowerCase()
-          .includes(roleFilter.toLowerCase());
+        user.acc_role?.toLowerCase().includes(roleFilter.toLowerCase());
 
       return matchesDepartment && matchesRole;
     });
@@ -177,10 +173,10 @@ const UsersPage: React.FC = () => {
   };
 
   const getUniqueRoles = () => {
-    const allRoles = [
-      ...accountRequests.map((user) => user.acc_role),
-      ...accountRequests.map((user) => user.approved_acc_role).filter(Boolean),
-    ].filter(Boolean);
+    // Only get roles from acc_role column
+    const allRoles = accountRequests
+      .map((user) => user.acc_role)
+      .filter(Boolean);
     return [...new Set(allRoles)].sort();
   };
 
@@ -410,14 +406,20 @@ const UsersPage: React.FC = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentUsers = filteredUsers.slice(startIndex, endIndex);
 
-  // Pagination calculations
+  // Calculate proper pagination info for display
+  const startItem = startIndex + 1;
+  const endItem = Math.min(endIndex, filteredUsers.length);
+
+  // Pagination calculations for total pages
   const totalPages = Math.ceil(totalCount / itemsPerPage);
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalCount);
+
+  // Use filtered pagination for navigation
+  const actualTotalPages =
+    departmentFilter || roleFilter ? totalFilteredPages : totalPages;
 
   // Pagination handlers
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 1 && page <= actualTotalPages) {
       setCurrentPage(page);
     }
   };
@@ -433,7 +435,7 @@ const UsersPage: React.FC = () => {
 
     for (
       let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
+      i <= Math.min(actualTotalPages - 1, currentPage + delta);
       i++
     ) {
       range.push(i);
@@ -447,10 +449,10 @@ const UsersPage: React.FC = () => {
 
     rangeWithDots.push(...range);
 
-    if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push("...", totalPages);
+    if (currentPage + delta < actualTotalPages - 1) {
+      rangeWithDots.push("...", actualTotalPages);
     } else {
-      rangeWithDots.push(totalPages);
+      rangeWithDots.push(actualTotalPages);
     }
 
     return rangeWithDots.filter(
@@ -543,7 +545,7 @@ const UsersPage: React.FC = () => {
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           >
                             <Users className="w-4 h-4 mr-3" />
-                            Filter by Role
+                            Filter by Account Role
                           </button>
                         </div>
                       </div>
@@ -569,7 +571,7 @@ const UsersPage: React.FC = () => {
                     </select>
                   )}
 
-                  {/* Active Filter Dropdown for Role */}
+                  {/* Active Filter Dropdown for Account Role */}
                   {activeFilter === "role" && (
                     <select
                       value={roleFilter}
@@ -579,7 +581,7 @@ const UsersPage: React.FC = () => {
                       }}
                       className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">All Roles</option>
+                      <option value="">All Account Roles</option>
                       {getUniqueRoles().map((role) => (
                         <option key={role} value={role}>
                           {role}
@@ -689,9 +691,8 @@ const UsersPage: React.FC = () => {
                   </p>
                   {filteredUsers.length > 0 && (
                     <p className="text-sm text-gray-500">
-                      Showing {startIndex + 1} to{" "}
-                      {Math.min(endIndex, filteredUsers.length)} of{" "}
-                      {filteredUsers.length} results
+                      Showing {startItem} to {endItem} of {filteredUsers.length}{" "}
+                      results
                     </p>
                   )}
                 </div>
@@ -816,7 +817,7 @@ const UsersPage: React.FC = () => {
                 </div>
 
                 {/* Pagination */}
-                {totalFilteredPages > 1 && (
+                {actualTotalPages > 1 && (
                   <div className="px-6 py-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -858,9 +859,9 @@ const UsersPage: React.FC = () => {
 
                         <button
                           onClick={goToNext}
-                          disabled={currentPage === totalFilteredPages}
+                          disabled={currentPage === actualTotalPages}
                           className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium ${
-                            currentPage === totalFilteredPages
+                            currentPage === actualTotalPages
                               ? "text-gray-400 bg-gray-50 cursor-not-allowed"
                               : "text-gray-700 bg-white hover:bg-gray-50"
                           }`}
@@ -871,7 +872,7 @@ const UsersPage: React.FC = () => {
                       </div>
 
                       <div className="text-sm text-gray-500">
-                        Page {currentPage} of {totalFilteredPages}
+                        Page {currentPage} of {actualTotalPages}
                       </div>
                     </div>
                   </div>
