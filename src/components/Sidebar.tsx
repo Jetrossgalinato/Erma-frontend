@@ -9,7 +9,6 @@ import {
   FileText,
   Activity,
   Users,
-  Shield,
   ChevronDown,
   ChevronRight,
   LucideIcon,
@@ -548,10 +547,6 @@ const Sidebar: React.FC = () => {
     },
   ];
 
-  const filamentShieldItems: MenuItemData[] = [
-    { icon: Shield, label: "Roles", count: 4, path: "/roles" },
-  ];
-
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
       <div className="py-4 pt-25">
@@ -604,22 +599,6 @@ const Sidebar: React.FC = () => {
           {expandedSections.userManagement && (
             <div className="space-y-1">
               {userManagementItems.map((item, index) => (
-                <SidebarMenuItem key={index} {...item} isSubItem />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Filament Shield */}
-        <div className="mt-4">
-          <SidebarSectionHeader
-            label="Filament Shield"
-            isExpanded={expandedSections.filamentShield}
-            onToggle={() => toggleSection("filamentShield")}
-          />
-          {expandedSections.filamentShield && (
-            <div className="space-y-1">
-              {filamentShieldItems.map((item, index) => (
                 <SidebarMenuItem key={index} {...item} isSubItem />
               ))}
             </div>
