@@ -11,7 +11,7 @@ export default function LoginPage() {
   const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("employee"); // Default role
+  const [role] = useState("employee"); // Default role
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,17 +35,10 @@ export default function LoginPage() {
     }
 
     // Always query from account_requests
-    let query = supabase
+    const query = supabase
       .from("account_requests")
       .select("is_approved")
       .eq("user_id", user.id);
-
-    // Add the role-specific filter
-    if (role === "intern") {
-      query = query.eq("is_intern", true);
-    } else if (role === "supervisor") {
-      query = query.eq("is_supervisor", true);
-    }
 
     const { data: roleData, error: roleError } = await query.single();
 
@@ -115,26 +108,6 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
-            </div>
-
-            {/* 🔽 Dropdown for Organization */}
-            <div>
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Organization
-              </label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-              >
-                <option value="employee">Employee</option>
-                <option value="intern">Intern</option>
-                <option value="supervisor">Supervisor</option>
-              </select>
             </div>
 
             {error && (
