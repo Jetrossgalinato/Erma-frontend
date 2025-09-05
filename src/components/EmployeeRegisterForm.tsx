@@ -126,9 +126,13 @@ export default function EmployeeRegisterForm() {
       className="space-y-4 bg-white rounded-2xl shadow-xl p-8"
       onSubmit={handleSubmit}
     >
-      <h2 className="text-2xl font-semibold text-gray-700 text-center mb-4">
-        Employee Registration
-      </h2>
+      <div className="text-center mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Welcome back! 👋</h2>
+        <p className="text-lg text-gray-700">
+          Register to{" "}
+          <span className="text-orange-600 font-semibold">CRIMS</span>
+        </p>
+      </div>
 
       {/* Email */}
       <div>

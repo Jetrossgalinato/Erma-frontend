@@ -18,18 +18,8 @@ export default function RegisterPage() {
       <Navbar />
 
       <div className="flex flex-col items-center justify-center flex-1 px-4 py-12">
-        {/* New Heading */}
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Welcome back! 👋</h2>
-          <p className="text-lg text-gray-700">
-            Register to{" "}
-            <span className="text-orange-600 font-semibold">CRIMS</span> as an
-            Employee
-          </p>
-        </div>
-
         {/* Render the selected register form */}
-        <div className="w-full max-w-md mt-6">
+        <div className="w-full max-w-md mt-4">
           {registerAs === "employee" && <EmployeeRegisterForm />}
         </div>
       </div>
