@@ -1,14 +1,49 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Session } from "@supabase/supabase-js";
 
 export default function Home() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  const [session, setSession] = useState<Session | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (mounted) {
+        setSession(session);
+        setAuthChecked(true);
+      }
+    };
+
+    loadSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   const handleGetStarted = () => {
-    // Change this route to wherever you want new users to begin (e.g. /login or /register)
+    // Adjust this route if you have a dedicated registration/request-access page
     router.push("/login");
   };
 
@@ -39,31 +74,32 @@ export default function Home() {
                 and tracking your OJT attendance with ease.
               </p>
 
-              {/* Get Started Button (new) */}
-              <div>
-                <button
-                  onClick={handleGetStarted}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
-                  aria-label="Get started with CRIMS"
-                >
-                  Get Started
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    viewBox="0 0 24 24"
+              {/* Show the button ONLY when:
+                  - authChecked is true (so we don't flash the button incorrectly)
+                  - user is NOT logged in (session == null)
+               */}
+              {authChecked && !session && (
+                <div>
+                  <button
+                    onClick={handleGetStarted}
+                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                    aria-label="Get started with CRIMS"
                   >
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </button>
-                {/* Optional helper text */}
-                {/* <p className="mt-2 text-xs text-gray-600">
-                  No account yet? Request access after clicking Get Started.
-                </p> */}
-              </div>
+                    Get Started
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
