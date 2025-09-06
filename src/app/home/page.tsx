@@ -2,8 +2,16 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    // Change this route to wherever you want new users to begin (e.g. /login or /register)
+    router.push("/login");
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -25,15 +33,43 @@ export default function Home() {
               </h1>
             </div>
 
-            <p className="text-lg text-gray-700 max-w-lg leading-relaxed">
-              Your one-stop platform for managing college equipment requests and
-              tracking your OJT attendance with ease.
-            </p>
+            <div className="space-y-6">
+              <p className="text-lg text-gray-700 max-w-lg leading-relaxed">
+                Your one-stop platform for managing college equipment requests
+                and tracking your OJT attendance with ease.
+              </p>
+
+              {/* Get Started Button (new) */}
+              <div>
+                <button
+                  onClick={handleGetStarted}
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                  aria-label="Get started with CRIMS"
+                >
+                  Get Started
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+                {/* Optional helper text */}
+                {/* <p className="mt-2 text-xs text-gray-600">
+                  No account yet? Request access after clicking Get Started.
+                </p> */}
+              </div>
+            </div>
           </div>
 
           {/* Right Content - Phone Mockup */}
           <div className="relative flex justify-center lg:justify-end items-center">
-            {/* Floating Icons - Better distributed */}
+            {/* Floating Icons */}
             <div className="absolute -top-6 -left-12 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center transform rotate-12 shadow-lg">
               <svg
                 className="w-8 h-8 text-white"
@@ -66,7 +102,6 @@ export default function Home() {
               </svg>
             </div>
 
-            {/* Additional floating elements for better balance */}
             <div className="absolute -bottom-4 left-4 w-14 h-14 bg-orange-400 rounded-full flex items-center justify-center transform rotate-45 shadow-lg">
               <svg
                 className="w-7 h-7 text-white"
@@ -99,17 +134,13 @@ export default function Home() {
               </svg>
             </div>
 
-            {/* Phone Mockup - Better centered */}
+            {/* Phone Mockup */}
             <div className="relative z-10">
-              {/* Phone Frame */}
               <div className="w-72 h-[600px] bg-black rounded-[3rem] p-2 shadow-2xl">
                 <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
-                  {/* Phone Notch */}
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-black rounded-b-xl z-10"></div>
 
-                  {/* Phone Content */}
                   <div className="pt-8 px-6 h-full bg-gray-50">
-                    {/* Status Bar */}
                     <div className="flex justify-between items-center mb-8 text-sm">
                       <span className="font-semibold text-black">9:41</span>
                       <div className="flex items-center gap-1">
@@ -119,9 +150,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* App Content */}
                     <div className="space-y-6">
-                      {/* Projector Image */}
                       <div className="bg-white rounded-xl p-4 shadow-sm">
                         <div className="w-full h-24 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                           <Image
@@ -134,19 +163,16 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Progress Bars - Better spacing */}
                       <div className="space-y-3">
                         <div className="bg-orange-400 h-2 rounded-full"></div>
                         <div className="bg-orange-400 h-2 w-3/4 rounded-full"></div>
                       </div>
 
-                      {/* Request Button */}
                       <div className="relative mt-8">
                         <button className="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold text-lg shadow-lg">
                           Request
                         </button>
 
-                        {/* Floating Icon */}
                         <div className="absolute -top-4 -right-4 w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
                           <svg
                             className="w-8 h-8 text-purple-600"
@@ -172,7 +198,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );
