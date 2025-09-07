@@ -14,6 +14,7 @@ import {
   Edit,
   Trash2,
   RefreshCw,
+  Loader2,
   AlertTriangle,
   Filter,
   Building,
@@ -700,7 +701,7 @@ const UsersPage: React.FC = () => {
                 <div className="overflow-x-auto">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                      <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
                       <span className="ml-3 text-gray-600">Loading...</span>
                     </div>
                   ) : error ? (
