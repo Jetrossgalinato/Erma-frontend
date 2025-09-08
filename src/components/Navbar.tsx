@@ -144,7 +144,8 @@ const Navbar: React.FC = () => {
               (notif) => !notif.is_read
             ).length;
             setUnreadCount(unread);
-            console.log("Notifications:", data?.length, "Unread:", unread);
+            // Debug logs
+            // console.log("Notifications:", data?.length, "Unread:", unread);
           }
         }
       } catch (error) {
@@ -167,8 +168,7 @@ const Navbar: React.FC = () => {
             schema: "public",
             table: "notifications",
           },
-          (payload) => {
-            console.log("Real-time notification change:", payload);
+          () => {
             fetchNotifications();
           }
         )
@@ -201,16 +201,13 @@ const Navbar: React.FC = () => {
       fetchNotifications();
     }
   };
-  useEffect(() => {
-    console.log("Unread count updated:", unreadCount);
-    console.log("Total notifications:", notifications.length);
-  }, [unreadCount, notifications]);
 
   // Utility for checking if user is Staff/Faculty/Admin
   const isPrivileged =
     approvedAccRole === "Staff" ||
     approvedAccRole === "Faculty" ||
     approvedAccRole === "Admin";
+  const isFaculty = approvedAccRole === "Faculty";
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -302,13 +299,16 @@ const Navbar: React.FC = () => {
 
             {isAvatarDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
-                <a
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
-                >
-                  <LayoutDashboard size={16} />
-                  My Dashboard
-                </a>
+                {/* Hide My Dashboard for Faculty */}
+                {!isFaculty && (
+                  <a
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <LayoutDashboard size={16} />
+                    My Dashboard
+                  </a>
+                )}
                 <a
                   href="/my-requests"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
@@ -479,13 +479,16 @@ const Navbar: React.FC = () => {
 
               {isAvatarDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
-                  <a
-                    href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
-                  >
-                    <LayoutDashboard size={16} />
-                    My Dashboard
-                  </a>
+                  {/* Hide My Dashboard for Faculty */}
+                  {!isFaculty && (
+                    <a
+                      href="/dashboard"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    >
+                      <LayoutDashboard size={16} />
+                      My Dashboard
+                    </a>
+                  )}
                   <a
                     href="/my-requests"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
