@@ -38,6 +38,9 @@ const Navbar: React.FC = () => {
     useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Track user's approved_acc_role
+  const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
+
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
   const toggleAvatarDropdown = () =>
@@ -67,12 +70,34 @@ const Navbar: React.FC = () => {
   }, [supabase.auth]);
 
   useEffect(() => {
+    // When session changes, fetch approved_acc_role
+    const fetchUserRole = async () => {
+      if (session?.user) {
+        const { data: accountData, error: accountError } = await supabase
+          .from("account_requests")
+          .select("approved_acc_role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (accountError) {
+          setApprovedAccRole(null);
+          return;
+        }
+        setApprovedAccRole(accountData?.approved_acc_role ?? null);
+      } else {
+        setApprovedAccRole(null);
+      }
+    };
+    fetchUserRole();
+  }, [session, supabase]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest(".dropdown-container")) {
         setIsResourcesOpen(false);
         setIsAvatarDropdownOpen(false);
-        setIsNotificationDropdownOpen(false); // Add this line
+        setIsNotificationDropdownOpen(false);
       }
     };
 
@@ -115,12 +140,12 @@ const Navbar: React.FC = () => {
             console.error("Error fetching notifications:", error);
           } else {
             setNotifications(data || []);
-            // Ensure unreadCount is calculated correctly
             const unread = (data || []).filter(
               (notif) => !notif.is_read
             ).length;
             setUnreadCount(unread);
-            console.log("Notifications:", data?.length, "Unread:", unread); // Debug log
+            // Debug logs
+            // console.log("Notifications:", data?.length, "Unread:", unread);
           }
         }
       } catch (error) {
@@ -143,9 +168,8 @@ const Navbar: React.FC = () => {
             schema: "public",
             table: "notifications",
           },
-          (payload) => {
-            console.log("Real-time notification change:", payload); // Debug log
-            fetchNotifications(); // Refetch when notifications change
+          () => {
+            fetchNotifications();
           }
         )
         .subscribe();
@@ -165,25 +189,25 @@ const Navbar: React.FC = () => {
 
       if (error) throw error;
 
-      // Immediately update the local state instead of refetching
       setNotifications((prev) =>
         prev.map((notif) =>
           notif.id === notificationId ? { ...notif, is_read: true } : notif
         )
       );
 
-      // Update unread count immediately
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Error marking notification as read:", error);
-      // Fallback to refetch if update fails
       fetchNotifications();
     }
   };
-  useEffect(() => {
-    console.log("Unread count updated:", unreadCount);
-    console.log("Total notifications:", notifications.length);
-  }, [unreadCount, notifications]);
+
+  // Utility for checking if user is Staff/Faculty/Admin
+  const isPrivileged =
+    approvedAccRole === "Staff" ||
+    approvedAccRole === "Faculty" ||
+    approvedAccRole === "Admin";
+  const isFaculty = approvedAccRole === "Faculty";
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -252,7 +276,8 @@ const Navbar: React.FC = () => {
           )}
         </div>
 
-        {session && (
+        {/* Hide Account Requests for Staff, Faculty, Admin */}
+        {session && !isPrivileged && (
           <a
             href="/requests"
             className={`hover:text-black transition-colors duration-300 ${
@@ -274,13 +299,16 @@ const Navbar: React.FC = () => {
 
             {isAvatarDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
-                <a
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
-                >
-                  <LayoutDashboard size={16} />
-                  My Dashboard
-                </a>
+                {/* Hide My Dashboard for Faculty */}
+                {!isFaculty && (
+                  <a
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                  >
+                    <LayoutDashboard size={16} />
+                    My Dashboard
+                  </a>
+                )}
                 <a
                   href="/my-requests"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
@@ -428,7 +456,8 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {session && (
+          {/* Hide Account Requests for Staff, Faculty, Admin */}
+          {session && !isPrivileged && (
             <a
               href="/requests"
               className={`py-2 text-gray-700 ${
@@ -450,13 +479,16 @@ const Navbar: React.FC = () => {
 
               {isAvatarDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
-                  <a
-                    href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
-                  >
-                    <LayoutDashboard size={16} />
-                    My Dashboard
-                  </a>
+                  {/* Hide My Dashboard for Faculty */}
+                  {!isFaculty && (
+                    <a
+                      href="/dashboard"
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    >
+                      <LayoutDashboard size={16} />
+                      My Dashboard
+                    </a>
+                  )}
                   <a
                     href="/my-requests"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"

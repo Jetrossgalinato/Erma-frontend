@@ -118,6 +118,32 @@ const Sidebar: React.FC = () => {
   const [supplyLogsCount, setSupplyLogsCount] = useState<number>(0);
   const [accountRequestsCount, setAccountRequestsCount] = useState<number>(0);
 
+  // --- NEW: Approved Account Role State ---
+  const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
+
+  // Fetch current user's approved_acc_role
+  useEffect(() => {
+    const fetchRole = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+      if (!user) {
+        setApprovedAccRole(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("account_requests")
+        .select("approved_acc_role")
+        .eq("user_id", user.id)
+        .single();
+      if (error || !data) {
+        setApprovedAccRole(null);
+      } else {
+        setApprovedAccRole(data.approved_acc_role || null);
+      }
+    };
+    fetchRole();
+  }, [supabase]);
+
   // Fetch equipment count from Supabase
   useEffect(() => {
     const fetchEquipmentCount = async () => {
@@ -143,7 +169,6 @@ const Sidebar: React.FC = () => {
 
     fetchEquipmentCount();
 
-    // Optional: Set up real-time subscription to update count when equipment is added/removed
     const subscription = supabase
       .channel("equipments_changes")
       .on(
@@ -164,7 +189,6 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch facility count from Supabase
   useEffect(() => {
     const fetchFacilityCount = async () => {
       try {
@@ -189,7 +213,6 @@ const Sidebar: React.FC = () => {
 
     fetchFacilityCount();
 
-    // Optional: Set up real-time subscription to update count when facility is added/removed
     const subscription = supabase
       .channel("facilities_changes")
       .on(
@@ -233,7 +256,6 @@ const Sidebar: React.FC = () => {
 
     fetchRequestCount();
 
-    // Optional: real-time update if any table changes
     const channels = ["borrowing", "booking", "acquiring"].map((table) =>
       supabase
         .channel(`${table}_changes`)
@@ -248,7 +270,6 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch supply count from Supabase
   useEffect(() => {
     const fetchSupplyCount = async () => {
       try {
@@ -273,7 +294,6 @@ const Sidebar: React.FC = () => {
 
     fetchSupplyCount();
 
-    // Optional: Set up real-time subscription to update count when supply is added/removed
     const subscription = supabase
       .channel("supplies_changes")
       .on(
@@ -294,7 +314,6 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch equipment logs count from Supabase
   useEffect(() => {
     const fetchEquipmentLogsCount = async () => {
       try {
@@ -319,7 +338,6 @@ const Sidebar: React.FC = () => {
 
     fetchEquipmentLogsCount();
 
-    // Optional: Set up real-time subscription to update count when equipment logs are added/removed
     const subscription = supabase
       .channel("equipment_logs_changes")
       .on(
@@ -340,7 +358,6 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch facility logs count from Supabase
   useEffect(() => {
     const fetchFacilityLogsCount = async () => {
       try {
@@ -365,7 +382,6 @@ const Sidebar: React.FC = () => {
 
     fetchFacilityLogsCount();
 
-    // Optional: Set up real-time subscription to update count when facility logs are added/removed
     const subscription = supabase
       .channel("facility_logs_changes")
       .on(
@@ -410,7 +426,6 @@ const Sidebar: React.FC = () => {
 
     fetchSupplyLogsCount();
 
-    // Optional: Set up real-time subscription to update count when supply logs are added/removed
     const subscription = supabase
       .channel("supply_logs_changes")
       .on(
@@ -431,7 +446,6 @@ const Sidebar: React.FC = () => {
     };
   }, [supabase]);
 
-  // Fetch account requests count from Supabase - ONLY NULL users
   useEffect(() => {
     const fetchAccountRequestsCount = async () => {
       try {
@@ -440,7 +454,7 @@ const Sidebar: React.FC = () => {
           .from("account_requests")
           .select("*", { count: "exact", head: true })
           .is("is_intern", null)
-          .is("is_supervisor", null); // Only count users where both are NULL
+          .is("is_supervisor", null);
 
         if (error) {
           console.error("Error fetching account requests count:", error);
@@ -458,7 +472,6 @@ const Sidebar: React.FC = () => {
 
     fetchAccountRequestsCount();
 
-    // Optional: Set up real-time subscription to update count when account requests are added/removed
     const subscription = supabase
       .channel("account_requests_changes")
       .on(
@@ -547,6 +560,9 @@ const Sidebar: React.FC = () => {
     },
   ];
 
+  // Staff should NOT see Requests & User Management
+  const isStaff = approvedAccRole === "Staff";
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
       <div className="py-4 pt-25">
@@ -557,21 +573,23 @@ const Sidebar: React.FC = () => {
           ))}
         </div>
 
-        {/* Requests */}
-        <div className="mt-6">
-          <SidebarSectionHeader
-            label="Requests"
-            isExpanded={expandedSections.requests}
-            onToggle={() => toggleSection("requests")}
-          />
-          {expandedSections.requests && (
-            <div className="space-y-1">
-              {requestItems.map((item, index) => (
-                <SidebarMenuItem key={index} {...item} isSubItem />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Requests (hide for Staff) */}
+        {!isStaff && (
+          <div className="mt-6">
+            <SidebarSectionHeader
+              label="Requests"
+              isExpanded={expandedSections.requests}
+              onToggle={() => toggleSection("requests")}
+            />
+            {expandedSections.requests && (
+              <div className="space-y-1">
+                {requestItems.map((item, index) => (
+                  <SidebarMenuItem key={index} {...item} isSubItem />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Monitoring */}
         <div className="mt-4">
@@ -589,21 +607,23 @@ const Sidebar: React.FC = () => {
           )}
         </div>
 
-        {/* User Management */}
-        <div className="mt-4">
-          <SidebarSectionHeader
-            label="User Management"
-            isExpanded={expandedSections.userManagement}
-            onToggle={() => toggleSection("userManagement")}
-          />
-          {expandedSections.userManagement && (
-            <div className="space-y-1">
-              {userManagementItems.map((item, index) => (
-                <SidebarMenuItem key={index} {...item} isSubItem />
-              ))}
-            </div>
-          )}
-        </div>
+        {/* User Management (hide for Staff) */}
+        {!isStaff && (
+          <div className="mt-4">
+            <SidebarSectionHeader
+              label="User Management"
+              isExpanded={expandedSections.userManagement}
+              onToggle={() => toggleSection("userManagement")}
+            />
+            {expandedSections.userManagement && (
+              <div className="space-y-1">
+                {userManagementItems.map((item, index) => (
+                  <SidebarMenuItem key={index} {...item} isSubItem />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
