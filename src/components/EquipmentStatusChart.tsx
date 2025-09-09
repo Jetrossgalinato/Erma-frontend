@@ -65,7 +65,11 @@ export default function EquipmentStatusChart() {
   }, [supabase]);
 
   if (loading)
-    return <p className="text-gray-500 italic">Loading status chart...</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400 italic">
+        Loading status chart...
+      </p>
+    );
 
   // Define colors for each status
   const statusColors: Record<string, string> = {
@@ -75,8 +79,8 @@ export default function EquipmentStatusChart() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 tracking-tight">
         Equipment Status Overview
       </h2>
       <ResponsiveContainer width="100%" height={300}>

@@ -125,7 +125,7 @@ const DashboardNavbar: React.FC = () => {
   };
 
   return (
-    <nav className="w-full bg-white dark:bg-gray-900 shadow-sm px-6 md:py-1 flex justify-between items-center relative">
+    <nav className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm px-6 md:py-1 flex justify-between items-center relative">
       <div className="flex items-center pl-40">
         <Image
           src="/images/logocircle.png"

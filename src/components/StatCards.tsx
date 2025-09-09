@@ -11,7 +11,7 @@ interface StatCardProps {
 
 const StatCard: FC<StatCardProps> = ({ title, value, bgColor, iconPath }) => {
   return (
-    <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-5">
         <div className="flex items-center">
           <div className="flex-shrink-0">
@@ -35,10 +35,10 @@ const StatCard: FC<StatCardProps> = ({ title, value, bgColor, iconPath }) => {
           </div>
           <div className="ml-5 w-0 flex-1">
             <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                 {title}
               </dt>
-              <dd className="text-lg font-semibold text-gray-900">
+              <dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {value !== null ? value : "Loading..."}
               </dd>
             </dl>

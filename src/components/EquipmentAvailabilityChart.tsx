@@ -66,7 +66,7 @@ export default function EquipmentAvailabilityChart() {
 
   if (loading)
     return (
-      <p className="text-gray-500 italic">
+      <p className="text-gray-500 dark:text-gray-400 italic">
         Loading equipment availability chart...
       </p>
     );
@@ -79,8 +79,8 @@ export default function EquipmentAvailabilityChart() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4 tracking-tight">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 tracking-tight">
         Equipment Availability Status
       </h2>
       <ResponsiveContainer width="100%" height={300}>

@@ -198,13 +198,13 @@ export default function DashboardPage() {
 
   if (!mounted) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <div className="animate-pulse bg-gray-200 w-64 h-full" />
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-pulse bg-gray-200 dark:bg-gray-700 w-64 h-full" />
         <div className="flex-1 flex flex-col">
-          <div className="animate-pulse bg-gray-200 h-16 w-full" />
+          <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-16 w-full" />
           <div className="flex-1 p-6">
-            <div className="animate-pulse bg-gray-200 h-8 w-48 mb-4 rounded" />
-            <div className="animate-pulse bg-gray-200 h-4 w-64 rounded" />
+            <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-48 mb-4 rounded" />
+            <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-64 rounded" />
           </div>
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
@@ -221,7 +221,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <DashboardNavbar />
       </header>
 
@@ -241,10 +241,10 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                     Dashboard
                   </h1>
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Welcome to your dashboard! {"Here's"} an overview of the
                     system.
                   </p>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                 <button
                   onClick={handleRefreshClick}
                   disabled={isRefreshing}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
                     isRefreshing
                       ? "cursor-not-allowed opacity-75"
                       : "hover:shadow-md"
