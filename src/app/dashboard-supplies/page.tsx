@@ -794,16 +794,19 @@ export default function DashboardSuppliesPage() {
     if (quantity === 0)
       return {
         status: "Out of Stock",
-        color: "bg-red-100 text-red-800 border-red-200",
+        color:
+          "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700",
       };
     if (quantity <= stockingPoint)
       return {
         status: "Low Stock",
-        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        color:
+          "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700",
       };
     return {
       status: "In Stock",
-      color: "bg-green-100 text-green-800 border-green-200",
+      color:
+        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700",
     };
   };
 
@@ -833,7 +836,7 @@ export default function DashboardSuppliesPage() {
   }, [fetchSupplies, fetchFacilities]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
@@ -842,7 +845,7 @@ export default function DashboardSuppliesPage() {
         />
       )}
 
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <DashboardNavbar />
       </header>
 
@@ -862,10 +865,10 @@ export default function DashboardSuppliesPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                     Supplies
                   </h1>
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Welcome to the Supplies Dashboard. Here you can manage and
                     track all supply inventory.
                   </p>
@@ -875,10 +878,10 @@ export default function DashboardSuppliesPage() {
                   <div className="relative" ref={filterDropdownRef}>
                     <button
                       onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium transition-all duration-200 ${
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
                         activeFilter || categoryFilter || facilityFilter
-                          ? "bg-blue-50 text-blue-700 border-blue-300"
-                          : "bg-white text-gray-700 hover:bg-gray-50"
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
+                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                       }`}
                     >
                       <Filter className="w-4 h-4 mr-2" />
@@ -887,18 +890,18 @@ export default function DashboardSuppliesPage() {
                     </button>
 
                     {showFilterDropdown && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
                           <button
                             onClick={() => handleFilterSelect("category")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
                             <Tag className="w-4 h-4 mr-3" />
                             Filter by Category
                           </button>
                           <button
                             onClick={() => handleFilterSelect("facility")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
                             <Building className="w-4 h-4 mr-3" />
                             Filter by Facility
@@ -916,7 +919,7 @@ export default function DashboardSuppliesPage() {
                         setCategoryFilter(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All Categories</option>
                       {getUniqueCategories().map((category) => (
@@ -935,7 +938,7 @@ export default function DashboardSuppliesPage() {
                         setFacilityFilter(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All Facilities</option>
                       {getUniqueFacilities().map((facility) => (
@@ -950,7 +953,7 @@ export default function DashboardSuppliesPage() {
                   {(categoryFilter || facilityFilter || activeFilter) && (
                     <button
                       onClick={clearFilters}
-                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                     >
                       <X className="w-4 h-4 mr-1 inline" />
                       Clear
@@ -963,7 +966,7 @@ export default function DashboardSuppliesPage() {
                       onClick={() =>
                         setShowActionsDropdown(!showActionsDropdown)
                       }
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Actions
@@ -972,7 +975,7 @@ export default function DashboardSuppliesPage() {
 
                     {/* Actions Dropdown Menu */}
                     {showActionsDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
                           {/* Insert Row Option */}
                           <button
@@ -980,9 +983,9 @@ export default function DashboardSuppliesPage() {
                               setShowInsertForm(true);
                               setShowActionsDropdown(false);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
-                            <Plus className="w-4 h-4 mr-3 text-green-600" />
+                            <Plus className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
                             Insert Row
                           </button>
 
@@ -992,13 +995,13 @@ export default function DashboardSuppliesPage() {
                               setShowImportModal(true);
                               setShowActionsDropdown(false);
                             }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
-                            <Upload className="w-4 h-4 mr-3 text-green-600" />
+                            <Upload className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
                             Import Data from CSV File
                           </button>
 
-                          <hr className="my-1 border-gray-100" />
+                          <hr className="my-1 border-gray-100 dark:border-gray-600" />
 
                           {/* Edit Selected Option */}
                           <button
@@ -1009,11 +1012,11 @@ export default function DashboardSuppliesPage() {
                             disabled={selectedRows.length !== 1}
                             className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
                               selectedRows.length !== 1
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                             }`}
                           >
-                            <Edit className="w-4 h-4 mr-3 text-blue-600" />
+                            <Edit className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
                             Edit Selected (
                             {selectedRows.length === 1
                               ? "1"
@@ -1030,11 +1033,11 @@ export default function DashboardSuppliesPage() {
                             disabled={selectedRows.length === 0}
                             className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
                               selectedRows.length === 0
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-red-50 hover:text-red-900"
+                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-900 dark:hover:text-red-400"
                             }`}
                           >
-                            <Trash2 className="w-4 h-4 mr-3 text-red-600" />
+                            <Trash2 className="w-4 h-4 mr-3 text-red-600 dark:text-red-400" />
                             Delete Selected ({selectedRows.length})
                           </button>
                         </div>
@@ -1049,35 +1052,35 @@ export default function DashboardSuppliesPage() {
                         className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
                         onClick={() => setShowDeleteModal(false)}
                       ></div>
-                      <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
                         <div className="p-6">
                           <div className="flex items-center justify-center">
-                            <AlertTriangle className="h-10 w-10 text-red-600" />
+                            <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400" />
                           </div>
                           <div className="mt-3 text-center">
-                            <h3 className="text-lg font-medium text-gray-900">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                               Delete Selected Supplies
                             </h3>
                             <div className="mt-2">
-                              <p className="text-sm text-gray-500">
-                                Are you sure you want to delete **
-                                {selectedRows.length}** supply records? This
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Are you sure you want to delete{" "}
+                                {selectedRows.length} supply records? This
                                 action cannot be undone.
                               </p>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+                        <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 flex justify-center gap-3">
                           <button
                             type="button"
-                            className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                            className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 dark:bg-red-700 text-base font-medium text-white hover:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
                             onClick={handleDeleteSelectedRows}
                           >
                             Delete
                           </button>
                           <button
                             type="button"
-                            className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                            className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
                             onClick={() => setShowDeleteModal(false)}
                           >
                             Cancel
@@ -1091,7 +1094,7 @@ export default function DashboardSuppliesPage() {
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
-                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
                       isRefreshing
                         ? "cursor-not-allowed opacity-75"
                         : "hover:shadow-md"
@@ -1109,30 +1112,30 @@ export default function DashboardSuppliesPage() {
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
-                  <span className="ml-3 text-gray-600">
+                  <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
+                  <span className="ml-3 text-gray-600 dark:text-gray-400">
                     Loading supplies...
                   </span>
                 </div>
               ) : supplies.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 text-lg">
+                  <div className="text-gray-400 dark:text-gray-500 text-lg">
                     No supplies found.
                   </div>
                 </div>
               ) : (
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
                   {/* Insert Form Row */}
                   {showInsertForm && (
-                    <div className="border-b border-gray-200 bg-green-50">
+                    <div className="border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-sm font-medium text-gray-900">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             Add new supply
                           </h4>
                           <button
                             onClick={handleCancelInsert}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                           >
                             <X className="w-5 h-5" />
                           </button>
@@ -1140,7 +1143,7 @@ export default function DashboardSuppliesPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Name <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1152,13 +1155,13 @@ export default function DashboardSuppliesPage() {
                                   name: e.target.value,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="Supply name"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Description
                             </label>
                             <input
@@ -1170,14 +1173,14 @@ export default function DashboardSuppliesPage() {
                                   description: e.target.value,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="Description"
                             />
                           </div>
 
                           {/* Add this in the insert form grid, after the facility field */}
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Image
                             </label>
                             <div className="space-y-2">
@@ -1185,7 +1188,7 @@ export default function DashboardSuppliesPage() {
                                 <button
                                   type="button"
                                   onClick={() => imageInputRef.current?.click()}
-                                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                                 >
                                   Choose Image
                                 </button>
@@ -1193,7 +1196,7 @@ export default function DashboardSuppliesPage() {
                                   <button
                                     type="button"
                                     onClick={clearImageSelection}
-                                    className="px-2 py-1 text-xs text-red-600 hover:text-red-800"
+                                    className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                                   >
                                     Remove
                                   </button>
@@ -1201,7 +1204,7 @@ export default function DashboardSuppliesPage() {
                               </div>
 
                               {selectedImageFile && (
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   Selected: {selectedImageFile.name}
                                 </div>
                               )}
@@ -1219,7 +1222,7 @@ export default function DashboardSuppliesPage() {
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Category <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1231,13 +1234,13 @@ export default function DashboardSuppliesPage() {
                                   category: e.target.value,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="Category"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Quantity
                             </label>
                             <input
@@ -1250,13 +1253,13 @@ export default function DashboardSuppliesPage() {
                                   quantity: parseInt(e.target.value) || 0,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="0"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Stocking Point
                             </label>
                             <input
@@ -1269,13 +1272,13 @@ export default function DashboardSuppliesPage() {
                                   stocking_point: parseInt(e.target.value) || 0,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="0"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Stock Unit <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -1287,13 +1290,13 @@ export default function DashboardSuppliesPage() {
                                   stock_unit: e.target.value,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="e.g., pieces, kg, liters"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Facility
                             </label>
                             <select
@@ -1310,7 +1313,7 @@ export default function DashboardSuppliesPage() {
                                   },
                                 });
                               }}
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             >
                               <option value="">Select facility</option>
                               {facilities.map((facility) => (
@@ -1322,7 +1325,7 @@ export default function DashboardSuppliesPage() {
                           </div>
 
                           <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Remarks
                             </label>
                             <input
@@ -1334,7 +1337,7 @@ export default function DashboardSuppliesPage() {
                                   remarks: e.target.value,
                                 })
                               }
-                              className="w-full px-3 py-2 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="Additional notes"
                             />
                           </div>
@@ -1344,14 +1347,14 @@ export default function DashboardSuppliesPage() {
                           <button
                             type="button"
                             onClick={handleCancelInsert}
-                            className="px-3 py-1.5 text-sm text-black font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                            className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
                           >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={handleInsertSupply}
-                            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 dark:bg-green-700 border border-transparent rounded-md hover:bg-green-700 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
                           >
                             Save
                           </button>
@@ -1361,16 +1364,16 @@ export default function DashboardSuppliesPage() {
                   )}
 
                   <div className="overflow-auto flex-1">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50 sticky top-0 z-20">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-20">
                         <tr>
                           <th
                             scope="col"
-                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider"
+                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                           >
                             <input
                               type="checkbox"
-                              className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                              className="form-checkbox h-4 w-4 text-green-600 dark:text-green-400 transition duration-150 ease-in-out"
                               checked={
                                 selectedRows.length === supplies.length &&
                                 supplies.length > 0
@@ -1387,40 +1390,40 @@ export default function DashboardSuppliesPage() {
                             />
                           </th>
 
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Name
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Description
                           </th>
 
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Image
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Category
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Quantity
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Stocking Point
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Stock Unit
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Facility
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Stock Status
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                             Remarks
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {currentSupplies.map((supply, index) => {
                           const stockStatus = getStockStatus(
                             supply.quantity,
@@ -1429,14 +1432,16 @@ export default function DashboardSuppliesPage() {
                           return (
                             <tr
                               key={supply.id}
-                              className={`hover:bg-gray-50 ${
-                                index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                                index % 2 === 0
+                                  ? "bg-white dark:bg-gray-800"
+                                  : "bg-gray-50/50 dark:bg-gray-700/20"
                               }`}
                             >
-                              <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 bg-white border-r border-gray-200">
+                              <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
                                 <input
                                   type="checkbox"
-                                  className="form-checkbox h-4 w-4 text-green-600 transition duration-150 ease-in-out"
+                                  className="form-checkbox h-4 w-4 text-green-600 dark:text-green-400 transition duration-150 ease-in-out"
                                   checked={selectedRows.includes(supply.id)}
                                   onChange={() =>
                                     handleCheckboxChange(supply.id)
@@ -1444,22 +1449,22 @@ export default function DashboardSuppliesPage() {
                                 />
                               </td>
 
-                              <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
                                 {supply.name}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 <div className="max-w-xs truncate">
                                   {supply.description || "-"}
                                 </div>
                               </td>
                               {/* Add this after the checkbox cell, before the name cell */}
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 {supply.image ? (
                                   <div className="flex items-center justify-center">
                                     <img
                                       src={supply.image}
                                       alt={`${supply.name} supply`}
-                                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
+                                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
                                       onClick={() =>
                                         handleImageClick(
                                           supply.image!,
@@ -1473,15 +1478,15 @@ export default function DashboardSuppliesPage() {
                                         const parent = target.parentElement;
                                         if (parent) {
                                           parent.innerHTML =
-                                            '<span class="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">Failed to load</span>';
+                                            '<span class="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">Failed to load</span>';
                                         }
                                       }}
                                     />
                                   </div>
                                 ) : (
-                                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 border border-gray-200 rounded-lg">
+                                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                                     <svg
-                                      className="w-6 h-6 text-gray-400"
+                                      className="w-6 h-6 text-gray-400 dark:text-gray-500"
                                       fill="none"
                                       stroke="currentColor"
                                       viewBox="0 0 24 24"
@@ -1496,31 +1501,31 @@ export default function DashboardSuppliesPage() {
                                   </div>
                                 )}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
-                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 border border-gray-200">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
+                                <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
                                   {supply.category}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 text-center font-mono">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 text-center font-mono">
                                 {supply.quantity}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100 text-center font-mono">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 text-center font-mono">
                                 {supply.stocking_point}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 {supply.stock_unit}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 {supply.facilities?.name || "-"}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 <span
                                   className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stockStatus.color}`}
                                 >
                                   {stockStatus.status}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-100">
+                              <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                                 <div className="max-w-xs truncate">
                                   {supply.remarks || "-"}
                                 </div>
@@ -1532,8 +1537,8 @@ export default function DashboardSuppliesPage() {
                     </table>
                   </div>
 
-                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-                    <div className="text-sm text-gray-500">
+                  <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       Showing {startIndex + 1} to{" "}
                       {Math.min(endIndex, filteredSupplies.length)} of{" "}
                       {filteredSupplies.length} supplies
@@ -1545,12 +1550,12 @@ export default function DashboardSuppliesPage() {
                           setCurrentPage((prev) => Math.max(prev - 1, 1))
                         }
                         disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm text-black border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                        className="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
                       >
                         Previous
                       </button>
 
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
                         Page {currentPage} of {totalPages}
                       </span>
 
@@ -1561,7 +1566,7 @@ export default function DashboardSuppliesPage() {
                           )
                         }
                         disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm text-black border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                        className="px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600"
                       >
                         Next
                       </button>
@@ -1583,31 +1588,31 @@ export default function DashboardSuppliesPage() {
               onClick={() => setShowImportModal(false)}
             />
 
-            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-4xl">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl">
               <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6">
                   Import Supplies Data
                 </h3>
 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Upload file
                     </label>
                     <div
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload
-                        className="mx-auto h-8 w-8 text-gray-400 mb-3"
+                        className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-3"
                         strokeWidth={1.5}
                       />
-                      <p className="text-sm text-gray-600 mb-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                         {selectedFile
                           ? selectedFile.name
                           : "Click to upload or drag and drop"}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
                         CSV files (.csv) up to 10MB
                       </p>
                     </div>
@@ -1616,58 +1621,61 @@ export default function DashboardSuppliesPage() {
                   {importData.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Preview
                         </label>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {importData.length} row
                           {importData.length !== 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
                         <div className="max-h-64 overflow-y-auto">
                           <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0">
                               <tr>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Name
                                 </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Category
                                 </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Quantity
                                 </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Stock Unit
                                 </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Stocking Point
                                 </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700">
+                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
                                   Facility
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-600">
                               {importData.map((item, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                  <td className="px-3 py-2 text-gray-900 font-medium">
+                                <tr
+                                  key={index}
+                                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                >
+                                  <td className="px-3 py-2 text-gray-900 dark:text-gray-100 font-medium">
                                     {item.name || "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-gray-600">
+                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                                     {item.category || "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-gray-600">
+                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                                     {item.quantity || "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-gray-600">
+                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                                     {item.stock_unit || "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-gray-600">
+                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                                     {item.stocking_point || "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-gray-600">
+                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
                                     {item.facilities?.name || "—"}
                                   </td>
                                 </tr>
@@ -1681,15 +1689,15 @@ export default function DashboardSuppliesPage() {
 
                   {isProcessing && (
                     <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 border-t-transparent"></div>
-                      <span className="ml-3 text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 dark:border-green-400 border-t-transparent"></div>
+                      <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
                         Processing supplies data...
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
+                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
                   <button
                     type="button"
                     onClick={() => {
@@ -1697,7 +1705,7 @@ export default function DashboardSuppliesPage() {
                       setSelectedFile(null);
                       setImportData([]);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Cancel
                   </button>
@@ -1705,7 +1713,7 @@ export default function DashboardSuppliesPage() {
                     type="button"
                     onClick={handleImportData}
                     disabled={importData.length === 0 || isProcessing}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700 border border-transparent rounded-md hover:bg-green-700 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProcessing
                       ? "Importing..."
@@ -1735,15 +1743,15 @@ export default function DashboardSuppliesPage() {
               onClick={handleCancelEdit}
             />
 
-            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                     Edit Supply
                   </h3>
                   <button
                     onClick={handleCancelEdit}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1752,7 +1760,7 @@ export default function DashboardSuppliesPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1760,13 +1768,13 @@ export default function DashboardSuppliesPage() {
                         name="name"
                         value={editingSupply.name || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Supply name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Category <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1774,13 +1782,13 @@ export default function DashboardSuppliesPage() {
                         name="category"
                         value={editingSupply.category || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Category"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Quantity
                       </label>
                       <input
@@ -1789,12 +1797,12 @@ export default function DashboardSuppliesPage() {
                         min="0"
                         value={editingSupply.quantity || 0}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Stocking Point
                       </label>
                       <input
@@ -1803,12 +1811,12 @@ export default function DashboardSuppliesPage() {
                         min="0"
                         value={editingSupply.stocking_point || 0}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Stock Unit <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1816,20 +1824,20 @@ export default function DashboardSuppliesPage() {
                         name="stock_unit"
                         value={editingSupply.stock_unit || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., pieces, kg, liters"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Facility
                       </label>
                       <select
                         name="facility_id"
                         value={editingSupply.facilities?.id || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="">Select facility</option>
                         {facilities.map((facility) => (
@@ -1842,7 +1850,7 @@ export default function DashboardSuppliesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Description
                     </label>
                     <textarea
@@ -1850,21 +1858,21 @@ export default function DashboardSuppliesPage() {
                       rows={3}
                       value={editingSupply.description || ""}
                       onChange={handleEditChange}
-                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Supply description"
                     />
                   </div>
 
                   {/* Add this in the edit modal grid, after the facility field */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Image
                     </label>
                     <div className="space-y-3">
                       {/* Current Image Display */}
                       {editingSupply?.image && !editImagePreview && (
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                             Current Image:
                           </div>
                           <div className="flex items-center space-x-2">
@@ -1882,7 +1890,7 @@ export default function DashboardSuppliesPage() {
                             <button
                               type="button"
                               onClick={removeCurrentImage}
-                              className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded"
+                              className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 border border-red-300 dark:border-red-600 rounded"
                             >
                               Remove Current Image
                             </button>
@@ -1895,21 +1903,21 @@ export default function DashboardSuppliesPage() {
                         <button
                           type="button"
                           onClick={() => editImageInputRef.current?.click()}
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
                         >
                           <Upload className="w-4 h-4 mr-2" />
                           {editingSupply?.image ? "Change Image" : "Add Image"}
                         </button>
 
                         {editImageFile && (
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             New image: {editImageFile.name}
                           </div>
                         )}
 
                         {editImagePreview && (
                           <div className="mt-2">
-                            <div className="text-xs text-gray-500 mb-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                               Preview:
                             </div>
                             <img
@@ -1930,7 +1938,7 @@ export default function DashboardSuppliesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Remarks
                     </label>
                     <textarea
@@ -1938,24 +1946,24 @@ export default function DashboardSuppliesPage() {
                       rows={2}
                       value={editingSupply.remarks || ""}
                       onChange={handleEditChange}
-                      className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Additional notes"
                     />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent rounded-md hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Save Changes
                   </button>
