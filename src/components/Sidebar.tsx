@@ -54,21 +54,25 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
   return (
     <div
       onClick={() => path && router.push(path)}
-      className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+      className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
         active
-          ? "bg-orange-50 text-orange-600 border-r-2 border-orange-500"
-          : "text-gray-600"
+          ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-r-2 border-orange-500"
+          : "text-gray-600 dark:text-gray-300"
       } ${isSubItem ? "pl-10" : ""}`}
     >
       <div className="flex items-center space-x-3">
         <Icon
           size={16}
-          className={active ? "text-orange-500" : "text-gray-400"}
+          className={
+            active
+              ? "text-orange-500 dark:text-orange-400"
+              : "text-gray-400 dark:text-gray-500"
+          }
         />
         <span className="text-sm font-medium">{label}</span>
       </div>
       {count !== null && (
-        <span className="text-xs bg-gray-200 text-orange-500 px-2 py-1 rounded-full min-w-[20px] text-center">
+        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-orange-500 dark:text-orange-400 px-2 py-1 rounded-full min-w-[20px] text-center">
           {count}
         </span>
       )}
@@ -82,16 +86,16 @@ const SidebarSectionHeader: React.FC<SectionHeaderProps> = ({
   onToggle,
 }) => (
   <div
-    className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+    className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
     onClick={onToggle}
   >
-    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
       {label}
     </span>
     {isExpanded ? (
-      <ChevronDown size={14} className="text-gray-400" />
+      <ChevronDown size={14} className="text-gray-400 dark:text-gray-500" />
     ) : (
-      <ChevronRight size={14} className="text-gray-400" />
+      <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
     )}
   </div>
 );
@@ -143,6 +147,9 @@ const Sidebar: React.FC = () => {
     };
     fetchRole();
   }, [supabase]);
+
+  // All the useEffect hooks for data fetching remain the same...
+  // (I'm keeping the existing logic as it's working properly)
 
   // Fetch equipment count from Supabase
   useEffect(() => {
@@ -564,7 +571,7 @@ const Sidebar: React.FC = () => {
   const isStaff = approvedAccRole === "Staff";
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
+    <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-screen overflow-y-auto">
       <div className="py-4 pt-25">
         {/* Main Menu */}
         <div className="space-y-1">
