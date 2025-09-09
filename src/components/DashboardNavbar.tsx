@@ -9,6 +9,7 @@ import {
   LogOut,
   Home,
   Search,
+  Palette,
 } from "lucide-react";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -19,6 +20,7 @@ const DashboardNavbar: React.FC = () => {
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState("light");
   const supabase = createClientComponentClient();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -31,6 +33,18 @@ const DashboardNavbar: React.FC = () => {
     alert("You have been logged out successfully.");
   };
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    // Apply theme to document
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    setIsAvatarDropdownOpen(false);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Add your search logic here
@@ -38,6 +52,13 @@ const DashboardNavbar: React.FC = () => {
   };
 
   useEffect(() => {
+    // Load theme from localStorage
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setTheme(savedTheme);
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -115,6 +136,46 @@ const DashboardNavbar: React.FC = () => {
 
             {isAvatarDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                <div className="px-4 py-2 border-b border-gray-200">
+                  <div className="flex items-center gap-2 mb-2 text-gray-700">
+                    <Palette size={16} />
+                    <span className="text-sm font-medium text-gray-700">
+                      Theme
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleThemeChange("light")}
+                      className={`px-3 py-1 text-xs rounded cursor-pointer ${
+                        theme === "light"
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition`}
+                    >
+                      Light
+                    </button>
+                    <button
+                      onClick={() => handleThemeChange("dark")}
+                      className={`px-3 py-1 text-xs rounded cursor-pointer ${
+                        theme === "dark"
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition`}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      onClick={() => handleThemeChange("system")}
+                      className={`px-3 py-1 text-xs rounded cursor-pointer ${
+                        theme === "system"
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition`}
+                    >
+                      System
+                    </button>
+                  </div>
+                </div>
                 <a
                   href="/home"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
@@ -191,6 +252,46 @@ const DashboardNavbar: React.FC = () => {
 
               {isAvatarDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
+                  <div className="px-4 py-2 border-b border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Palette size={16} />
+                      <span className="text-sm font-medium text-gray-700">
+                        Theme
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleThemeChange("light")}
+                        className={`px-3 py-1 text-xs rounded ${
+                          theme === "light"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        } transition`}
+                      >
+                        Light
+                      </button>
+                      <button
+                        onClick={() => handleThemeChange("dark")}
+                        className={`px-3 py-1 text-xs rounded ${
+                          theme === "dark"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        } transition`}
+                      >
+                        Dark
+                      </button>
+                      <button
+                        onClick={() => handleThemeChange("system")}
+                        className={`px-3 py-1 text-xs rounded ${
+                          theme === "system"
+                            ? "bg-orange-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        } transition`}
+                      >
+                        System
+                      </button>
+                    </div>
+                  </div>
                   <a
                     href="/home"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
