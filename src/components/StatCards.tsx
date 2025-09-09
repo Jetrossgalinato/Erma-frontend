@@ -1,15 +1,16 @@
 // components/StatCards.tsx
 "use client";
 import { FC } from "react";
+import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
   value: number | null;
   bgColor: string;
-  iconPath: string;
+  icon: LucideIcon;
 }
 
-const StatCard: FC<StatCardProps> = ({ title, value, bgColor, iconPath }) => {
+const StatCard: FC<StatCardProps> = ({ title, value, bgColor, icon: Icon }) => {
   return (
     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-5">
@@ -18,19 +19,7 @@ const StatCard: FC<StatCardProps> = ({ title, value, bgColor, iconPath }) => {
             <div
               className={`w-8 h-8 ${bgColor} rounded-md flex items-center justify-center`}
             >
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d={iconPath}
-                />
-              </svg>
+              <Icon size={20} className="text-white" />
             </div>
           </div>
           <div className="ml-5 w-0 flex-1">

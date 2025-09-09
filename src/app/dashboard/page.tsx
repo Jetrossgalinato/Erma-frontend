@@ -9,6 +9,17 @@ import EquipmentStatusChart from "@/components/EquipmentStatusChart";
 import EquipmentPerFacilityChart from "@/components/EquipmentPerFacilityChart";
 import EquipmentAvailabilityChart from "@/components/EquipmentAvailabilityChart";
 import { StatCardsGrid } from "@/components/StatCards";
+import {
+  Users,
+  Clock,
+  Monitor,
+  Building,
+  Package,
+  TrendingUp,
+  Calendar,
+  Grid3X3,
+  RefreshCw,
+} from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -140,59 +151,55 @@ export default function DashboardPage() {
     }
   };
 
-  // Create stats array for StatCardsGrid
+  // Create stats array for StatCardsGrid with Lucide icons
   const stats = [
     {
       title: "Total Users",
       value: totalUsers,
       bgColor: "bg-purple-500",
-      iconPath:
-        "M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z",
+      icon: Users,
     },
     {
       title: "Pending Requests",
       value: pendingRequests,
       bgColor: "bg-yellow-500",
-      iconPath:
-        "M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2zm8 0h-2a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2z",
+      icon: Clock,
     },
     {
       title: "Total Equipments",
       value: totalEquipment,
       bgColor: "bg-blue-500",
-      iconPath:
-        "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+      icon: Monitor,
     },
     {
       title: "Active Facilities",
       value: activeFacilitiesCount,
       bgColor: "bg-green-500",
-      iconPath:
-        "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+      icon: Building,
     },
     {
       title: "Total Supplies",
       value: totalSupply,
       bgColor: "bg-indigo-500",
-      iconPath: "M4 6h16M4 10h16M4 14h16M4 18h16",
+      icon: Package,
     },
     {
       title: "Borrowed (Last 7 Days)",
       value: borrowedLast7Days,
       bgColor: "bg-orange-500",
-      iconPath: "M9 17v-6a2 2 0 00-2-2H5l7-7 7 7h-2a2 2 0 00-2 2v6",
+      icon: TrendingUp,
     },
     {
       title: "Borrowed Today",
       value: borrowedToday,
       bgColor: "bg-red-500",
-      iconPath: "M12 8v4l3 3",
+      icon: Calendar,
     },
     {
       title: "Equipment Categories",
       value: totalEquipmentCategories,
       bgColor: "bg-teal-500",
-      iconPath: "M3 7h18M3 12h18M3 17h18",
+      icon: Grid3X3,
     },
   ];
 
@@ -252,19 +259,18 @@ export default function DashboardPage() {
                 <button
                   onClick={handleRefreshClick}
                   disabled={isRefreshing}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ${
                     isRefreshing
                       ? "cursor-not-allowed opacity-75"
                       : "hover:shadow-md"
                   }`}
                 >
-                  <span
-                    className={`inline-block mr-2 transition-transform duration-300 ${
+                  <RefreshCw
+                    size={16}
+                    className={`mr-2 transition-transform duration-300 ${
                       isRefreshing ? "animate-spin" : ""
                     }`}
-                  >
-                    ⟳
-                  </span>
+                  />
                   {isRefreshing ? "Refreshing..." : "Refresh"}
                 </button>
               </div>
