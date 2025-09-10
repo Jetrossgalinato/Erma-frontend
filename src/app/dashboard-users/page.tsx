@@ -463,13 +463,13 @@ const UsersPage: React.FC = () => {
 
   if (!mounted || authLoading) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <div className="animate-pulse bg-gray-200 w-64 h-full" />
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-pulse bg-gray-200 dark:bg-gray-700 w-64 h-full" />
         <div className="flex-1 flex flex-col">
-          <div className="animate-pulse bg-gray-200 h-16 w-full" />
+          <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-16 w-full" />
           <div className="flex-1 p-6">
-            <div className="animate-pulse bg-gray-200 h-8 w-48 mb-4 rounded" />
-            <div className="animate-pulse bg-gray-200 h-4 w-64 rounded" />
+            <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-48 mb-4 rounded" />
+            <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-4 w-64 rounded" />
           </div>
         </div>
       </div>
@@ -477,7 +477,7 @@ const UsersPage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
@@ -486,7 +486,7 @@ const UsersPage: React.FC = () => {
         />
       )}
 
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <DashboardNavbar />
       </header>
 
@@ -506,10 +506,10 @@ const UsersPage: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                     Users Management
                   </h1>
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Manage and view all account requests from users in the
                     system
                   </p>
@@ -520,10 +520,10 @@ const UsersPage: React.FC = () => {
                   <div className="relative" ref={filterDropdownRef}>
                     <button
                       onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium transition-all duration-200 ${
+                      className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
                         activeFilter || departmentFilter || roleFilter
-                          ? "bg-blue-50 text-blue-700 border-blue-300"
-                          : "bg-white text-gray-700 hover:bg-gray-50"
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
+                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                       }`}
                     >
                       <Filter className="w-4 h-4 mr-2" />
@@ -532,18 +532,18 @@ const UsersPage: React.FC = () => {
                     </button>
 
                     {showFilterDropdown && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black dark:ring-gray-600 ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
                           <button
                             onClick={() => handleFilterSelect("department")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
                             <Building className="w-4 h-4 mr-3" />
                             Filter by Department
                           </button>
                           <button
                             onClick={() => handleFilterSelect("role")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                           >
                             <Users className="w-4 h-4 mr-3" />
                             Filter by Account Role
@@ -561,7 +561,7 @@ const UsersPage: React.FC = () => {
                         setDepartmentFilter(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All Departments</option>
                       {getUniqueDepartments().map((department) => (
@@ -580,7 +580,7 @@ const UsersPage: React.FC = () => {
                         setRoleFilter(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All Account Roles</option>
                       {getUniqueRoles().map((role) => (
@@ -595,7 +595,7 @@ const UsersPage: React.FC = () => {
                   {(departmentFilter || roleFilter || activeFilter) && (
                     <button
                       onClick={clearFilters}
-                      className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                     >
                       <X className="w-4 h-4 mr-1 inline" />
                       Clear
@@ -608,7 +608,7 @@ const UsersPage: React.FC = () => {
                       onClick={() =>
                         setShowActionsDropdown(!showActionsDropdown)
                       }
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Actions
@@ -617,7 +617,7 @@ const UsersPage: React.FC = () => {
 
                     {/* Actions Dropdown Menu */}
                     {showActionsDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black dark:ring-gray-600 ring-opacity-5 focus:outline-none z-50">
                         <div className="py-1">
                           {/* Edit Selected Option */}
                           <button
@@ -628,11 +628,11 @@ const UsersPage: React.FC = () => {
                             disabled={selectedRows.length !== 1}
                             className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
                               selectedRows.length !== 1
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
                             }`}
                           >
-                            <Edit className="w-4 h-4 mr-3 text-blue-600" />
+                            <Edit className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
                             Edit Selected (
                             {selectedRows.length === 1
                               ? "1"
@@ -649,11 +649,11 @@ const UsersPage: React.FC = () => {
                             disabled={selectedRows.length === 0}
                             className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
                               selectedRows.length === 0
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-red-50 hover:text-red-900"
+                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-900 dark:hover:text-red-400"
                             }`}
                           >
-                            <Trash2 className="w-4 h-4 mr-3 text-red-600" />
+                            <Trash2 className="w-4 h-4 mr-3 text-red-600 dark:text-red-400" />
                             Delete Selected ({selectedRows.length})
                           </button>
                         </div>
@@ -665,7 +665,7 @@ const UsersPage: React.FC = () => {
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
-                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
                       isRefreshing
                         ? "cursor-not-allowed opacity-75"
                         : "hover:shadow-md"
@@ -682,16 +682,16 @@ const UsersPage: React.FC = () => {
               </div>
 
               {/* Table Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <p className="text-sm text-gray-500">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {filteredUsers.length} total users{" "}
                     {departmentFilter || roleFilter
                       ? `(filtered from ${totalCount})`
                       : ""}
                   </p>
                   {filteredUsers.length > 0 && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Showing {startItem} to {endItem} of {filteredUsers.length}{" "}
                       results
                     </p>
@@ -701,31 +701,33 @@ const UsersPage: React.FC = () => {
                 <div className="overflow-x-auto">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
-                      <span className="ml-3 text-gray-600">Loading...</span>
+                      <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
+                      <span className="ml-3 text-gray-600 dark:text-gray-400">
+                        Loading...
+                      </span>
                     </div>
                   ) : error ? (
                     <div className="flex items-center justify-center py-12">
-                      <div className="text-red-500">
+                      <div className="text-red-500 dark:text-red-400">
                         <span className="font-semibold">Error:</span> {error}
                       </div>
                     </div>
                   ) : currentUsers.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <span className="text-gray-500">
+                      <span className="text-gray-500 dark:text-gray-400">
                         No users found{" "}
                         {(departmentFilter || roleFilter) &&
                           "matching the current filters"}
                       </span>
                     </div>
                   ) : (
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="w-12 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="w-12 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             <input
                               type="checkbox"
-                              className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                              className="form-checkbox h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 transition duration-150 ease-in-out"
                               checked={
                                 selectedRows.length === currentUsers.length &&
                                 currentUsers.length > 0
@@ -743,69 +745,72 @@ const UsersPage: React.FC = () => {
                               }}
                             />
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             First Name
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Last Name
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Email
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Department
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Phone Number
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Account Role
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Approved Role
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {currentUsers.map((request) => (
-                          <tr key={request.id} className="hover:bg-gray-50">
+                          <tr
+                            key={request.id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                          >
                             <td className="w-12 px-6 py-4 whitespace-nowrap">
                               <input
                                 type="checkbox"
-                                className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                                className="form-checkbox h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 transition duration-150 ease-in-out"
                                 checked={selectedRows.includes(request.id)}
                                 onChange={() =>
                                   handleCheckboxChange(request.id)
                                 }
                               />
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                               {request.first_name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {request.last_name}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {request.email}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {request.department}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                               {request.phone_number}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
                                 {request.acc_role}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               {request.approved_acc_role ? (
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
                                   {request.approved_acc_role}
                                 </span>
                               ) : (
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-400">
                                   Pending
                                 </span>
                               )}
@@ -819,16 +824,16 @@ const UsersPage: React.FC = () => {
 
                 {/* Pagination */}
                 {actualTotalPages > 1 && (
-                  <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={goToPrevious}
                           disabled={currentPage === 1}
-                          className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium ${
+                          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium ${
                             currentPage === 1
-                              ? "text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "text-gray-700 bg-white hover:bg-gray-50"
+                              ? "text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 cursor-not-allowed"
+                              : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                           }`}
                         >
                           <ChevronLeft size={16} className="mr-1" />
@@ -839,7 +844,7 @@ const UsersPage: React.FC = () => {
                           {getVisiblePages().map((page, index) => (
                             <React.Fragment key={index}>
                               {page === "..." ? (
-                                <span className="px-3 py-2 text-gray-500">
+                                <span className="px-3 py-2 text-gray-500 dark:text-gray-400">
                                   ...
                                 </span>
                               ) : (
@@ -847,8 +852,8 @@ const UsersPage: React.FC = () => {
                                   onClick={() => goToPage(page as number)}
                                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                                     currentPage === page
-                                      ? "bg-orange-500 text-white"
-                                      : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+                                      ? "bg-orange-500 dark:bg-orange-600 text-white"
+                                      : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
                                   }`}
                                 >
                                   {page}
@@ -861,10 +866,10 @@ const UsersPage: React.FC = () => {
                         <button
                           onClick={goToNext}
                           disabled={currentPage === actualTotalPages}
-                          className={`inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium ${
+                          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium ${
                             currentPage === actualTotalPages
-                              ? "text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "text-gray-700 bg-white hover:bg-gray-50"
+                              ? "text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 cursor-not-allowed"
+                              : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                           }`}
                         >
                           Next
@@ -872,7 +877,7 @@ const UsersPage: React.FC = () => {
                         </button>
                       </div>
 
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
                         Page {currentPage} of {actualTotalPages}
                       </div>
                     </div>
@@ -893,15 +898,15 @@ const UsersPage: React.FC = () => {
               onClick={handleCancelEdit}
             />
 
-            <div className="relative bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-2xl">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                     Edit User
                   </h3>
                   <button
                     onClick={handleCancelEdit}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -910,7 +915,7 @@ const UsersPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -918,13 +923,13 @@ const UsersPage: React.FC = () => {
                         name="first_name"
                         value={editingUser.first_name || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="First name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -932,29 +937,29 @@ const UsersPage: React.FC = () => {
                         name="last_name"
                         value={editingUser.last_name || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Last name"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Email
                       </label>
                       <input
                         type="email"
                         value={editingUser.email || ""}
-                        className="w-full px-3 py-2 text-gray-500 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
+                        className="w-full px-3 py-2 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 cursor-not-allowed"
                         disabled
                         placeholder="Email (read-only)"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Email cannot be edited
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Department <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -962,13 +967,13 @@ const UsersPage: React.FC = () => {
                         name="department"
                         value={editingUser.department || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Department"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Phone Number
                       </label>
                       <input
@@ -976,13 +981,13 @@ const UsersPage: React.FC = () => {
                         name="phone_number"
                         value={editingUser.phone_number || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Phone number"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Account Role
                       </label>
                       <input
@@ -990,13 +995,13 @@ const UsersPage: React.FC = () => {
                         name="acc_role"
                         value={editingUser.acc_role || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Account role"
                       />
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Approved Role
                       </label>
                       <input
@@ -1004,25 +1009,25 @@ const UsersPage: React.FC = () => {
                         name="approved_acc_role"
                         value={editingUser.approved_acc_role || ""}
                         onChange={handleEditChange}
-                        className="w-full px-3 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Approved role (leave empty if not approved)"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveEdit}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Save Changes
                   </button>
@@ -1040,17 +1045,17 @@ const UsersPage: React.FC = () => {
             className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
             onClick={() => setShowDeleteModal(false)}
           ></div>
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
             <div className="p-6">
               <div className="flex items-center justify-center">
-                <AlertTriangle className="h-10 w-10 text-red-600" />
+                <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400" />
               </div>
               <div className="mt-3 text-center">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                   Delete Selected Users
                 </h3>
                 <div className="mt-2">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Are you sure you want to delete **
                     {selectedRows.length}** user records? This action cannot be
                     undone.
@@ -1058,17 +1063,17 @@ const UsersPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-center gap-3">
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 flex justify-center gap-3">
               <button
                 type="button"
-                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 dark:bg-red-700 text-base font-medium text-white hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
                 onClick={handleDeleteSelectedRows}
               >
                 Delete
               </button>
               <button
                 type="button"
-                className="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
                 onClick={() => setShowDeleteModal(false)}
               >
                 Cancel

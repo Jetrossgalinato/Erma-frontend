@@ -187,17 +187,21 @@ export default function AcquiringRequests() {
 
   const getStatusBadge = (status?: string) => {
     const statusColors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      approved: "bg-green-100 text-green-800",
-      rejected: "bg-red-100 text-red-800",
-      ordered: "bg-blue-100 text-blue-800",
-      received: "bg-purple-100 text-purple-800",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+      approved:
+        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+      rejected: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
+      ordered:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+      received:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
     };
 
     const normalizedStatus = status?.toLowerCase();
     const colorClass =
       statusColors[normalizedStatus as keyof typeof statusColors] ||
-      "bg-gray-100 text-gray-800";
+      "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
 
     return (
       <span
@@ -428,8 +432,8 @@ export default function AcquiringRequests() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-orange-500 animate-spin" />
-          <span className="ml-3 text-gray-600">
+          <Loader2 className="h-8 w-8 text-orange-500 dark:text-orange-400 animate-spin" />
+          <span className="ml-3 text-gray-600 dark:text-gray-400">
             Loading acquiring requests...
           </span>
         </div>
@@ -440,7 +444,7 @@ export default function AcquiringRequests() {
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
@@ -456,13 +460,15 @@ export default function AcquiringRequests() {
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-400">
                 Error loading acquiring requests
               </h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                {error}
+              </p>
               <button
                 onClick={fetchRequests}
-                className="mt-2 bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm font-medium transition-colors"
+                className="mt-2 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-800 dark:text-red-300 px-3 py-1 rounded text-sm font-medium transition-colors"
               >
                 Try Again
               </button>
@@ -477,12 +483,12 @@ export default function AcquiringRequests() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             {requests.length} acquiring request
             {requests.length !== 1 ? "s" : ""} found
           </span>
           {selectedRequests.length > 0 && (
-            <span className="text-sm text-blue-600 font-medium">
+            <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
               {selectedRequests.length} selected
             </span>
           )}
@@ -493,33 +499,33 @@ export default function AcquiringRequests() {
             <button
               onClick={() => setShowActionDropdown(!showActionDropdown)}
               disabled={selectedRequests.length === 0}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Actions ({selectedRequests.length})
               <ChevronDown className="w-4 h-4" />
             </button>
 
             {showActionDropdown && selectedRequests.length > 0 && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-10">
                 <div className="py-1">
                   <button
                     onClick={() => handleAction("Approve")}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-2"
                   >
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                     Approve Selected
                   </button>
                   <button
                     onClick={() => handleAction("Reject")}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                   >
-                    <X className="w-4 h-4 text-red-600" />
+                    <X className="w-4 h-4 text-red-600 dark:text-red-400" />
                     Reject Selected
                   </button>
-                  <div className="border-t mt-1">
+                  <div className="border-t dark:border-gray-600 mt-1">
                     <button
                       onClick={() => handleAction("Delete")}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete Selected
@@ -532,7 +538,7 @@ export default function AcquiringRequests() {
 
           <button
             onClick={fetchRequests}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex font-medium transition-colors gap-2 items-center"
+            className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm flex font-medium transition-colors gap-2 items-center"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
@@ -543,7 +549,7 @@ export default function AcquiringRequests() {
       {requests.length === 0 ? (
         <div className="text-center py-12">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -555,20 +561,20 @@ export default function AcquiringRequests() {
               d="M16 11V7a4 4 0 00-8 0v4M8 11v6a2 2 0 002 2h8a2 2 0 002-2v-6a2 2 0 00-2-2H10a2 2 0 00-2 2z"
             />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             No acquiring requests found
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             No supply acquisition requests have been submitted yet.
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-12">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600 w-12">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
@@ -576,36 +582,39 @@ export default function AcquiringRequests() {
                         if (input) input.indeterminate = isSomeSelected;
                       }}
                       onChange={(e) => handleSelectAll(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Item
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Requested By
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Purpose
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-600">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Requested
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {requests.map((request, index) => (
-                  <tr key={request.id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                  <tr
+                    key={request.id || index}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                       <input
                         type="checkbox"
                         checked={selectedRequests.includes(request.id || "")}
@@ -615,17 +624,17 @@ export default function AcquiringRequests() {
                             e.target.checked
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 dark:text-blue-400 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {request.supplies?.name || "N/A"}
                         </div>
                         {request.purpose && (
                           <div
-                            className="text-sm text-gray-500 truncate max-w-xs"
+                            className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs"
                             title={request.purpose}
                           >
                             {request.purpose}
@@ -633,27 +642,27 @@ export default function AcquiringRequests() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {request.account_requests
                         ? `${request.account_requests.first_name} ${request.account_requests.last_name}`
                         : request.acquirers_id || "Unknown"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-600">
                       {getStatusBadge(request.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {request.quantity || "N/A"}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {request.purpose || "N/A"}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-600">
                       {request.supplies?.facilities?.name || "N/A"}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                       {formatDate(request.created_at)}
                     </td>
                   </tr>
