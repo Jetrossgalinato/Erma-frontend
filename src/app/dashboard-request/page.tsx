@@ -14,7 +14,7 @@ export default function DashboardRequestsPage() {
     setSidebarOpen(false);
   };
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
@@ -23,7 +23,7 @@ export default function DashboardRequestsPage() {
         />
       )}
 
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <DashboardNavbar />
       </header>
 
@@ -42,10 +42,10 @@ export default function DashboardRequestsPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                     Requests List
                   </h1>
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Monitor requests for borrowing equipment, booking
                     facilities, and acquiring supplies—all in one place.
                   </p>
@@ -55,7 +55,7 @@ export default function DashboardRequestsPage() {
                     <select
                       value={selectedRequestType}
                       onChange={(e) => setSelectedRequestType(e.target.value)}
-                      className="block w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="block w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="Borrowing Requests">
                         Borrowing Requests
