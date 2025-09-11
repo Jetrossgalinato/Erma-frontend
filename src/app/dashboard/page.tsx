@@ -259,15 +259,12 @@ export default function DashboardPage() {
                 <button
                   onClick={handleRefreshClick}
                   disabled={isRefreshing}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 ${
-                    isRefreshing
-                      ? "cursor-not-allowed opacity-75"
-                      : "hover:shadow-md"
+                  className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                    isRefreshing ? "cursor-not-allowed opacity-75" : ""
                   }`}
                 >
                   <RefreshCw
-                    size={16}
-                    className={`mr-2 transition-transform duration-300 ${
+                    className={`w-4 h-4 transition-transform duration-300 ${
                       isRefreshing ? "animate-spin" : ""
                     }`}
                   />
