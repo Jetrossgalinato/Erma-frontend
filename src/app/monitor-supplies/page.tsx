@@ -4,6 +4,8 @@ import Sidebar from "@/components/Sidebar";
 import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface SupplyLog {
   id: number;
@@ -23,6 +25,41 @@ export default function MonitorSuppliesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+
+  // Auth guard states
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  // Auth guard logic
+  useEffect(() => {
+    const checkAuth = async () => {
+      setAuthLoading(true);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
+        router.replace("/home");
+      } else {
+        setCurrentUser(session.user);
+      }
+      setAuthLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!session?.user) {
+        router.replace("/home");
+      } else {
+        setCurrentUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, supabase]);
 
   const fetchSupplyLogs = useCallback(
     async (page = 1) => {
@@ -44,7 +81,7 @@ export default function MonitorSuppliesPage() {
 
         const { data, error } = await supabase
           .from("supply_logs")
-          .select("id, log_message, created_at") // Remove the multiline template literal
+          .select("id, log_message, created_at")
           .order("created_at", { ascending: false })
           .range(offset, offset + itemsPerPage - 1);
 
@@ -57,12 +94,21 @@ export default function MonitorSuppliesPage() {
       }
     },
     [supabase, itemsPerPage]
-  ); // Add dependencies for useCallback
+  );
 
-  // Update the useEffect dependencies
   useEffect(() => {
-    fetchSupplyLogs(currentPage);
-  }, [fetchSupplyLogs, currentPage]);
+    if (currentUser) {
+      fetchSupplyLogs(currentPage);
+    }
+  }, [fetchSupplyLogs, currentPage, currentUser]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <span className="text-gray-500 dark:text-gray-300">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
