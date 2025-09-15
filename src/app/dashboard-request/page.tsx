@@ -4,21 +4,64 @@ import Sidebar from "@/components/Sidebar";
 import BorrowingRequests from "@/components/BorrowingRequests";
 import BookingRequests from "@/components/BookingRequests";
 import AcquiringRequests from "@/components/AcquiringRequests";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function DashboardRequestsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedRequestType, setSelectedRequestType] =
     useState("Borrowing Requests");
-  const handleOverlayClick = () => {
-    setSidebarOpen(false);
-  };
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  // Auth guard logic (copied and adapted from dashboard-equipment)
+  useEffect(() => {
+    const checkAuth = async () => {
+      setAuthLoading(true);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) {
+        router.replace("/home");
+      } else {
+        setCurrentUser(session.user);
+      }
+      setAuthLoading(false);
+    };
+
+    checkAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!session?.user) {
+        router.replace("/home");
+      } else {
+        setCurrentUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, supabase]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <span className="text-gray-500 dark:text-gray-300">Loading...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
-          onClick={handleOverlayClick}
+          onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
       )}

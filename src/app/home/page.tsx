@@ -61,17 +61,17 @@ export default function Home() {
           <div className="space-y-10 pl-4">
             <div className="space-y-6">
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                Welcome to <span className="text-orange-500">CRIMS</span>
+                Welcome to <span className="text-orange-500">CRMS</span>
               </h1>
               <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
-                CCIS Resource and Internship Management System
+                CCIS Resource Management System
               </h1>
             </div>
 
             <div className="space-y-6">
               <p className="text-lg text-gray-700 max-w-lg leading-relaxed">
-                Your one-stop platform for managing college equipment requests
-                and tracking your OJT attendance with ease.
+                Your one-stop platform for managing college equipment, facility
+                and supply requests with ease.
               </p>
 
               {/* Show the button ONLY when:
