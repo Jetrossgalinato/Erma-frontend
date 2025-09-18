@@ -223,25 +223,25 @@ export default function SuppliesPage() {
   }, [filteredSupplies, currentPage]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      <div className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 flex justify-between items-center">
+      <div className="flex-1 p-2 sm:p-4 md:p-6 flex flex-col">
+        <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
+          <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
                 Supplies
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 View all supply records, filter by category, or search for
                 specific supplies.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={fetchSupplies}
                 disabled={loading}
-                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1.5 sm:gap-2 disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -250,16 +250,16 @@ export default function SuppliesPage() {
               </button>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4">
               <div className="md:col-span-6 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-4 h-4 sm:w-5 sm:h-5" />
                 <input
                   type="text"
                   placeholder="Search supply..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function SuppliesPage() {
                 <select
                   value={selectedCategory ?? ""}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -281,7 +281,7 @@ export default function SuppliesPage() {
                 <select
                   value={selectedFacility ?? ""}
                   onChange={(e) => setSelectedFacility(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
                 >
                   {facility.map((facility) => (
                     <option key={facility} value={facility}>
@@ -292,18 +292,20 @@ export default function SuppliesPage() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {loading ? (
-              <div className="col-span-full flex justify-center items-center py-12">
-                <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
-                <span className="ml-2 text-gray-600">Loading supplies...</span>
+              <div className="col-span-full flex justify-center items-center py-8 sm:py-12">
+                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-orange-500" />
+                <span className="ml-2 text-gray-600 text-sm sm:text-base">
+                  Loading supplies...
+                </span>
               </div>
             ) : filteredSupplies.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <div className="text-gray-500 text-lg mb-2">
+              <div className="col-span-full text-center py-8 sm:py-12">
+                <div className="text-gray-500 text-base sm:text-lg mb-2">
                   No supplies found
                 </div>
-                <p className="text-gray-400">
+                <p className="text-gray-400 text-xs sm:text-sm">
                   Try adjusting your search or filter criteria
                 </p>
               </div>
@@ -314,7 +316,7 @@ export default function SuppliesPage() {
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                 >
                   {supply.image && (
-                    <div className="h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+                    <div className="h-32 sm:h-40 md:h-48 bg-gray-100 rounded-t-lg overflow-hidden">
                       <img
                         src={supply.image}
                         alt={supply.name}
@@ -328,18 +330,18 @@ export default function SuppliesPage() {
                           const parent = target.parentElement;
                           if (parent) {
                             parent.innerHTML =
-                              '<div class="flex items-center justify-center h-full text-red-500 text-sm">Failed to load image</div>';
+                              '<div class="flex items-center justify-center h-full text-red-500 text-xs sm:text-sm">Failed to load image</div>';
                           }
                         }}
                       />
                     </div>
                   )}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 text-lg mb-3">
+                  <div className="p-2 sm:p-3 md:p-4">
+                    <h3 className="font-semibold text-gray-900 text-base sm:text-lg mb-2 sm:mb-3">
                       {supply.name}
                     </h3>
 
-                    <div className="space-y-2 mb-4 text-sm">
+                    <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4 text-xs sm:text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-500">Category:</span>
                         <span className="text-gray-900">{supply.category}</span>
@@ -352,21 +354,21 @@ export default function SuppliesPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                       <button
                         onClick={() => handleView(supply)}
-                        className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
                       >
                         View
                       </button>
                       {userLoading ? (
-                        <div className="flex-1 px-3 py-2 text-sm bg-gray-200 rounded-lg animate-pulse">
-                          <div className="h-4 bg-gray-300 rounded"></div>
+                        <div className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
+                          <div className="h-3 sm:h-4 bg-gray-300 rounded"></div>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleAcquire(supply)}
-                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                          className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                             user
                               ? "bg-orange-500 text-white hover:bg-orange-600"
                               : "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -387,14 +389,14 @@ export default function SuppliesPage() {
               ))
             )}
           </div>
-          <div className="flex justify-center mt-2 mb-12 space-x-2">
+          <div className="flex justify-center mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
             {Array.from({
               length: Math.ceil(filteredSupplies.length / ITEMS_PER_PAGE),
             }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
+                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
                   currentPage === i + 1
                     ? "bg-orange-600 text-white"
                     : "bg-gray-200 text-gray-800"
@@ -407,11 +409,10 @@ export default function SuppliesPage() {
         </div>
       </div>
       <Footer />
-
       {/* Image Modal */}
       {showImageModal && selectedImageUrl && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-75"
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               setShowImageModal(false);
@@ -430,11 +431,11 @@ export default function SuppliesPage() {
                 setSelectedImageUrl(null);
                 setSelectedImageName("");
               }}
-              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
+              className="fixed top-2 sm:top-4 right-2 sm:right-4 z-10 p-1.5 sm:p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
               title="Close (Esc)"
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5 sm:w-6 sm:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -449,8 +450,8 @@ export default function SuppliesPage() {
             </button>
 
             {/* Supply name */}
-            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
-              <p className="text-white text-sm font-medium">
+            <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-10 bg-black bg-opacity-50 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
+              <p className="text-white text-xs sm:text-sm font-medium">
                 {selectedImageName}
               </p>
             </div>
@@ -477,7 +478,7 @@ export default function SuppliesPage() {
 
       {showAcquireModal && selectedSupply && (
         <div
-          className="fixed inset-0 z-50 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-2 sm:p-4"
           onClick={() => {
             setShowAcquireModal(false);
             setSelectedSupply(null);
@@ -486,7 +487,7 @@ export default function SuppliesPage() {
           }}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -501,15 +502,15 @@ export default function SuppliesPage() {
               &times;
             </button>
 
-            <h2 className="text-xl text-gray-800 font-bold mb-4">
+            <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-3 sm:mb-4">
               Acquire Supply
             </h2>
 
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                 Supply: <strong>{selectedSupply.name}</strong>
               </p>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                 Available Stock:{" "}
                 <span className="font-medium">
                   {selectedSupply.quantity} {selectedSupply.stock_unit}
@@ -517,11 +518,11 @@ export default function SuppliesPage() {
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
                 <label
                   htmlFor="quantity"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1"
                 >
                   Quantity to Acquire
                 </label>
@@ -534,14 +535,14 @@ export default function SuppliesPage() {
                   onChange={(e) =>
                     setAcquireQuantity(parseInt(e.target.value) || 1)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="reason"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1"
                 >
                   Reason (Optional)
                 </label>
@@ -550,12 +551,12 @@ export default function SuppliesPage() {
                   value={acquireReason}
                   onChange={(e) => setAcquireReason(e.target.value)}
                   placeholder="Enter reason for acquiring this supply..."
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-20 resize-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-16 sm:h-20 resize-none text-xs sm:text-sm"
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
               <button
                 onClick={() => {
                   setShowAcquireModal(false);
@@ -563,7 +564,7 @@ export default function SuppliesPage() {
                   setAcquireQuantity(1);
                   setAcquireReason("");
                 }}
-                className="flex-1 px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 disabled={isSubmittingAcquire}
               >
                 Cancel
@@ -576,7 +577,7 @@ export default function SuppliesPage() {
                   acquireQuantity > selectedSupply.quantity ||
                   !currentUser
                 }
-                className="flex-1 px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
               >
                 {isSubmittingAcquire && (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -597,7 +598,7 @@ export default function SuppliesPage() {
           }}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-2xl p-6 relative shadow-lg max-h-[80vh] overflow-y-auto"
+            className="bg-white rounded-lg w-full max-w-lg sm:max-w-2xl p-3 sm:p-6 relative shadow-lg max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -610,11 +611,11 @@ export default function SuppliesPage() {
               &times;
             </button>
 
-            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+            <h2 className="text-xl sm:text-2xl text-gray-800 font-bold mb-3 sm:mb-4">
               {selectedSupply.name}
             </h2>
 
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
               <p>
                 <strong>Description:</strong>{" "}
                 {selectedSupply.description || "N/A"}
@@ -648,11 +649,11 @@ export default function SuppliesPage() {
             </div>
 
             {selectedSupply.quantity <= selectedSupply.stocking_point && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 text-sm font-medium">
+              <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-xs sm:text-sm font-medium">
                   ⚠️ Low Stock Alert
                 </p>
-                <p className="text-red-700 text-xs">
+                <p className="text-red-700 text-[10px] sm:text-xs">
                   Current stock is at or below the stocking point.
                 </p>
               </div>
