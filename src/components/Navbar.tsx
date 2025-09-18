@@ -209,7 +209,8 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
-      <div className="flex items-center pl-40">
+      {/* Logo: Left-aligned with padding on all screens */}
+      <div className="flex items-center pl-4 md:pl-40 w-full md:w-auto justify-start">
         <Image
           src="/images/logocircle.png"
           alt="Logo"
