@@ -17,9 +17,9 @@ export default function RegisterPage() {
     >
       <Navbar />
 
-      <div className="flex flex-col items-center justify-center flex-1 px-4 py-12">
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
         {/* Render the selected register form */}
-        <div className="w-full max-w-md mt-4">
+        <div className="w-full max-w-xs sm:max-w-md mt-4 mx-auto">
           {registerAs === "employee" && <EmployeeRegisterForm />}
         </div>
       </div>
