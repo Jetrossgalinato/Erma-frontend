@@ -144,8 +144,6 @@ const Navbar: React.FC = () => {
               (notif) => !notif.is_read
             ).length;
             setUnreadCount(unread);
-            // Debug logs
-            // console.log("Notifications:", data?.length, "Unread:", unread);
           }
         }
       } catch (error) {
@@ -211,7 +209,8 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
-      <div className="flex items-center pl-40">
+      {/* Logo: Left-aligned with padding on all screens */}
+      <div className="flex items-center pl-4 md:pl-40 w-full md:w-auto justify-start">
         <Image
           src="/images/logocircle.png"
           alt="Logo"
@@ -422,17 +421,23 @@ const Navbar: React.FC = () => {
                   ? "text-orange-500"
                   : ""
               }`}
+              type="button"
             >
               Resources
               <ChevronDown size={16} />
             </button>
-            {isResourcesOpen && (
+            {/* MODIFIED: Make dropdown options always clickable on mobile */}
+            {(isResourcesOpen || isOpen) && (
               <div className="pl-4 flex flex-col">
                 <a
                   href="/equipment"
                   className={`py-1 text-gray-600 ${
                     pathname.startsWith("/equipment") ? "text-orange-500" : ""
                   }`}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsResourcesOpen(false);
+                  }}
                 >
                   Equipments
                 </a>
@@ -441,14 +446,22 @@ const Navbar: React.FC = () => {
                   className={`py-1 text-gray-600 ${
                     pathname.startsWith("/facilities") ? "text-orange-500" : ""
                   }`}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsResourcesOpen(false);
+                  }}
                 >
                   Facilities
                 </a>
                 <a
                   href="/supplies"
                   className={`py-1 text-gray-600 ${
-                    pathname.startsWith("/facilities") ? "text-orange-500" : ""
+                    pathname.startsWith("/supplies") ? "text-orange-500" : ""
                   }`}
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsResourcesOpen(false);
+                  }}
                 >
                   Supplies
                 </a>
@@ -463,6 +476,7 @@ const Navbar: React.FC = () => {
               className={`py-2 text-gray-700 ${
                 pathname === "/requests" ? "text-orange-500" : ""
               }`}
+              onClick={() => setIsOpen(false)}
             >
               Account Requests
             </a>
@@ -484,6 +498,7 @@ const Navbar: React.FC = () => {
                     <a
                       href="/dashboard"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                      onClick={() => setIsOpen(false)}
                     >
                       <LayoutDashboard size={16} />
                       My Dashboard
@@ -492,6 +507,7 @@ const Navbar: React.FC = () => {
                   <a
                     href="/my-requests"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    onClick={() => setIsOpen(false)}
                   >
                     <FileText size={16} />
                     My Requests
@@ -499,6 +515,7 @@ const Navbar: React.FC = () => {
                   <a
                     href="/profile"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
+                    onClick={() => setIsOpen(false)}
                   >
                     <User size={16} />
                     My Profile
