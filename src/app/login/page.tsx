@@ -12,52 +12,33 @@ export default function LoginPage() {
   const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role] = useState("employee"); // Default role
+  const [role] = useState("employee");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-    if (authError) {
-      setError(authError.message);
-      return;
-    }
-
+      await supabase.auth.signInWithPassword({ email, password });
+    if (authError) return setError(authError.message);
     const user = authData?.user;
-    if (!user) {
-      setError("No user data returned.");
-      return;
-    }
-
-    // Always query from account_requests
-    const query = supabase
+    if (!user) return setError("No user data returned.");
+    const { data: roleData, error: roleError } = await supabase
       .from("account_requests")
       .select("is_approved")
-      .eq("user_id", user.id);
-
-    const { data: roleData, error: roleError } = await query.single();
-
+      .eq("user_id", user.id)
+      .single();
     if (roleError || !roleData) {
       setError(`No ${role} record found for this user.`);
       await supabase.auth.signOut();
       return;
     }
-
     if (!roleData.is_approved) {
       setError("Your account is pending approval.");
       await supabase.auth.signOut();
       return;
     }
-
     setError("");
-    alert("You have logged in successfully!");
     router.push("/home");
   };
 
@@ -67,21 +48,19 @@ export default function LoginPage() {
       style={{ background: "linear-gradient(to left, #facc76ff, #FDF1AD)" }}
     >
       <Navbar />
-
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-700">
+      <div className="flex flex-1 items-center justify-center px-2 py-6">
+        <div className="w-full max-w-xs bg-white rounded-xl shadow p-4">
+          <div className="text-lg font-bold text-gray-800 mb-3 text-center">
+            <h2 className="text-base font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
             Login to <span className="text-orange-600">CRIMS</span>
           </div>
-
-          <form className="space-y-4" onSubmit={handleLogin}>
-            <div>
+          <form className="space-y-2" onSubmit={handleLogin}>
+            <div className="px-2">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-xs font-medium text-gray-700"
               >
                 Email
               </label>
@@ -91,14 +70,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
               />
             </div>
-
-            <div>
+            <div className="px-2">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-xs font-medium text-gray-700"
               >
                 Password
               </label>
@@ -109,37 +87,36 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 w-full pr-12 px-4 py-2 text-black border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="mt-0.5 w-full pr-8 px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="mt-1 absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-gray-700 focus:outline-none"
                   tabIndex={0}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
             </div>
-
             {error && (
-              <p className="text-sm text-red-500 text-center">{error}</p>
+              <p className="text-xs text-red-500 text-center">{error}</p>
             )}
-
-            <button
-              type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition"
-            >
-              Sign In
-            </button>
+            <div className="px-2">
+              <button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-1 px-3 rounded shadow transition text-xs"
+              >
+                Sign In
+              </button>
+            </div>
           </form>
-
-          <p className="mt-4 text-sm text-gray-600 text-center">
+          <p className="mt-2 text-xs text-gray-600 text-center">
             Don&apos;t have an account?{" "}
             <a
               href="/register"
@@ -150,7 +127,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-
       <Footer />
     </div>
   );
