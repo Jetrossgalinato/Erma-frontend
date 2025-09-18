@@ -58,18 +58,18 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-8 py-20">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
-          <div className="space-y-10 pl-4">
-            <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+          <div className="space-y-4 md:space-y-10 pl-4">
+            <div className="space-y-4 md:space-y-6">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
                 Welcome to <span className="text-orange-500">CRMS</span>
               </h1>
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
+              <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
                 CCIS Resource Management System
               </h1>
             </div>
 
-            <div className="space-y-6">
-              <p className="text-lg text-gray-700 max-w-lg leading-relaxed">
+            <div className="space-y-4 md:space-y-6">
+              <p className="text-md md:text-lg text-gray-700 max-w-lg leading-relaxed">
                 Your one-stop platform for managing college equipment, facility
                 and supply requests with ease.
               </p>
@@ -82,12 +82,12 @@ export default function Home() {
                 <div>
                   <button
                     onClick={handleGetStarted}
-                    className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                    className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
                     aria-label="Get started with CRIMS"
                   >
                     Get Started
                     <svg
-                      className="w-5 h-5"
+                      className="w-3 h-3 md:w-5 md:h-5"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
@@ -104,7 +104,7 @@ export default function Home() {
           </div>
 
           {/* Right Content - Phone Mockup */}
-          <div className="relative flex justify-center lg:justify-end items-center">
+          <div className="relative justify-center lg:justify-end items-center hidden md:flex">
             {/* Floating Icons */}
             <div className="absolute -top-6 -left-12 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center transform rotate-12 shadow-lg">
               <svg

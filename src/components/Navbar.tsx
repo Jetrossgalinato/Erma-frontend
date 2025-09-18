@@ -216,7 +216,7 @@ const Navbar: React.FC = () => {
           alt="Logo"
           width={80}
           height={80}
-          className="h-20 w-20 object-contain"
+          className="h-15 w-15 md:h-20 md:w-20 object-contain"
         />
       </div>
 
