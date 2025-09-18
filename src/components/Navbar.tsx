@@ -216,7 +216,7 @@ const Navbar: React.FC = () => {
           alt="Logo"
           width={80}
           height={80}
-          className="h-20 w-20 object-contain"
+          className="h-15 w-15 md:h-20 md:w-20 object-contain"
         />
       </div>
 
@@ -402,7 +402,7 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
+        <div className="absolute top-16 left-0 text-sm md:text-lg w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
           <a
             href="/home"
             className={`py-2 text-gray-700 ${
