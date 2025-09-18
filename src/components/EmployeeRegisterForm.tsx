@@ -123,22 +123,21 @@ export default function EmployeeRegisterForm() {
 
   return (
     <form
-      className="space-y-4 bg-white rounded-2xl shadow-xl p-8"
+      className="space-y-2 bg-white rounded-xl shadow p-4 w-full max-w-xs"
       onSubmit={handleSubmit}
     >
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">Welcome back! 👋</h2>
-        <p className="text-lg text-gray-700">
-          Register to{" "}
-          <span className="text-orange-600 font-semibold">CRIMS</span>
-        </p>
+      <div className="text-center mb-3">
+        <h2 className="text-base font-semibold text-gray-700">Welcome! 👋</h2>
+        <span className="block text-lg font-bold text-gray-800">
+          Register to <span className="text-orange-600">CRIMS</span>
+        </span>
       </div>
 
       {/* Email */}
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Email
         </label>
@@ -148,7 +147,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.email}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         />
       </div>
 
@@ -156,7 +155,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="firstName"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           First Name
         </label>
@@ -166,7 +165,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.firstName}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         />
       </div>
 
@@ -174,7 +173,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="lastName"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Last Name
         </label>
@@ -184,7 +183,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.lastName}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         />
       </div>
 
@@ -192,7 +191,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="department"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Department
         </label>
@@ -201,7 +200,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.department}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         >
           <option value="" disabled>
             Select department
@@ -216,7 +215,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="phoneNumber"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Phone Number
         </label>
@@ -226,7 +225,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.phoneNumber}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         />
       </div>
 
@@ -234,7 +233,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Password
         </label>
@@ -245,14 +244,18 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 pr-10"
+            className="mt-0.5 w-full pr-8 px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-gray-700 focus:outline-none"
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
@@ -261,7 +264,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="confirmpassword"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Confirm Password
         </label>
@@ -272,14 +275,18 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.confirmpassword}
             onChange={handleChange}
-            className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400 pr-10"
+            className="mt-0.5 w-full pr-8 px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 hover:text-gray-700 focus:outline-none"
           >
-            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showConfirmPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
@@ -288,7 +295,7 @@ export default function EmployeeRegisterForm() {
       <div>
         <label
           htmlFor="acc_role"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-medium text-gray-700"
         >
           Role
         </label>
@@ -297,7 +304,7 @@ export default function EmployeeRegisterForm() {
           required
           value={formData.acc_role}
           onChange={handleChange}
-          className="mt-1 w-full px-4 py-2 text-black border rounded-lg shadow-sm focus:ring-2 focus:ring-orange-400"
+          className="mt-0.5 w-full px-3 py-1 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs"
         >
           <option value="" disabled>
             Select a role
@@ -318,12 +325,12 @@ export default function EmployeeRegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-1 px-3 rounded shadow transition text-xs disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? "Registering..." : "Register"}
       </button>
 
-      <p className="text-sm text-gray-600 text-center font-bold">
+      <p className="text-xs text-gray-600 text-center font-bold">
         Already have an account?{" "}
         <a href="/login" className="text-orange-600 hover:underline">
           Login

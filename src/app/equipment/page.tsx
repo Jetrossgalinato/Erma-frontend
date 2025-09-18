@@ -43,7 +43,7 @@ type EquipmentWithJoins = Equipment & {
   } | null;
   borrowing?: Array<{
     request_status: string;
-    return_status?: string; // Add this line
+    return_status?: string;
   }> | null;
 };
 
@@ -99,7 +99,6 @@ export default function EquipmentPage() {
   });
   const [borrowing, setBorrowing] = useState(false);
 
-  // 3. Update the fetchEquipment function to include facility join
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("equipments").select(`
@@ -116,9 +115,7 @@ export default function EquipmentPage() {
     if (error) {
       console.error("Failed to fetch equipment:", error);
     } else {
-      // Transform the data to include facility_name and availability
       const transformedData = (data as EquipmentWithJoins[])?.map((item) => {
-        // Check if there's an approved borrowing request that hasn't been returned
         const activeBorrowing = item.borrowing?.find(
           (b) =>
             b.request_status === "Approved" && b.return_status !== "Returned"
@@ -146,22 +143,15 @@ export default function EquipmentPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
-        console.log("User found:", user.id); // Debug line
-
-        const { data: accountData, error } = await supabase
+        const { data: accountData } = await supabase
           .from("account_requests")
           .select("is_employee")
           .eq("user_id", user.id)
           .single();
 
-        console.log("Account data:", accountData, "Error:", error); // Debug line
-
         const authorized = accountData?.is_employee === true;
-        console.log("Is authorized:", authorized); // Debug line
-
         setIsAuthorized(authorized);
       } else {
-        console.log("No user found"); // Debug line
         setIsAuthorized(false);
       }
     };
@@ -169,7 +159,6 @@ export default function EquipmentPage() {
     checkUser();
   }, [supabase]);
 
-  // Generate unique categories and facilities dynamically
   const categories = useMemo(() => {
     const unique = Array.from(
       new Set(
@@ -181,7 +170,6 @@ export default function EquipmentPage() {
     return ["All Categories", ...unique];
   }, [equipmentData]);
 
-  // Filtering logic
   const filteredEquipment = useMemo(() => {
     return equipmentData.filter((equipment) => {
       const matchesSearch = equipment.name
@@ -204,7 +192,6 @@ export default function EquipmentPage() {
     return filteredEquipment.slice(start, end);
   }, [filteredEquipment, currentPage]);
 
-  // Modify the handleBorrow function to get the bigint user ID:
   const handleBorrow = async () => {
     if (!isAuthorized) {
       alert("You are not authorized to borrow equipment");
@@ -223,7 +210,6 @@ export default function EquipmentPage() {
 
     setBorrowing(true);
     try {
-      // Get current user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -234,11 +220,10 @@ export default function EquipmentPage() {
         return;
       }
 
-      // Get the user's bigint ID from accounts table
       const { data: accountData, error: accountError } = await supabase
         .from("account_requests")
         .select("id")
-        .eq("user_id", user.id) // or whatever column links to auth
+        .eq("user_id", user.id)
         .single();
 
       if (accountError || !accountData) {
@@ -288,7 +273,6 @@ export default function EquipmentPage() {
     status: EquipmentStatus,
     availability?: string
   ): string => {
-    // If equipment is borrowed, show different color
     if (availability === "Borrowed") {
       return "bg-red-100 text-red-800";
     }
@@ -306,258 +290,261 @@ export default function EquipmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      <div className=" p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Equipments
-              </h1>
-              <p className="text-gray-600">
-                View all equipment records, filter by category or facility, and
-                search for specific items.
-              </p>
-            </div>
-            <div className="flex gap-3 mb-6">
-              <button
-                onClick={fetchEquipment}
-                disabled={loading}
-                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-6 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search equipment..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
+      <div className="flex-1 flex flex-col">
+        <div className="p-3 sm:p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+              <div>
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+                  Equipments
+                </h1>
+                <p className="text-xs sm:text-base text-gray-600">
+                  View all equipment records, filter by category or facility,
+                  and search for specific items.
+                </p>
               </div>
-
-              <div className="md:col-span-3">
-                <select
-                  value={selectedCategory ?? ""}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+              <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-6">
+                <button
+                  onClick={fetchEquipment}
+                  disabled={loading}
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1 sm:gap-2 disabled:opacity-50"
                 >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-3">
-                <select
-                  value={selectedFacility ?? ""}
-                  onChange={(e) => setSelectedFacility(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                >
-                  {facility.map((facility) => (
-                    <option key={facility} value={facility}>
-                      {facility}
-                    </option>
-                  ))}
-                </select>
+                  <RefreshCw
+                    className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </button>
               </div>
             </div>
-          </div>
 
-          {loading ? (
-            // Loading State
-            <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 mx-auto text-orange-500 mb-4 animate-spin" />
-              <p className="text-gray-600">Loading equipment...</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {paginatedEquipment.map((equipment) => (
-                  <div
-                    key={equipment.id}
-                    className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-6 mb-4 sm:mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4">
+                <div className="md:col-span-6 relative">
+                  <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search equipment..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <select
+                    value={selectedCategory ?? ""}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   >
-                    {/* Image section */}
-                    <div className="h-48 bg-gray-200 relative">
-                      {equipment.image ? (
-                        <img
-                          src={equipment.image}
-                          alt={equipment.name}
-                          className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => {
-                            setSelectedImage(equipment.image!);
-                            setSelectedEquipment(equipment);
-                            setShowImageModal(true);
-                          }}
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            target.nextElementSibling?.classList.remove(
-                              "hidden"
-                            );
-                          }}
-                        />
-                      ) : null}
-                      {/* Placeholder when no image or image fails to load */}
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${
-                          equipment.image ? "hidden" : ""
-                        }`}
-                      >
-                        <div className="text-center text-gray-400">
-                          <svg
-                            className="w-12 h-12 mx-auto mb-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-3">
+                  <select
+                    value={selectedFacility ?? ""}
+                    onChange={(e) => setSelectedFacility(e.target.value)}
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  >
+                    {facility.map((facility) => (
+                      <option key={facility} value={facility}>
+                        {facility}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-8 sm:py-12">
+                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-3 sm:mb-4 animate-spin" />
+                <p className="text-xs sm:text-base text-gray-600">
+                  Loading equipment...
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
+                  {paginatedEquipment.map((equipment) => (
+                    <div
+                      key={equipment.id}
+                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
+                    >
+                      {/* Image section */}
+                      <div className="h-32 sm:h-48 bg-gray-200 relative">
+                        {equipment.image ? (
+                          <img
+                            src={equipment.image}
+                            alt={equipment.name}
+                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedImage(equipment.image!);
+                              setSelectedEquipment(equipment);
+                              setShowImageModal(true);
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling?.classList.remove(
+                                "hidden"
+                              );
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${
+                            equipment.image ? "hidden" : ""
+                          }`}
+                        >
+                          <div className="text-center text-gray-400">
+                            <svg
+                              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-1 sm:mb-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <p className="text-xs sm:text-sm">No Image</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 sm:p-6">
+                        <div className="flex justify-between items-start mb-2 sm:mb-4">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-2">
+                            {equipment.name}
+                          </h3>
+                          <span
+                            className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
+                              equipment.status,
+                              equipment.availability
+                            )}`}
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <p className="text-sm">No Image</p>
+                            {equipment.status === "Working"
+                              ? equipment.availability || "Available"
+                              : equipment.status}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            <span className="font-medium">Category:</span>{" "}
+                            {equipment.category}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            <span className="font-medium">Facility:</span>{" "}
+                            {equipment.facility_name ||
+                              equipment.facility ||
+                              "N/A"}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-1 sm:gap-2">
+                          <button
+                            className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                            onClick={() => {
+                              setSelectedEquipment(equipment);
+                              setShowModal(true);
+                            }}
+                          >
+                            View
+                          </button>
+
+                          <button
+                            className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                              isAuthorized &&
+                              equipment.availability !== "Borrowed"
+                                ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
+                            onClick={
+                              isAuthorized &&
+                              equipment.availability !== "Borrowed"
+                                ? () => {
+                                    setSelectedEquipment(equipment);
+                                    setShowBorrowModal(true);
+                                  }
+                                : undefined
+                            }
+                            disabled={
+                              !isAuthorized ||
+                              equipment.availability === "Borrowed"
+                            }
+                            title={
+                              equipment.availability === "Borrowed"
+                                ? "This equipment is currently borrowed"
+                                : !isAuthorized
+                                ? "You are not authorized to borrow equipment"
+                                : "Borrow this equipment"
+                            }
+                          >
+                            {equipment.availability === "Borrowed"
+                              ? "Borrowed"
+                              : "Borrow"}
+                          </button>
                         </div>
                       </div>
                     </div>
-
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
-                          {equipment.name}
-                        </h3>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            equipment.status,
-                            equipment.availability
-                          )}`}
-                        >
-                          {equipment.status === "Working"
-                            ? equipment.availability || "Available"
-                            : equipment.status}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Category:</span>{" "}
-                          {equipment.category}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Facility:</span>{" "}
-                          {equipment.facility_name ||
-                            equipment.facility ||
-                            "N/A"}
-                        </p>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
-                          onClick={() => {
-                            setSelectedEquipment(equipment);
-                            setShowModal(true);
-                          }}
-                        >
-                          View
-                        </button>
-
-                        <button
-                          className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
-                            isAuthorized &&
-                            equipment.availability !== "Borrowed"
-                              ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          }`}
-                          onClick={
-                            isAuthorized &&
-                            equipment.availability !== "Borrowed"
-                              ? () => {
-                                  setSelectedEquipment(equipment);
-                                  setShowBorrowModal(true);
-                                }
-                              : undefined
-                          }
-                          disabled={
-                            !isAuthorized ||
-                            equipment.availability === "Borrowed"
-                          }
-                          title={
-                            equipment.availability === "Borrowed"
-                              ? "This equipment is currently borrowed"
-                              : !isAuthorized
-                              ? "You are not authorized to borrow equipment"
-                              : "Borrow this equipment"
-                          }
-                        >
-                          {equipment.availability === "Borrowed"
-                            ? "Borrowed"
-                            : "Borrow"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-center mt-2 mb-12 space-x-2">
-                {Array.from({
-                  length: Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
-                }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === i + 1
-                        ? "bg-orange-600 text-white"
-                        : "bg-gray-200 text-gray-800"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-
-              {filteredEquipment.length === 0 && (
-                <div className="text-center py-12">
-                  <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No equipment found
-                  </h3>
-                  <p className="text-gray-600">
-                    Try adjusting your search or filters
-                  </p>
+                  ))}
                 </div>
-              )}
-            </>
-          )}
+
+                <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
+                  {Array.from({
+                    length: Math.ceil(
+                      filteredEquipment.length / ITEMS_PER_PAGE
+                    ),
+                  }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
+                        currentPage === i + 1
+                          ? "bg-orange-600 text-white"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredEquipment.length === 0 && (
+                  <div className="text-center py-8 sm:py-12">
+                    <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
+                      No equipment found
+                    </h3>
+                    <p className="text-xs sm:text-base text-gray-600">
+                      Try adjusting your search or filters
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
       {showModal && selectedEquipment && (
         <div
           className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => setShowModal(false)} // Clicking outside closes modal
+          onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            className="bg-white rounded-lg w-full max-w-xs sm:max-w-xl p-3 sm:p-6 relative shadow-lg"
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowModal(false)}
@@ -565,60 +552,61 @@ export default function EquipmentPage() {
             >
               &times;
             </button>
-            <h2 className="text-2xl text-gray-800 font-bold mb-4">
-              {selectedEquipment.name}
+            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
+              {selectedEquipment?.name}
             </h2>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
               <p>
                 <strong>PO Number:</strong>{" "}
-                {selectedEquipment.po_number || "N/A"}
+                {selectedEquipment?.po_number || "N/A"}
               </p>
               <p>
                 <strong>Unit Number:</strong>{" "}
-                {selectedEquipment.unit_number || "N/A"}
+                {selectedEquipment?.unit_number || "N/A"}
               </p>
               <p>
                 <strong>Brand Name:</strong>{" "}
-                {selectedEquipment.brand_name || "N/A"}
+                {selectedEquipment?.brand_name || "N/A"}
               </p>
               <p>
                 <strong>Description:</strong>{" "}
-                {selectedEquipment.description || "N/A"}
+                {selectedEquipment?.description || "N/A"}
               </p>
               <p>
-                <strong>Supplier:</strong> {selectedEquipment.supplier || "N/A"}
+                <strong>Supplier:</strong>{" "}
+                {selectedEquipment?.supplier || "N/A"}
               </p>
               <p>
-                <strong>Amount:</strong> {selectedEquipment.amount || "N/A"}
+                <strong>Amount:</strong> {selectedEquipment?.amount || "N/A"}
               </p>
               <p>
                 <strong>Estimated Life:</strong>{" "}
-                {selectedEquipment.estimated_life || "N/A"}
+                {selectedEquipment?.estimated_life || "N/A"}
               </p>
               <p>
                 <strong>Item Number:</strong>{" "}
-                {selectedEquipment.item_number || "N/A"}
+                {selectedEquipment?.item_number || "N/A"}
               </p>
               <p>
                 <strong>Property Number:</strong>{" "}
-                {selectedEquipment.property_number || "N/A"}
+                {selectedEquipment?.property_number || "N/A"}
               </p>
               <p>
                 <strong>Control Number:</strong>{" "}
-                {selectedEquipment.control_number || "N/A"}
+                {selectedEquipment?.control_number || "N/A"}
               </p>
               <p>
                 <strong>Facility:</strong>{" "}
-                {selectedEquipment.facility_name ||
-                  selectedEquipment.facility ||
+                {selectedEquipment?.facility_name ||
+                  selectedEquipment?.facility ||
                   "N/A"}
               </p>
               <p>
                 <strong>Person Liable:</strong>{" "}
-                {selectedEquipment.person_liable || "N/A"}
+                {selectedEquipment?.person_liable || "N/A"}
               </p>
               <p>
-                <strong>Remarks:</strong> {selectedEquipment.remarks || "N/A"}
+                <strong>Remarks:</strong> {selectedEquipment?.remarks || "N/A"}
               </p>
             </div>
           </div>
@@ -631,7 +619,7 @@ export default function EquipmentPage() {
           onClick={() => setShowBorrowModal(false)}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -640,12 +628,12 @@ export default function EquipmentPage() {
             >
               &times;
             </button>
-            <h2 className="text-xl text-gray-800 font-bold mb-4">
-              Borrow Equipment: {selectedEquipment.name}
+            <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-2 sm:mb-4">
+              Borrow Equipment: {selectedEquipment?.name}
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
                   Purpose *
                 </label>
                 <textarea
@@ -656,14 +644,14 @@ export default function EquipmentPage() {
                       purpose: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                  rows={3}
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  rows={2}
                   placeholder="Enter purpose for borrowing..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
                   Start Date *
                 </label>
                 <input
@@ -675,12 +663,12 @@ export default function EquipmentPage() {
                       start_date: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
                   End Date *
                 </label>
                 <input
@@ -692,12 +680,12 @@ export default function EquipmentPage() {
                       end_date: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
                   Expected Return Date *
                 </label>
                 <input
@@ -709,22 +697,22 @@ export default function EquipmentPage() {
                       return_date: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
               <button
                 onClick={() => setShowBorrowModal(false)}
-                className="flex-1 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleBorrow}
                 disabled={borrowing}
-                className="flex-1 px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {borrowing ? "Submitting..." : "Submit Request"}
               </button>
@@ -737,7 +725,7 @@ export default function EquipmentPage() {
 
       {showImageModal && selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4"
           onClick={() => setShowImageModal(false)}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -748,8 +736,8 @@ export default function EquipmentPage() {
           autoFocus
         >
           {/* Equipment name - Fixed to top-left of screen */}
-          <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
-            <h3 className="text-white text-lg font-semibold">
+          <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-10 bg-black bg-opacity-50 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
+            <h3 className="text-white text-base sm:text-lg font-semibold">
               {selectedEquipment?.name}
             </h3>
           </div>
@@ -757,11 +745,11 @@ export default function EquipmentPage() {
           {/* Close button - Fixed to top-right of screen */}
           <button
             onClick={() => setShowImageModal(false)}
-            className="fixed top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all"
+            className="fixed top-2 sm:top-4 right-2 sm:right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-1 sm:p-2 hover:bg-opacity-70 transition-all"
             title="Close (Esc)"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5 sm:w-6 sm:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -775,18 +763,18 @@ export default function EquipmentPage() {
             </svg>
           </button>
 
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+          <div className="relative max-w-xs sm:max-w-4xl max-h-[70vh] sm:max-h-[90vh] w-full h-full flex items-center justify-center">
             <div
               className="relative w-full h-full flex items-center justify-center cursor-pointer"
               onClick={() => setShowImageModal(false)}
             >
               <img
-                src={selectedImage}
+                src={selectedImage ?? ""}
                 alt="Equipment preview"
                 className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                 style={{
                   maxWidth: "90vw",
-                  maxHeight: "90vh",
+                  maxHeight: "70vh",
                 }}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;

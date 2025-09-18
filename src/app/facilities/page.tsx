@@ -225,25 +225,25 @@ export default function FacilitiesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8 flex justify-between items-center">
+      <div className="flex-1 p-2 sm:p-4 md:p-6">
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
                 Facilities
               </h1>
-              <p className="text-gray-600">
+              <p className="text-xs sm:text-sm md:text-base text-gray-600">
                 View all facility records, filter by type, floor level, or
                 building, and search for specific facilities.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
               <button
                 onClick={fetchFacilities}
                 disabled={loading}
-                className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-2 py-1 sm:px-3 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1 sm:gap-2 disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -254,17 +254,17 @@ export default function FacilitiesPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-4">
               {/* Search Bar */}
               <div className="md:col-span-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-4 h-4 sm:w-5 sm:h-5" />
                 <input
                   type="text"
                   placeholder="Search facilities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
@@ -272,7 +272,7 @@ export default function FacilitiesPage() {
               <select
                 value={selectedFacilityType}
                 onChange={(e) => setSelectedFacilityType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               >
                 {facilityTypes.map((type) => (
                   <option key={type} value={type}>
@@ -285,7 +285,7 @@ export default function FacilitiesPage() {
               <select
                 value={selectedFloorLevel}
                 onChange={(e) => setSelectedFloorLevel(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               >
                 {floorLevels.map((level) => (
                   <option key={level} value={level}>
@@ -302,7 +302,7 @@ export default function FacilitiesPage() {
                     e.target.value as FacilityStatus | "All Statuses"
                   )
                 }
-                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               >
                 <option value="All Statuses">All Statuses</option>
                 <option value="Available">Available</option>
@@ -316,37 +316,39 @@ export default function FacilitiesPage() {
           {/* Facilities Content */}
           {loading ? (
             // Loading State
-            <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 mx-auto text-orange-500 mb-4 animate-spin" />
-              <p className="text-gray-600">Loading facilities...</p>
+            <div className="text-center py-8 sm:py-12">
+              <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-2 sm:mb-4 animate-spin" />
+              <p className="text-xs sm:text-base text-gray-600">
+                Loading facilities...
+              </p>
             </div>
           ) : (
             <>
               {/* Facilities Grid */}
               {filteredFacilities.length === 0 ? (
-                <div className="text-center py-12">
-                  <Search className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="text-center py-8 sm:py-12">
+                  <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto text-gray-400 mb-2 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
                     No facilities found
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-xs sm:text-base text-gray-600">
                     Try adjusting your search or filters
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
                   {paginatedFacilities.map((facility) => (
                     <div
                       key={facility.id}
                       className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                     >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 flex-1 pr-2">
+                      <div className="p-3 sm:p-6">
+                        <div className="flex justify-between items-start mb-2 sm:mb-4">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-1 sm:pr-2">
                             {facility.name}
                           </h3>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
                               facility.status
                             )}`}
                           >
@@ -354,20 +356,20 @@ export default function FacilitiesPage() {
                           </span>
                         </div>
 
-                        <div className="space-y-2 mb-4">
-                          <p className="text-sm text-gray-600">
+                        <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
+                          <p className="text-xs sm:text-sm text-gray-600">
                             <span className="font-medium">Floor:</span>{" "}
                             {facility.floor_level}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs sm:text-sm text-gray-600">
                             <span className="font-medium">Building:</span>{" "}
                             {facility.building}
                           </p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <button
-                            className="flex-1 px-3 py-2 text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                            className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
                             onClick={() => {
                               setSelectedFacility(facility);
                               setShowModal(true);
@@ -376,12 +378,12 @@ export default function FacilitiesPage() {
                             View
                           </button>
                           {userLoading ? (
-                            <div className="flex-1 px-3 py-2 text-sm bg-gray-200 rounded-lg animate-pulse">
-                              <div className="h-4 bg-gray-300 rounded"></div>
+                            <div className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
+                              <div className="h-3 sm:h-4 bg-gray-300 rounded"></div>
                             </div>
                           ) : (
                             <button
-                              className={`flex-1 px-3 py-2 text-sm rounded-lg transition-colors ${
+                              className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                                 facility.status === "Available" && user
                                   ? "bg-orange-600 text-white hover:bg-orange-700"
                                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -413,7 +415,7 @@ export default function FacilitiesPage() {
 
               {/* Pagination - Only show if there are items to paginate */}
               {filteredFacilities.length > ITEMS_PER_PAGE && (
-                <div className="flex justify-center mt-2 mb-12 space-x-2">
+                <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
                   {Array.from({
                     length: Math.ceil(
                       filteredFacilities.length / ITEMS_PER_PAGE
@@ -422,7 +424,7 @@ export default function FacilitiesPage() {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`px-3 py-1 rounded ${
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
                         currentPage === i + 1
                           ? "bg-orange-600 text-white"
                           : "bg-gray-200 text-gray-800"
@@ -437,13 +439,14 @@ export default function FacilitiesPage() {
           )}
         </div>
       </div>
+      {/* Modal for viewing facility */}
       {showModal && selectedFacility && (
         <div
           className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
           onClick={() => setShowModal(false)} // Clicking outside closes modal
         >
           <div
-            className="bg-white rounded-lg w-full max-w-xl p-6 relative shadow-lg"
+            className="bg-white rounded-lg w-full max-w-xs sm:max-w-xl p-3 sm:p-6 relative shadow-lg"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
           >
             <button
@@ -452,10 +455,10 @@ export default function FacilitiesPage() {
             >
               &times;
             </button>
-            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
               {selectedFacility.name}
             </h2>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
               <p>
                 <strong>Connection Type:</strong>{" "}
                 {selectedFacility.connection_type || "N/A"}
@@ -485,14 +488,14 @@ export default function FacilitiesPage() {
           </div>
         </div>
       )}
-      <Footer />
+      {/* Modal for booking */}
       {showBookingModal && selectedFacility && (
         <div
-          className="fixed inset-0 z-50 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center"
+          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
           onClick={resetBookingModal}
         >
           <div
-            className="bg-white rounded-lg w-full max-w-md p-6 relative shadow-lg"
+            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -501,13 +504,16 @@ export default function FacilitiesPage() {
             >
               &times;
             </button>
-            <h2 className="text-2xl text-gray-800 font-bold mb-4">
+            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
               Book {selectedFacility.name}
             </h2>
 
-            <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <form
+              onSubmit={handleBookingSubmit}
+              className="space-y-2 sm:space-y-4"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Purpose <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -517,13 +523,13 @@ export default function FacilitiesPage() {
                   }
                   placeholder="Describe the purpose of your booking..."
                   required
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  rows={2}
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Start Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -537,12 +543,12 @@ export default function FacilitiesPage() {
                   }
                   required
                   min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   End Date <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -556,22 +562,22 @@ export default function FacilitiesPage() {
                     bookingData.start_date ||
                     new Date().toISOString().slice(0, 16)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
                 <button
                   type="button"
                   onClick={resetBookingModal}
-                  className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={bookingLoading}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-xs sm:text-base"
                 >
                   {bookingLoading ? "Booking..." : "Submit Booking"}
                 </button>
@@ -580,6 +586,10 @@ export default function FacilitiesPage() {
           </div>
         </div>
       )}
+      {/* Footer always at the bottom */}
+      <div className="mt-auto">
+        <Footer />
+      </div>
     </div>
   );
 }
