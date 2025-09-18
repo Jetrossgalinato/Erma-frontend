@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
-
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -23,7 +22,6 @@ type BorrowingStatus = "Pending" | "Approved" | "Rejected";
 
 interface Borrowing {
   id: number;
-
   request_status: BorrowingStatus;
   availability: string;
   purpose: string | null;
@@ -36,10 +34,8 @@ interface Borrowing {
     borrowing_id: number;
     receiver_name: string;
     status: string;
-
     message: string;
   }[];
-
   borrowers_id: number;
   borrowed_item: number;
   equipments?: {
@@ -50,7 +46,6 @@ interface Borrowing {
 
 interface Booking {
   id: number;
-
   status: string;
   purpose: string | null;
   start_date: string | null;
@@ -134,9 +129,6 @@ export default function MyRequestsPage() {
         }
 
         setUser(session.user);
-
-        // Allow all authenticated users for now
-        // TODO: Add role-based restrictions if needed
       } catch (error) {
         console.error("Auth check failed:", error);
         router.push("/login");
@@ -180,7 +172,7 @@ export default function MyRequestsPage() {
     const { data: accountRequest, error: accountError } = await supabase
       .from("account_requests")
       .select("id")
-      .eq("user_id", user.id) // Assuming auth_id links to the authenticated user
+      .eq("user_id", user.id)
       .single();
 
     if (accountError || !accountRequest) {
@@ -204,7 +196,6 @@ export default function MyRequestsPage() {
       borrowing_id,
       receiver_name,
       status,
-      
       message
     )
     `
@@ -433,7 +424,6 @@ export default function MyRequestsPage() {
         borrowing_id: requestId,
         receiver_name: receiverName.trim(),
         status: "pending_confirmation",
-
         message: `User has marked items as returned. Receiver: ${receiverName.trim()}`,
       }));
 
@@ -562,27 +552,27 @@ export default function MyRequestsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      <div className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex justify-between items-center">
+      <div className="flex-1 p-2 sm:p-6 flex flex-col">
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+          <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
                 My Requests
               </h1>
-              <p className="text-gray-600">
+              <p className="text-xs sm:text-base text-gray-600">
                 Track your equipment borrowing requests and their current status
               </p>
             </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-end mb-6">
-                <div className="relative inline-block text-left request-type-dropdown">
+            <div className="flex flex-col gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex justify-end mb-2 sm:mb-6 w-full sm:w-auto">
+                <div className="relative inline-block text-left request-type-dropdown w-full sm:w-auto">
                   <button
                     onClick={() =>
                       setShowRequestTypeDropdown(!showRequestTypeDropdown)
                     }
-                    className="inline-flex items-center justify-between w-48 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="inline-flex items-center justify-between w-full sm:w-48 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   >
                     {
                       {
@@ -595,7 +585,7 @@ export default function MyRequestsPage() {
                   </button>
 
                   {showRequestTypeDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                    <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                       <div className="py-1">
                         {[
                           { key: "borrowing", label: "Borrowing Requests" },
@@ -613,7 +603,7 @@ export default function MyRequestsPage() {
                               );
                               setShowRequestTypeDropdown(false);
                             }}
-                            className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                            className={`w-full px-4 py-2 text-xs sm:text-sm text-left hover:bg-gray-100 ${
                               requestType === type.key
                                 ? "bg-orange-50 text-orange-600 font-medium"
                                 : "text-gray-700"
@@ -627,11 +617,11 @@ export default function MyRequestsPage() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <div className="relative">
+              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
                   <button
                     onClick={() => setShowActionsDropdown(!showActionsDropdown)}
-                    className={`px-4 py-2 text-sm rounded-lg transition-colors flex items-center gap-2 ${
+                    className={`px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors flex items-center gap-2 w-full sm:w-auto ${
                       selectedRequests.length > 0
                         ? "bg-blue-600 text-white hover:bg-blue-700"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -643,13 +633,13 @@ export default function MyRequestsPage() {
                   </button>
 
                   {showActionsDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                    <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
                       <div className="py-1">
                         {requestType === "borrowing" ? (
                           <>
                             <button
                               onClick={handleBulkReturn}
-                              className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-xs sm:text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                               disabled={selectedRequests.length === 0}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -657,7 +647,7 @@ export default function MyRequestsPage() {
                             </button>
                             <button
                               onClick={handleBulkDelete}
-                              className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-xs sm:text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
                               disabled={selectedRequests.length === 0}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -668,7 +658,7 @@ export default function MyRequestsPage() {
                           <>
                             <button
                               onClick={handleBulkDone}
-                              className="w-full px-4 py-2 text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-xs sm:text-sm text-left text-green-600 hover:bg-green-50 flex items-center gap-2"
                               disabled={selectedRequests.length === 0}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -676,7 +666,7 @@ export default function MyRequestsPage() {
                             </button>
                             <button
                               onClick={handleBulkDelete}
-                              className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              className="w-full px-4 py-2 text-xs sm:text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
                               disabled={selectedRequests.length === 0}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -684,13 +674,12 @@ export default function MyRequestsPage() {
                             </button>
                           </>
                         ) : (
-                          // For acquiring requests - only show delete
                           <button
                             onClick={() => {
                               setShowDeleteModal(true);
                               setShowActionsDropdown(false);
                             }}
-                            className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            className="w-full px-4 py-2 text-xs sm:text-sm text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
                             disabled={selectedRequests.length === 0}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -710,7 +699,7 @@ export default function MyRequestsPage() {
                       : fetchAcquiring()
                   }
                   disabled={loading}
-                  className="px-4 py-2 cursor-pointer text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  className="px-2 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -722,11 +711,11 @@ export default function MyRequestsPage() {
           </div>
 
           {/* Requests Table */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto flex-1">
             {loading || authLoading ? (
-              <div className="p-8 text-center">
+              <div className="p-4 sm:p-8 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-xs sm:text-base">
                   {authLoading
                     ? "Checking authentication..."
                     : `Loading ${requestType} requests...`}
@@ -737,22 +726,22 @@ export default function MyRequestsPage() {
                 : requestType === "booking"
                 ? bookingData.length
                 : acquiringData.length) === 0 ? (
-              <div className="p-8 text-center">
-                <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-500 text-lg mb-2">
+              <div className="p-4 sm:p-8 text-center">
+                <Package className="w-8 sm:w-12 h-8 sm:h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-500 text-base sm:text-lg mb-2">
                   No {requestType} requests found
                 </p>
-                <p className="text-gray-400">
+                <p className="text-gray-400 text-xs sm:text-base">
                   Your {requestType} requests will appear here once you make
                   them.
                 </p>
               </div>
             ) : requestType === "borrowing" ? (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
                         <input
                           type="checkbox"
                           checked={
@@ -766,32 +755,31 @@ export default function MyRequestsPage() {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Item
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Receiver
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Start Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         End Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Return Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Date Returned
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Availability
                       </th>
                     </tr>
@@ -799,7 +787,7 @@ export default function MyRequestsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {borrowingData.map((borrowing) => (
                       <tr key={borrowing.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap ">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap ">
                           <input
                             type="checkbox"
                             checked={selectedRequests.includes(borrowing.id)}
@@ -809,8 +797,7 @@ export default function MyRequestsPage() {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               borrowing.request_status
@@ -819,11 +806,11 @@ export default function MyRequestsPage() {
                             {borrowing.request_status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           {borrowing.equipments?.name ||
                             `#${borrowing.borrowed_item}`}
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={borrowing.purpose || "-"}
@@ -831,7 +818,7 @@ export default function MyRequestsPage() {
                             {borrowing.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <User className="w-4 h-4 text-gray-400" />
                             {borrowing.return_notifications &&
@@ -840,25 +827,25 @@ export default function MyRequestsPage() {
                               : "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.start_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.end_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(borrowing.return_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           {borrowing.date_returned ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4 text-green-500" />
@@ -868,7 +855,7 @@ export default function MyRequestsPage() {
                             <span className="text-gray-400">Not returned</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               borrowing.availability === "Available"
@@ -886,10 +873,10 @@ export default function MyRequestsPage() {
               </div>
             ) : requestType === "booking" ? (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
                         <input
                           type="checkbox"
                           checked={
@@ -900,20 +887,19 @@ export default function MyRequestsPage() {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Facility
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Start Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                         End Date
                       </th>
                     </tr>
@@ -921,7 +907,7 @@ export default function MyRequestsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {bookingData.map((booking) => (
                       <tr key={booking.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedRequests.includes(booking.id)}
@@ -929,8 +915,7 @@ export default function MyRequestsPage() {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               booking.status as BorrowingStatus
@@ -939,10 +924,10 @@ export default function MyRequestsPage() {
                             {booking.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           {booking.facilities?.name}
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={booking.purpose || "-"}
@@ -950,13 +935,13 @@ export default function MyRequestsPage() {
                             {booking.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.start_date)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(booking.end_date)}
@@ -969,10 +954,10 @@ export default function MyRequestsPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-12">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
                         <input
                           type="checkbox"
                           checked={
@@ -983,21 +968,19 @@ export default function MyRequestsPage() {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Status
                       </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Supply
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Quantity
                       </th>
-
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
                         Created Date
                       </th>
                     </tr>
@@ -1005,7 +988,7 @@ export default function MyRequestsPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {acquiringData.map((acquiring) => (
                       <tr key={acquiring.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedRequests.includes(acquiring.id)}
@@ -1015,7 +998,7 @@ export default function MyRequestsPage() {
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
                               acquiring.status as BorrowingStatus
@@ -1024,16 +1007,14 @@ export default function MyRequestsPage() {
                             {acquiring.status}
                           </span>
                         </td>
-
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           {acquiring.supplies?.name ||
                             `#${acquiring.supply_id}`}
                         </td>
-                        <td className="px-6 py-4 border-r border-gray-200 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
                           {acquiring.quantity}
                         </td>
-
-                        <td className="px-6 py-4 border-r border-gray-200 text-sm text-gray-900 max-w-xs">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
                           <div
                             className="truncate"
                             title={acquiring.purpose || "-"}
@@ -1041,7 +1022,7 @@ export default function MyRequestsPage() {
                             {acquiring.purpose || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4 text-gray-400" />
                             {formatDate(acquiring.created_at)}
@@ -1057,13 +1038,12 @@ export default function MyRequestsPage() {
         </div>
       </div>
       <Footer />
-
-      {/* Return Modal */}
+      {/* Modals */}
       {showReturnModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md mx-2 sm:mx-4">
+            <div className="flex justify-between items-center mb-2 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                 Mark Items as Returned
               </h3>
               <button
@@ -1076,13 +1056,12 @@ export default function MyRequestsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-3">
+            <div className="mb-2 sm:mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
                 You are about to mark {selectedRequests.length} item(s) as
                 returned.
               </p>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 {"Receiver's"} Name *
               </label>
               <input
@@ -1090,18 +1069,17 @@ export default function MyRequestsPage() {
                 value={receiverName}
                 onChange={(e) => setReceiverName(e.target.value)}
                 placeholder="Enter the name of person who received the items"
-                className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isSubmittingReturn}
               />
             </div>
-
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 justify-end">
               <button
                 onClick={() => {
                   setShowReturnModal(false);
                   setReceiverName("");
                 }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                 disabled={isSubmittingReturn}
               >
                 Cancel
@@ -1109,7 +1087,7 @@ export default function MyRequestsPage() {
               <button
                 onClick={handleSubmitReturn}
                 disabled={isSubmittingReturn || !receiverName.trim()}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmittingReturn ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1125,9 +1103,9 @@ export default function MyRequestsPage() {
 
       {showDoneModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md mx-2 sm:mx-4">
+            <div className="flex justify-between items-center mb-2 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                 Mark Booking(s) as Done
               </h3>
               <button
@@ -1140,13 +1118,12 @@ export default function MyRequestsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-3">
+            <div className="mb-2 sm:mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
                 You are about to mark {selectedRequests.length} booking(s) as
                 completed.
               </p>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Completion Notes (Optional)
               </label>
               <textarea
@@ -1154,18 +1131,17 @@ export default function MyRequestsPage() {
                 onChange={(e) => setCompletionNotes(e.target.value)}
                 placeholder="Add any completion notes or feedback..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
                 disabled={isSubmittingDone}
               />
             </div>
-
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 justify-end">
               <button
                 onClick={() => {
                   setShowDoneModal(false);
                   setCompletionNotes("");
                 }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                 disabled={isSubmittingDone}
               >
                 Cancel
@@ -1173,7 +1149,7 @@ export default function MyRequestsPage() {
               <button
                 onClick={handleSubmitDone}
                 disabled={isSubmittingDone}
-                className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmittingDone ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1190,9 +1166,9 @@ export default function MyRequestsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md mx-2 sm:mx-4">
+            <div className="flex justify-between items-center mb-2 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                 Delete Requests
               </h3>
               <button
@@ -1202,18 +1178,16 @@ export default function MyRequestsPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-600">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Are you sure you want to delete {selectedRequests.length}{" "}
                 selected request(s)? This action cannot be undone.
               </p>
             </div>
-
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                 disabled={isDeleting}
               >
                 Cancel
@@ -1221,7 +1195,7 @@ export default function MyRequestsPage() {
               <button
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1234,6 +1208,25 @@ export default function MyRequestsPage() {
           </div>
         </div>
       )}
+      {/* Sticky Footer */}
+      <style jsx global>{`
+        html,
+        body,
+        #__next {
+          height: 100%;
+        }
+        body {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        #__next > div {
+          flex: 1 0 auto;
+        }
+        footer {
+          flex-shrink: 0;
+        }
+      `}</style>
     </div>
   );
 }
