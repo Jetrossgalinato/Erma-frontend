@@ -12,6 +12,8 @@ import {
   ChevronDown,
   Trash2,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/../lib/database.types";
@@ -77,10 +79,24 @@ interface Acquiring {
   };
 }
 
+// Pagination constants
+const PAGE_SIZE = 10;
+
 export default function MyRequestsPage() {
   const [loading, setLoading] = useState(false);
   const supabase = createClientComponentClient<Database>();
   const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
+  const [borrowingTotal, setBorrowingTotal] = useState(0);
+  const [borrowingPage, setBorrowingPage] = useState(1);
+
+  const [bookingData, setBookingData] = useState<Booking[]>([]);
+  const [bookingTotal, setBookingTotal] = useState(0);
+  const [bookingPage, setBookingPage] = useState(1);
+
+  const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
+  const [acquiringTotal, setAcquiringTotal] = useState(0);
+  const [acquiringPage, setAcquiringPage] = useState(1);
+
   const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
 
@@ -100,14 +116,28 @@ export default function MyRequestsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [bookingData, setBookingData] = useState<Booking[]>([]);
-  const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
-
   const [showRequestTypeDropdown, setShowRequestTypeDropdown] = useState(false);
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
+
+  // Pagination helpers
+  const currentPage =
+    requestType === "borrowing"
+      ? borrowingPage
+      : requestType === "booking"
+      ? bookingPage
+      : acquiringPage;
+
+  const totalItems =
+    requestType === "borrowing"
+      ? borrowingTotal
+      : requestType === "booking"
+      ? bookingTotal
+      : acquiringTotal;
+
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -153,161 +183,221 @@ export default function MyRequestsPage() {
     return () => subscription.unsubscribe();
   }, [router, supabase]);
 
-  const fetchBorrowing = useCallback(async () => {
-    setLoading(true);
+  const fetchBorrowing = useCallback(
+    async (page = borrowingPage) => {
+      setLoading(true);
 
-    // Get the current user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+      // Get the current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      console.error("Failed to get current user:", userError);
+      if (userError || !user) {
+        console.error("Failed to get current user:", userError);
+        setLoading(false);
+        return;
+      }
+
+      // First, get the user's account_requests ID
+      const { data: accountRequest, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (accountError || !accountRequest) {
+        console.error("Failed to get account request:", accountError);
+        setLoading(false);
+        return;
+      }
+
+      // Get total count
+      const { count: total, error: countError } = await supabase
+        .from("borrowing")
+        .select("id", { count: "exact", head: true })
+        .eq("borrowers_id", accountRequest.id);
+
+      if (countError) {
+        setLoading(false);
+        return;
+      }
+      setBorrowingTotal(total || 0);
+
+      // Filter borrowing data by the account_requests ID with pagination
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await supabase
+        .from("borrowing")
+        .select(
+          `
+      *,
+      equipments!borrowed_item (
+        id,
+        name
+      ),
+      return_notifications!borrowing_id (
+        id,
+        borrowing_id,
+        receiver_name,
+        status,
+        message
+      )
+      `
+        )
+        .eq("borrowers_id", accountRequest.id)
+        .order("id", { ascending: false })
+        .range(from, to);
+
+      if (error) {
+        console.error("Failed to fetch borrowing data:", error);
+      } else {
+        setBorrowingData(data as Borrowing[]);
+      }
       setLoading(false);
-      return;
-    }
+    },
+    [supabase, borrowingPage]
+  );
 
-    // First, get the user's account_requests ID
-    const { data: accountRequest, error: accountError } = await supabase
-      .from("account_requests")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
+  const fetchBooking = useCallback(
+    async (page = bookingPage) => {
+      setLoading(true);
 
-    if (accountError || !accountRequest) {
-      console.error("Failed to get account request:", accountError);
-      setLoading(false);
-      return;
-    }
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    // Filter borrowing data by the account_requests ID
-    const { data, error } = await supabase
-      .from("borrowing")
-      .select(
-        `
-    *,
-    equipments!borrowed_item (
-      id,
-      name
-    ),
-    return_notifications!borrowing_id (
-      id,
-      borrowing_id,
-      receiver_name,
-      status,
-      message
-    )
+      if (userError || !user) {
+        console.error("Failed to get current user:", userError);
+        setLoading(false);
+        return;
+      }
+
+      const { data: accountRequest, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (accountError || !accountRequest) {
+        console.error("Failed to get account request:", accountError);
+        setLoading(false);
+        return;
+      }
+
+      // Get total count
+      const { count: total, error: countError } = await supabase
+        .from("booking")
+        .select("id", { count: "exact", head: true })
+        .eq("bookers_id", accountRequest.id);
+
+      if (countError) {
+        setLoading(false);
+        return;
+      }
+      setBookingTotal(total || 0);
+
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await supabase
+        .from("booking")
+        .select(
+          `
+      *,
+      facilities (
+        id,
+        name
+      )
     `
+        )
+        .eq("bookers_id", accountRequest.id)
+        .order("id", { ascending: false })
+        .range(from, to);
+
+      if (error) {
+        console.error("Failed to fetch booking data:", error);
+      } else {
+        setBookingData(data as Booking[]);
+      }
+      setLoading(false);
+    },
+    [supabase, bookingPage]
+  );
+
+  const fetchAcquiring = useCallback(
+    async (page = acquiringPage) => {
+      setLoading(true);
+
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("Failed to get current user:", userError);
+        setLoading(false);
+        return;
+      }
+
+      const { data: accountRequest, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (accountError || !accountRequest) {
+        console.error("Failed to get account request:", accountError);
+        setLoading(false);
+        return;
+      }
+
+      // Get total count
+      const { count: total, error: countError } = await supabase
+        .from("acquiring")
+        .select("id", { count: "exact", head: true })
+        .eq("acquirers_id", accountRequest.id);
+
+      if (countError) {
+        setLoading(false);
+        return;
+      }
+      setAcquiringTotal(total || 0);
+
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await supabase
+        .from("acquiring")
+        .select(
+          `
+      *,
+      supplies (
+        id,
+        name
+      ),
+      account_requests!acquirers_id (
+        id,
+        first_name,
+        last_name
       )
-      .eq("borrowers_id", accountRequest.id);
+    `
+        )
+        .eq("acquirers_id", accountRequest.id)
+        .order("id", { ascending: false })
+        .range(from, to);
 
-    if (error) {
-      console.error("Failed to fetch borrowing data:", error);
-    } else {
-      setBorrowingData(data as Borrowing[]);
-    }
-    setLoading(false);
-  }, [supabase]);
-
-  const fetchBooking = useCallback(async () => {
-    setLoading(true);
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("Failed to get current user:", userError);
+      if (error) {
+        console.error("Failed to fetch acquiring data:", error);
+      } else {
+        setAcquiringData(data as Acquiring[]);
+      }
       setLoading(false);
-      return;
-    }
-
-    const { data: accountRequest, error: accountError } = await supabase
-      .from("account_requests")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (accountError || !accountRequest) {
-      console.error("Failed to get account request:", accountError);
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("booking")
-      .select(
-        `
-    *,
-    facilities (
-      id,
-      name
-    )
-  `
-      )
-      .eq("bookers_id", accountRequest.id);
-
-    if (error) {
-      console.error("Failed to fetch booking data:", error);
-    } else {
-      setBookingData(data as Booking[]);
-    }
-    setLoading(false);
-  }, [supabase]);
-
-  const fetchAcquiring = useCallback(async () => {
-    setLoading(true);
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error("Failed to get current user:", userError);
-      setLoading(false);
-      return;
-    }
-
-    const { data: accountRequest, error: accountError } = await supabase
-      .from("account_requests")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (accountError || !accountRequest) {
-      console.error("Failed to get account request:", accountError);
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("acquiring")
-      .select(
-        `
-    *,
-    supplies (
-      id,
-      name
-    ),
-    account_requests!acquirers_id (
-      id,
-      first_name,
-      last_name
-    )
-  `
-      )
-      .eq("acquirers_id", accountRequest.id);
-
-    if (error) {
-      console.error("Failed to fetch acquiring data:", error);
-    } else {
-      setAcquiringData(data as Acquiring[]);
-    }
-    setLoading(false);
-  }, [supabase]);
+    },
+    [supabase, acquiringPage]
+  );
 
   const handleBulkDone = async () => {
     setShowDoneModal(true);
@@ -403,7 +493,7 @@ export default function MyRequestsPage() {
   useEffect(() => {
     setSelectedRequests([]);
     setShowActionsDropdown(false);
-  }, [requestType]);
+  }, [requestType, borrowingPage, bookingPage, acquiringPage]);
 
   const handleBulkReturn = async () => {
     setShowReturnModal(true);
@@ -460,11 +550,11 @@ export default function MyRequestsPage() {
   useEffect(() => {
     if (!authLoading && user) {
       if (requestType === "borrowing") {
-        fetchBorrowing();
+        fetchBorrowing(borrowingPage);
       } else if (requestType === "booking") {
-        fetchBooking();
+        fetchBooking(bookingPage);
       } else {
-        fetchAcquiring();
+        fetchAcquiring(acquiringPage);
       }
     }
   }, [
@@ -474,6 +564,9 @@ export default function MyRequestsPage() {
     authLoading,
     user,
     requestType,
+    borrowingPage,
+    bookingPage,
+    acquiringPage,
   ]);
 
   const getStatusColor = (status: BorrowingStatus): string => {
@@ -527,14 +620,17 @@ export default function MyRequestsPage() {
         setBorrowingData((prev) =>
           prev.filter((item) => !selectedRequests.includes(item.id))
         );
+        fetchBorrowing(borrowingPage);
       } else if (requestType === "booking") {
         setBookingData((prev) =>
           prev.filter((item) => !selectedRequests.includes(item.id))
         );
+        fetchBooking(bookingPage);
       } else {
         setAcquiringData((prev) =>
           prev.filter((item) => !selectedRequests.includes(item.id))
         );
+        fetchAcquiring(acquiringPage);
       }
 
       // Reset selection and close modal
@@ -550,6 +646,51 @@ export default function MyRequestsPage() {
       setIsDeleting(false);
     }
   };
+
+  // Pagination controls
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    if (requestType === "borrowing") setBorrowingPage(page);
+    else if (requestType === "booking") setBookingPage(page);
+    else setAcquiringPage(page);
+  };
+
+  // Reset page when changing request type
+  useEffect(() => {
+    if (requestType === "borrowing") setBorrowingPage(1);
+    else if (requestType === "booking") setBookingPage(1);
+    else setAcquiringPage(1);
+  }, [requestType]);
+
+  // Pagination UI
+  function Pagination() {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-gray-50">
+        <div className="text-xs sm:text-sm text-gray-600">
+          Page {currentPage} of {totalPages}
+        </div>
+        <div className="flex gap-1">
+          <button
+            className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || loading}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || loading}
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -693,10 +834,10 @@ export default function MyRequestsPage() {
                 <button
                   onClick={() =>
                     requestType === "borrowing"
-                      ? fetchBorrowing()
+                      ? fetchBorrowing(currentPage)
                       : requestType === "booking"
-                      ? fetchBooking()
-                      : fetchAcquiring()
+                      ? fetchBooking(currentPage)
+                      : fetchAcquiring(currentPage)
                   }
                   disabled={loading}
                   className="px-2 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50"
@@ -711,7 +852,7 @@ export default function MyRequestsPage() {
           </div>
 
           {/* Requests Table */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto flex-1">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto flex-1 flex flex-col">
             {loading || authLoading ? (
               <div className="p-4 sm:p-8 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
@@ -737,302 +878,317 @@ export default function MyRequestsPage() {
                 </p>
               </div>
             ) : requestType === "borrowing" ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
-                        <input
-                          type="checkbox"
-                          checked={
-                            borrowingData.length > 0 &&
-                            selectedRequests.length === borrowingData.length &&
-                            borrowingData.every((item) =>
-                              selectedRequests.includes(item.id)
-                            )
-                          }
-                          onChange={toggleAllRequests}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Item
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Purpose
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Receiver
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Start Date
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        End Date
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Return Date
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Date Returned
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                        Availability
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {borrowingData.map((borrowing) => (
-                      <tr key={borrowing.id} className="hover:bg-gray-50">
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap ">
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
                           <input
                             type="checkbox"
-                            checked={selectedRequests.includes(borrowing.id)}
-                            onChange={() =>
-                              toggleRequestSelection(borrowing.id)
+                            checked={
+                              borrowingData.length > 0 &&
+                              selectedRequests.length ===
+                                borrowingData.length &&
+                              borrowingData.every((item) =>
+                                selectedRequests.includes(item.id)
+                              )
                             }
+                            onChange={toggleAllRequests}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                              borrowing.request_status
-                            )}`}
-                          >
-                            {borrowing.request_status}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          {borrowing.equipments?.name ||
-                            `#${borrowing.borrowed_item}`}
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
-                          <div
-                            className="truncate"
-                            title={borrowing.purpose || "-"}
-                          >
-                            {borrowing.purpose || "-"}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <User className="w-4 h-4 text-gray-400" />
-                            {borrowing.return_notifications &&
-                            borrowing.return_notifications.length > 0
-                              ? borrowing.return_notifications[0].receiver_name
-                              : "-"}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(borrowing.start_date)}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(borrowing.end_date)}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(borrowing.return_date)}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          {borrowing.date_returned ? (
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4 text-green-500" />
-                              {formatDate(borrowing.date_returned)}
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Item
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Purpose
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Receiver
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Start Date
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          End Date
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Return Date
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Date Returned
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          Availability
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {borrowingData.map((borrowing) => (
+                        <tr key={borrowing.id} className="hover:bg-gray-50">
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap ">
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(borrowing.id)}
+                              onChange={() =>
+                                toggleRequestSelection(borrowing.id)
+                              }
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                                borrowing.request_status
+                              )}`}
+                            >
+                              {borrowing.request_status}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            {borrowing.equipments?.name ||
+                              `#${borrowing.borrowed_item}`}
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
+                            <div
+                              className="truncate"
+                              title={borrowing.purpose || "-"}
+                            >
+                              {borrowing.purpose || "-"}
                             </div>
-                          ) : (
-                            <span className="text-gray-400">Not returned</span>
-                          )}
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              borrowing.availability === "Available"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {borrowing.availability}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <User className="w-4 h-4 text-gray-400" />
+                              {borrowing.return_notifications &&
+                              borrowing.return_notifications.length > 0
+                                ? borrowing.return_notifications[0]
+                                    .receiver_name
+                                : "-"}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(borrowing.start_date)}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(borrowing.end_date)}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(borrowing.return_date)}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            {borrowing.date_returned ? (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4 text-green-500" />
+                                {formatDate(borrowing.date_returned)}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">
+                                Not returned
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                                borrowing.availability === "Available"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {borrowing.availability}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination />
+              </>
             ) : requestType === "booking" ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
-                        <input
-                          type="checkbox"
-                          checked={
-                            selectedRequests.length === bookingData.length &&
-                            bookingData.length > 0
-                          }
-                          onChange={toggleAllRequests}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Facility
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Purpose
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Start Date
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                        End Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {bookingData.map((booking) => (
-                      <tr key={booking.id} className="hover:bg-gray-50">
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
                           <input
                             type="checkbox"
-                            checked={selectedRequests.includes(booking.id)}
-                            onChange={() => toggleRequestSelection(booking.id)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                              booking.status as BorrowingStatus
-                            )}`}
-                          >
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          {booking.facilities?.name}
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
-                          <div
-                            className="truncate"
-                            title={booking.purpose || "-"}
-                          >
-                            {booking.purpose || "-"}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(booking.start_date)}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(booking.end_date)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
-                        <input
-                          type="checkbox"
-                          checked={
-                            selectedRequests.length === acquiringData.length &&
-                            acquiringData.length > 0
-                          }
-                          onChange={toggleAllRequests}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Supply
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Quantity
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
-                        Purpose
-                      </th>
-                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
-                        Created Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {acquiringData.map((acquiring) => (
-                      <tr key={acquiring.id} className="hover:bg-gray-50">
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedRequests.includes(acquiring.id)}
-                            onChange={() =>
-                              toggleRequestSelection(acquiring.id)
+                            checked={
+                              selectedRequests.length === bookingData.length &&
+                              bookingData.length > 0
                             }
+                            onChange={toggleAllRequests}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
-                          <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                              acquiring.status as BorrowingStatus
-                            )}`}
-                          >
-                            {acquiring.status}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          {acquiring.supplies?.name ||
-                            `#${acquiring.supply_id}`}
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
-                          {acquiring.quantity}
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
-                          <div
-                            className="truncate"
-                            title={acquiring.purpose || "-"}
-                          >
-                            {acquiring.purpose || "-"}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(acquiring.created_at)}
-                          </div>
-                        </td>
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Facility
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Purpose
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Start Date
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          End Date
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {bookingData.map((booking) => (
+                        <tr key={booking.id} className="hover:bg-gray-50">
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(booking.id)}
+                              onChange={() =>
+                                toggleRequestSelection(booking.id)
+                              }
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                                booking.status as BorrowingStatus
+                              )}`}
+                            >
+                              {booking.status}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            {booking.facilities?.name}
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
+                            <div
+                              className="truncate"
+                              title={booking.purpose || "-"}
+                            >
+                              {booking.purpose || "-"}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(booking.start_date)}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(booking.end_date)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination />
+              </>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider w-8 sm:w-12">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedRequests.length ===
+                                acquiringData.length && acquiringData.length > 0
+                            }
+                            onChange={toggleAllRequests}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Supply
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Quantity
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 border-r border-gray-200 uppercase tracking-wider">
+                          Purpose
+                        </th>
+                        <th className="px-2 sm:px-6 py-2 sm:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          Created Date
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {acquiringData.map((acquiring) => (
+                        <tr key={acquiring.id} className="hover:bg-gray-50">
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedRequests.includes(acquiring.id)}
+                              onChange={() =>
+                                toggleRequestSelection(acquiring.id)
+                              }
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                                acquiring.status as BorrowingStatus
+                              )}`}
+                            >
+                              {acquiring.status}
+                            </span>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            {acquiring.supplies?.name ||
+                              `#${acquiring.supply_id}`}
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 whitespace-nowrap text-gray-900">
+                            {acquiring.quantity}
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 border-r border-gray-200 text-gray-900 max-w-xs">
+                            <div
+                              className="truncate"
+                              title={acquiring.purpose || "-"}
+                            >
+                              {acquiring.purpose || "-"}
+                            </div>
+                          </td>
+                          <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-gray-900">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(acquiring.created_at)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination />
+              </>
             )}
           </div>
         </div>
