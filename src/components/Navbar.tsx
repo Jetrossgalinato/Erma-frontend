@@ -393,7 +393,7 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu Button */}
       <button
-        className="md:hidden text-gray-600"
+        className="md:hidden text-gray-600 px-4"
         onClick={toggleMenu}
         aria-label="Toggle menu"
       >
