@@ -54,7 +54,7 @@ export default function LoginPage() {
             <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
-            Login to <span className="text-orange-600">CRIMS</span>
+            Login to <span className="text-orange-600">CRMS</span>
           </div>
           <form className="space-y-3 sm:space-y-4" onSubmit={handleLogin}>
             <div className="px-2">
