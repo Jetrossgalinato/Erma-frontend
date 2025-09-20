@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +15,22 @@ export default function LoginPage() {
   const [role] = useState("employee");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/home");
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router, supabase]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +57,14 @@ export default function LoginPage() {
     setError("");
     router.push("/home");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div
