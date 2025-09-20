@@ -1,14 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import EmployeeRegisterForm from "../../components/EmployeeRegisterForm";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const [registerAs] = useState<"employee" | "intern" | "supervisor">(
     "employee"
   );
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        router.replace("/home");
+      } else {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, [router, supabase]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div
