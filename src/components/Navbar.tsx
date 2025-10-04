@@ -200,6 +200,36 @@ const Navbar: React.FC = () => {
     }
   };
 
+  const clearAllNotifications = async () => {
+    if (!session?.user) return;
+
+    try {
+      const { data: accountData, error: accountError } = await supabase
+        .from("account_requests")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (accountError || !accountData) {
+        console.error("Error fetching account request:", accountError);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", accountData.id);
+
+      if (error) throw error;
+
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      fetchNotifications();
+    }
+  };
+
   // Utility for checking if user is Staff/Faculty/Admin
   const isPrivileged =
     approvedAccRole === "Staff" ||
@@ -357,8 +387,16 @@ const Navbar: React.FC = () => {
 
             {isNotificationDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[300px] max-h-[400px] overflow-y-auto z-50">
-                <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
-                  Notifications
+                <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800 flex justify-between items-center">
+                  <span>Notifications</span>
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={clearAllNotifications}
+                      className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  )}
                 </div>
                 {notifications.length === 0 ? (
                   <div className="px-4 py-3 text-gray-500 text-center">
@@ -559,8 +597,16 @@ const Navbar: React.FC = () => {
 
               {isNotificationDropdownOpen && (
                 <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg min-w-[280px] max-h-[300px] overflow-y-auto">
-                  <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800">
-                    Notifications
+                  <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800 flex justify-between items-center">
+                    <span>Notifications</span>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearAllNotifications}
+                        className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                      >
+                        Clear All
+                      </button>
+                    )}
                   </div>
                   {notifications.length === 0 ? (
                     <div className="px-4 py-3 text-gray-500 text-center">

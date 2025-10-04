@@ -55,6 +55,7 @@ export default function LoginPage() {
       return;
     }
     setError("");
+    alert("You have logged in successfully!");
     router.push("/home");
   };
 
