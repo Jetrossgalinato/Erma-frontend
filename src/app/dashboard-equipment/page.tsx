@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import EquipmentsTable from "./components/equipmentsTable";
+import ImageModal from "./components/imageModal";
+import EditModal from "./components/editModal";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   Upload,
@@ -73,7 +76,9 @@ export default function DashboardEquipmentPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
-  const editImageInputRef = useRef<HTMLInputElement>(null);
+  const editImageInputRef = useRef<HTMLInputElement>(
+    null
+  ) as React.RefObject<HTMLInputElement>;
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
@@ -233,17 +238,6 @@ export default function DashboardEquipmentPage() {
     setActiveFilter(null);
   };
 
-  const getCurrentPageData = () => {
-    const filtered = getFilteredEquipments();
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filtered.slice(startIndex, endIndex);
-  };
-
-  const getTotalPages = () => {
-    return Math.ceil(getFilteredEquipments().length / itemsPerPage);
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -334,12 +328,6 @@ export default function DashboardEquipmentPage() {
       setFacilities(data as Facility[]);
     }
   }, [supabase]);
-
-  const getFacilityName = (facilityId?: number) => {
-    if (!facilityId) return "-";
-    const facility = facilities.find((f) => f.id === facilityId);
-    return facility ? facility.name : `ID: ${facilityId}`;
-  };
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
@@ -500,6 +488,10 @@ export default function DashboardEquipmentPage() {
     return [
       ...new Set(equipments.map((eq) => eq.category).filter(Boolean)),
     ].sort();
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(getFilteredEquipments().length / itemsPerPage);
   };
 
   const handleCancelInsert = () => {
@@ -800,174 +792,6 @@ export default function DashboardEquipmentPage() {
     fetchFacilities();
     fetchEquipments(false);
   }, [fetchEquipments, fetchFacilities]);
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const getStatusBadge = (status?: string) => {
-    if (!status)
-      return <span className="text-gray-400 dark:text-gray-500">-</span>;
-
-    const statusColors = {
-      Working:
-        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-      "For Repair":
-        "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
-      "In Use":
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-    };
-
-    type StatusKey = keyof typeof statusColors;
-
-    function normalizeStatus(input: string): StatusKey | undefined {
-      const normalized = input.toLowerCase().replace(/ /g, "_");
-      if (normalized in statusColors) {
-        return normalized as StatusKey;
-      }
-      return undefined;
-    }
-
-    const key = normalizeStatus(status);
-    const colorClass = key
-      ? statusColors[key]
-      : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
-      >
-        {status}
-      </span>
-    );
-  };
-
-  const getAvailabilityBadge = (availability?: string) => {
-    if (!availability)
-      return <span className="text-gray-400 dark:text-gray-500">-</span>;
-
-    const availabilityColors = {
-      available:
-        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-      disposed: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
-      for_disposal:
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-    };
-
-    type AvailabilityKey = keyof typeof availabilityColors;
-
-    function normalizeAvailability(input: string): AvailabilityKey | undefined {
-      const normalized = input.toLowerCase().replace(/ /g, "_");
-      if (normalized in availabilityColors) {
-        return normalized as AvailabilityKey;
-      }
-      return undefined;
-    }
-
-    const key = normalizeAvailability(availability);
-    const colorClass = key
-      ? availabilityColors[key]
-      : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
-      >
-        {availability}
-      </span>
-    );
-  };
-
-  const renderEditableCell = (
-    eq: Equipment,
-    column: keyof Equipment,
-    value: string | number | null | undefined
-  ) => {
-    const isEditing =
-      editingCell?.rowId === eq.id && editingCell?.column === column;
-
-    if (isEditing) {
-      if (column === "status") {
-        return (
-          <div className="relative">
-            <select
-              value={editingCell.value}
-              onChange={(e) => handleCellEdit(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={handleCancelEdit}
-              autoFocus
-              className="w-full px-2 py-1 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm"
-            >
-              <option value="">Select status</option>
-              <option value="Working">Working</option>
-              <option value="In Use">In Use</option>
-              <option value="For Repair">For Repair</option>
-            </select>
-            <div className="absolute -top-8 left-0 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
-              Press Enter to save, Esc to cancel
-            </div>
-          </div>
-        );
-      }
-
-      if (column === "availability") {
-        return (
-          <div className="relative">
-            <select
-              value={editingCell.value}
-              onChange={(e) => handleCellEdit(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onBlur={handleCancelEdit}
-              autoFocus
-              className="w-full px-2 py-1 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm"
-            >
-              <option value="">Select availability</option>
-              <option value="Available">Available</option>
-              <option value="For Disposal">For Disposal</option>
-              <option value="Disposed">Disposed</option>
-            </select>
-            <div className="absolute -top-8 left-0 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
-              Press Enter to save, Esc to cancel
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="relative">
-          <input
-            type={
-              column === "facility_id"
-                ? "number"
-                : column === "date_acquired"
-                ? "date"
-                : "text"
-            }
-            value={editingCell.value}
-            onChange={(e) => handleCellEdit(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleCancelEdit}
-            autoFocus
-            className="w-full px-2 py-1 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm"
-            placeholder="NULL"
-          />
-          <div className="absolute -top-8 left-0 bg-gray-800 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-10">
-            Press Enter to save, Esc to cancel
-          </div>
-        </div>
-      );
-    }
-
-    const displayValue =
-      value === null || value === undefined ? "-" : String(value);
-
-    return (
-      <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-        {displayValue}
-      </div>
-    );
-  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -1684,326 +1508,28 @@ export default function DashboardEquipmentPage() {
                     </div>
                   )}
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="sticky left-0 z-10 w-12 px-6 py-3 border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs leading-4 font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                          >
-                            <input
-                              type="checkbox"
-                              className="form-checkbox h-4 w-4 text-green-600 dark:text-green-400 transition duration-150 ease-in-out"
-                              checked={
-                                selectedRows.length === equipments.length &&
-                                equipments.length > 0
-                              }
-                              onChange={() => {
-                                if (selectedRows.length === equipments.length) {
-                                  setSelectedRows([]);
-                                } else {
-                                  setSelectedRows(
-                                    equipments.map((eq) => eq.id)
-                                  );
-                                }
-                              }}
-                            />
-                          </th>
-
-                          <th className="sticky left-12 z-10 px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Name
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Image
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            PO Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Unit Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Brand
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Category
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Status
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Availability
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Date Acquired
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Supplier
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Amount
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Estimated Life
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Item Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Control Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Serial Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Property Number
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Person Liable
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Facility
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
-                            Description
-                          </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Remarks
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {getCurrentPageData().map((eq, index) => (
-                          <tr
-                            key={eq.id}
-                            className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                              index % 2 === 0
-                                ? "bg-white dark:bg-gray-800"
-                                : "bg-gray-50/50 dark:bg-gray-700/20"
-                            }`}
-                          >
-                            <td className="sticky left-0 z-10 w-12 px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                              <input
-                                type="checkbox"
-                                className="form-checkbox h-4 w-4 text-green-600 dark:text-green-400 transition duration-150 ease-in-out"
-                                checked={selectedRows.includes(eq.id)}
-                                onChange={() => handleCheckboxChange(eq.id)}
-                              />
-                            </td>
-
-                            <td className="sticky left-12 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(eq, "name", eq.name)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "image" ? (
-                                renderEditableCell(eq, "image", eq.image)
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                  {eq.image ? (
-                                    <div className="flex items-center justify-center">
-                                      <img
-                                        src={eq.image}
-                                        alt={`${eq.name} equipment`}
-                                        className="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
-                                        onClick={() =>
-                                          handleImageClick(eq.image!, eq.name)
-                                        }
-                                        onError={(e) => {
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          target.style.display = "none";
-                                          const parent = target.parentElement;
-                                          if (parent) {
-                                            parent.innerHTML =
-                                              '<span class="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">Failed to load</span>';
-                                          }
-                                        }}
-                                        onLoad={(e) => {
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          target.style.opacity = "1";
-                                        }}
-                                        style={{
-                                          opacity: "0",
-                                          transition:
-                                            "opacity 0.3s ease-in-out, transform 0.2s ease-in-out",
-                                        }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                                      <svg
-                                        className="w-6 h-6 text-gray-400 dark:text-gray-500"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={1.5}
-                                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                        />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 font-mono">
-                              {renderEditableCell(
-                                eq,
-                                "po_number",
-                                eq.po_number
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 font-mono">
-                              {renderEditableCell(
-                                eq,
-                                "unit_number",
-                                eq.unit_number
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(
-                                eq,
-                                "brand_name",
-                                eq.brand_name
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(eq, "category", eq.category)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm border-r border-gray-100 dark:border-gray-700">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "status" ? (
-                                renderEditableCell(eq, "status", eq.status)
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                  {getStatusBadge(eq.status)}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm border-r border-gray-100 dark:border-gray-700">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "availability" ? (
-                                renderEditableCell(
-                                  eq,
-                                  "availability",
-                                  eq.availability
-                                )
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                  {getAvailabilityBadge(eq.availability)}
-                                </div>
-                              )}
-                            </td>
-
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "date_acquired" ? (
-                                renderEditableCell(
-                                  eq,
-                                  "date_acquired",
-                                  eq.date_acquired
-                                )
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                  {formatDate(eq.date_acquired)}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(eq, "supplier", eq.supplier)}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700 font-mono">
-                              {editingCell?.rowId === eq.id &&
-                              editingCell?.column === "amount" ? (
-                                renderEditableCell(eq, "amount", eq.amount)
-                              ) : (
-                                <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                  {eq.amount ? `₱${eq.amount}` : "-"}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(
-                                eq,
-                                "estimated_life",
-                                eq.estimated_life
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(
-                                eq,
-                                "item_number",
-                                eq.item_number
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(
-                                eq,
-                                "control_number",
-                                eq.control_number
-                              )}
-                            </td>
-
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 font-mono">
-                              {renderEditableCell(
-                                eq,
-                                "serial_number",
-                                eq.serial_number
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700 font-mono">
-                              {renderEditableCell(
-                                eq,
-                                "property_number",
-                                eq.property_number
-                              )}
-                            </td>
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {renderEditableCell(
-                                eq,
-                                "person_liable",
-                                eq.person_liable
-                              )}
-                            </td>
-
-                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
-                              {getFacilityName(eq.facility_id)}
-                            </td>
-                            <td className="px-3 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs border-r border-gray-100 dark:border-gray-700">
-                              <div className="truncate cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                {editingCell?.rowId === eq.id &&
-                                editingCell?.column === "description"
-                                  ? renderEditableCell(
-                                      eq,
-                                      "description",
-                                      eq.description
-                                    )
-                                  : eq.description || "-"}
-                              </div>
-                            </td>
-                            <td className="px-3 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs">
-                              <div className="truncate cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                                {editingCell?.rowId === eq.id &&
-                                editingCell?.column === "remarks"
-                                  ? renderEditableCell(
-                                      eq,
-                                      "remarks",
-                                      eq.remarks
-                                    )
-                                  : eq.remarks || "-"}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <EquipmentsTable
+                    equipments={equipments}
+                    facilities={facilities}
+                    selectedRows={selectedRows}
+                    editingCell={editingCell}
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    onCheckboxChange={handleCheckboxChange}
+                    onSelectAll={() => {
+                      if (selectedRows.length === equipments.length) {
+                        setSelectedRows([]);
+                      } else {
+                        setSelectedRows(equipments.map((eq) => eq.id));
+                      }
+                    }}
+                    onImageClick={handleImageClick}
+                    onCellEdit={handleCellEdit}
+                    onKeyDown={handleKeyDown}
+                    onCancelEdit={handleCancelEdit}
+                    categoryFilter={categoryFilter}
+                    facilityFilter={facilityFilter}
+                  />
 
                   <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-t border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 flex items-center justify-between">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -2209,432 +1735,31 @@ export default function DashboardEquipmentPage() {
       )}
 
       {/* Edit Modal */}
-      {showEditModal && editingEquipment && (
-        <div className="fixed inset-0 z-50 text-black dark:text-white flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
-            onClick={handleCancelEdit}
-          ></div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-4xl w-full max-h-[90vh] z-50 flex flex-col">
-            <div className="p-6 overflow-y-auto flex-1">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 top-0 bg-white dark:bg-gray-800 pb-2 border-b border-gray-200 dark:border-gray-700">
-                Edit Equipment: {editingEquipment.name}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editingEquipment.name || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    PO Number
-                  </label>
-                  <input
-                    type="text"
-                    name="po_number"
-                    value={editingEquipment.po_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Unit Number
-                  </label>
-                  <input
-                    type="text"
-                    name="unit_number"
-                    value={editingEquipment.unit_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Brand Name
-                  </label>
-                  <input
-                    type="text"
-                    name="brand_name"
-                    value={editingEquipment.brand_name || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    name="category"
-                    value={editingEquipment.category || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={editingEquipment.status || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select status</option>
-                    <option value="Working">Working</option>
-                    <option value="In Use">In Use</option>
-                    <option value="For Repair">For Repair</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Availability
-                  </label>
-                  <select
-                    name="availability"
-                    value={editingEquipment.availability || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select availability</option>
-                    <option value="available">Available</option>
-                    <option value="for_disposal">For Disposal</option>
-                    <option value="disposed">Disposed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date Acquired
-                  </label>
-                  <input
-                    type="date"
-                    name="date_acquired"
-                    value={editingEquipment.date_acquired?.split("T")[0] || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Supplier
-                  </label>
-                  <input
-                    type="text"
-                    name="supplier"
-                    value={editingEquipment.supplier || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Amount
-                  </label>
-                  <input
-                    type="text"
-                    name="amount"
-                    value={editingEquipment.amount || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Estimated Life
-                  </label>
-                  <input
-                    type="text"
-                    name="estimated_life"
-                    value={editingEquipment.estimated_life || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Item Number
-                  </label>
-                  <input
-                    type="text"
-                    name="item_number"
-                    value={editingEquipment.item_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Control Number
-                  </label>
-                  <input
-                    type="text"
-                    name="control_number"
-                    value={editingEquipment.control_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Serial Number
-                  </label>
-                  <input
-                    type="text"
-                    name="serial_number"
-                    value={editingEquipment.serial_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Property Number
-                  </label>
-                  <input
-                    type="text"
-                    name="property_number"
-                    value={editingEquipment.property_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Person Liable
-                  </label>
-                  <input
-                    type="text"
-                    name="person_liable"
-                    value={editingEquipment.person_liable || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Facility
-                  </label>
-                  <select
-                    name="facility_id"
-                    value={editingEquipment.facility_id || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select facility</option>
-                    {facilities.map((facility) => (
-                      <option key={facility.id} value={facility.id}>
-                        {facility.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+      <EditModal
+        isOpen={showEditModal && !!editingEquipment}
+        equipment={editingEquipment}
+        facilities={facilities}
+        editImageFile={editImageFile}
+        editImagePreview={editImagePreview}
+        onChange={handleEditChange}
+        onImageUpload={handleEditImageFileSelect}
+        onRemoveImage={removeCurrentImage}
+        onSave={handleSaveEdit}
+        onCancel={handleCancelEdit}
+        editImageInputRef={editImageInputRef}
+        onImageClick={handleImageClick}
+      />
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Image
-                  </label>
-                  <div className="space-y-3">
-                    {editingEquipment?.image && !editImagePreview && (
-                      <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Current Image:
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <img
-                            src={editingEquipment.image}
-                            alt="Current equipment"
-                            className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
-                            onClick={() =>
-                              handleImageClick(
-                                editingEquipment.image!,
-                                editingEquipment.name
-                              )
-                            }
-                            onError={(e) => {
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={removeCurrentImage}
-                            className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 border border-red-300 dark:border-red-600 rounded"
-                          >
-                            Remove Current Image
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => editImageInputRef.current?.click()}
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {editingEquipment?.image
-                            ? "Change Image"
-                            : "Add Image"}
-                        </button>
-                        {editImageFile && (
-                          <button
-                            type="button"
-                            onClick={clearEditImageSelection}
-                            className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-
-                      {editImageFile && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          New image: {editImageFile.name}
-                        </div>
-                      )}
-
-                      {editImagePreview && (
-                        <div className="mt-2">
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            Preview:
-                          </div>
-                          <img
-                            src={editImagePreview}
-                            alt="Preview"
-                            className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
-                            onClick={() =>
-                              handleImageClick(
-                                editImagePreview,
-                                `${editingEquipment.name} (Preview)`
-                              )
-                            }
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    name="description"
-                    value={editingEquipment.description || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Remarks
-                  </label>
-                  <input
-                    type="text"
-                    name="remarks"
-                    value={editingEquipment.remarks || ""}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 flex justify-center gap-3 border-t border-gray-200 dark:border-gray-600">
-              <button
-                type="button"
-                className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 dark:bg-blue-700 text-base font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
-                onClick={handleSaveEdit}
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                onClick={handleCancelEdit}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Image Modal */}
-      {showImageModal && selectedImageUrl && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setShowImageModal(false);
-              setSelectedImageUrl(null);
-              setSelectedImageName("");
-            }
-          }}
-          tabIndex={0}
-          autoFocus
-        >
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
-              title="Close (Esc)"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
-              <p className="text-white text-sm font-medium">
-                {selectedImageName}
-              </p>
-            </div>
-
-            <div
-              className="relative w-full h-full flex items-center justify-center cursor-pointer"
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-            >
-              <img
-                src={selectedImageUrl}
-                alt={`${selectedImageName} equipment preview`}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                style={{
-                  maxWidth: "90vw",
-                  maxHeight: "90vh",
-                }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML =
-                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ImageModal
+        isOpen={showImageModal}
+        imageUrl={selectedImageUrl}
+        imageName={selectedImageName}
+        onClose={() => {
+          setShowImageModal(false);
+          setSelectedImageUrl(null);
+          setSelectedImageName("");
+        }}
+      />
 
       {/* Hidden file inputs */}
       <input
