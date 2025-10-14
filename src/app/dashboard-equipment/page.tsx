@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import EquipmentsTable from "./components/equipmentsTable";
+import ImageModal from "./components/imageModal";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   Upload,
@@ -2094,69 +2095,16 @@ export default function DashboardEquipmentPage() {
         </div>
       )}
 
-      {/* Image Modal */}
-      {showImageModal && selectedImageUrl && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black bg-opacity-75"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setShowImageModal(false);
-              setSelectedImageUrl(null);
-              setSelectedImageName("");
-            }
-          }}
-          tabIndex={0}
-          autoFocus
-        >
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            <button
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-              className="fixed top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
-              title="Close (Esc)"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            <div className="fixed top-4 left-4 z-10 bg-black bg-opacity-50 rounded-lg px-3 py-2">
-              <p className="text-white text-sm font-medium">
-                {selectedImageName}
-              </p>
-            </div>
-
-            <div
-              className="relative w-full h-full flex items-center justify-center cursor-pointer"
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-            >
-              <img
-                src={selectedImageUrl}
-                alt={`${selectedImageName} equipment preview`}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                style={{
-                  maxWidth: "90vw",
-                  maxHeight: "90vh",
-                }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML =
-                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ImageModal
+        isOpen={showImageModal}
+        imageUrl={selectedImageUrl}
+        imageName={selectedImageName}
+        onClose={() => {
+          setShowImageModal(false);
+          setSelectedImageUrl(null);
+          setSelectedImageName("");
+        }}
+      />
 
       {/* Hidden file inputs */}
       <input
