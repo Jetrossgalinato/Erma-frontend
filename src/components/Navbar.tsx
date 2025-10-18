@@ -13,15 +13,17 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Session } from "@supabase/supabase-js";
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
-  const supabase = createClientComponentClient();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUserData] = useState<{
+    email: string;
+    first_name?: string;
+    acc_role?: string;
+  } | null>(null);
   const pathname = usePathname();
 
   type Notification = {
@@ -46,50 +48,34 @@ const Navbar: React.FC = () => {
   const toggleAvatarDropdown = () =>
     setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    setIsAuthenticated(false);
+    setUserData(null);
     setIsAvatarDropdownOpen(false);
     alert("You have been logged out successfully.");
     window.location.href = "/home";
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    // Check authentication status from localStorage
+    const token = localStorage.getItem("authToken");
+    const storedUserData = localStorage.getItem("userData");
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
+    if (token && storedUserData) {
+      setIsAuthenticated(true);
+      try {
+        const parsedUserData = JSON.parse(storedUserData);
+        setUserData(parsedUserData);
+        setApprovedAccRole(parsedUserData.acc_role || null);
+      } catch {
+        // If parsing fails, clear invalid data
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
       }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase.auth]);
-
-  useEffect(() => {
-    // When session changes, fetch approved_acc_role
-    const fetchUserRole = async () => {
-      if (session?.user) {
-        const { data: accountData, error: accountError } = await supabase
-          .from("account_requests")
-          .select("approved_acc_role")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (accountError) {
-          setApprovedAccRole(null);
-          return;
-        }
-        setApprovedAccRole(accountData?.approved_acc_role ?? null);
-      } else {
-        setApprovedAccRole(null);
-      }
-    };
-    fetchUserRole();
-  }, [session, supabase]);
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -108,7 +94,8 @@ const Navbar: React.FC = () => {
   }, []);
 
   const getInitial = () => {
-    const name = session?.user?.user_metadata?.name || session?.user?.email;
+    if (!userData) return "?";
+    const name = userData.first_name || userData.email;
     return name ? name.charAt(0).toUpperCase() : "?";
   };
 
@@ -116,84 +103,70 @@ const Navbar: React.FC = () => {
     setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
 
   const fetchNotifications = useCallback(async () => {
-    if (session?.user) {
-      try {
-        const { data: accountData, error: accountError } = await supabase
-          .from("account_requests")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .single();
+    if (!isAuthenticated) return;
 
-        if (accountError) {
-          console.error("Error fetching account request:", accountError);
-          return;
-        }
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
-        if (accountData) {
-          const { data, error } = await supabase
-            .from("notifications")
-            .select("*")
-            .eq("user_id", accountData.id)
-            .order("created_at", { ascending: false });
+      // Call FastAPI endpoint to get notifications
+      const response = await fetch("http://localhost:8000/api/notifications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-          if (error) {
-            console.error("Error fetching notifications:", error);
-          } else {
-            setNotifications(data || []);
-            const unread = (data || []).filter(
-              (notif) => !notif.is_read
-            ).length;
-            setUnreadCount(unread);
-          }
-        }
-      } catch (error) {
-        console.error("Error:", error);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data || []);
+        const unread = (data || []).filter(
+          (notif: Notification) => !notif.is_read
+        ).length;
+        setUnreadCount(unread);
       }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
     }
-  }, [session, supabase]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (session?.user) {
+    if (isAuthenticated) {
       fetchNotifications();
 
-      // Set up real-time subscription
-      const channel = supabase
-        .channel("notifications-changes")
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "notifications",
-          },
-          () => {
-            fetchNotifications();
-          }
-        )
-        .subscribe();
+      // Optional: Set up polling for notifications every 30 seconds
+      const interval = setInterval(fetchNotifications, 30000);
 
       return () => {
-        supabase.removeChannel(channel);
+        clearInterval(interval);
       };
     }
-  }, [session, fetchNotifications, supabase]);
+  }, [isAuthenticated, fetchNotifications]);
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", notificationId);
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
-      if (error) throw error;
-
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, is_read: true } : notif
-        )
+      const response = await fetch(
+        `http://localhost:8000/api/notifications/${notificationId}/read`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      if (response.ok) {
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === notificationId ? { ...notif, is_read: true } : notif
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
     } catch (error) {
       console.error("Error marking notification as read:", error);
       fetchNotifications();
@@ -201,29 +174,24 @@ const Navbar: React.FC = () => {
   };
 
   const clearAllNotifications = async () => {
-    if (!session?.user) return;
+    if (!isAuthenticated) return;
 
     try {
-      const { data: accountData, error: accountError } = await supabase
-        .from("account_requests")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .single();
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
-      if (accountError || !accountData) {
-        console.error("Error fetching account request:", accountError);
-        return;
+      const response = await fetch("http://localhost:8000/api/notifications", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
       }
-
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("user_id", accountData.id);
-
-      if (error) throw error;
-
-      setNotifications([]);
-      setUnreadCount(0);
     } catch (error) {
       console.error("Error clearing notifications:", error);
       fetchNotifications();
@@ -306,7 +274,7 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* Hide Account Requests for Staff, Faculty, Admin */}
-        {session && !isPrivileged && (
+        {isAuthenticated && !isPrivileged && (
           <a
             href="/requests"
             className={`hover:text-black transition-colors duration-300 ${
@@ -317,7 +285,7 @@ const Navbar: React.FC = () => {
           </a>
         )}
 
-        {session ? (
+        {isAuthenticated ? (
           <div className="relative dropdown-container">
             <button
               onClick={toggleAvatarDropdown}
@@ -371,7 +339,7 @@ const Navbar: React.FC = () => {
           </a>
         )}
 
-        {session && (
+        {isAuthenticated && (
           <div className="relative dropdown-container">
             <button
               onClick={toggleNotificationDropdown}
@@ -508,7 +476,7 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Hide Account Requests for Staff, Faculty, Admin */}
-          {session && !isPrivileged && (
+          {isAuthenticated && !isPrivileged && (
             <a
               href="/requests"
               className={`py-2 text-gray-700 ${
@@ -520,7 +488,7 @@ const Navbar: React.FC = () => {
             </a>
           )}
 
-          {session ? (
+          {isAuthenticated ? (
             <div className="relative dropdown-container w-full mt-2">
               <button
                 onClick={toggleAvatarDropdown}
@@ -580,7 +548,7 @@ const Navbar: React.FC = () => {
             </a>
           )}
 
-          {session && (
+          {isAuthenticated && (
             <div className="relative dropdown-container w-full">
               <button
                 onClick={toggleNotificationDropdown}
