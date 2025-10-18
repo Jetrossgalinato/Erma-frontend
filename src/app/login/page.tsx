@@ -39,31 +39,39 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      // Replace with your FastAPI login endpoint
       const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const result = await response.json();
+
+      console.log("FastAPI Response:", result);
+
       if (!response.ok) {
         setError(result.detail || "Login failed.");
         setLoading(false);
         return;
       }
-      // Example response: { token, user: { id, is_approved } }
+
+      // Check if user data is returned
       if (!result.user) {
         setError("No user data returned.");
         setLoading(false);
         return;
       }
+
+      // Check if user is approved
       if (!result.user.is_approved) {
         setError("Your account is pending approval.");
         setLoading(false);
         return;
       }
-      // Save token (for future requests)
-      localStorage.setItem("authToken", result.token);
+
+      // Save token and user data
+      localStorage.setItem("authToken", result.access_token);
+      localStorage.setItem("userData", JSON.stringify(result.user));
+
       setError("");
       alert("You have logged in successfully!");
       router.push("/home");
