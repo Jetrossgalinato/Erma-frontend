@@ -2,61 +2,75 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+// import axios or use fetch for FastAPI requests
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role] = useState("employee");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is already authenticated (e.g., via cookie or localStorage)
     const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        router.push("/home");
-      } else {
+      try {
+        // Example: check for token in localStorage
+        const token = localStorage.getItem("authToken");
+        if (token) {
+          // Optionally verify token with FastAPI
+          router.push("/home");
+        } else {
+          setLoading(false);
+        }
+      } catch {
         setLoading(false);
       }
     };
-
     checkAuth();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({ email, password });
-    if (authError) return setError(authError.message);
-    const user = authData?.user;
-    if (!user) return setError("No user data returned.");
-    const { data: roleData, error: roleError } = await supabase
-      .from("account_requests")
-      .select("is_approved")
-      .eq("user_id", user.id)
-      .single();
-    if (roleError || !roleData) {
-      setError(`No ${role} record found for this user.`);
-      await supabase.auth.signOut();
-      return;
-    }
-    if (!roleData.is_approved) {
-      setError("Your account is pending approval.");
-      await supabase.auth.signOut();
-      return;
-    }
     setError("");
-    alert("You have logged in successfully!");
-    router.push("/home");
+    setLoading(true);
+    try {
+      // Replace with your FastAPI login endpoint
+      const response = await fetch("http://localhost:8000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.detail || "Login failed.");
+        setLoading(false);
+        return;
+      }
+      // Example response: { token, user: { id, is_approved } }
+      if (!result.user) {
+        setError("No user data returned.");
+        setLoading(false);
+        return;
+      }
+      if (!result.user.is_approved) {
+        setError("Your account is pending approval.");
+        setLoading(false);
+        return;
+      }
+      // Save token (for future requests)
+      localStorage.setItem("authToken", result.token);
+      setError("");
+      alert("You have logged in successfully!");
+      router.push("/home");
+    } catch {
+      setError("Login failed. Please try again.");
+      setLoading(false);
+    }
   };
 
   if (loading) {

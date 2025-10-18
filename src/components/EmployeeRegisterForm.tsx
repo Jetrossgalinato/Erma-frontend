@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
 
 export default function EmployeeRegisterForm() {
   const [formData, setFormData] = useState({
@@ -50,51 +49,27 @@ export default function EmployeeRegisterForm() {
     }
 
     try {
-      const { data: signUpData, error: authError } = await supabase.auth.signUp(
-        {
+      // Call FastAPI registration endpoint
+      const response = await fetch("http://localhost:8000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           email,
           password,
-          options: {
-            data: {
-              full_name: `${firstName} ${lastName}`,
-              acc_role: acc_role,
-            },
-          },
-        }
-      );
+          first_name: firstName,
+          last_name: lastName,
+          department,
+          phone_number: phoneNumber,
+          acc_role,
+          status: "Pending",
+          is_employee: true,
+        }),
+      });
 
-      if (authError)
-        throw new Error(`Authentication error: ${authError.message}`);
+      const result = await response.json();
 
-      const userId = signUpData.user?.id;
-      if (!userId) throw new Error("User ID not returned from authentication");
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const { error: insertError } = await supabase
-        .from("account_requests")
-        .insert([
-          {
-            user_id: userId,
-            first_name: firstName,
-            last_name: lastName,
-            department,
-            phone_number: phoneNumber,
-            acc_role,
-            status: "Pending",
-            is_employee: "True",
-          },
-        ]);
-
-      if (insertError) {
-        try {
-          await supabase.auth.admin.deleteUser(userId);
-        } catch (cleanupError) {
-          console.error("Cleanup error:", cleanupError);
-        }
-        throw new Error(
-          `Failed to save registration data: ${insertError.message}`
-        );
+      if (!response.ok) {
+        throw new Error(result.detail || "Registration failed.");
       }
 
       alert(
