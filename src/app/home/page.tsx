@@ -5,42 +5,18 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { Session } from "@supabase/supabase-js";
 
 export default function Home() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
-
-  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-
-    const loadSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (mounted) {
-        setSession(session);
-        setAuthChecked(true);
-      }
-    };
-
-    loadSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+    // Check if user is authenticated via localStorage
+    const token = localStorage.getItem("authToken");
+    setIsAuthenticated(!!token);
+    setAuthChecked(true);
+  }, []);
 
   const handleGetStarted = () => {
     router.push("/login");
@@ -83,7 +59,7 @@ export default function Home() {
                   facility and supply requests with ease.
                 </p>
 
-                {authChecked && !session && (
+                {authChecked && !isAuthenticated && (
                   <div>
                     <button
                       onClick={handleGetStarted}
@@ -106,7 +82,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {authChecked && session && (
+                {authChecked && isAuthenticated && (
                   <div>
                     <button
                       onClick={handleMyRequests}
