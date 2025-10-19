@@ -8,21 +8,11 @@ import EditModal from "./components/editModal";
 import ImportDataModal from "./components/importDataModal";
 import DeleteConfirmationModal from "./components/deleteConfirmationModal";
 import InsertEquipmentForm from "./components/insertEquipmentForm";
+import PageHeader from "./components/pageHeader";
+import FilterControls from "./components/filterControls";
+import ActionsDropdown from "./components/actionsDropdown";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  Loader2,
-  Filter,
-  ChevronDown,
-  Settings,
-  Plus,
-  Download,
-  Edit,
-  Trash2,
-  X,
-  Building,
-  Tag,
-  RefreshCw,
-} from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -32,7 +22,6 @@ import {
   validateImageFile,
   readFileAsDataURL,
   filterEquipments,
-  getUniqueCategories,
   calculateTotalPages,
   parseCSVToEquipment,
   validateEquipmentName,
@@ -683,182 +672,52 @@ export default function DashboardEquipmentPage() {
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                    Equipments
-                  </h1>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Welcome to the Equipments page, where you can manage all the
-                    equipments efficiently.
-                  </p>
-                </div>
+                <PageHeader
+                  title="Equipments"
+                  description="Welcome to the Equipments page, where you can manage all the equipments efficiently."
+                />
                 <div className="flex gap-3">
-                  <div className="relative" ref={filterDropdownRef}>
-                    <button
-                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
-                        activeFilter || categoryFilter || facilityFilter
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
-                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                      }`}
-                    >
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filter
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    </button>
+                  <FilterControls
+                    equipments={equipments}
+                    facilities={facilities}
+                    categoryFilter={categoryFilter}
+                    facilityFilter={facilityFilter}
+                    activeFilter={activeFilter}
+                    showFilterDropdown={showFilterDropdown}
+                    filterDropdownRef={filterDropdownRef}
+                    onToggleDropdown={() =>
+                      setShowFilterDropdown(!showFilterDropdown)
+                    }
+                    onFilterSelect={handleFilterSelect}
+                    onCategoryChange={setCategoryFilter}
+                    onFacilityChange={setFacilityFilter}
+                    onClearFilters={clearFilters}
+                  />
 
-                    {showFilterDropdown && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                        <div className="py-1">
-                          <button
-                            onClick={() => handleFilterSelect("category")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Tag className="w-4 h-4 mr-3" />
-                            Filter by Category
-                          </button>
-                          <button
-                            onClick={() => handleFilterSelect("facility")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Building className="w-4 h-4 mr-3" />
-                            Filter by Facility
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {activeFilter === "category" && (
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Categories</option>
-                      {getUniqueCategories(equipments).map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {activeFilter === "facility" && (
-                    <select
-                      value={facilityFilter}
-                      onChange={(e) => setFacilityFilter(e.target.value)}
-                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Facilities</option>
-                      {facilities.map((facility) => (
-                        <option key={facility.id} value={facility.id}>
-                          {facility.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {(categoryFilter || facilityFilter || activeFilter) && (
-                    <button
-                      onClick={clearFilters}
-                      className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      <X className="w-4 h-4 mr-1 inline" />
-                      Clear
-                    </button>
-                  )}
-
-                  <div className="relative" ref={actionsDropdownRef}>
-                    <button
-                      onClick={() =>
-                        setShowActionsDropdown(!showActionsDropdown)
-                      }
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm font-medium rounded-md shadow-sm transition-all duration-200"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Actions
-                      <ChevronDown className="w-4 h-4 ml-2" />
-                    </button>
-
-                    {showActionsDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setShowInsertForm(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Plus className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                            Insert Row
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowImportModal(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Download className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                            Import Data from CSV File
-                          </button>
-
-                          <hr className="my-1 border-gray-100 dark:border-gray-600" />
-
-                          <button
-                            onClick={() => {
-                              handleEditClick();
-                              setShowActionsDropdown(false);
-                            }}
-                            disabled={selectedRows.length !== 1}
-                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
-                              selectedRows.length !== 1
-                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                            }`}
-                          >
-                            <Edit
-                              className={`w-4 h-4 mr-3 ${
-                                selectedRows.length !== 1
-                                  ? "text-gray-400 dark:text-gray-500"
-                                  : "text-blue-600 dark:text-blue-400"
-                              }`}
-                            />
-                            Edit Selected (
-                            {selectedRows.length === 1
-                              ? "1"
-                              : selectedRows.length}
-                            )
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowDeleteModal(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            disabled={selectedRows.length === 0}
-                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
-                              selectedRows.length === 0
-                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-900 dark:hover:text-red-400"
-                            }`}
-                          >
-                            <Trash2
-                              className={`w-4 h-4 mr-3 ${
-                                selectedRows.length === 0
-                                  ? "text-gray-400 dark:text-gray-500"
-                                  : "text-red-600 dark:text-red-400"
-                              }`}
-                            />
-                            Delete Selected ({selectedRows.length})
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ActionsDropdown
+                    selectedRows={selectedRows}
+                    showActionsDropdown={showActionsDropdown}
+                    actionsDropdownRef={actionsDropdownRef}
+                    onToggleDropdown={() =>
+                      setShowActionsDropdown(!showActionsDropdown)
+                    }
+                    onInsertClick={() => {
+                      setShowInsertForm(true);
+                      setShowActionsDropdown(false);
+                    }}
+                    onImportClick={() => {
+                      setShowImportModal(true);
+                      setShowActionsDropdown(false);
+                    }}
+                    onEditClick={() => {
+                      handleEditClick();
+                      setShowActionsDropdown(false);
+                    }}
+                    onDeleteClick={() => {
+                      setShowDeleteModal(true);
+                      setShowActionsDropdown(false);
+                    }}
+                  />
 
                   <DeleteConfirmationModal
                     isOpen={showDeleteModal}
