@@ -1,36 +1,10 @@
 "use client";
 import React from "react";
-
-type Equipment = {
-  id: number;
-  po_number?: string;
-  unit_number?: string;
-  brand_name?: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  date_acquired?: string;
-  supplier?: string;
-  amount?: string;
-  estimated_life?: string;
-  item_number?: string;
-  property_number?: string;
-  control_number?: string;
-  serial_number?: string;
-  person_liable?: string;
-  remarks?: string;
-  updated_at?: string;
-  name: string;
-  facility_id?: number;
-  availability?: string;
-  created_at: string;
-  image?: string;
-};
-
-type Facility = {
-  id: number;
-  name: string;
-};
+import {
+  type Equipment,
+  type Facility,
+  filterEquipments,
+} from "../utils/helpers";
 
 type EditingCell = {
   rowId: number;
@@ -247,14 +221,7 @@ export default function EquipmentsTable({
   };
 
   const getFilteredEquipments = () => {
-    return equipments.filter((eq) => {
-      const matchesCategory =
-        !categoryFilter ||
-        eq.category?.toLowerCase().includes(categoryFilter.toLowerCase());
-      const matchesFacility =
-        !facilityFilter || eq.facility_id === parseInt(facilityFilter);
-      return matchesCategory && matchesFacility;
-    });
+    return filterEquipments(equipments, categoryFilter, facilityFilter);
   };
 
   const getCurrentPageData = () => {

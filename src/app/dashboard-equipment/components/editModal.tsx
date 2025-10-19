@@ -1,36 +1,6 @@
 import React from "react";
 import { Upload } from "lucide-react";
-
-type Equipment = {
-  id: number;
-  po_number?: string;
-  unit_number?: string;
-  brand_name?: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  date_acquired?: string;
-  supplier?: string;
-  amount?: string;
-  estimated_life?: string;
-  item_number?: string;
-  property_number?: string;
-  control_number?: string;
-  serial_number?: string;
-  person_liable?: string;
-  remarks?: string;
-  updated_at?: string;
-  name: string;
-  facility_id?: number;
-  availability?: string;
-  created_at: string;
-  image?: string;
-};
-
-type Facility = {
-  id: number;
-  name: string;
-};
+import { type Equipment, type Facility } from "../utils/helpers";
 
 type EditModalProps = {
   isOpen: boolean;

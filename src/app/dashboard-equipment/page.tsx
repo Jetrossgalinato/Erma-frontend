@@ -26,39 +26,20 @@ import {
 
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  type Equipment,
+  type Facility,
+  validateImageFile,
+  readFileAsDataURL,
+  filterEquipments,
+  getUniqueCategories,
+  calculateTotalPages,
+  parseCSVToEquipment,
+  validateEquipmentName,
+  validateCSVFile,
+} from "./utils/helpers";
 
 // Define the shape of one row from your equipments table
-type Equipment = {
-  id: number;
-  po_number?: string;
-  unit_number?: string;
-  brand_name?: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  date_acquired?: string;
-  supplier?: string;
-  amount?: string;
-  estimated_life?: string;
-  item_number?: string;
-  property_number?: string;
-  control_number?: string;
-  serial_number?: string;
-  person_liable?: string;
-  remarks?: string;
-  updated_at?: string;
-  name: string;
-  facility_id?: number;
-  availability?: string;
-  created_at: string;
-  image?: string;
-};
-
-type Facility = {
-  id: number;
-  name: string;
-};
-
 type EditingCell = {
   rowId: number;
   column: keyof Equipment;
@@ -337,7 +318,7 @@ export default function DashboardEquipmentPage() {
   }, [isRefreshing, fetchEquipments]);
 
   const handleInsertEquipment = async () => {
-    if (!newEquipment.name?.trim()) {
+    if (!validateEquipmentName(newEquipment.name)) {
       alert("Equipment name is required");
       return;
     }
@@ -396,29 +377,27 @@ export default function DashboardEquipmentPage() {
     }
   };
 
-  const handleImageFileSelect = (
+  const handleImageFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
-      alert("Please select a PNG or JPG image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image file size must be less than 5MB");
+    const error = validateImageFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
     setSelectedImageFile(file);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataURL = await readFileAsDataURL(file);
+      setImagePreview(dataURL);
+    } catch (error) {
+      console.error("Error reading image file:", error);
+      alert("Failed to read image file");
+    }
   };
 
   const clearImageSelection = () => {
@@ -429,29 +408,27 @@ export default function DashboardEquipmentPage() {
     }
   };
 
-  const handleEditImageFileSelect = (
+  const handleEditImageFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
-      alert("Please select a PNG or JPG image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image file size must be less than 5MB");
+    const error = validateImageFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
     setEditImageFile(file);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setEditImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataURL = await readFileAsDataURL(file);
+      setEditImagePreview(dataURL);
+    } catch (error) {
+      console.error("Error reading image file:", error);
+      alert("Failed to read image file");
+    }
   };
 
   const handleImageClick = (imageUrl: string, equipmentName: string) => {
@@ -475,24 +452,11 @@ export default function DashboardEquipmentPage() {
   };
 
   const getFilteredEquipments = () => {
-    return equipments.filter((eq) => {
-      const matchesCategory =
-        !categoryFilter ||
-        eq.category?.toLowerCase().includes(categoryFilter.toLowerCase());
-      const matchesFacility =
-        !facilityFilter || eq.facility_id === parseInt(facilityFilter);
-      return matchesCategory && matchesFacility;
-    });
-  };
-
-  const getUniqueCategories = () => {
-    return [
-      ...new Set(equipments.map((eq) => eq.category).filter(Boolean)),
-    ].sort();
+    return filterEquipments(equipments, categoryFilter, facilityFilter);
   };
 
   const getTotalPages = () => {
-    return Math.ceil(getFilteredEquipments().length / itemsPerPage);
+    return calculateTotalPages(getFilteredEquipments().length, itemsPerPage);
   };
 
   const handleCancelInsert = () => {
@@ -507,8 +471,9 @@ export default function DashboardEquipmentPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith(".csv")) {
-      alert("Please select a CSV file");
+    const error = validateCSVFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
@@ -516,119 +481,14 @@ export default function DashboardEquipmentPage() {
     setIsProcessing(true);
 
     try {
-      const text = await file.text();
-      const lines = text.split("\n").filter((line) => line.trim());
-
-      if (lines.length < 2) {
-        alert("CSV file must have at least a header row and one data row");
-        return;
-      }
-
-      const headers = lines[0]
-        .split(",")
-        .map((h) => h.trim().replace(/"/g, ""));
-
-      const equipmentData: Partial<Equipment>[] = lines.slice(1).map((line) => {
-        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
-        const equipment: Partial<Equipment> = {};
-
-        headers.forEach((header, index) => {
-          const value = values[index] || "";
-
-          switch (header.toLowerCase()) {
-            case "name":
-            case "equipment name":
-              equipment.name = value;
-              break;
-            case "po number":
-            case "po_number":
-            case "ponumber":
-              equipment.po_number = value;
-              break;
-            case "unit number":
-            case "unit_number":
-            case "unitnumber":
-              equipment.unit_number = value;
-              break;
-            case "brand name":
-            case "brand_name":
-            case "brand":
-              equipment.brand_name = value;
-              break;
-            case "description":
-              equipment.description = value;
-              break;
-            case "category":
-              equipment.category = value;
-              break;
-            case "status":
-              equipment.status = value;
-              break;
-            case "availability":
-              equipment.availability = value;
-              break;
-            case "date acquired":
-            case "date_acquired":
-            case "dateacquired":
-              equipment.date_acquired = value;
-              break;
-            case "supplier":
-              equipment.supplier = value;
-              break;
-            case "amount":
-            case "price":
-              equipment.amount = value;
-              break;
-            case "estimated life":
-            case "estimated_life":
-            case "estimatedlife":
-              equipment.estimated_life = value;
-              break;
-            case "item number":
-            case "item_number":
-            case "itemnumber":
-              equipment.item_number = value;
-              break;
-            case "property number":
-            case "property_number":
-            case "propertynumber":
-              equipment.property_number = value;
-              break;
-            case "control number":
-            case "control_number":
-            case "controlnumber":
-              equipment.control_number = value;
-              break;
-            case "serial number":
-            case "serial_number":
-            case "serialnumber":
-              equipment.serial_number = value;
-              break;
-            case "person liable":
-            case "person_liable":
-            case "personliable":
-              equipment.person_liable = value;
-              break;
-            case "facility id":
-            case "facility_id":
-            case "facilityid":
-              equipment.facility_id = value ? parseInt(value, 10) : undefined;
-              break;
-            case "remarks":
-            case "notes":
-              equipment.remarks = value;
-              break;
-          }
-        });
-
-        return equipment;
-      });
-
+      const equipmentData = await parseCSVToEquipment(file);
       setImportData(equipmentData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);
       alert(
-        "Error reading CSV file. Please make sure it's properly formatted."
+        error instanceof Error
+          ? error.message
+          : "Error reading CSV file. Please make sure it's properly formatted."
       );
     } finally {
       setIsProcessing(false);
@@ -876,7 +736,7 @@ export default function DashboardEquipmentPage() {
                       className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">All Categories</option>
-                      {getUniqueCategories().map((category) => (
+                      {getUniqueCategories(equipments).map((category) => (
                         <option key={category} value={category}>
                           {category}
                         </option>
