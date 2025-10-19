@@ -5,9 +5,9 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import EquipmentsTable from "./components/equipmentsTable";
 import ImageModal from "./components/imageModal";
 import EditModal from "./components/editModal";
+import ImportDataModal from "./components/importDataModal";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
-  Upload,
   Loader2,
   Filter,
   ChevronDown,
@@ -1579,160 +1579,20 @@ export default function DashboardEquipmentPage() {
       </div>
 
       {/* Import Data Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <div
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowImportModal(false)}
-            />
-
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6">
-                  Import Equipment Data
-                </h3>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Upload file
-                    </label>
-                    <div
-                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-3" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {selectedFile
-                          ? selectedFile.name
-                          : "Click to upload or drag and drop"}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        CSV files (.csv) up to 10MB
-                      </p>
-                    </div>
-                  </div>
-
-                  {importData.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Preview
-                        </label>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {importData.length} row
-                          {importData.length !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
-                        <div className="max-h-48 overflow-y-auto">
-                          <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0">
-                              <tr>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Name
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Brand
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Category
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Status
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Amount
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-600">
-                              {importData.map((item, index) => (
-                                <tr
-                                  key={index}
-                                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                                >
-                                  <td className="px-3 py-2 text-gray-900 dark:text-gray-100 font-medium">
-                                    {item.name || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.brand_name || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.category || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.status ? (
-                                      <span
-                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                          item.status === "Working"
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                                            : item.status === "For Repair"
-                                            ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                                            : item.status === "In Use"
-                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-                                        }`}
-                                      >
-                                        {item.status}
-                                      </span>
-                                    ) : (
-                                      "—"
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400 font-mono">
-                                    {item.amount ? `₱${item.amount}` : "—"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {isProcessing && (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 dark:border-green-400 border-t-transparent"></div>
-                      <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                        Processing equipment data...
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowImportModal(false);
-                      setSelectedFile(null);
-                      setImportData([]);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleImportData}
-                    disabled={importData.length === 0 || isProcessing}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700 border border-transparent rounded-md hover:bg-green-700 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isProcessing
-                      ? "Importing..."
-                      : `Import ${importData.length} Equipment${
-                          importData.length !== 1 ? "s" : ""
-                        }`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ImportDataModal
+        isOpen={showImportModal}
+        selectedFile={selectedFile}
+        importData={importData}
+        isProcessing={isProcessing}
+        onClose={() => {
+          setShowImportModal(false);
+          setSelectedFile(null);
+          setImportData([]);
+        }}
+        onFileSelect={handleFileSelect}
+        onImport={handleImportData}
+        fileInputRef={fileInputRef}
+      />
 
       {/* Edit Modal */}
       <EditModal
