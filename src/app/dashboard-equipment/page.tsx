@@ -5,59 +5,30 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import EquipmentsTable from "./components/equipmentsTable";
 import ImageModal from "./components/imageModal";
 import EditModal from "./components/editModal";
+import ImportDataModal from "./components/importDataModal";
+import DeleteConfirmationModal from "./components/deleteConfirmationModal";
+import InsertEquipmentForm from "./components/insertEquipmentForm";
+import PageHeader from "./components/pageHeader";
+import FilterControls from "./components/filterControls";
+import ActionsDropdown from "./components/actionsDropdown";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  Upload,
-  Loader2,
-  Filter,
-  ChevronDown,
-  Settings,
-  Plus,
-  Download,
-  Edit,
-  Trash2,
-  X,
-  AlertTriangle,
-  Building,
-  Tag,
-  RefreshCw,
-} from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  type Equipment,
+  type Facility,
+  validateImageFile,
+  readFileAsDataURL,
+  filterEquipments,
+  calculateTotalPages,
+  parseCSVToEquipment,
+  validateEquipmentName,
+  validateCSVFile,
+} from "./utils/helpers";
 
 // Define the shape of one row from your equipments table
-type Equipment = {
-  id: number;
-  po_number?: string;
-  unit_number?: string;
-  brand_name?: string;
-  description?: string;
-  category?: string;
-  status?: string;
-  date_acquired?: string;
-  supplier?: string;
-  amount?: string;
-  estimated_life?: string;
-  item_number?: string;
-  property_number?: string;
-  control_number?: string;
-  serial_number?: string;
-  person_liable?: string;
-  remarks?: string;
-  updated_at?: string;
-  name: string;
-  facility_id?: number;
-  availability?: string;
-  created_at: string;
-  image?: string;
-};
-
-type Facility = {
-  id: number;
-  name: string;
-};
-
 type EditingCell = {
   rowId: number;
   column: keyof Equipment;
@@ -336,7 +307,7 @@ export default function DashboardEquipmentPage() {
   }, [isRefreshing, fetchEquipments]);
 
   const handleInsertEquipment = async () => {
-    if (!newEquipment.name?.trim()) {
+    if (!validateEquipmentName(newEquipment.name)) {
       alert("Equipment name is required");
       return;
     }
@@ -395,29 +366,27 @@ export default function DashboardEquipmentPage() {
     }
   };
 
-  const handleImageFileSelect = (
+  const handleImageFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
-      alert("Please select a PNG or JPG image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image file size must be less than 5MB");
+    const error = validateImageFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
     setSelectedImageFile(file);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataURL = await readFileAsDataURL(file);
+      setImagePreview(dataURL);
+    } catch (error) {
+      console.error("Error reading image file:", error);
+      alert("Failed to read image file");
+    }
   };
 
   const clearImageSelection = () => {
@@ -428,29 +397,27 @@ export default function DashboardEquipmentPage() {
     }
   };
 
-  const handleEditImageFileSelect = (
+  const handleEditImageFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.match(/^image\/(png|jpe?g)$/i)) {
-      alert("Please select a PNG or JPG image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image file size must be less than 5MB");
+    const error = validateImageFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
     setEditImageFile(file);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setEditImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const dataURL = await readFileAsDataURL(file);
+      setEditImagePreview(dataURL);
+    } catch (error) {
+      console.error("Error reading image file:", error);
+      alert("Failed to read image file");
+    }
   };
 
   const handleImageClick = (imageUrl: string, equipmentName: string) => {
@@ -474,24 +441,11 @@ export default function DashboardEquipmentPage() {
   };
 
   const getFilteredEquipments = () => {
-    return equipments.filter((eq) => {
-      const matchesCategory =
-        !categoryFilter ||
-        eq.category?.toLowerCase().includes(categoryFilter.toLowerCase());
-      const matchesFacility =
-        !facilityFilter || eq.facility_id === parseInt(facilityFilter);
-      return matchesCategory && matchesFacility;
-    });
-  };
-
-  const getUniqueCategories = () => {
-    return [
-      ...new Set(equipments.map((eq) => eq.category).filter(Boolean)),
-    ].sort();
+    return filterEquipments(equipments, categoryFilter, facilityFilter);
   };
 
   const getTotalPages = () => {
-    return Math.ceil(getFilteredEquipments().length / itemsPerPage);
+    return calculateTotalPages(getFilteredEquipments().length, itemsPerPage);
   };
 
   const handleCancelInsert = () => {
@@ -506,8 +460,9 @@ export default function DashboardEquipmentPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith(".csv")) {
-      alert("Please select a CSV file");
+    const error = validateCSVFile(file);
+    if (error) {
+      alert(error);
       return;
     }
 
@@ -515,119 +470,14 @@ export default function DashboardEquipmentPage() {
     setIsProcessing(true);
 
     try {
-      const text = await file.text();
-      const lines = text.split("\n").filter((line) => line.trim());
-
-      if (lines.length < 2) {
-        alert("CSV file must have at least a header row and one data row");
-        return;
-      }
-
-      const headers = lines[0]
-        .split(",")
-        .map((h) => h.trim().replace(/"/g, ""));
-
-      const equipmentData: Partial<Equipment>[] = lines.slice(1).map((line) => {
-        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
-        const equipment: Partial<Equipment> = {};
-
-        headers.forEach((header, index) => {
-          const value = values[index] || "";
-
-          switch (header.toLowerCase()) {
-            case "name":
-            case "equipment name":
-              equipment.name = value;
-              break;
-            case "po number":
-            case "po_number":
-            case "ponumber":
-              equipment.po_number = value;
-              break;
-            case "unit number":
-            case "unit_number":
-            case "unitnumber":
-              equipment.unit_number = value;
-              break;
-            case "brand name":
-            case "brand_name":
-            case "brand":
-              equipment.brand_name = value;
-              break;
-            case "description":
-              equipment.description = value;
-              break;
-            case "category":
-              equipment.category = value;
-              break;
-            case "status":
-              equipment.status = value;
-              break;
-            case "availability":
-              equipment.availability = value;
-              break;
-            case "date acquired":
-            case "date_acquired":
-            case "dateacquired":
-              equipment.date_acquired = value;
-              break;
-            case "supplier":
-              equipment.supplier = value;
-              break;
-            case "amount":
-            case "price":
-              equipment.amount = value;
-              break;
-            case "estimated life":
-            case "estimated_life":
-            case "estimatedlife":
-              equipment.estimated_life = value;
-              break;
-            case "item number":
-            case "item_number":
-            case "itemnumber":
-              equipment.item_number = value;
-              break;
-            case "property number":
-            case "property_number":
-            case "propertynumber":
-              equipment.property_number = value;
-              break;
-            case "control number":
-            case "control_number":
-            case "controlnumber":
-              equipment.control_number = value;
-              break;
-            case "serial number":
-            case "serial_number":
-            case "serialnumber":
-              equipment.serial_number = value;
-              break;
-            case "person liable":
-            case "person_liable":
-            case "personliable":
-              equipment.person_liable = value;
-              break;
-            case "facility id":
-            case "facility_id":
-            case "facilityid":
-              equipment.facility_id = value ? parseInt(value, 10) : undefined;
-              break;
-            case "remarks":
-            case "notes":
-              equipment.remarks = value;
-              break;
-          }
-        });
-
-        return equipment;
-      });
-
+      const equipmentData = await parseCSVToEquipment(file);
       setImportData(equipmentData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);
       alert(
-        "Error reading CSV file. Please make sure it's properly formatted."
+        error instanceof Error
+          ? error.message
+          : "Error reading CSV file. Please make sure it's properly formatted."
       );
     } finally {
       setIsProcessing(false);
@@ -822,226 +672,59 @@ export default function DashboardEquipmentPage() {
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-                    Equipments
-                  </h1>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Welcome to the Equipments page, where you can manage all the
-                    equipments efficiently.
-                  </p>
-                </div>
+                <PageHeader
+                  title="Equipments"
+                  description="Welcome to the Equipments page, where you can manage all the equipments efficiently."
+                />
                 <div className="flex gap-3">
-                  <div className="relative" ref={filterDropdownRef}>
-                    <button
-                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                      className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
-                        activeFilter || categoryFilter || facilityFilter
-                          ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
-                          : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                      }`}
-                    >
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filter
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    </button>
+                  <FilterControls
+                    equipments={equipments}
+                    facilities={facilities}
+                    categoryFilter={categoryFilter}
+                    facilityFilter={facilityFilter}
+                    activeFilter={activeFilter}
+                    showFilterDropdown={showFilterDropdown}
+                    filterDropdownRef={filterDropdownRef}
+                    onToggleDropdown={() =>
+                      setShowFilterDropdown(!showFilterDropdown)
+                    }
+                    onFilterSelect={handleFilterSelect}
+                    onCategoryChange={setCategoryFilter}
+                    onFacilityChange={setFacilityFilter}
+                    onClearFilters={clearFilters}
+                  />
 
-                    {showFilterDropdown && (
-                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                        <div className="py-1">
-                          <button
-                            onClick={() => handleFilterSelect("category")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Tag className="w-4 h-4 mr-3" />
-                            Filter by Category
-                          </button>
-                          <button
-                            onClick={() => handleFilterSelect("facility")}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Building className="w-4 h-4 mr-3" />
-                            Filter by Facility
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ActionsDropdown
+                    selectedRows={selectedRows}
+                    showActionsDropdown={showActionsDropdown}
+                    actionsDropdownRef={actionsDropdownRef}
+                    onToggleDropdown={() =>
+                      setShowActionsDropdown(!showActionsDropdown)
+                    }
+                    onInsertClick={() => {
+                      setShowInsertForm(true);
+                      setShowActionsDropdown(false);
+                    }}
+                    onImportClick={() => {
+                      setShowImportModal(true);
+                      setShowActionsDropdown(false);
+                    }}
+                    onEditClick={() => {
+                      handleEditClick();
+                      setShowActionsDropdown(false);
+                    }}
+                    onDeleteClick={() => {
+                      setShowDeleteModal(true);
+                      setShowActionsDropdown(false);
+                    }}
+                  />
 
-                  {activeFilter === "category" && (
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Categories</option>
-                      {getUniqueCategories().map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {activeFilter === "facility" && (
-                    <select
-                      value={facilityFilter}
-                      onChange={(e) => setFacilityFilter(e.target.value)}
-                      className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Facilities</option>
-                      {facilities.map((facility) => (
-                        <option key={facility.id} value={facility.id}>
-                          {facility.name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {(categoryFilter || facilityFilter || activeFilter) && (
-                    <button
-                      onClick={clearFilters}
-                      className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      <X className="w-4 h-4 mr-1 inline" />
-                      Clear
-                    </button>
-                  )}
-
-                  <div className="relative" ref={actionsDropdownRef}>
-                    <button
-                      onClick={() =>
-                        setShowActionsDropdown(!showActionsDropdown)
-                      }
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm font-medium rounded-md shadow-sm transition-all duration-200"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Actions
-                      <ChevronDown className="w-4 h-4 ml-2" />
-                    </button>
-
-                    {showActionsDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                        <div className="py-1">
-                          <button
-                            onClick={() => {
-                              setShowInsertForm(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Plus className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                            Insert Row
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowImportModal(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                          >
-                            <Download className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
-                            Import Data from CSV File
-                          </button>
-
-                          <hr className="my-1 border-gray-100 dark:border-gray-600" />
-
-                          <button
-                            onClick={() => {
-                              handleEditClick();
-                              setShowActionsDropdown(false);
-                            }}
-                            disabled={selectedRows.length !== 1}
-                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
-                              selectedRows.length !== 1
-                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-                            }`}
-                          >
-                            <Edit
-                              className={`w-4 h-4 mr-3 ${
-                                selectedRows.length !== 1
-                                  ? "text-gray-400 dark:text-gray-500"
-                                  : "text-blue-600 dark:text-blue-400"
-                              }`}
-                            />
-                            Edit Selected (
-                            {selectedRows.length === 1
-                              ? "1"
-                              : selectedRows.length}
-                            )
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setShowDeleteModal(true);
-                              setShowActionsDropdown(false);
-                            }}
-                            disabled={selectedRows.length === 0}
-                            className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
-                              selectedRows.length === 0
-                                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                                : "text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-900 dark:hover:text-red-400"
-                            }`}
-                          >
-                            <Trash2
-                              className={`w-4 h-4 mr-3 ${
-                                selectedRows.length === 0
-                                  ? "text-gray-400 dark:text-gray-500"
-                                  : "text-red-600 dark:text-red-400"
-                              }`}
-                            />
-                            Delete Selected ({selectedRows.length})
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {showDeleteModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                      <div
-                        className="fixed inset-0 backdrop-blur-sm bg-opacity-50"
-                        onClick={() => setShowDeleteModal(false)}
-                      ></div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-sm w-full z-50">
-                        <div className="p-6">
-                          <div className="flex items-center justify-center">
-                            <AlertTriangle className="h-10 w-10 text-red-600 dark:text-red-400" />
-                          </div>
-                          <div className="mt-3 text-center">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                              Delete Selected Equipments
-                            </h3>
-                            <div className="mt-2">
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Are you sure you want to delete{" "}
-                                {selectedRows.length} equipment records? This
-                                action cannot be undone.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 flex justify-center gap-3">
-                          <button
-                            type="button"
-                            className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 dark:bg-red-700 text-base font-medium text-white hover:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
-                            onClick={handleDeleteSelectedRows}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            type="button"
-                            className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                            onClick={() => setShowDeleteModal(false)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <DeleteConfirmationModal
+                    isOpen={showDeleteModal}
+                    selectedCount={selectedRows.length}
+                    onConfirm={handleDeleteSelectedRows}
+                    onCancel={() => setShowDeleteModal(false)}
+                  />
 
                   <button
                     onClick={handleRefreshClick}
@@ -1075,438 +758,20 @@ export default function DashboardEquipmentPage() {
                 </div>
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                  {showInsertForm && (
-                    <div className="border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
-                      <div className="px-6 py-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            Add new row to equipments
-                          </h4>
-                          <button
-                            onClick={handleCancelInsert}
-                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.name || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  name: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Equipment name"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              PO Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.po_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  po_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="PO Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Unit Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.unit_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  unit_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Unit Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Brand Name
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.brand_name || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  brand_name: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Brand Name"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Category
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.category || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  category: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Category"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Status
-                            </label>
-                            <select
-                              value={newEquipment.status || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  status: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                              <option value="">Select status</option>
-                              <option value="Working">Working</option>
-                              <option value="In Use">In Use</option>
-                              <option value="For Repair">For Repair</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Availability
-                            </label>
-                            <select
-                              value={newEquipment.availability || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  availability: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                              <option value="">Select availability</option>
-                              <option value="Available">Available</option>
-                              <option value="For Disposal">For Disposal</option>
-                              <option value="Disposed">Disposed</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Date Acquired
-                            </label>
-                            <input
-                              type="date"
-                              value={newEquipment.date_acquired || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  date_acquired: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Supplier
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.supplier || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  supplier: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Supplier"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Amount
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.amount || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  amount: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Amount"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Estimated Life
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.estimated_life || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  estimated_life: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Estimated Life"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Item Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.item_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  item_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Item Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Control Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.control_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  control_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Control Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Serial Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.serial_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  serial_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Serial Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Property Number
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.property_number || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  property_number: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Property Number"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Person Liable
-                            </label>
-                            <input
-                              type="text"
-                              value={newEquipment.person_liable || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  person_liable: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="Person Liable"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Facility
-                            </label>
-                            <select
-                              value={newEquipment.facility_id || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  facility_id: e.target.value
-                                    ? parseInt(e.target.value, 10)
-                                    : undefined,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            >
-                              <option value="">Select facility</option>
-                              {facilities.map((facility) => (
-                                <option key={facility.id} value={facility.id}>
-                                  {facility.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Image
-                            </label>
-                            <div className="space-y-2">
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  type="button"
-                                  onClick={() => imageInputRef.current?.click()}
-                                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                                >
-                                  Choose Image
-                                </button>
-                                {selectedImageFile && (
-                                  <button
-                                    type="button"
-                                    onClick={clearImageSelection}
-                                    className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                                  >
-                                    Remove
-                                  </button>
-                                )}
-                              </div>
-
-                              {selectedImageFile && (
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Selected: {selectedImageFile.name}
-                                </div>
-                              )}
-
-                              {imagePreview && (
-                                <div className="mt-2">
-                                  <img
-                                    src={imagePreview}
-                                    alt="Preview"
-                                    className="w-16 h-16 rounded border object-cover"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Description
-                            </label>
-                            <textarea
-                              value={newEquipment.description || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  description: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                              rows={2}
-                              placeholder="Description"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Remarks
-                            </label>
-                            <textarea
-                              value={newEquipment.remarks || ""}
-                              onChange={(e) =>
-                                setNewEquipment({
-                                  ...newEquipment,
-                                  remarks: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                              rows={2}
-                              placeholder="Remarks"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={handleCancelInsert}
-                            className="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleInsertEquipment}
-                            className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 dark:bg-green-700 border border-transparent rounded-md hover:bg-green-700 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <InsertEquipmentForm
+                    isOpen={showInsertForm}
+                    newEquipment={newEquipment}
+                    facilities={facilities}
+                    selectedImageFile={selectedImageFile}
+                    imagePreview={imagePreview}
+                    onChange={(field, value) =>
+                      setNewEquipment({ ...newEquipment, [field]: value })
+                    }
+                    onImageSelect={() => imageInputRef.current?.click()}
+                    onImageClear={clearImageSelection}
+                    onSave={handleInsertEquipment}
+                    onCancel={handleCancelInsert}
+                  />
 
                   <EquipmentsTable
                     equipments={equipments}
@@ -1579,160 +844,20 @@ export default function DashboardEquipmentPage() {
       </div>
 
       {/* Import Data Modal */}
-      {showImportModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen p-4">
-            <div
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
-              onClick={() => setShowImportModal(false)}
-            />
-
-            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6">
-                  Import Equipment Data
-                </h3>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Upload file
-                    </label>
-                    <div
-                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-3" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {selectedFile
-                          ? selectedFile.name
-                          : "Click to upload or drag and drop"}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        CSV files (.csv) up to 10MB
-                      </p>
-                    </div>
-                  </div>
-
-                  {importData.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Preview
-                        </label>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {importData.length} row
-                          {importData.length !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
-                        <div className="max-h-48 overflow-y-auto">
-                          <table className="min-w-full text-sm">
-                            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0">
-                              <tr>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Name
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Brand
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Category
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Status
-                                </th>
-                                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">
-                                  Amount
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-600">
-                              {importData.map((item, index) => (
-                                <tr
-                                  key={index}
-                                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                                >
-                                  <td className="px-3 py-2 text-gray-900 dark:text-gray-100 font-medium">
-                                    {item.name || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.brand_name || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.category || "—"}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400">
-                                    {item.status ? (
-                                      <span
-                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                          item.status === "Working"
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                                            : item.status === "For Repair"
-                                            ? "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-                                            : item.status === "In Use"
-                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-                                        }`}
-                                      >
-                                        {item.status}
-                                      </span>
-                                    ) : (
-                                      "—"
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2 text-gray-600 dark:text-gray-400 font-mono">
-                                    {item.amount ? `₱${item.amount}` : "—"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {isProcessing && (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-green-600 dark:border-green-400 border-t-transparent"></div>
-                      <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
-                        Processing equipment data...
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-gray-600">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowImportModal(false);
-                      setSelectedFile(null);
-                      setImportData([]);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleImportData}
-                    disabled={importData.length === 0 || isProcessing}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700 border border-transparent rounded-md hover:bg-green-700 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isProcessing
-                      ? "Importing..."
-                      : `Import ${importData.length} Equipment${
-                          importData.length !== 1 ? "s" : ""
-                        }`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ImportDataModal
+        isOpen={showImportModal}
+        selectedFile={selectedFile}
+        importData={importData}
+        isProcessing={isProcessing}
+        onClose={() => {
+          setShowImportModal(false);
+          setSelectedFile(null);
+          setImportData([]);
+        }}
+        onFileSelect={handleFileSelect}
+        onImport={handleImportData}
+        fileInputRef={fileInputRef}
+      />
 
       {/* Edit Modal */}
       <EditModal
