@@ -231,9 +231,9 @@ export default function AccountRequestsPage() {
   const rejectedCount = requests.filter((r) => r.status === "Rejected").length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="p-6">
+      <div className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex justify-between items-center">
