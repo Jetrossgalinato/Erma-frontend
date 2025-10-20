@@ -44,9 +44,18 @@ const Navbar: React.FC = () => {
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
 
   const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleResources = () => setIsResourcesOpen(!isResourcesOpen);
-  const toggleAvatarDropdown = () =>
+
+  const toggleResources = () => {
+    setIsResourcesOpen(!isResourcesOpen);
+    setIsAvatarDropdownOpen(false);
+    setIsNotificationDropdownOpen(false);
+  };
+
+  const toggleAvatarDropdown = () => {
     setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
+    setIsResourcesOpen(false);
+    setIsNotificationDropdownOpen(false);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -99,8 +108,11 @@ const Navbar: React.FC = () => {
     return name ? name.charAt(0).toUpperCase() : "?";
   };
 
-  const toggleNotificationDropdown = () =>
+  const toggleNotificationDropdown = () => {
     setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
+    setIsResourcesOpen(false);
+    setIsAvatarDropdownOpen(false);
+  };
 
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
