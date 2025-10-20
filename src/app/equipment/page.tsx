@@ -1,77 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/../lib/database.types";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-type EquipmentStatus = "Working" | "In Use" | "For Repair";
-
-interface Equipment {
-  id: number;
-  created_at: string;
-  name: string;
-  po_number: string | null;
-  unit_number: string | null;
-  brand_name: string | null;
-  description: string | null;
-  facility: string | null;
-  facility_id: number | null;
-  facility_name?: string;
-  category: string | null;
-  status: EquipmentStatus;
-  availability?: string;
-  date_acquire: string | null;
-  supplier: string | null;
-  amount: string | null;
-  estimated_life: string | null;
-  item_number: string | null;
-  property_number: string | null;
-  control_number: string | null;
-  serial_number: string | null;
-  person_liable: string | null;
-  remarks: string | null;
-  updated_at?: string;
-  image?: string | null;
-}
-
-type EquipmentWithJoins = Equipment & {
-  facilities?: {
-    name: string;
-  } | null;
-  borrowing?: Array<{
-    request_status: string;
-    return_status?: string;
-  }> | null;
-};
-
-const facility = [
-  "All Facilities",
-  "CL1",
-  "CL2",
-  "CL3",
-  "CL4",
-  "CL5",
-  "CL6",
-  "CL10",
-  "CL11",
-  "MULTIMEDIA LAB",
-  "MSIT LAB",
-  "NET LAB",
-  "DEANS OFFICE",
-  "FACULTY OFFICE",
-  "REPAIR ROOM",
-  "AIR LAB",
-  "CHCI",
-  "VLRC",
-  "ICTC",
-  "NAVIGATU",
-];
+import {
+  Equipment,
+  BorrowingFormData,
+  FACILITIES,
+  ITEMS_PER_PAGE,
+  getStatusColor,
+  getUniqueCategories,
+  filterEquipment as filterEquipmentHelper,
+  paginateEquipment as paginateEquipmentHelper,
+  calculateTotalPages,
+  fetchEquipmentList,
+  checkUserAuthorization,
+  createBorrowingRequest,
+} from "./utils/helpers";
 
 export default function EquipmentPage() {
-  const supabase = createClientComponentClient<Database>();
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -85,13 +33,12 @@ export default function EquipmentPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
   const [loading, setLoading] = useState(false);
-  const ITEMS_PER_PAGE = 9;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const [showBorrowModal, setShowBorrowModal] = useState(false);
-  const [borrowFormData, setBorrowFormData] = useState({
+  const [borrowFormData, setBorrowFormData] = useState<BorrowingFormData>({
     purpose: "",
     start_date: "",
     end_date: "",
@@ -101,36 +48,10 @@ export default function EquipmentPage() {
 
   const fetchEquipment = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("equipments").select(`
-  *,
-  facilities!facility_id (
-    name
-  ),
-  borrowing!borrowed_item (
-    request_status,
-    return_status
-  )
-`);
-
-    if (error) {
-      console.error("Failed to fetch equipment:", error);
-    } else {
-      const transformedData = (data as EquipmentWithJoins[])?.map((item) => {
-        const activeBorrowing = item.borrowing?.find(
-          (b) =>
-            b.request_status === "Approved" && b.return_status !== "Returned"
-        );
-
-        return {
-          ...item,
-          facility_name: item.facilities?.name || null,
-          availability: activeBorrowing ? "Borrowed" : "Available",
-        };
-      }) as Equipment[];
-      setEquipmentData(transformedData);
-    }
+    const data = await fetchEquipmentList();
+    setEquipmentData(data);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchEquipment();
@@ -138,58 +59,37 @@ export default function EquipmentPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: accountData } = await supabase
-          .from("account_requests")
-          .select("is_employee")
-          .eq("user_id", user.id)
-          .single();
-
-        const authorized = accountData?.is_employee === true;
+      try {
+        const authorized = await checkUserAuthorization();
         setIsAuthorized(authorized);
-      } else {
+      } catch (error) {
+        console.error("Failed to check authorization:", error);
         setIsAuthorized(false);
       }
     };
 
     checkUser();
-  }, [supabase]);
+  }, []);
 
   const categories = useMemo(() => {
-    const unique = Array.from(
-      new Set(
-        equipmentData
-          .map((e) => e.category)
-          .filter((cat): cat is string => cat !== null)
-      )
-    );
-    return ["All Categories", ...unique];
+    return getUniqueCategories(equipmentData);
   }, [equipmentData]);
 
   const filteredEquipment = useMemo(() => {
-    return equipmentData.filter((equipment) => {
-      const matchesSearch = equipment.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All Categories" ||
-        equipment.category === selectedCategory;
-      const matchesFacility =
-        selectedFacility === "All Facilities" ||
-        equipment.facility === selectedFacility;
-
-      return matchesSearch && matchesCategory && matchesFacility;
-    });
+    return filterEquipmentHelper(
+      equipmentData,
+      searchTerm,
+      selectedCategory,
+      selectedFacility
+    );
   }, [equipmentData, searchTerm, selectedCategory, selectedFacility]);
 
   const paginatedEquipment = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return filteredEquipment.slice(start, end);
+    return paginateEquipmentHelper(
+      filteredEquipment,
+      currentPage,
+      ITEMS_PER_PAGE
+    );
   }, [filteredEquipment, currentPage]);
 
   const handleBorrow = async () => {
@@ -209,58 +109,22 @@ export default function EquipmentPage() {
     }
 
     setBorrowing(true);
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const success = await createBorrowingRequest(
+      selectedEquipment.id,
+      borrowFormData
+    );
 
-      if (!user) {
-        alert("You must be logged in to borrow equipment");
-        setBorrowing(false);
-        return;
-      }
-
-      const { data: accountData, error: accountError } = await supabase
-        .from("account_requests")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (accountError || !accountData) {
-        alert("User account not found");
-        setBorrowing(false);
-        return;
-      }
-
-      const { error } = await supabase.from("borrowing").insert({
-        borrowed_item: selectedEquipment.id,
-        purpose: borrowFormData.purpose,
-        start_date: borrowFormData.start_date,
-        end_date: borrowFormData.end_date,
-        return_date: borrowFormData.return_date,
-        request_status: "Pending",
-        availability: "Available",
-        borrowers_id: accountData.id,
+    if (success) {
+      alert("Borrowing request submitted successfully!");
+      setShowBorrowModal(false);
+      setBorrowFormData({
+        purpose: "",
+        start_date: "",
+        end_date: "",
+        return_date: "",
       });
-
-      if (error) {
-        console.error("Failed to create borrowing request:", error);
-        alert("Failed to create borrowing request");
-      } else {
-        alert("Borrowing request submitted successfully!");
-        setShowBorrowModal(false);
-        setBorrowFormData({
-          purpose: "",
-          start_date: "",
-          end_date: "",
-          return_date: "",
-        });
-        setSelectedEquipment(null);
-        fetchEquipment();
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred");
+      setSelectedEquipment(null);
+      fetchEquipment();
     }
     setBorrowing(false);
   };
@@ -268,26 +132,6 @@ export default function EquipmentPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, selectedFacility]);
-
-  const getStatusColor = (
-    status: EquipmentStatus,
-    availability?: string
-  ): string => {
-    if (availability === "Borrowed") {
-      return "bg-red-100 text-red-800";
-    }
-
-    switch (status) {
-      case "Working":
-        return "bg-green-100 text-green-800";
-      case "In Use":
-        return "bg-orange-100 text-orange-800";
-      case "For Repair":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -352,9 +196,9 @@ export default function EquipmentPage() {
                     onChange={(e) => setSelectedFacility(e.target.value)}
                     className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   >
-                    {facility.map((facility) => (
-                      <option key={facility} value={facility}>
-                        {facility}
+                    {FACILITIES.map((facilityName) => (
+                      <option key={facilityName} value={facilityName}>
+                        {facilityName}
                       </option>
                     ))}
                   </select>
@@ -503,8 +347,9 @@ export default function EquipmentPage() {
 
                 <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
                   {Array.from({
-                    length: Math.ceil(
-                      filteredEquipment.length / ITEMS_PER_PAGE
+                    length: calculateTotalPages(
+                      filteredEquipment.length,
+                      ITEMS_PER_PAGE
                     ),
                   }).map((_, i) => (
                     <button
