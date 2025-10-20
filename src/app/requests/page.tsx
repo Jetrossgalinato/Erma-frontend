@@ -1,7 +1,5 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/../lib/database.types";
 import {
   Search,
   User,
@@ -15,50 +13,25 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { mapRoleToSystemRole } from "@/../lib/roleUtils"; // Import the helper function
-
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import { useRouter } from "next/navigation";
-import { User as SupabaseUser } from "@supabase/supabase-js";
-
-// Define types for better TypeScript support
-type RequestStatus = "Pending" | "Approved" | "Rejected";
-
-interface AccountRequest {
-  id: number;
-  user_id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  status: RequestStatus;
-  requestedAt: string;
-  department?: string;
-  phoneNumber?: string;
-  acc_role?: string;
-  approved_acc_role?: string;
-  is_supervisor?: boolean;
-  is_intern?: boolean;
-}
-
-const requestStatuses = ["All Statuses", "Pending", "Approved", "Rejected"];
-
-// Updated departments from register page
-const departments = ["All Departments", "BSIT", "BSCS", "BSIS"];
-
-// Role options from register page
-const roleOptions = [
-  "All Roles",
-  "CCIS Dean",
-  "Lab Technician",
-  "Comlab Adviser",
-  "Department Chairperson",
-  "Associate Dean",
-  "College Clerk",
-  "Student Assistant",
-  "Lecturer",
-  "Instructor",
-];
-
-const supabase = createClientComponentClient<Database>();
+import {
+  type AccountRequest,
+  type RequestStatus,
+  requestStatuses,
+  departments,
+  roleOptions,
+  getDateOptions,
+  getStatusColor,
+  handleError,
+  filterRequests,
+  paginateItems,
+  fetchAccountRequests,
+  approveAccountRequest,
+  rejectAccountRequest,
+  deleteAccountRequest,
+  verifyAuth,
+} from "./utils/helpers";
 
 export default function AccountRequestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,54 +47,23 @@ export default function AccountRequestsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
 
-  const [, setUser] = useState<SupabaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const router = useRouter();
 
-  // Generate date options dynamically
-  const getDateOptions = () => {
-    const today = new Date();
-    const options = ["All Dates"];
-
-    // Add recent dates
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
-      if (i === 0) options.push(`Today (${dateStr})`);
-      else if (i === 1) options.push(`Yesterday (${dateStr})`);
-      else options.push(dateStr);
-    }
-
-    options.push("This Week", "This Month");
-    return options;
-  };
+  const [requestedAtOptions] = useState(getDateOptions());
+  const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        const authData = await verifyAuth();
 
-        if (error) {
-          console.error("Auth error:", error);
+        if (!authData) {
           router.push("/login");
           return;
         }
 
-        if (!session?.user) {
-          router.push("/login");
-          return;
-        }
-
-        setUser(session.user);
-
-        // Optional: Check if user has admin privileges
-        const userRole = session.user.user_metadata?.acc_role;
-        console.log("User role from metadata:", userRole); // Debug log
-        console.log("Full user metadata:", session.user.user_metadata); // Debug log
+        console.log("User role:", authData.role);
 
         // Allow all authenticated users for now
         // TODO: Re-enable role check once we confirm the role structure
@@ -134,74 +76,14 @@ export default function AccountRequestsPage() {
     };
 
     checkAuth();
-
-    // Listen for auth state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        router.push("/login");
-      } else if (session?.user) {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [router]);
 
-  const [requestedAtOptions] = useState(getDateOptions());
-  const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
-
-  // Helper function for consistent error handling
-  const handleError = (error: unknown, operation: string): string => {
-    console.error(`Failed to ${operation}:`, error);
-
-    let errorMessage = "Please try again.";
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (error && typeof error === "object" && "message" in error) {
-      errorMessage = String(error.message);
-
-      // Check for Supabase error details
-      if ("details" in error) {
-        console.error("Error details:", error.details);
-      }
-    }
-
-    return errorMessage;
-  };
-
-  // Fetch requests function with TypeScript error handling
+  // Fetch requests function with FastAPI
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("account_requests")
-        .select(`*,  is_supervisor, is_intern `)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error; // or handle it however you prefer
-      }
-
-      const mappedRequests: AccountRequest[] = (data || []).map((acc, idx) => ({
-        id: acc.id || idx,
-        user_id: acc.user_id || "",
-        firstName: acc.first_name || "",
-        lastName: acc.last_name || "",
-        email: acc.email || "", // this will now come from auth.users
-        status: acc.status as RequestStatus,
-        requestedAt: acc.created_at?.split("T")[0] || "",
-        department: acc.department || undefined,
-        phoneNumber: acc.phone_number || undefined,
-        acc_role: acc.acc_role || "",
-        approved_acc_role: acc.approved_acc_role || undefined,
-        is_supervisor: acc.is_supervisor ?? false,
-        is_intern: acc.is_intern ?? false,
-      }));
-
-      setRequests(mappedRequests);
+      const data = await fetchAccountRequests();
+      setRequests(data);
     } catch (error) {
       const errorMessage = handleError(error, "fetch requests");
       alert(`Failed to fetch requests: ${errorMessage}`);
@@ -231,56 +113,16 @@ export default function AccountRequestsPage() {
     fetchRequests();
   }, [fetchRequests]);
 
-  // Filter and search logic
+  // Filter and search logic using helper function
   const filteredRequests = useMemo(() => {
-    return requests.filter((request) => {
-      const fullName = `${request.firstName} ${request.lastName}`.toLowerCase();
-      const matchesSearch =
-        fullName.includes(searchTerm.toLowerCase()) ||
-        request.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus =
-        selectedStatus === "All Statuses" || request.status === selectedStatus;
-
-      const matchesDepartment =
-        selectedDepartment === "All Departments" ||
-        request.department === selectedDepartment;
-
-      const matchesRole =
-        selectedRole === "All Roles" || request.acc_role === selectedRole;
-
-      const matchesRequestedAt = (() => {
-        if (selectedRequestedAt === "All Dates") return true;
-
-        const today = new Date().toISOString().split("T")[0];
-        const yesterday = new Date(Date.now() - 86400000)
-          .toISOString()
-          .split("T")[0];
-
-        if (selectedRequestedAt.includes("Today"))
-          return request.requestedAt === today;
-        if (selectedRequestedAt.includes("Yesterday"))
-          return request.requestedAt === yesterday;
-        if (selectedRequestedAt === "This Week") {
-          const weekAgo = new Date(Date.now() - 7 * 86400000)
-            .toISOString()
-            .split("T")[0];
-          return request.requestedAt >= weekAgo && request.requestedAt <= today;
-        }
-        if (selectedRequestedAt === "This Month") {
-          return request.requestedAt.startsWith(today.substring(0, 7));
-        }
-        return request.requestedAt === selectedRequestedAt;
-      })();
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesDepartment &&
-        matchesRole &&
-        matchesRequestedAt
-      );
-    });
+    return filterRequests(
+      requests,
+      searchTerm,
+      selectedStatus,
+      selectedDepartment,
+      selectedRole,
+      selectedRequestedAt
+    );
   }, [
     searchTerm,
     selectedStatus,
@@ -291,9 +133,7 @@ export default function AccountRequestsPage() {
   ]);
 
   const paginatedRequests = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return filteredRequests.slice(start, end);
+    return paginateItems(filteredRequests, currentPage, ITEMS_PER_PAGE);
   }, [filteredRequests, currentPage]);
 
   useEffect(() => {
@@ -306,98 +146,32 @@ export default function AccountRequestsPage() {
     selectedRequestedAt,
   ]);
 
-  const handleApprove = async (
-    requestId: number,
-    originalRole: string,
-    userId: string
-  ) => {
+  const handleApprove = async (requestId: number, originalRole: string) => {
     try {
-      // Step 1: Get account request to check is_supervisor and is_intern
-      const { data: accountRequest, error: accountRequestError } =
-        await supabase
-          .from("account_requests")
-          .select("*")
-          .eq("id", requestId)
-          .single();
+      // Find the request in local state to check is_supervisor and is_intern
+      const request = requests.find((r) => r.id === requestId);
+      if (!request) {
+        throw new Error("Request not found");
+      }
 
-      if (accountRequestError) throw accountRequestError;
+      const { is_supervisor, is_intern } = request;
 
-      const { is_supervisor, is_intern } = accountRequest;
-
-      // ✅ Conditionally map or copy role
+      // Conditionally map or copy role
       const approvedRole =
         !is_supervisor && !is_intern
           ? mapRoleToSystemRole(originalRole)
           : originalRole;
 
-      // Step 3: Insert to supervisor table if applicable
-      if (is_supervisor) {
-        const { data: existingSupervisor } = await supabase
-          .from("supervisor")
-          .select("id")
-          .eq("account_req_id", requestId)
-          .maybeSingle();
+      // Call FastAPI to approve the request
+      await approveAccountRequest(requestId, approvedRole);
 
-        if (!existingSupervisor) {
-          const { error: insertSupervisorError } = await supabase
-            .from("supervisor")
-            .insert([{ account_req_id: requestId }]);
-
-          if (insertSupervisorError) throw insertSupervisorError;
-        }
-      }
-      // If is_intern, insert into interns table
-      if (is_intern) {
-        const { data: existingIntern } = await supabase
-          .from("intern")
-          .select("id")
-          .eq("account_req_id", requestId)
-          .maybeSingle();
-
-        if (!existingIntern) {
-          const { error: insertInternError } = await supabase
-            .from("intern")
-            .insert([{ account_req_id: requestId }]);
-
-          if (insertInternError) throw insertInternError;
-        }
-      }
-
-      // Step 4: Update request status
-      const { error: updateError } = await supabase
-        .from("account_requests")
-        .update({
-          status: "Approved",
-          is_approved: true,
-          approved_acc_role: approvedRole,
-          approved_at: new Date().toISOString(),
-        })
-        .eq("id", requestId);
-
-      if (updateError) throw updateError;
-
-      // Step 5: Update Auth metadata
-      try {
-        const { error: authError } = await supabase.auth.admin.updateUserById(
-          userId,
-          {
-            user_metadata: {
-              acc_role: approvedRole,
-            },
-          }
-        );
-        if (authError) console.warn("Auth metadata update failed:", authError);
-      } catch (authError) {
-        console.warn("Supabase auth update exception:", authError);
-      }
-
-      // Step 6: Update local UI
+      // Update local UI
       setRequests((prev) =>
         prev.map((r) =>
           r.id === requestId
             ? {
                 ...r,
-                status: "Approved",
+                status: "Approved" as RequestStatus,
                 approved_acc_role: approvedRole,
               }
             : r
@@ -419,17 +193,9 @@ export default function AccountRequestsPage() {
 
   const handleReject = async (requestId: number) => {
     try {
-      const { error } = await supabase
-        .from("account_requests")
-        .update({
-          status: "Rejected" as string,
-          approved_at: new Date().toISOString(),
-        })
-        .eq("id", requestId);
+      await rejectAccountRequest(requestId);
 
-      if (error) throw error;
-
-      // If the update is successful, update the local state
+      // Update local state
       setRequests((prevRequests) =>
         prevRequests.map((request) =>
           request.id === requestId
@@ -437,6 +203,8 @@ export default function AccountRequestsPage() {
             : request
         )
       );
+
+      alert("Request rejected successfully!");
     } catch (error) {
       const errorMessage = handleError(error, "reject request");
       alert(`Failed to reject request: ${errorMessage}`);
@@ -445,35 +213,16 @@ export default function AccountRequestsPage() {
 
   const handleRemove = async (requestId: number) => {
     try {
-      const { error: requestDeleteError } = await supabase
-        .from("account_requests")
-        .delete()
-        .eq("id", requestId);
-
-      if (requestDeleteError) throw requestDeleteError;
+      await deleteAccountRequest(requestId);
 
       setRequests((prevRequests) =>
         prevRequests.filter((request) => request.id !== requestId)
       );
 
-      // Success notification (you can replace with toast if preferred)
       alert("Request removed successfully!");
     } catch (error) {
       const errorMessage = handleError(error, "remove request");
       alert(`Failed to remove request: ${errorMessage}`);
-    }
-  };
-
-  const getStatusColor = (status: RequestStatus): string => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Approved":
-        return "bg-green-100 text-green-800";
-      case "Rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -731,11 +480,7 @@ export default function AccountRequestsPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() =>
-                              handleApprove(
-                                request.id,
-                                request.acc_role || "",
-                                request.user_id
-                              )
+                              handleApprove(request.id, request.acc_role || "")
                             }
                             className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
                           >
