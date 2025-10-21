@@ -11,11 +11,13 @@ import {
   filterSupplies,
   paginateSupplies,
   calculateTotalPages,
-  isLowStock,
   fetchSuppliesList,
   checkUserAuthentication,
   createAcquireRequest,
 } from "./utils/helpers";
+import SupplyDetailsModal from "./components/SupplyDetailsModal";
+import AcquireSupplyModal from "./components/AcquireSupplyModal";
+import ImageModal from "./components/ImageModal";
 
 export default function SuppliesPage() {
   const [loading, setLoading] = useState(false);
@@ -320,263 +322,44 @@ export default function SuppliesPage() {
         </div>
       </div>
       <Footer />
-      {/* Image Modal */}
-      {showImageModal && selectedImageUrl && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-75"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setShowImageModal(false);
-              setSelectedImageUrl(null);
-              setSelectedImageName("");
-            }
-          }}
-          tabIndex={0}
-          autoFocus
-        >
-          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-            {/* Close button */}
-            <button
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-              className="fixed top-2 sm:top-4 right-2 sm:right-4 z-10 p-1.5 sm:p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
-              title="Close (Esc)"
-            >
-              <svg
-                className="w-5 h-5 sm:w-6 sm:h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
 
-            {/* Supply name */}
-            <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-10 bg-black bg-opacity-50 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
-              <p className="text-white text-xs sm:text-sm font-medium">
-                {selectedImageName}
-              </p>
-            </div>
+      {/* Modals */}
+      <ImageModal
+        isOpen={showImageModal}
+        imageUrl={selectedImageUrl}
+        imageName={selectedImageName}
+        onClose={() => {
+          setShowImageModal(false);
+          setSelectedImageUrl(null);
+          setSelectedImageName("");
+        }}
+      />
 
-            {/* Image container */}
-            <div
-              className="relative w-full h-full flex items-center justify-center cursor-pointer"
-              onClick={() => {
-                setShowImageModal(false);
-                setSelectedImageUrl(null);
-                setSelectedImageName("");
-              }}
-            >
-              <img
-                src={selectedImageUrl}
-                alt={`${selectedImageName} supply preview`}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                style={{ maxWidth: "90vw", maxHeight: "90vh" }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <AcquireSupplyModal
+        isOpen={showAcquireModal}
+        supply={selectedSupply}
+        quantity={acquireQuantity}
+        reason={acquireReason}
+        isSubmitting={isSubmittingAcquire}
+        onQuantityChange={setAcquireQuantity}
+        onReasonChange={setAcquireReason}
+        onSubmit={submitAcquireRequest}
+        onClose={() => {
+          setShowAcquireModal(false);
+          setSelectedSupply(null);
+          setAcquireQuantity(1);
+          setAcquireReason("");
+        }}
+      />
 
-      {showAcquireModal && selectedSupply && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-2 sm:p-4"
-          onClick={() => {
-            setShowAcquireModal(false);
-            setSelectedSupply(null);
-            setAcquireQuantity(1);
-            setAcquireReason("");
-          }}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => {
-                setShowAcquireModal(false);
-                setSelectedSupply(null);
-                setAcquireQuantity(1);
-                setAcquireReason("");
-              }}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-
-            <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-3 sm:mb-4">
-              Acquire Supply
-            </h2>
-
-            <div className="mb-3 sm:mb-4">
-              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
-                Supply: <strong>{selectedSupply.supply_name}</strong>
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
-                Available Stock:{" "}
-                <span className="font-medium">
-                  {selectedSupply.quantity} {selectedSupply.stock_unit}
-                </span>
-              </p>
-            </div>
-
-            <div className="space-y-3 sm:space-y-4">
-              <div>
-                <label
-                  htmlFor="quantity"
-                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1"
-                >
-                  Quantity to Acquire
-                </label>
-                <input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  max={selectedSupply.quantity}
-                  value={acquireQuantity}
-                  onChange={(e) =>
-                    setAcquireQuantity(parseInt(e.target.value) || 1)
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="reason"
-                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1"
-                >
-                  Reason (Optional)
-                </label>
-                <textarea
-                  id="reason"
-                  value={acquireReason}
-                  onChange={(e) => setAcquireReason(e.target.value)}
-                  placeholder="Enter reason for acquiring this supply..."
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-16 sm:h-20 resize-none text-xs sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
-              <button
-                onClick={() => {
-                  setShowAcquireModal(false);
-                  setSelectedSupply(null);
-                  setAcquireQuantity(1);
-                  setAcquireReason("");
-                }}
-                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                disabled={isSubmittingAcquire}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitAcquireRequest}
-                disabled={
-                  isSubmittingAcquire ||
-                  acquireQuantity <= 0 ||
-                  acquireQuantity > selectedSupply.quantity
-                }
-                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
-              >
-                {isSubmittingAcquire && (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                )}
-                {isSubmittingAcquire ? "Submitting..." : "Submit Request"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showViewModal && selectedSupply && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => {
-            setShowViewModal(false);
-            setSelectedSupply(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-lg sm:max-w-2xl p-3 sm:p-6 relative shadow-lg max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => {
-                setShowViewModal(false);
-                setSelectedSupply(null);
-              }}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-
-            <h2 className="text-xl sm:text-2xl text-gray-800 font-bold mb-3 sm:mb-4">
-              {selectedSupply.supply_name}
-            </h2>
-
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
-              <p>
-                <strong>Description:</strong>{" "}
-                {selectedSupply.description || "N/A"}
-              </p>
-              <p>
-                <strong>Category:</strong> {selectedSupply.category || "N/A"}
-              </p>
-              <p>
-                <strong>Facility:</strong>{" "}
-                {selectedSupply.facility_name || "N/A"}
-              </p>
-              <p>
-                <strong>Current Stock:</strong>{" "}
-                <span
-                  className={
-                    isLowStock(
-                      selectedSupply.quantity,
-                      selectedSupply.stocking_point
-                    )
-                      ? "text-red-600 font-medium"
-                      : "text-green-600 font-medium"
-                  }
-                >
-                  {selectedSupply.quantity} {selectedSupply.stock_unit}
-                </span>
-              </p>
-              <p>
-                <strong>Stocking Point:</strong> {selectedSupply.stocking_point}{" "}
-                {selectedSupply.stock_unit}
-              </p>
-              <p>
-                <strong>Remarks:</strong> {selectedSupply.remarks || "N/A"}
-              </p>
-            </div>
-
-            {isLowStock(
-              selectedSupply.quantity,
-              selectedSupply.stocking_point
-            ) && (
-              <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 text-xs sm:text-sm font-medium">
-                  ⚠️ Low Stock Alert
-                </p>
-                <p className="text-red-700 text-[10px] sm:text-xs">
-                  Current stock is at or below the stocking point.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <SupplyDetailsModal
+        isOpen={showViewModal}
+        supply={selectedSupply}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedSupply(null);
+        }}
+      />
     </div>
   );
 }
