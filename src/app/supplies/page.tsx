@@ -4,108 +4,62 @@ import Navbar from "@/components/Navbar";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
-  createClientComponentClient,
-  User,
-} from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/../lib/database.types";
-
-interface Supplies {
-  id: number;
-  image?: string;
-  name: string;
-  description?: string;
-  category: string;
-  quantity: number;
-  stocking_point: number;
-  stock_unit: string;
-  facilities: {
-    id: number;
-    name: string;
-  };
-  remarks?: string;
-}
-
-const facility = [
-  "All Facilities",
-  "CL1",
-  "CL2",
-  "CL3",
-  "CL4",
-  "CL5",
-  "CL6",
-  "CL10",
-  "CL11",
-  "MULTIMEDIA LAB",
-  "MSIT LAB",
-  "NET LAB",
-  "DEANS OFFICE",
-  "FACULTY OFFICE",
-  "REPAIR ROOM",
-  "AIR LAB",
-  "CHCI",
-  "VLRC",
-  "ICTC",
-  "NAVIGATU",
-];
+  Supply,
+  FACILITIES,
+  ITEMS_PER_PAGE,
+  getUniqueCategories,
+  filterSupplies,
+  paginateSupplies,
+  calculateTotalPages,
+  isLowStock,
+  fetchSuppliesList,
+  checkUserAuthentication,
+  createAcquireRequest,
+} from "./utils/helpers";
 
 export default function SuppliesPage() {
-  const supabase = createClientComponentClient<Database>();
   const [loading, setLoading] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userLoading, setUserLoading] = useState(true);
-  const [supplies, setSupplies] = useState<Supplies[]>([]);
+  const [supplies, setSupplies] = useState<Supply[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
   const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedSupply, setSelectedSupply] = useState<Supplies | null>(null);
+  const [selectedSupply, setSelectedSupply] = useState<Supply | null>(null);
 
   const [showAcquireModal, setShowAcquireModal] = useState(false);
   const [acquireQuantity, setAcquireQuantity] = useState(1);
   const [acquireReason, setAcquireReason] = useState("");
   const [isSubmittingAcquire, setIsSubmittingAcquire] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{
-    id: number;
-    name?: string;
-    email?: string;
-  } | null>(null);
 
   // Add these states after your existing useState declarations
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
 
-  const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchSupplies = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("supplies")
-      .select("*, facilities(id, name)");
-
-    if (error) {
-      console.error("Error fetching supplies:", error);
-    } else {
-      setSupplies(data as Supplies[]);
-    }
-
-    setLoading(false);
-  }, [supabase]);
-
+  // Check authentication on mount
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+    const checkAuth = async () => {
+      const authenticated = await checkUserAuthentication();
+      setIsAuthenticated(authenticated);
       setUserLoading(false);
     };
 
-    getUser();
-  }, [supabase]);
+    checkAuth();
+  }, []);
+
+  // Fetch supplies from FastAPI
+  const fetchSupplies = useCallback(async () => {
+    setLoading(true);
+    const data = await fetchSuppliesList();
+    setSupplies(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     fetchSupplies();
@@ -116,58 +70,24 @@ export default function SuppliesPage() {
   }, [searchTerm, selectedCategory, selectedFacility]);
 
   const categories = useMemo(() => {
-    const unique = Array.from(
-      new Set(
-        supplies
-          .map((e) => e.category)
-          .filter((cat): cat is string => cat !== null)
-      )
-    );
-    return ["All Categories", ...unique];
+    return getUniqueCategories(supplies);
   }, [supplies]);
 
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        // Fetch user details from your user table (adjust table name as needed)
-        const { data: userData } = await supabase
-          .from("account_requests") // or whatever your user table is called
-          .select("*")
-          .eq("user_id", user.id) // adjust this field name to match your schema
-          .single();
-
-        setCurrentUser(userData);
-      }
-    };
-
-    getCurrentUser();
-  }, [supabase]);
-
   const filteredSupplies = useMemo(() => {
-    return supplies.filter((supply) => {
-      const matchesSearch =
-        supply.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        supply.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "All Categories" ||
-        supply.category === selectedCategory;
-      const matchesFacility =
-        selectedFacility === "All Facilities" ||
-        supply.facilities.name === selectedFacility;
-
-      return matchesSearch && matchesCategory && matchesFacility;
-    });
+    return filterSupplies(
+      supplies,
+      searchTerm,
+      selectedCategory,
+      selectedFacility
+    );
   }, [supplies, searchTerm, selectedCategory, selectedFacility]);
 
-  const handleView = (supply: Supplies) => {
+  const handleView = (supply: Supply) => {
     setSelectedSupply(supply);
     setShowViewModal(true);
   };
 
-  const handleAcquire = (supply: Supplies) => {
+  const handleAcquire = (supply: Supply) => {
     setSelectedSupply(supply);
     setAcquireQuantity(1);
     setAcquireReason("");
@@ -175,39 +95,26 @@ export default function SuppliesPage() {
   };
 
   const submitAcquireRequest = async () => {
-    if (!selectedSupply || acquireQuantity <= 0 || !currentUser) return;
+    if (!selectedSupply || acquireQuantity <= 0) return;
 
     setIsSubmittingAcquire(true);
 
-    try {
-      // Insert acquire request into database
-      const { error } = await supabase.from("acquiring").insert([
-        {
-          supply_id: selectedSupply.id,
-          acquirers_id: currentUser.id,
-          quantity: acquireQuantity,
-          purpose: acquireReason || null,
-          status: "Pending",
-          created_at: new Date().toISOString(),
-        },
-      ]);
+    const success = await createAcquireRequest(
+      selectedSupply.supply_id,
+      acquireQuantity,
+      acquireReason
+    );
 
-      if (error) {
-        console.error("Error submitting acquire request:", error);
-        alert("Failed to submit acquire request. Please try again.");
-      } else {
-        alert("Acquire request submitted successfully!");
-        setShowAcquireModal(false);
-        setSelectedSupply(null);
-        setAcquireQuantity(1);
-        setAcquireReason("");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      setIsSubmittingAcquire(false);
+    if (success) {
+      alert("Acquire request submitted successfully!");
+      setShowAcquireModal(false);
+      setSelectedSupply(null);
+      setAcquireQuantity(1);
+      setAcquireReason("");
+      fetchSupplies();
     }
+
+    setIsSubmittingAcquire(false);
   };
 
   const handleImageClick = (imageUrl: string, supplyName: string) => {
@@ -217,9 +124,7 @@ export default function SuppliesPage() {
   };
 
   const paginatedSupply = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return filteredSupplies.slice(start, end);
+    return paginateSupplies(filteredSupplies, currentPage, ITEMS_PER_PAGE);
   }, [filteredSupplies, currentPage]);
 
   return (
@@ -283,7 +188,7 @@ export default function SuppliesPage() {
                   onChange={(e) => setSelectedFacility(e.target.value)}
                   className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
                 >
-                  {facility.map((facility) => (
+                  {FACILITIES.map((facility) => (
                     <option key={facility} value={facility}>
                       {facility}
                     </option>
@@ -312,17 +217,20 @@ export default function SuppliesPage() {
             ) : (
               paginatedSupply.map((supply) => (
                 <div
-                  key={supply.id}
+                  key={supply.supply_id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                 >
-                  {supply.image && (
+                  {supply.image_url && (
                     <div className="h-32 sm:h-40 md:h-48 bg-gray-100 rounded-t-lg overflow-hidden">
                       <img
-                        src={supply.image}
-                        alt={supply.name}
+                        src={supply.image_url}
+                        alt={supply.supply_name}
                         className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
                         onClick={() =>
-                          handleImageClick(supply.image!, supply.name)
+                          handleImageClick(
+                            supply.image_url!,
+                            supply.supply_name
+                          )
                         }
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -338,7 +246,7 @@ export default function SuppliesPage() {
                   )}
                   <div className="p-2 sm:p-3 md:p-4">
                     <h3 className="font-semibold text-gray-900 text-base sm:text-lg mb-2 sm:mb-3">
-                      {supply.name}
+                      {supply.supply_name}
                     </h3>
 
                     <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4 text-xs sm:text-sm">
@@ -349,7 +257,7 @@ export default function SuppliesPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-500">Facility:</span>
                         <span className="text-gray-900">
-                          {supply.facilities.name}
+                          {supply.facility_name}
                         </span>
                       </div>
                     </div>
@@ -369,13 +277,13 @@ export default function SuppliesPage() {
                         <button
                           onClick={() => handleAcquire(supply)}
                           className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                            user
+                            isAuthenticated
                               ? "bg-orange-500 text-white hover:bg-orange-600"
                               : "bg-gray-200 text-gray-400 cursor-not-allowed"
                           }`}
-                          disabled={!user}
+                          disabled={!isAuthenticated}
                           title={
-                            !user
+                            !isAuthenticated
                               ? "You must be logged in to acquire supplies"
                               : ""
                           }
@@ -391,7 +299,10 @@ export default function SuppliesPage() {
           </div>
           <div className="flex justify-center mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
             {Array.from({
-              length: Math.ceil(filteredSupplies.length / ITEMS_PER_PAGE),
+              length: calculateTotalPages(
+                filteredSupplies.length,
+                ITEMS_PER_PAGE
+              ),
             }).map((_, i) => (
               <button
                 key={i}
@@ -508,7 +419,7 @@ export default function SuppliesPage() {
 
             <div className="mb-3 sm:mb-4">
               <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
-                Supply: <strong>{selectedSupply.name}</strong>
+                Supply: <strong>{selectedSupply.supply_name}</strong>
               </p>
               <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                 Available Stock:{" "}
@@ -574,8 +485,7 @@ export default function SuppliesPage() {
                 disabled={
                   isSubmittingAcquire ||
                   acquireQuantity <= 0 ||
-                  acquireQuantity > selectedSupply.quantity ||
-                  !currentUser
+                  acquireQuantity > selectedSupply.quantity
                 }
                 className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
               >
@@ -612,7 +522,7 @@ export default function SuppliesPage() {
             </button>
 
             <h2 className="text-xl sm:text-2xl text-gray-800 font-bold mb-3 sm:mb-4">
-              {selectedSupply.name}
+              {selectedSupply.supply_name}
             </h2>
 
             <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
@@ -625,13 +535,16 @@ export default function SuppliesPage() {
               </p>
               <p>
                 <strong>Facility:</strong>{" "}
-                {selectedSupply.facilities.name || "N/A"}
+                {selectedSupply.facility_name || "N/A"}
               </p>
               <p>
                 <strong>Current Stock:</strong>{" "}
                 <span
                   className={
-                    selectedSupply.quantity <= selectedSupply.stocking_point
+                    isLowStock(
+                      selectedSupply.quantity,
+                      selectedSupply.stocking_point
+                    )
                       ? "text-red-600 font-medium"
                       : "text-green-600 font-medium"
                   }
@@ -648,7 +561,10 @@ export default function SuppliesPage() {
               </p>
             </div>
 
-            {selectedSupply.quantity <= selectedSupply.stocking_point && (
+            {isLowStock(
+              selectedSupply.quantity,
+              selectedSupply.stocking_point
+            ) && (
               <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-800 text-xs sm:text-sm font-medium">
                   ⚠️ Low Stock Alert
