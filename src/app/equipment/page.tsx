@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
+import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
+import ImageModal from "./components/ImageModal";
 import {
   Equipment,
   BorrowingFormData,
@@ -382,259 +385,31 @@ export default function EquipmentPage() {
           </div>
         </div>
       </div>
-      {showModal && selectedEquipment && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-xl p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              {selectedEquipment?.name}
-            </h2>
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
-              <p>
-                <strong>PO Number:</strong>{" "}
-                {selectedEquipment?.po_number || "N/A"}
-              </p>
-              <p>
-                <strong>Unit Number:</strong>{" "}
-                {selectedEquipment?.unit_number || "N/A"}
-              </p>
-              <p>
-                <strong>Brand Name:</strong>{" "}
-                {selectedEquipment?.brand_name || "N/A"}
-              </p>
-              <p>
-                <strong>Description:</strong>{" "}
-                {selectedEquipment?.description || "N/A"}
-              </p>
-              <p>
-                <strong>Supplier:</strong>{" "}
-                {selectedEquipment?.supplier || "N/A"}
-              </p>
-              <p>
-                <strong>Amount:</strong> {selectedEquipment?.amount || "N/A"}
-              </p>
-              <p>
-                <strong>Estimated Life:</strong>{" "}
-                {selectedEquipment?.estimated_life || "N/A"}
-              </p>
-              <p>
-                <strong>Item Number:</strong>{" "}
-                {selectedEquipment?.item_number || "N/A"}
-              </p>
-              <p>
-                <strong>Property Number:</strong>{" "}
-                {selectedEquipment?.property_number || "N/A"}
-              </p>
-              <p>
-                <strong>Control Number:</strong>{" "}
-                {selectedEquipment?.control_number || "N/A"}
-              </p>
-              <p>
-                <strong>Facility:</strong>{" "}
-                {selectedEquipment?.facility_name ||
-                  selectedEquipment?.facility ||
-                  "N/A"}
-              </p>
-              <p>
-                <strong>Person Liable:</strong>{" "}
-                {selectedEquipment?.person_liable || "N/A"}
-              </p>
-              <p>
-                <strong>Remarks:</strong> {selectedEquipment?.remarks || "N/A"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {showBorrowModal && selectedEquipment && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => setShowBorrowModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowBorrowModal(false)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-2 sm:mb-4">
-              Borrow Equipment: {selectedEquipment?.name}
-            </h2>
-            <div className="space-y-2 sm:space-y-4">
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                  Purpose *
-                </label>
-                <textarea
-                  value={borrowFormData.purpose}
-                  onChange={(e) =>
-                    setBorrowFormData({
-                      ...borrowFormData,
-                      purpose: e.target.value,
-                    })
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                  rows={2}
-                  placeholder="Enter purpose for borrowing..."
-                />
-              </div>
+      <EquipmentDetailsModal
+        isOpen={showModal}
+        equipment={selectedEquipment}
+        onClose={() => setShowModal(false)}
+      />
 
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                  Start Date *
-                </label>
-                <input
-                  type="date"
-                  value={borrowFormData.start_date}
-                  onChange={(e) =>
-                    setBorrowFormData({
-                      ...borrowFormData,
-                      start_date: e.target.value,
-                    })
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                  End Date *
-                </label>
-                <input
-                  type="date"
-                  value={borrowFormData.end_date}
-                  onChange={(e) =>
-                    setBorrowFormData({
-                      ...borrowFormData,
-                      end_date: e.target.value,
-                    })
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                  Expected Return Date *
-                </label>
-                <input
-                  type="date"
-                  value={borrowFormData.return_date}
-                  onChange={(e) =>
-                    setBorrowFormData({
-                      ...borrowFormData,
-                      return_date: e.target.value,
-                    })
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
-              <button
-                onClick={() => setShowBorrowModal(false)}
-                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBorrow}
-                disabled={borrowing}
-                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {borrowing ? "Submitting..." : "Submit Request"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BorrowEquipmentModal
+        isOpen={showBorrowModal}
+        equipment={selectedEquipment}
+        formData={borrowFormData}
+        borrowing={borrowing}
+        onClose={() => setShowBorrowModal(false)}
+        onFormChange={setBorrowFormData}
+        onSubmit={handleBorrow}
+      />
 
       <Footer />
 
-      {showImageModal && selectedImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-2 sm:p-4"
-          onClick={() => setShowImageModal(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setShowImageModal(false);
-            }
-          }}
-          tabIndex={0}
-          autoFocus
-        >
-          {/* Equipment name - Fixed to top-left of screen */}
-          <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-10 bg-black bg-opacity-50 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
-            <h3 className="text-white text-base sm:text-lg font-semibold">
-              {selectedEquipment?.name}
-            </h3>
-          </div>
-
-          {/* Close button - Fixed to top-right of screen */}
-          <button
-            onClick={() => setShowImageModal(false)}
-            className="fixed top-2 sm:top-4 right-2 sm:right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-1 sm:p-2 hover:bg-opacity-70 transition-all"
-            title="Close (Esc)"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-
-          <div className="relative max-w-xs sm:max-w-4xl max-h-[70vh] sm:max-h-[90vh] w-full h-full flex items-center justify-center">
-            <div
-              className="relative w-full h-full flex items-center justify-center cursor-pointer"
-              onClick={() => setShowImageModal(false)}
-            >
-              <img
-                src={selectedImage ?? ""}
-                alt="Equipment preview"
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                style={{
-                  maxWidth: "90vw",
-                  maxHeight: "70vh",
-                }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML =
-                      '<div class="text-white text-center"><p class="text-lg mb-2">Failed to load image</p><p class="text-sm opacity-75">The image could not be displayed</p></div>';
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ImageModal
+        isOpen={showImageModal}
+        imageUrl={selectedImage}
+        equipmentName={selectedEquipment?.name || null}
+        onClose={() => setShowImageModal(false)}
+      />
     </div>
   );
 }
