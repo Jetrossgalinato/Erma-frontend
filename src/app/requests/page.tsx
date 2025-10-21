@@ -1,20 +1,14 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  Search,
-  User,
-  Mail,
-  Calendar,
-  UserCheck,
-  UserX,
-  Trash2,
-  RefreshCw,
-  ArrowRight,
-} from "lucide-react";
+import { Search, User, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import { useRouter } from "next/navigation";
+import StatisticsCards from "./components/StatisticsCards";
+import FilterControls from "./components/FilterControls";
+import RequestCard from "./components/RequestCard";
+import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import {
   type AccountRequest,
   type RequestStatus,
@@ -22,7 +16,6 @@ import {
   departments,
   roleOptions,
   getDateOptions,
-  getStatusColor,
   handleError,
   filterRequests,
   paginateItems,
@@ -260,126 +253,29 @@ export default function AccountRequestsPage() {
           </div>
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Pending Requests
-                  </p>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {pendingCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <Calendar className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Approved</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {approvedCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <UserCheck className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Rejected</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {rejectedCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <UserX className="w-6 h-6 text-red-600" />
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatisticsCards
+            pendingCount={pendingCount}
+            approvedCount={approvedCount}
+            rejectedCount={rejectedCount}
+          />
 
-          {/* Search and Filters - Updated to include Role filter */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {/* Search Bar */}
-              <div className="md:col-span-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div className="md:col-span-1">
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  {requestStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Department Filter */}
-              <div className="md:col-span-1">
-                <select
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Role Filter - New */}
-              <div className="md:col-span-1">
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  {roleOptions.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Requested At Filter */}
-              <div className="md:col-span-1">
-                <select
-                  value={selectedRequestedAt}
-                  onChange={(e) => setSelectedRequestedAt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                >
-                  {requestedAtOptions.map((date) => (
-                    <option key={date} value={date}>
-                      {date}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          {/* Search and Filters */}
+          <FilterControls
+            searchTerm={searchTerm}
+            selectedStatus={selectedStatus}
+            selectedDepartment={selectedDepartment}
+            selectedRole={selectedRole}
+            selectedRequestedAt={selectedRequestedAt}
+            onSearchChange={setSearchTerm}
+            onStatusChange={setSelectedStatus}
+            onDepartmentChange={setSelectedDepartment}
+            onRoleChange={setSelectedRole}
+            onRequestedAtChange={setSelectedRequestedAt}
+            requestStatuses={requestStatuses}
+            departments={departments}
+            roleOptions={roleOptions}
+            requestedAtOptions={requestedAtOptions}
+          />
 
           {/* Loading State */}
           {(loading || authLoading) && (
@@ -395,118 +291,17 @@ export default function AccountRequestsPage() {
             </div>
           )}
 
-          {/* Account Requests Grid - Updated to show role mapping */}
+          {/* Account Requests Grid */}
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
               {paginatedRequests.map((request) => (
-                <div
+                <RequestCard
                   key={request.id}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow flex flex-col"
-                >
-                  <div className="p-6 flex-1 flex flex-col">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <User className="w-5 h-5 text-blue-600" />
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {request.firstName} {request.lastName}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Mail className="w-4 h-4 text-gray-400" />
-                            <p className="text-sm text-gray-600">
-                              {request.email}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          request.status
-                        )}`}
-                      >
-                        {request.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      {request.department && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Department:</span>{" "}
-                          {request.department}
-                        </p>
-                      )}
-
-                      {request.acc_role && (
-                        <div className="text-sm text-gray-600">
-                          <span className="font-medium">Requested Role:</span>{" "}
-                          {request.acc_role}
-                          {request.status === "Pending" &&
-                            !(request.is_supervisor || request.is_intern) && (
-                              <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
-                                <ArrowRight className="w-3 h-3" />
-                                <span>
-                                  Will map to:{" "}
-                                  {mapRoleToSystemRole(request.acc_role)}
-                                </span>
-                              </div>
-                            )}
-                          {request.approved_acc_role &&
-                            request.status === "Approved" && (
-                              <div className="flex items-center gap-2 mt-1 text-xs text-green-600">
-                                <ArrowRight className="w-3 h-3" />
-                                <span>
-                                  Approved as: {request.approved_acc_role}
-                                </span>
-                              </div>
-                            )}
-                        </div>
-                      )}
-
-                      {request.phoneNumber && (
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Phone:</span>{" "}
-                          {request.phoneNumber}
-                        </p>
-                      )}
-
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Requested:</span>{" "}
-                        {request.requestedAt}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2 mt-auto">
-                      {request.status === "Pending" && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() =>
-                              handleApprove(request.id, request.acc_role || "")
-                            }
-                            className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
-                          >
-                            <UserCheck className="w-4 h-4" />
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleReject(request.id)}
-                            className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-1"
-                          >
-                            <UserX className="w-4 h-4" />
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => openDeleteModal(request.id)}
-                        className="w-full px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-all duration-200 flex items-center justify-center gap-2 group"
-                        title="Remove request"
-                      >
-                        <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <span>Remove Request</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  request={request}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onDelete={openDeleteModal}
+                />
               ))}
             </div>
           )}
@@ -556,44 +351,13 @@ export default function AccountRequestsPage() {
         </div>
       </div>
       <Footer />
+
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                  <Trash2 className="h-6 w-6 text-red-600" />
-                </div>
-              </div>
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Remove Account Request
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Are you sure you want to remove this account request? This
-                  action cannot be undone and will permanently delete the
-                  request from the system.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={closeDeleteModal}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
