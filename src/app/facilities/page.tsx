@@ -65,7 +65,8 @@ export default function FacilitiesPage() {
   const fetchFacilities = useCallback(async () => {
     setLoading(true);
     const data = await fetchFacilitiesList();
-    setFacilities(data);
+    // Ensure we always set an array
+    setFacilities(Array.isArray(data) ? data : []);
     setLoading(false);
   }, []);
 
@@ -97,7 +98,7 @@ export default function FacilitiesPage() {
     setBookingLoading(true);
 
     const success = await createBookingRequest(
-      selectedFacility.id,
+      selectedFacility.facility_id,
       bookingData
     );
 
@@ -241,13 +242,13 @@ export default function FacilitiesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
                   {paginatedFacilities.map((facility) => (
                     <div
-                      key={facility.id}
+                      key={facility.facility_id}
                       className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                     >
                       <div className="p-3 sm:p-6">
                         <div className="flex justify-between items-start mb-2 sm:mb-4">
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-1 sm:pr-2">
-                            {facility.name}
+                            {facility.facility_name}
                           </h3>
                           <span
                             className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -260,12 +261,16 @@ export default function FacilitiesPage() {
 
                         <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
                           <p className="text-xs sm:text-sm text-gray-600">
+                            <span className="font-medium">Type:</span>{" "}
+                            {facility.facility_type}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             <span className="font-medium">Floor:</span>{" "}
                             {facility.floor_level}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600">
-                            <span className="font-medium">Building:</span>{" "}
-                            {facility.building}
+                            <span className="font-medium">Capacity:</span>{" "}
+                            {facility.capacity}
                           </p>
                         </div>
 
@@ -366,34 +371,42 @@ export default function FacilitiesPage() {
               &times;
             </button>
             <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              {selectedFacility.name}
+              {selectedFacility.facility_name}
             </h2>
             <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
               <p>
-                <strong>Connection Type:</strong>{" "}
-                {selectedFacility.connection_type || "N/A"}
+                <strong>Facility ID:</strong> {selectedFacility.facility_id}
               </p>
               <p>
-                <strong>Facility Type:</strong>{" "}
-                {selectedFacility.facility_type || "N/A"}
+                <strong>Facility Type:</strong> {selectedFacility.facility_type}
               </p>
               <p>
-                <strong>Floor Level:</strong>{" "}
-                {selectedFacility.floor_level || "N/A"}
+                <strong>Floor Level:</strong> {selectedFacility.floor_level}
               </p>
               <p>
-                <strong>Cooling Tools:</strong>{" "}
-                {selectedFacility.cooling_tools || "N/A"}
+                <strong>Capacity:</strong> {selectedFacility.capacity}
               </p>
               <p>
-                <strong>Building:</strong> {selectedFacility.building || "N/A"}
+                <strong>Status:</strong> {selectedFacility.status}
               </p>
-              <p>
-                <strong>Status:</strong> {selectedFacility.status || "N/A"}
-              </p>
-              <p>
-                <strong>Remarks:</strong> {selectedFacility.remarks || "N/A"}
-              </p>
+              {selectedFacility.description && (
+                <p>
+                  <strong>Description:</strong> {selectedFacility.description}
+                </p>
+              )}
+              {selectedFacility.image_url && (
+                <p>
+                  <strong>Image:</strong>{" "}
+                  <a
+                    href={selectedFacility.image_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-600 hover:underline"
+                  >
+                    View Image
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -415,7 +428,7 @@ export default function FacilitiesPage() {
               &times;
             </button>
             <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              Book {selectedFacility.name}
+              Book {selectedFacility.facility_name}
             </h2>
 
             <form

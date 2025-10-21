@@ -1,20 +1,15 @@
 // Types
-export type FacilityStatus =
-  | "Available"
-  | "Unavailable"
-  | "Maintenance"
-  | "Renovation";
+export type FacilityStatus = "Available" | "Occupied" | "Under Maintenance";
 
 export interface Facility {
-  id: number;
-  name: string;
-  connection_type: string;
+  facility_id: number;
+  facility_name: string;
   facility_type: string;
   floor_level: string;
-  cooling_tools: string;
-  building: string;
-  remarks: string;
+  capacity: number;
+  description?: string;
   status: FacilityStatus;
+  image_url?: string;
 }
 
 export interface BookingFormData {
@@ -63,9 +58,9 @@ export function getStatusColor(status: FacilityStatus): string {
   switch (status) {
     case "Available":
       return "bg-green-100 text-green-800";
-    case "Unavailable":
+    case "Occupied":
       return "bg-red-100 text-red-800";
-    case "Maintenance":
+    case "Under Maintenance":
       return "bg-yellow-100 text-yellow-800";
     default:
       return "bg-gray-100 text-gray-800";
@@ -79,8 +74,14 @@ export function filterFacilities(
   selectedFloorLevel: string,
   selectedStatus: FacilityStatus | "All Statuses"
 ): Facility[] {
+  // Defensive check: ensure facilities is an array
+  if (!Array.isArray(facilities)) {
+    console.error("filterFacilities received non-array:", facilities);
+    return [];
+  }
+
   return facilities.filter((facility) => {
-    const matchesSearch = facility.name
+    const matchesSearch = facility.facility_name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
@@ -176,8 +177,20 @@ export async function fetchFacilitiesList(): Promise<Facility[]> {
       throw new Error(`Failed to fetch facilities: ${response.statusText}`);
     }
 
-    const data: Facility[] = await response.json();
-    return data;
+    const data = await response.json();
+
+    // Handle both direct array and object with facilities property
+    if (Array.isArray(data)) {
+      return data as Facility[];
+    }
+
+    // Check if data has a facilities property that is an array
+    if (data && typeof data === "object" && Array.isArray(data.facilities)) {
+      return data.facilities as Facility[];
+    }
+
+    console.error("API returned unexpected data format:", data);
+    return [];
   } catch (error) {
     handleError(error, "Failed to fetch facilities");
     return [];
