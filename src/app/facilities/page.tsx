@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FacilityDetailsModal from "./components/FacilityDetailsModal";
+import BookFacilityModal from "./components/BookFacilityModal";
 import {
   Facility,
   FacilityStatus,
@@ -354,161 +356,25 @@ export default function FacilitiesPage() {
           )}
         </div>
       </div>
-      {/* Modal for viewing facility */}
-      {showModal && selectedFacility && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => setShowModal(false)} // Clicking outside closes modal
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-xl p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-          >
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              {selectedFacility.facility_name}
-            </h2>
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
-              <p>
-                <strong>Facility ID:</strong> {selectedFacility.facility_id}
-              </p>
-              <p>
-                <strong>Facility Type:</strong> {selectedFacility.facility_type}
-              </p>
-              <p>
-                <strong>Floor Level:</strong> {selectedFacility.floor_level}
-              </p>
-              <p>
-                <strong>Capacity:</strong> {selectedFacility.capacity}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedFacility.status}
-              </p>
-              {selectedFacility.description && (
-                <p>
-                  <strong>Description:</strong> {selectedFacility.description}
-                </p>
-              )}
-              {selectedFacility.image_url && (
-                <p>
-                  <strong>Image:</strong>{" "}
-                  <a
-                    href={selectedFacility.image_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-orange-600 hover:underline"
-                  >
-                    View Image
-                  </a>
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal for booking */}
-      {showBookingModal && selectedFacility && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={resetBookingModal}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={resetBookingModal}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              Book {selectedFacility.facility_name}
-            </h2>
 
-            <form
-              onSubmit={handleBookingSubmit}
-              className="space-y-2 sm:space-y-4"
-            >
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Purpose <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={bookingData.purpose}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, purpose: e.target.value })
-                  }
-                  placeholder="Describe the purpose of your booking..."
-                  required
-                  rows={2}
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
+      {/* Facility Details Modal */}
+      <FacilityDetailsModal
+        isOpen={showModal}
+        facility={selectedFacility}
+        onClose={() => setShowModal(false)}
+      />
 
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Start Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={bookingData.start_date}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      start_date: e.target.value,
-                    })
-                  }
-                  required
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
+      {/* Booking Modal */}
+      <BookFacilityModal
+        isOpen={showBookingModal}
+        facility={selectedFacility}
+        bookingData={bookingData}
+        bookingLoading={bookingLoading}
+        onClose={resetBookingModal}
+        onBookingDataChange={setBookingData}
+        onSubmit={handleBookingSubmit}
+      />
 
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  End Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={bookingData.end_date}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, end_date: e.target.value })
-                  }
-                  required
-                  min={
-                    bookingData.start_date ||
-                    new Date().toISOString().slice(0, 16)
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-
-              <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
-                <button
-                  type="button"
-                  onClick={resetBookingModal}
-                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={bookingLoading}
-                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-xs sm:text-base"
-                >
-                  {bookingLoading ? "Booking..." : "Submit Booking"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       {/* Footer always at the bottom */}
       <div className="mt-auto">
         <Footer />
