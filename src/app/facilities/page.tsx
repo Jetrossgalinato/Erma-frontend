@@ -4,60 +4,40 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FacilityDetailsModal from "./components/FacilityDetailsModal";
+import BookFacilityModal from "./components/BookFacilityModal";
 import {
-  createClientComponentClient,
-  User,
-} from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/../lib/database.types";
-
-type FacilityStatus =
-  | "Available"
-  | "Unavailable"
-  | "Maintenance"
-  | "Renovation";
-
-interface Facility {
-  id: number;
-  name: string;
-  connection_type: string;
-  facility_type: string;
-  floor_level: string;
-  cooling_tools: string;
-  building: string;
-  remarks: string;
-  status: FacilityStatus;
-}
-
-const facilityTypes = [
-  "All Facility Types",
-  "Room",
-  "Office",
-  "Computer Lab",
-  "Incubation Hub",
-  "Robotic Hub",
-  "Hall",
-];
-
-const floorLevels = ["All Floor Levels", "1st Floor", "2nd Floor", "3rd Floor"];
+  Facility,
+  FacilityStatus,
+  BookingFormData,
+  FACILITY_TYPES,
+  FLOOR_LEVELS,
+  ITEMS_PER_PAGE,
+  getStatusColor,
+  filterFacilities,
+  paginateFacilities,
+  calculateTotalPages,
+  fetchFacilitiesList,
+  checkUserAuthentication,
+  createBookingRequest,
+} from "./utils/helpers";
 
 export default function FacilitiesPage() {
-  const supabase = createClientComponentClient<Database>();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null
   );
 
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userLoading, setUserLoading] = useState(true);
 
   // booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingData, setBookingData] = useState({
+  const [bookingData, setBookingData] = useState<BookingFormData>({
     purpose: "",
     start_date: "",
     end_date: "",
@@ -74,30 +54,23 @@ export default function FacilitiesPage() {
   >("All Statuses");
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+    const checkAuth = async () => {
+      const authenticated = await checkUserAuthentication();
+      setIsAuthenticated(authenticated);
       setUserLoading(false);
     };
 
-    getUser();
-  }, [supabase]);
+    checkAuth();
+  }, []);
 
-  // Fetch data from Supabase
+  // Fetch data from FastAPI
   const fetchFacilities = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("facilities").select("*");
-
-    if (error) {
-      console.error("Error fetching facilities:", error);
-    } else {
-      setFacilities(data as Facility[]);
-    }
-
+    const data = await fetchFacilitiesList();
+    // Ensure we always set an array
+    setFacilities(Array.isArray(data) ? data : []);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchFacilities();
@@ -105,29 +78,13 @@ export default function FacilitiesPage() {
 
   // Filter logic
   const filteredFacilities = useMemo(() => {
-    return facilities.filter((facility) => {
-      const matchesSearch = facility.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-      const matchesFacilityType =
-        selectedFacilityType === "All Facility Types" ||
-        facility.facility_type === selectedFacilityType;
-
-      const matchesFloorLevel =
-        selectedFloorLevel === "All Floor Levels" ||
-        facility.floor_level === selectedFloorLevel;
-
-      const matchesStatus =
-        selectedStatus === "All Statuses" || facility.status === selectedStatus;
-
-      return (
-        matchesSearch &&
-        matchesFacilityType &&
-        matchesFloorLevel &&
-        matchesStatus
-      );
-    });
+    return filterFacilities(
+      facilities,
+      searchTerm,
+      selectedFacilityType,
+      selectedFloorLevel,
+      selectedStatus
+    );
   }, [
     facilities,
     searchTerm,
@@ -142,57 +99,20 @@ export default function FacilitiesPage() {
 
     setBookingLoading(true);
 
-    try {
-      // Get the current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const success = await createBookingRequest(
+      selectedFacility.facility_id,
+      bookingData
+    );
 
-      if (userError || !user) {
-        console.error("Failed to get current user:", userError);
-        setBookingLoading(false);
-        return;
-      }
-
-      // Get the user's account_requests ID
-      const { data: accountRequest, error: accountError } = await supabase
-        .from("account_requests")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (accountError || !accountRequest) {
-        console.error("Failed to get account request:", accountError);
-        setBookingLoading(false);
-        return;
-      }
-
-      // Insert booking request
-      const { error } = await supabase.from("booking").insert({
-        bookers_id: accountRequest.id,
-        facility_id: selectedFacility.id,
-        purpose: bookingData.purpose,
-        start_date: bookingData.start_date,
-        end_date: bookingData.end_date,
-        status: "Pending",
-      });
-
-      if (error) {
-        console.error("Failed to create booking:", error);
-      } else {
-        // Reset form and close modal
-        setBookingData({ purpose: "", start_date: "", end_date: "" });
-        setShowBookingModal(false);
-        setSelectedFacility(null);
-        console.log("Booking request created successfully!");
-        // You might want to show a success message here
-      }
-    } catch (error) {
-      console.error("Error creating booking:", error);
-    } finally {
-      setBookingLoading(false);
+    if (success) {
+      alert("Booking request submitted successfully!");
+      setBookingData({ purpose: "", start_date: "", end_date: "" });
+      setShowBookingModal(false);
+      setSelectedFacility(null);
+      fetchFacilities();
     }
+
+    setBookingLoading(false);
   };
 
   const resetBookingModal = () => {
@@ -202,27 +122,12 @@ export default function FacilitiesPage() {
 
   // Pagination logic
   const paginatedFacilities = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return filteredFacilities.slice(start, end);
+    return paginateFacilities(filteredFacilities, currentPage, ITEMS_PER_PAGE);
   }, [filteredFacilities, currentPage]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedFacilityType, selectedFloorLevel, selectedStatus]);
-
-  const getStatusColor = (status: FacilityStatus): string => {
-    switch (status) {
-      case "Available":
-        return "bg-green-100 text-green-800";
-      case "Unavailable":
-        return "bg-red-100 text-red-800";
-      case "Maintenance":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -274,7 +179,7 @@ export default function FacilitiesPage() {
                 onChange={(e) => setSelectedFacilityType(e.target.value)}
                 className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               >
-                {facilityTypes.map((type) => (
+                {FACILITY_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>
@@ -287,7 +192,7 @@ export default function FacilitiesPage() {
                 onChange={(e) => setSelectedFloorLevel(e.target.value)}
                 className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               >
-                {floorLevels.map((level) => (
+                {FLOOR_LEVELS.map((level) => (
                   <option key={level} value={level}>
                     {level}
                   </option>
@@ -339,13 +244,13 @@ export default function FacilitiesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
                   {paginatedFacilities.map((facility) => (
                     <div
-                      key={facility.id}
+                      key={facility.facility_id}
                       className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
                     >
                       <div className="p-3 sm:p-6">
                         <div className="flex justify-between items-start mb-2 sm:mb-4">
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-1 sm:pr-2">
-                            {facility.name}
+                            {facility.facility_name}
                           </h3>
                           <span
                             className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -358,12 +263,16 @@ export default function FacilitiesPage() {
 
                         <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
                           <p className="text-xs sm:text-sm text-gray-600">
+                            <span className="font-medium">Type:</span>{" "}
+                            {facility.facility_type}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             <span className="font-medium">Floor:</span>{" "}
                             {facility.floor_level}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600">
-                            <span className="font-medium">Building:</span>{" "}
-                            {facility.building}
+                            <span className="font-medium">Capacity:</span>{" "}
+                            {facility.capacity}
                           </p>
                         </div>
 
@@ -384,21 +293,28 @@ export default function FacilitiesPage() {
                           ) : (
                             <button
                               className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                                facility.status === "Available" && user
+                                facility.status === "Available" &&
+                                isAuthenticated
                                   ? "bg-orange-600 text-white hover:bg-orange-700"
                                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
                               }`}
                               onClick={() => {
-                                if (facility.status === "Available" && user) {
+                                if (
+                                  facility.status === "Available" &&
+                                  isAuthenticated
+                                ) {
                                   setSelectedFacility(facility);
                                   setShowBookingModal(true);
                                 }
                               }}
                               disabled={
-                                facility.status !== "Available" || !user
+                                facility.status !== "Available" ||
+                                !isAuthenticated
                               }
                               title={
-                                !user ? "Please log in to book facilities" : ""
+                                !isAuthenticated
+                                  ? "Please log in to book facilities"
+                                  : ""
                               }
                             >
                               {facility.status === "Available"
@@ -417,8 +333,9 @@ export default function FacilitiesPage() {
               {filteredFacilities.length > ITEMS_PER_PAGE && (
                 <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
                   {Array.from({
-                    length: Math.ceil(
-                      filteredFacilities.length / ITEMS_PER_PAGE
+                    length: calculateTotalPages(
+                      filteredFacilities.length,
+                      ITEMS_PER_PAGE
                     ),
                   }).map((_, i) => (
                     <button
@@ -439,153 +356,25 @@ export default function FacilitiesPage() {
           )}
         </div>
       </div>
-      {/* Modal for viewing facility */}
-      {showModal && selectedFacility && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={() => setShowModal(false)} // Clicking outside closes modal
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-xl p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-          >
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              {selectedFacility.name}
-            </h2>
-            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">
-              <p>
-                <strong>Connection Type:</strong>{" "}
-                {selectedFacility.connection_type || "N/A"}
-              </p>
-              <p>
-                <strong>Facility Type:</strong>{" "}
-                {selectedFacility.facility_type || "N/A"}
-              </p>
-              <p>
-                <strong>Floor Level:</strong>{" "}
-                {selectedFacility.floor_level || "N/A"}
-              </p>
-              <p>
-                <strong>Cooling Tools:</strong>{" "}
-                {selectedFacility.cooling_tools || "N/A"}
-              </p>
-              <p>
-                <strong>Building:</strong> {selectedFacility.building || "N/A"}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedFacility.status || "N/A"}
-              </p>
-              <p>
-                <strong>Remarks:</strong> {selectedFacility.remarks || "N/A"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal for booking */}
-      {showBookingModal && selectedFacility && (
-        <div
-          className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
-          onClick={resetBookingModal}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-xs sm:max-w-md p-3 sm:p-6 relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={resetBookingModal}
-              className="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-xl"
-            >
-              &times;
-            </button>
-            <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
-              Book {selectedFacility.name}
-            </h2>
 
-            <form
-              onSubmit={handleBookingSubmit}
-              className="space-y-2 sm:space-y-4"
-            >
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Purpose <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={bookingData.purpose}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, purpose: e.target.value })
-                  }
-                  placeholder="Describe the purpose of your booking..."
-                  required
-                  rows={2}
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
+      {/* Facility Details Modal */}
+      <FacilityDetailsModal
+        isOpen={showModal}
+        facility={selectedFacility}
+        onClose={() => setShowModal(false)}
+      />
 
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Start Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={bookingData.start_date}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      start_date: e.target.value,
-                    })
-                  }
-                  required
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
+      {/* Booking Modal */}
+      <BookFacilityModal
+        isOpen={showBookingModal}
+        facility={selectedFacility}
+        bookingData={bookingData}
+        bookingLoading={bookingLoading}
+        onClose={resetBookingModal}
+        onBookingDataChange={setBookingData}
+        onSubmit={handleBookingSubmit}
+      />
 
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  End Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  value={bookingData.end_date}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, end_date: e.target.value })
-                  }
-                  required
-                  min={
-                    bookingData.start_date ||
-                    new Date().toISOString().slice(0, 16)
-                  }
-                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-
-              <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
-                <button
-                  type="button"
-                  onClick={resetBookingModal}
-                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={bookingLoading}
-                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 text-xs sm:text-base"
-                >
-                  {bookingLoading ? "Booking..." : "Submit Booking"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
       {/* Footer always at the bottom */}
       <div className="mt-auto">
         <Footer />
