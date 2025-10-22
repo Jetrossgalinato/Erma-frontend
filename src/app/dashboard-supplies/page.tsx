@@ -15,6 +15,7 @@ import Pagination from "./components/Pagination";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import ImageModal from "./components/ImageModal";
+import { RefreshCw } from "lucide-react";
 import {
   Supply,
   SupplyFormData,
@@ -679,6 +680,21 @@ export default function DashboardSuppliesPage() {
                       onCancel={() => setShowDeleteModal(false)}
                     />
                   )}
+
+                  <button
+                    onClick={handleRefreshClick}
+                    disabled={isRefreshing}
+                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                      isRefreshing ? "cursor-not-allowed opacity-75" : ""
+                    }`}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </button>
                 </div>
               </div>
 

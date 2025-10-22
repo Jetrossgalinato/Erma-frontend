@@ -5,14 +5,7 @@
  */
 
 import React from "react";
-import {
-  RefreshCw,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Plus,
-  Upload,
-} from "lucide-react";
+import { MoreVertical, Edit, Trash2, Plus, Upload } from "lucide-react";
 
 interface ActionsDropdownProps {
   selectedRows: number[];
@@ -29,9 +22,7 @@ interface ActionsDropdownProps {
 
 const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   selectedRows,
-  isRefreshing,
   showActionsDropdown,
-  onRefresh,
   onToggleDropdown,
   onAddNew,
   onEdit,
@@ -41,17 +32,6 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 }) => {
   return (
     <div className="flex gap-2">
-      {/* Refresh Button */}
-      <button
-        onClick={onRefresh}
-        disabled={isRefreshing}
-        className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <RefreshCw
-          className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-        />
-      </button>
-
       {/* Actions Dropdown */}
       <div className="relative" ref={dropdownRef}>
         <button
