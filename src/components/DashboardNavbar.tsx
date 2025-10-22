@@ -11,24 +11,29 @@ import {
   Palette,
 } from "lucide-react";
 import Image from "next/image";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Session } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const DashboardNavbar: React.FC = () => {
+  const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
   const [theme, setTheme] = useState("light");
-  const supabase = createClientComponentClient();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleAvatarDropdown = () =>
     setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsAvatarDropdownOpen(false);
-    alert("You have been logged out successfully.");
+    try {
+      await logout();
+      setIsAvatarDropdownOpen(false);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Failed to logout. Please try again.");
+    }
   };
 
   const applyTheme = (newTheme: string) => {
@@ -82,21 +87,10 @@ const DashboardNavbar: React.FC = () => {
 
     mediaQuery.addEventListener("change", handleSystemThemeChange);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
-
     return () => {
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
-      authListener.subscription.unsubscribe();
     };
-  }, [supabase.auth]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,7 +107,8 @@ const DashboardNavbar: React.FC = () => {
   }, []);
 
   const getInitial = () => {
-    const name = session?.user?.user_metadata?.name || session?.user?.email;
+    if (!user) return "?";
+    const name = user.email;
     return name ? name.charAt(0).toUpperCase() : "?";
   };
 
@@ -131,7 +126,7 @@ const DashboardNavbar: React.FC = () => {
 
       {/* Desktop Avatar Only */}
       <div className="hidden md:flex pr-40 items-center gap-4">
-        {session ? (
+        {isAuthenticated && user ? (
           <div className="relative dropdown-container">
             <button
               onClick={toggleAvatarDropdown}
@@ -229,7 +224,7 @@ const DashboardNavbar: React.FC = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white dark:bg-gray-800 shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
-          {session ? (
+          {isAuthenticated && user ? (
             <div className="relative dropdown-container w-full mt-2">
               <button
                 onClick={toggleAvatarDropdown}
