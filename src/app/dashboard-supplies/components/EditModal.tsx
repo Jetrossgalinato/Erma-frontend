@@ -130,14 +130,16 @@ const EditModal: React.FC<EditModalProps> = ({
                 </label>
                 <select
                   name="facility_id"
-                  value={supply.facilities?.id || ""}
+                  value={supply.facility_id || supply.facilities?.id || ""}
                   onChange={onChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select Facility</option>
                   {facilities.map((facility) => (
                     <option key={facility.id} value={facility.id}>
-                      {facility.name}
+                      {facility.facility_name ||
+                        facility.name ||
+                        `Facility ${facility.id}`}
                     </option>
                   ))}
                 </select>
@@ -182,6 +184,7 @@ const EditModal: React.FC<EditModalProps> = ({
                   )}
                 </div>
                 {(imagePreview || supply.image) && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imagePreview || supply.image}
                     alt="Preview"

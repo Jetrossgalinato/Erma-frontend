@@ -46,6 +46,7 @@ export default function DashboardSuppliesPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Data State
@@ -220,7 +221,15 @@ export default function DashboardSuppliesPage() {
         );
         return {
           ...prev,
-          facilities: selectedFacility || { id: 0, name: "" },
+          facility_id: selectedFacility?.id,
+          facilities: selectedFacility
+            ? {
+                id: selectedFacility.id,
+                facility_id: selectedFacility.facility_id,
+                facility_name: selectedFacility.facility_name,
+                name: selectedFacility.name,
+              }
+            : undefined,
         };
       }
 

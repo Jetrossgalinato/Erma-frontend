@@ -115,7 +115,9 @@ const AddSupplyForm: React.FC<AddSupplyFormProps> = ({
             <option value="">Select Facility</option>
             {facilities.map((facility) => (
               <option key={facility.id} value={facility.id}>
-                {facility.name}
+                {facility.facility_name ||
+                  facility.name ||
+                  `Facility ${facility.id}`}
               </option>
             ))}
           </select>
@@ -157,6 +159,7 @@ const AddSupplyForm: React.FC<AddSupplyFormProps> = ({
             )}
           </div>
           {imagePreview && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imagePreview}
               alt="Preview"

@@ -22,7 +22,9 @@ export interface Supply {
   updated_at?: string;
   facilities?: {
     id: number;
-    name: string;
+    facility_id?: number;
+    facility_name: string;
+    name?: string; // Fallback for compatibility
   };
 }
 
@@ -40,7 +42,9 @@ export interface SupplyFormData {
 
 export interface Facility {
   id: number;
-  name: string;
+  facility_id?: number;
+  facility_name: string;
+  name?: string; // Fallback for compatibility
 }
 
 /**
@@ -105,16 +109,13 @@ export async function fetchFacilities(): Promise<Facility[]> {
   const data = await response.json();
 
   // Ensure we always return an array
-  if (Array.isArray(data)) {
-    return data;
-  }
+  const facilitiesArray = Array.isArray(data) ? data : data.facilities || [];
 
-  if (data && Array.isArray(data.facilities)) {
-    return data.facilities;
-  }
-
-  console.error("Unexpected facilities API response format:", data);
-  return [];
+  // Map facility_id to id for consistency
+  return facilitiesArray.map((facility: Facility) => ({
+    ...facility,
+    id: facility.id || facility.facility_id || 0,
+  }));
 }
 
 /**

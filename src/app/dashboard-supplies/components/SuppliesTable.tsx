@@ -92,14 +92,18 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 </td>
                 <td className="px-6 py-4">
                   {supply.image ? (
-                    <img
-                      src={supply.image}
-                      alt={supply.name}
-                      className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
-                      onClick={() =>
-                        onImageClick && onImageClick(supply.image!, supply.name)
-                      }
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={supply.image}
+                        alt={supply.name}
+                        className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
+                        onClick={() =>
+                          onImageClick &&
+                          onImageClick(supply.image!, supply.name)
+                        }
+                      />
+                    </>
                   ) : (
                     <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
                       <ImageIcon className="h-6 w-6 text-gray-400 dark:text-gray-600" />
@@ -123,7 +127,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                  {supply.facilities?.name || "—"}
+                  {supply.facilities?.facility_name ||
+                    supply.facilities?.name ||
+                    "—"}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                   {supply.remarks || "—"}
