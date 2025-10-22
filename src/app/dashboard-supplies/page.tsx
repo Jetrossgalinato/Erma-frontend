@@ -2,25 +2,38 @@
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useAuthStore } from "@/store/authStore";
+import SuppliesTable from "./components/SuppliesTable";
+import FilterControls from "./components/FilterControls";
+import ActionsDropdown from "./components/ActionsDropdown";
+import EditModal from "./components/EditModal";
+import AddSupplyForm from "./components/AddSupplyForm";
+import ImportModal from "./components/ImportModal";
+import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
+import Pagination from "./components/Pagination";
+import LoadingState from "./components/LoadingState";
+import EmptyState from "./components/EmptyState";
+import ImageModal from "./components/ImageModal";
 import {
-  Filter,
-  ChevronDown,
-  Tag,
-  Building,
-  X,
-  Settings,
-  Plus,
-  Upload,
-  Edit,
-  Trash2,
-  Loader2,
-  RefreshCw,
-  AlertTriangle,
-} from "lucide-react";
+  Supply,
+  SupplyFormData,
+  Facility,
+  fetchSupplies,
+  fetchFacilities,
+  createSupply,
+  updateSupply,
+  deleteSupplies,
+  bulkImportSupplies,
+  logSupplyAction,
+  parseCSVToSupplies,
+  getUniqueCategories,
+  getUniqueFacilities,
+  filterSupplies,
+  getStockStatus,
+} from "./utils/helpers";
 
+// Keep the old interface for compatibility during migration
 interface Supplies {
   id: number;
   image?: string;
@@ -39,124 +52,70 @@ interface Supplies {
 }
 
 export default function DashboardSuppliesPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  // UI State
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [supplies, setSupplies] = useState<Supplies[]>([]);
-  const [editingSupply, setEditingSupply] = useState<Supplies | null>(null);
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showInsertForm, setShowInsertForm] = useState(false);
-  const [facilities, setFacilities] = useState<{ id: number; name: string }[]>(
-    []
-  );
-  const [newSupply, setNewSupply] = useState<Partial<Supplies>>({
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Data State
+  const [supplies, setSupplies] = useState<Supply[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
+  const [newSupply, setNewSupply] = useState<Partial<SupplyFormData>>({
     name: "",
     category: "",
     quantity: 0,
     stocking_point: 0,
     stock_unit: "",
   });
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [importData, setImportData] = useState<Partial<Supply>[]>([]);
 
-  const [currentUser, setCurrentUser] = useState<{
-    first_name?: string;
-    last_name?: string;
-  } | null>(null);
-
-  // Add these image-related states after your existing state declarations
+  // Image-related states
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  // Image states for editing supplies
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const editImageInputRef = useRef<HTMLInputElement>(null);
-
-  // Image modal states
-  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
 
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [facilityFilter, setFacilityFilter] = useState<string>("");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [activeFilter, setActiveFilter] = useState<
     "category" | "facility" | null
   >(null);
-  const [showActionsDropdown, setShowActionsDropdown] = useState(false);
 
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 11;
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [importData, setImportData] = useState<Partial<Supplies>[]>([]);
+  // Processing State
+  const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(11);
-
-  const supabase = createClientComponentClient();
-
-  const [, setUser] = useState<SupabaseUser | null>(null);
-  const [, setAuthLoading] = useState(true);
-  const router = useRouter();
-
+  // Auth check - redirect to login if not authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Auth error:", error);
-          router.push("/login");
-          return;
-        }
-
-        if (!session?.user) {
-          router.push("/login");
-          return;
-        }
-
-        setUser(session.user);
-
-        // Fetch user profile information
-        const { data: profile, error: profileError } = await supabase
-          .from("account_requests") // or whatever your user profile table is called
-          .select("first_name, last_name")
-          .eq("user_id", session.user.id)
-          .single();
-
-        if (!profileError && profile) {
-          setCurrentUser(profile);
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        router.push("/login");
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        router.push("/login");
-      } else if (session?.user) {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router, supabase]);
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -205,46 +164,33 @@ export default function DashboardSuppliesPage() {
     );
   };
 
-  const fetchFacilities = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("facilities")
-      .select("id, name")
-      .order("name", { ascending: true });
-
-    if (error) {
+  // Fetch facilities from FastAPI
+  const loadFacilities = useCallback(async () => {
+    try {
+      const data = await fetchFacilities();
+      setFacilities(data);
+    } catch (error) {
       console.error("Error fetching facilities:", error);
-    } else {
-      setFacilities(data || []);
+      setError("Failed to load facilities");
     }
-  }, [supabase]);
+  }, []);
 
-  const fetchSupplies = useCallback(
-    async (showAnimation = false) => {
-      if (showAnimation) {
-        setIsRefreshing(true);
-      } else {
-        setLoading(true);
-      }
+  // Fetch supplies from FastAPI
+  const loadSupplies = useCallback(async (showAnimation = false) => {
+    if (showAnimation) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
 
-      const { data, error } = await supabase
-        .from("supplies")
-        .select(
-          `
-          *,
-          facilities:facility_id (
-            id,
-            name
-          )
-        `
-        )
-        .order("id", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching supplies:", error);
-      } else {
-        setSupplies(data as Supplies[]);
-      }
-
+    try {
+      const data = await fetchSupplies();
+      setSupplies(data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching supplies:", error);
+      setError("Failed to load supplies");
+    } finally {
       if (showAnimation) {
         setTimeout(() => {
           setIsRefreshing(false);
@@ -252,15 +198,15 @@ export default function DashboardSuppliesPage() {
       } else {
         setLoading(false);
       }
-    },
-    [supabase]
-  );
+    }
+  }, []);
 
+  // Refresh data handler
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
-      fetchSupplies(true);
+      loadSupplies(true);
     }
-  }, [isRefreshing, fetchSupplies]);
+  }, [isRefreshing, loadSupplies]);
 
   // Replace the existing handleEditClick function
   const handleEditClick = () => {
@@ -384,6 +330,7 @@ export default function DashboardSuppliesPage() {
   };
 
   // Replace the existing handleSaveEdit function
+  // Save edited supply using FastAPI
   const handleSaveEdit = async () => {
     if (!editingSupply) return;
 
@@ -402,77 +349,54 @@ export default function DashboardSuppliesPage() {
       return;
     }
 
-    const updatedSupply = { ...editingSupply };
+    try {
+      const supplyData: SupplyFormData = {
+        name: editingSupply.name,
+        description: editingSupply.description,
+        category: editingSupply.category,
+        quantity: editingSupply.quantity,
+        stocking_point: editingSupply.stocking_point,
+        stock_unit: editingSupply.stock_unit,
+        facility_id: editingSupply.facilities.id,
+        image: editingSupply.image,
+        remarks: editingSupply.remarks,
+      };
 
-    // Handle image upload if a new image file is selected
-    if (editImageFile) {
-      try {
-        const fileExt = editImageFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("supply-images")
-          .upload(fileName, editImageFile);
-
-        if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          alert(
-            `Failed to upload image: ${uploadError.message}. Supply will be updated without new image.`
-          );
-        } else {
-          const { data: urlData } = supabase.storage
-            .from("supply-images")
-            .getPublicUrl(fileName);
-          updatedSupply.image = urlData.publicUrl;
-        }
-      } catch (error) {
-        console.error("Error processing image:", error);
-        alert(
-          "Failed to process image. Supply will be updated without new image."
-        );
+      // TODO: Handle image upload to FastAPI when endpoint is ready
+      // For now, existing image URL is preserved
+      if (editImageFile) {
+        console.warn("Image upload to FastAPI not yet implemented");
       }
-    }
 
-    const { error } = await supabase
-      .from("supplies")
-      .update({
-        name: updatedSupply.name,
-        description: updatedSupply.description,
-        category: updatedSupply.category,
-        quantity: updatedSupply.quantity,
-        stocking_point: updatedSupply.stocking_point,
-        stock_unit: updatedSupply.stock_unit,
-        facility_id: updatedSupply.facilities.id,
-        image: updatedSupply.image,
-        remarks: updatedSupply.remarks,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", updatedSupply.id);
+      const updatedSupply = await updateSupply(editingSupply.id, supplyData);
 
-    if (error) {
-      console.error("Error updating supply:", error);
-      alert("Failed to update supply");
-    } else {
+      // Log the action
       await logSupplyAction(
+        "update",
+        editingSupply.id,
         `Supply "${updatedSupply.name}" was updated`,
-        `- Category: ${updatedSupply.category}, Quantity: ${
+        `Category: ${updatedSupply.category}, Quantity: ${
           updatedSupply.quantity
         } ${updatedSupply.stock_unit}, Facility: ${
           updatedSupply.facilities?.name || "None"
         }`
       );
+
+      // Update local state
       setSupplies((prev) =>
         prev.map((supply) =>
           supply.id === updatedSupply.id ? updatedSupply : supply
         )
       );
+
       setShowEditModal(false);
       setEditingSupply(null);
       setSelectedRows([]);
       clearEditImageSelection();
       console.log("Supply updated successfully");
+    } catch (error) {
+      console.error("Error updating supply:", error);
+      alert("Failed to update supply");
     }
   };
 
@@ -482,7 +406,7 @@ export default function DashboardSuppliesPage() {
     clearEditImageSelection();
   };
 
-  // Replace the existing handleInsertSupply function
+  // Insert new supply using FastAPI
   const handleInsertSupply = async () => {
     if (!newSupply.name?.trim()) {
       alert("Supply name is required");
@@ -499,53 +423,32 @@ export default function DashboardSuppliesPage() {
       return;
     }
 
-    let imageUrl = null;
+    try {
+      const supplyData: SupplyFormData = {
+        name: newSupply.name!,
+        description: newSupply.description,
+        category: newSupply.category!,
+        quantity: newSupply.quantity!,
+        stocking_point: newSupply.stocking_point!,
+        stock_unit: newSupply.stock_unit!,
+        facility_id: newSupply.facility_id,
+        image: newSupply.image,
+        remarks: newSupply.remarks,
+      };
 
-    // Upload image if selected
-    if (selectedImageFile) {
-      try {
-        const fileExt = selectedImageFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("supply-images") // Create this bucket in Supabase
-          .upload(fileName, selectedImageFile);
-
-        if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          alert(
-            `Failed to upload image: ${uploadError.message}. Supply will be created without image.`
-          );
-        } else {
-          const { data: urlData } = supabase.storage
-            .from("supply-images")
-            .getPublicUrl(fileName);
-          imageUrl = urlData.publicUrl;
-        }
-      } catch (error) {
-        console.error("Error processing image:", error);
-        alert("Failed to process image. Supply will be created without image.");
+      // TODO: Handle image upload to FastAPI when endpoint is ready
+      if (selectedImageFile) {
+        console.warn("Image upload to FastAPI not yet implemented");
       }
-    }
 
-    const { error } = await supabase.from("supplies").insert([
-      {
-        ...newSupply,
-        image: imageUrl,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ]);
+      const createdSupply = await createSupply(supplyData);
 
-    if (error) {
-      console.error("Error inserting supply:", error);
-      alert("Failed to insert supply");
-    } else {
+      // Log the action
       await logSupplyAction(
-        `Supply "${newSupply.name}" was created`,
-        `with category "${newSupply.category}" and quantity ${newSupply.quantity} ${newSupply.stock_unit}`
+        "create",
+        createdSupply.id,
+        `Supply "${createdSupply.name}" was created`,
+        `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
       );
 
       setShowInsertForm(false);
@@ -557,39 +460,22 @@ export default function DashboardSuppliesPage() {
         stock_unit: "",
       });
       clearImageSelection();
-      fetchSupplies(false);
+      loadSupplies(false);
+    } catch (error) {
+      console.error("Error inserting supply:", error);
+      alert("Failed to insert supply");
     }
   };
 
-  const getFilteredSupplies = () => {
-    return supplies.filter((supply) => {
-      const matchesCategory =
-        !categoryFilter ||
-        supply.category?.toLowerCase().includes(categoryFilter.toLowerCase());
-
-      const matchesFacility =
-        !facilityFilter ||
-        supply.facilities?.name
-          ?.toLowerCase()
-          .includes(facilityFilter.toLowerCase());
-
-      return matchesCategory && matchesFacility;
-    });
-  };
-
-  const getUniqueCategories = () => {
-    return [
-      ...new Set(supplies.map((supply) => supply.category).filter(Boolean)),
-    ].sort();
-  };
-
-  const getUniqueFacilities = () => {
-    return [
-      ...new Set(
-        supplies.map((supply) => supply.facilities?.name).filter(Boolean)
-      ),
-    ].sort();
-  };
+  // Use helper functions from helpers.ts for filtering
+  const filteredSupplies = filterSupplies(
+    supplies,
+    searchQuery,
+    categoryFilter,
+    facilityFilter
+  );
+  const uniqueCategories = getUniqueCategories(supplies);
+  const uniqueFacilities = getUniqueFacilities(supplies);
 
   const filteredSupplies = getFilteredSupplies();
   const totalPages = Math.ceil(filteredSupplies.length / itemsPerPage);
@@ -697,6 +583,7 @@ export default function DashboardSuppliesPage() {
     }
   };
 
+  // Import supplies from CSV using FastAPI
   const handleImportData = async () => {
     if (importData.length === 0) return;
 
@@ -712,42 +599,35 @@ export default function DashboardSuppliesPage() {
         alert(
           "No valid supplies found. Make sure each row has name, category, and stock unit."
         );
+        setIsProcessing(false);
         return;
       }
 
-      const suppliesWithTimestamps = validData.map((supply) => ({
-        ...supply,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
+      const result = await bulkImportSupplies(validData as SupplyFormData[]);
 
-      const { error } = await supabase
-        .from("supplies")
-        .insert(suppliesWithTimestamps);
+      const importedSupplyNames = result
+        .map((supply) => supply.name)
+        .slice(0, 5)
+        .join(", ");
+      const remainingCount = Math.max(0, result.length - 5);
+      const namesList =
+        remainingCount > 0
+          ? `${importedSupplyNames} and ${remainingCount} more`
+          : importedSupplyNames;
 
-      if (error) {
-        console.error("Error importing supplies:", error);
-        alert("Failed to import supplies. Please try again.");
-      } else {
-        const importedSupplyNames = validData
-          .map((supply) => supply.name)
-          .slice(0, 5)
-          .join(", ");
-        const remainingCount = Math.max(0, validData.length - 5);
-        const namesList =
-          remainingCount > 0
-            ? `${importedSupplyNames} and ${remainingCount} more`
-            : importedSupplyNames;
-        await logSupplyAction(
-          `${validData.length} supplies were imported from CSV:`,
-          `${namesList}`
-        );
-        alert(`Successfully imported ${validData.length} supplies!`);
-        setShowImportModal(false);
-        setSelectedFile(null);
-        setImportData([]);
-        fetchSupplies(false);
-      }
+      // Log the import action
+      await logSupplyAction(
+        "import",
+        null,
+        `${result.length} supplies were imported from CSV`,
+        namesList
+      );
+
+      alert(`Successfully imported ${result.length} supplies!`);
+      setShowImportModal(false);
+      setSelectedFile(null);
+      setImportData([]);
+      loadSupplies(false);
     } catch (error) {
       console.error("Error importing data:", error);
       alert("An error occurred while importing data.");
@@ -756,18 +636,11 @@ export default function DashboardSuppliesPage() {
     }
   };
 
+  // Delete selected supplies using FastAPI
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
 
-    const { error } = await supabase
-      .from("supplies")
-      .delete()
-      .in("id", selectedRows);
-
-    if (error) {
-      console.error("Error deleting supplies:", error);
-      alert("Failed to delete selected supplies");
-    } else {
+    try {
       const suppliesToDelete = supplies.filter((supply) =>
         selectedRows.includes(supply.id)
       );
@@ -775,65 +648,38 @@ export default function DashboardSuppliesPage() {
         .map((supply) => supply.name)
         .join(", ");
 
+      await deleteSupplies(selectedRows);
+
+      // Log the action
       await logSupplyAction(
-        `${selectedRows.length} supply/supplies were deleted:`,
-        `${supplyNames}`
+        "delete",
+        null,
+        `${selectedRows.length} supply/supplies were deleted`,
+        supplyNames
       );
+
       setSupplies((prev) =>
         prev.filter((supply) => !selectedRows.includes(supply.id))
       );
       setSelectedRows([]);
       console.log(`Successfully deleted ${selectedRows.length} rows.`);
-    }
-
-    setShowDeleteModal(false);
-  };
-
-  // Helper function to get stock status color
-  const getStockStatus = (quantity: number, stockingPoint: number) => {
-    if (quantity === 0)
-      return {
-        status: "Out of Stock",
-        color:
-          "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700",
-      };
-    if (quantity <= stockingPoint)
-      return {
-        status: "Low Stock",
-        color:
-          "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700",
-      };
-    return {
-      status: "In Stock",
-      color:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700",
-    };
-  };
-
-  const logSupplyAction = async (action: string, details: string) => {
-    try {
-      const adminName =
-        currentUser?.first_name && currentUser?.last_name
-          ? `${currentUser.first_name} ${currentUser.last_name}`
-          : "Unknown Admin";
-
-      const logMessage = `${action} by ${adminName} ${details}`;
-
-      await supabase.from("supply_logs").insert([
-        {
-          log_message: logMessage,
-          created_at: new Date().toISOString(),
-        },
-      ]);
     } catch (error) {
-      console.error("Error logging supply action:", error);
+      console.error("Error deleting supplies:", error);
+      alert("Failed to delete selected supplies");
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
+  // getStockStatus and logSupplyAction are now imported from helpers.ts
+
+  // Load initial data
   useEffect(() => {
-    fetchSupplies();
-    fetchFacilities();
-  }, [fetchSupplies, fetchFacilities]);
+    if (isAuthenticated) {
+      loadSupplies();
+      loadFacilities();
+    }
+  }, [isAuthenticated, loadSupplies, loadFacilities]);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
