@@ -698,41 +698,41 @@ export default function DashboardSuppliesPage() {
                 </div>
               </div>
 
+              {/* Insert Form Row */}
+              {showInsertForm && (
+                <AddSupplyForm
+                  supply={newSupply}
+                  facilities={facilities}
+                  imagePreview={imagePreview}
+                  onChange={(e) => {
+                    const { name, value } = e.target;
+                    if (name === "quantity" || name === "stocking_point") {
+                      setNewSupply({
+                        ...newSupply,
+                        [name]: parseInt(value) || 0,
+                      });
+                    } else if (name === "facility_id") {
+                      setNewSupply({
+                        ...newSupply,
+                        facility_id: parseInt(value) || undefined,
+                      });
+                    } else {
+                      setNewSupply({ ...newSupply, [name]: value });
+                    }
+                  }}
+                  onSave={handleInsertSupply}
+                  onCancel={handleCancelInsert}
+                  onImageSelect={() => imageInputRef.current?.click()}
+                  onImageClear={clearImageSelection}
+                />
+              )}
+
               {loading ? (
                 <LoadingState />
               ) : supplies.length === 0 ? (
                 <EmptyState />
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                  {/* Insert Form Row */}
-                  {showInsertForm && (
-                    <AddSupplyForm
-                      supply={newSupply}
-                      facilities={facilities}
-                      imagePreview={imagePreview}
-                      onChange={(e) => {
-                        const { name, value } = e.target;
-                        if (name === "quantity" || name === "stocking_point") {
-                          setNewSupply({
-                            ...newSupply,
-                            [name]: parseInt(value) || 0,
-                          });
-                        } else if (name === "facility_id") {
-                          setNewSupply({
-                            ...newSupply,
-                            facility_id: parseInt(value) || undefined,
-                          });
-                        } else {
-                          setNewSupply({ ...newSupply, [name]: value });
-                        }
-                      }}
-                      onSave={handleInsertSupply}
-                      onCancel={handleCancelInsert}
-                      onImageSelect={() => imageInputRef.current?.click()}
-                      onImageClear={clearImageSelection}
-                    />
-                  )}
-
                   <SuppliesTable
                     supplies={filteredSupplies}
                     selectedRows={selectedRows}
