@@ -48,7 +48,11 @@ export default function DashboardFacilitiesPage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
   const [newFacility, setNewFacility] = useState<Partial<FacilityFormData>>({
-    name: "",
+    facility_name: "",
+    facility_type: "",
+    floor_level: "",
+    capacity: 0,
+    status: "Available",
   });
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [importData, setImportData] = useState<Partial<Facility>[]>([]);
@@ -197,25 +201,26 @@ export default function DashboardFacilitiesPage() {
   const handleSaveEdit = async () => {
     if (!editingFacility) return;
 
-    if (!editingFacility.name?.trim()) {
+    if (!editingFacility.facility_name?.trim()) {
       alert("Facility name is required");
       return;
     }
 
     try {
       const updatedFacility = await updateFacility(editingFacility.id, {
-        name: editingFacility.name,
+        facility_name: editingFacility.facility_name,
         connection_type: editingFacility.connection_type,
         facility_type: editingFacility.facility_type,
         floor_level: editingFacility.floor_level,
         cooling_tools: editingFacility.cooling_tools,
         building: editingFacility.building,
-        status: editingFacility.status,
+        capacity: editingFacility.capacity || 0,
+        status: editingFacility.status || "Available",
         remarks: editingFacility.remarks,
       });
 
       // Log the edit action
-      await logFacilityAction("updated", editingFacility.name);
+      await logFacilityAction("updated", editingFacility.facility_name);
 
       // Update local state
       setFacilities((prev) =>
@@ -248,29 +253,55 @@ export default function DashboardFacilitiesPage() {
   };
 
   const handleInsertFacility = async () => {
-    if (!newFacility.name?.trim()) {
+    if (!newFacility.facility_name?.trim()) {
       alert("Facility name is required");
       return;
     }
 
     try {
-      await createFacility(newFacility as FacilityFormData);
+      // Filter out empty string values and only send non-empty fields
+      const cleanedData: Partial<FacilityFormData> = {};
+
+      Object.entries(newFacility).forEach(([key, value]) => {
+        if (value !== "" && value !== undefined && value !== null) {
+          cleanedData[key as keyof FacilityFormData] = value as never;
+        }
+      });
+
+      console.log("Sending facility data:", cleanedData);
+      await createFacility(cleanedData as FacilityFormData);
 
       // Log the insert action
-      await logFacilityAction("created", newFacility.name);
+      await logFacilityAction("created", newFacility.facility_name);
 
       setShowInsertForm(false);
-      setNewFacility({ name: "" });
+      setNewFacility({
+        facility_name: "",
+        facility_type: "",
+        floor_level: "",
+        capacity: 0,
+        status: "Available",
+      });
       loadFacilities(false);
     } catch (error) {
       console.error("Error creating facility:", error);
-      alert("Failed to create facility");
+      alert(
+        error instanceof Error
+          ? `Failed to create facility: ${error.message}`
+          : "Failed to create facility"
+      );
     }
   };
 
   const handleCancelInsert = () => {
     setShowInsertForm(false);
-    setNewFacility({ name: "" });
+    setNewFacility({
+      facility_name: "",
+      facility_type: "",
+      floor_level: "",
+      capacity: 0,
+      status: "Available",
+    });
   };
 
   const handleFileSelect = async (
@@ -308,13 +339,15 @@ export default function DashboardFacilitiesPage() {
     setIsProcessing(true);
 
     try {
-      // Filter out rows without names (required field)
+      // Filter out rows without facility_name (required field)
       const validData = importData.filter(
-        (item) => item.name && item.name.trim()
+        (item) => item.facility_name && item.facility_name.trim()
       );
 
       if (validData.length === 0) {
-        alert("No valid facilities found. Make sure each row has a name.");
+        alert(
+          "No valid facilities found. Make sure each row has a facility_name."
+        );
         return;
       }
 
@@ -322,7 +355,7 @@ export default function DashboardFacilitiesPage() {
 
       // Log the import action
       const facilityNames = validData
-        .map((facility) => facility.name)
+        .map((facility) => facility.facility_name)
         .join(", ");
       await logFacilityAction(
         "imported",
@@ -349,7 +382,7 @@ export default function DashboardFacilitiesPage() {
       // Get the names of facilities being deleted for logging
       const facilityNames = facilities
         .filter((facility) => selectedRows.includes(facility.id))
-        .map((facility) => facility.name);
+        .map((facility) => facility.facility_name);
 
       await deleteFacilities(selectedRows);
 
@@ -488,21 +521,21 @@ export default function DashboardFacilitiesPage() {
                 </div>
               </div>
 
+              {showInsertForm && (
+                <AddFacilityForm
+                  facility={newFacility}
+                  onChange={handleNewFacilityChange}
+                  onSave={handleInsertFacility}
+                  onCancel={handleCancelInsert}
+                />
+              )}
+
               {loading ? (
                 <LoadingState />
               ) : facilities.length === 0 ? (
                 <EmptyState />
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                  {showInsertForm && (
-                    <AddFacilityForm
-                      facility={newFacility}
-                      onChange={handleNewFacilityChange}
-                      onSave={handleInsertFacility}
-                      onCancel={handleCancelInsert}
-                    />
-                  )}
-
                   <FacilitiesTable
                     facilities={filteredFacilitiesComputed}
                     selectedRows={selectedRows}

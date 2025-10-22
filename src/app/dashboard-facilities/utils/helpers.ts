@@ -11,12 +11,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface Facility {
   id: number;
-  name: string;
+  facility_name: string;
   connection_type?: string;
   facility_type?: string;
   floor_level?: string;
   cooling_tools?: string;
   building?: string;
+  capacity?: number;
   remarks?: string;
   status?: string;
   created_at?: string;
@@ -24,14 +25,15 @@ export interface Facility {
 }
 
 export interface FacilityFormData {
-  name: string;
+  facility_name: string;
   connection_type?: string;
-  facility_type?: string;
-  floor_level?: string;
+  facility_type: string;
+  floor_level: string;
   cooling_tools?: string;
   building?: string;
+  capacity: number;
+  status: string;
   remarks?: string;
-  status?: string;
 }
 
 // ==================== API Functions ====================
@@ -95,6 +97,18 @@ export async function createFacility(
     const error = await response
       .json()
       .catch(() => ({ detail: "Failed to create facility" }));
+
+    // Handle validation errors (422)
+    if (error.detail && Array.isArray(error.detail)) {
+      const errorMessages = error.detail
+        .map(
+          (err: { loc?: string[]; msg: string }) =>
+            `${err.loc ? err.loc.join(".") : "Field"}: ${err.msg}`
+        )
+        .join("; ");
+      throw new Error(errorMessages);
+    }
+
     throw new Error(error.detail || "Failed to create facility");
   }
 
@@ -238,7 +252,8 @@ export function parseCSVToFacilities(csvText: string): Partial<Facility>[] {
       switch (header.toLowerCase()) {
         case "name":
         case "facility name":
-          facility.name = value;
+        case "facility_name":
+          facility.facility_name = value;
           break;
         case "connection type":
         case "connectiontype":
@@ -260,6 +275,9 @@ export function parseCSVToFacilities(csvText: string): Partial<Facility>[] {
           break;
         case "building":
           facility.building = value;
+          break;
+        case "capacity":
+          facility.capacity = value ? parseInt(value, 10) : 0;
           break;
         case "status":
           facility.status = value;

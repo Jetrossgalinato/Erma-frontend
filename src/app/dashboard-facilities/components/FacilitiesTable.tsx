@@ -95,7 +95,7 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
                 {facility.id}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                {facility.name}
+                {facility.facility_name}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {facility.connection_type || "-"}
