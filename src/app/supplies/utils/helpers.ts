@@ -86,8 +86,9 @@ export function filterSupplies(
 
   return supplies.filter((supply) => {
     const matchesSearch =
-      supply.supply_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supply.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      supply.supply_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supply.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      false;
 
     const matchesCategory =
       selectedCategory === "All Categories" ||
@@ -188,17 +189,40 @@ export async function fetchSuppliesList(): Promise<Supply[]> {
     const data = await response.json();
 
     // Handle both direct array and object with supplies property
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let suppliesArray: any[] = [];
     if (Array.isArray(data)) {
-      return data as Supply[];
+      suppliesArray = data;
+    } else if (
+      data &&
+      typeof data === "object" &&
+      Array.isArray(data.supplies)
+    ) {
+      suppliesArray = data.supplies;
+    } else {
+      console.error("API returned unexpected data format:", data);
+      return [];
     }
 
-    // Check if data has a supplies property that is an array
-    if (data && typeof data === "object" && Array.isArray(data.supplies)) {
-      return data.supplies as Supply[];
-    }
-
-    console.error("API returned unexpected data format:", data);
-    return [];
+    // Map the data to match our interface (handle both formats)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return suppliesArray.map((item: any) => ({
+      supply_id: item.supply_id || item.id,
+      supply_name: item.supply_name || item.name,
+      description: item.description,
+      category: item.category,
+      quantity: item.quantity || 0,
+      stocking_point: item.stocking_point || 0,
+      stock_unit: item.stock_unit,
+      facility_id: item.facility_id || item.facilities?.id,
+      facility_name:
+        item.facility_name ||
+        item.facilities?.facility_name ||
+        item.facilities?.name ||
+        "Unknown",
+      remarks: item.remarks,
+      image_url: item.image_url || item.image,
+    }));
   } catch (error) {
     handleError(error, "fetchSuppliesList");
     return [];
