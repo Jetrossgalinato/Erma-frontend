@@ -174,6 +174,34 @@ export async function updateSupply(
 }
 
 /**
+ * Upload supply image
+ */
+export async function uploadSupplyImage(file: File): Promise<string> {
+  const token = localStorage.getItem("authToken");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/supplies/upload-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to upload image" }));
+    throw new Error(error.detail || "Failed to upload image");
+  }
+
+  const data = await response.json();
+  return data.image_url;
+}
+
+/**
  * Delete multiple supplies
  */
 export async function deleteSupplies(ids: number[]): Promise<void> {

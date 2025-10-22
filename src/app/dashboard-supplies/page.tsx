@@ -24,6 +24,7 @@ import {
   fetchFacilities,
   createSupply,
   updateSupply,
+  uploadSupplyImage,
   deleteSupplies,
   bulkImportSupplies,
   logSupplyAction,
@@ -337,6 +338,19 @@ export default function DashboardSuppliesPage() {
     }
 
     try {
+      let imageUrl = editingSupply.image;
+
+      // Upload new image if selected
+      if (editImageFile) {
+        try {
+          imageUrl = await uploadSupplyImage(editImageFile);
+          console.log("Image uploaded successfully:", imageUrl);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          alert("Failed to upload image. Proceeding without image update.");
+        }
+      }
+
       const supplyData: SupplyFormData = {
         name: editingSupply.name,
         description: editingSupply.description,
@@ -345,28 +359,29 @@ export default function DashboardSuppliesPage() {
         stocking_point: editingSupply.stocking_point,
         stock_unit: editingSupply.stock_unit,
         facility_id: editingSupply.facilities?.id,
-        image: editingSupply.image,
+        image: imageUrl,
         remarks: editingSupply.remarks,
       };
-
-      // TODO: Handle image upload to FastAPI when endpoint is ready
-      // For now, existing image URL is preserved
-      if (editImageFile) {
-        console.warn("Image upload to FastAPI not yet implemented");
-      }
 
       const updatedSupply = await updateSupply(editingSupply.id, supplyData);
 
       // Log the action
-      await logSupplyAction(
-        "update",
-        updatedSupply.name,
-        `Category: ${updatedSupply.category}, Quantity: ${
-          updatedSupply.quantity
-        } ${updatedSupply.stock_unit}, Facility: ${
-          updatedSupply.facilities?.name || "None"
-        }`
-      );
+      try {
+        await logSupplyAction(
+          "update",
+          updatedSupply.name,
+          `Category: ${updatedSupply.category}, Quantity: ${
+            updatedSupply.quantity
+          } ${updatedSupply.stock_unit}, Facility: ${
+            updatedSupply.facilities?.facility_name ||
+            updatedSupply.facilities?.name ||
+            "None"
+          }`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       // Update local state
       setSupplies((prev) =>
@@ -410,6 +425,19 @@ export default function DashboardSuppliesPage() {
     }
 
     try {
+      let imageUrl = newSupply.image;
+
+      // Upload new image if selected
+      if (selectedImageFile) {
+        try {
+          imageUrl = await uploadSupplyImage(selectedImageFile);
+          console.log("Image uploaded successfully:", imageUrl);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          alert("Failed to upload image. Proceeding without image.");
+        }
+      }
+
       const supplyData: SupplyFormData = {
         name: newSupply.name!,
         description: newSupply.description,
@@ -418,23 +446,23 @@ export default function DashboardSuppliesPage() {
         stocking_point: newSupply.stocking_point!,
         stock_unit: newSupply.stock_unit!,
         facility_id: newSupply.facility_id,
-        image: newSupply.image,
+        image: imageUrl,
         remarks: newSupply.remarks,
       };
-
-      // TODO: Handle image upload to FastAPI when endpoint is ready
-      if (selectedImageFile) {
-        console.warn("Image upload to FastAPI not yet implemented");
-      }
 
       const createdSupply = await createSupply(supplyData);
 
       // Log the action
-      await logSupplyAction(
-        "create",
-        createdSupply.name,
-        `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
-      );
+      try {
+        await logSupplyAction(
+          "create",
+          createdSupply.name,
+          `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       setShowInsertForm(false);
       setNewSupply({
@@ -526,11 +554,16 @@ export default function DashboardSuppliesPage() {
       const result = await bulkImportSupplies(validData as SupplyFormData[]);
 
       // Log the import action
-      await logSupplyAction(
-        "import",
-        undefined,
-        `${result.imported} supplies imported, ${result.failed} failed`
-      );
+      try {
+        await logSupplyAction(
+          "import",
+          undefined,
+          `${result.imported} supplies imported, ${result.failed} failed`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       alert(
         `Successfully imported ${result.imported} supplies! ${
@@ -564,11 +597,16 @@ export default function DashboardSuppliesPage() {
       await deleteSupplies(selectedRows);
 
       // Log the action
-      await logSupplyAction(
-        "delete",
-        undefined,
-        `${selectedRows.length} supplies deleted: ${supplyNames}`
-      );
+      try {
+        await logSupplyAction(
+          "delete",
+          undefined,
+          `${selectedRows.length} supplies deleted: ${supplyNames}`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       setSupplies((prev) =>
         prev.filter((supply) => !selectedRows.includes(supply.id))
