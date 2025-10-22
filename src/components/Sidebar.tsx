@@ -1,4 +1,4 @@
-"use client"; // Needed if this is in /app directory
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -14,7 +14,12 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import {
+  fetchSidebarCounts,
+  fetchUserRole,
+  type SidebarCounts,
+} from "./utils/sidebarHelpers";
 
 type SectionKey =
   | "requests"
@@ -111,393 +116,67 @@ const Sidebar: React.FC = () => {
     filamentShield: true,
   });
 
-  const [equipmentCount, setEquipmentCount] = useState<number>(0);
-  const [facilityCount, setFacilityCount] = useState<number>(0);
-  const [requestCount, setRequestCount] = useState<number>(0);
+  const [counts, setCounts] = useState<SidebarCounts>({
+    equipments: 0,
+    facilities: 0,
+    supplies: 0,
+    requests: 0,
+    equipment_logs: 0,
+    facility_logs: 0,
+    supply_logs: 0,
+    account_requests: 0,
+  });
   const [loading, setLoading] = useState<boolean>(true);
-  const supabase = createClientComponentClient();
-  const [supplyCount, setSupplyCount] = useState<number>(0);
-  const [equipmentLogsCount, setEquipmentLogsCount] = useState<number>(0);
-  const [facilityLogsCount, setFacilityLogsCount] = useState<number>(0);
-  const [supplyLogsCount, setSupplyLogsCount] = useState<number>(0);
-  const [accountRequestsCount, setAccountRequestsCount] = useState<number>(0);
-
-  // --- NEW: Approved Account Role State ---
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
+  const { isAuthenticated } = useAuthStore();
 
-  // Fetch current user's approved_acc_role
+  // Fetch user role
   useEffect(() => {
-    const fetchRole = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData?.session?.user;
-      if (!user) {
+    const loadUserRole = async () => {
+      if (!isAuthenticated) {
         setApprovedAccRole(null);
         return;
       }
-      const { data, error } = await supabase
-        .from("account_requests")
-        .select("approved_acc_role")
-        .eq("user_id", user.id)
-        .single();
-      if (error || !data) {
+
+      try {
+        const roleData = await fetchUserRole();
+        setApprovedAccRole(roleData.approved_acc_role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
         setApprovedAccRole(null);
-      } else {
-        setApprovedAccRole(data.approved_acc_role || null);
       }
     };
-    fetchRole();
-  }, [supabase]);
 
-  // All the useEffect hooks for data fetching remain the same...
-  // (I'm keeping the existing logic as it's working properly)
+    loadUserRole();
+  }, [isAuthenticated]);
 
-  // Fetch equipment count from Supabase
+  // Fetch all sidebar counts
   useEffect(() => {
-    const fetchEquipmentCount = async () => {
+    const loadCounts = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const { count, error } = await supabase
-          .from("equipments")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching equipment count:", error);
-          setEquipmentCount(0);
-        } else {
-          setEquipmentCount(count || 0);
-        }
+        const countsData = await fetchSidebarCounts();
+        setCounts(countsData);
       } catch (error) {
-        console.error("Error fetching equipment count:", error);
-        setEquipmentCount(0);
+        console.error("Error fetching sidebar counts:", error);
+        // Keep existing counts on error
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEquipmentCount();
+    loadCounts();
 
-    const subscription = supabase
-      .channel("equipments_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "equipments",
-        },
-        () => {
-          fetchEquipmentCount();
-        }
-      )
-      .subscribe();
+    // Refresh counts every 30 seconds
+    const interval = setInterval(loadCounts, 30000);
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchFacilityCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("facilities")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching facility count:", error);
-          setFacilityCount(0);
-        } else {
-          setFacilityCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching facility count:", error);
-        setFacilityCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFacilityCount();
-
-    const subscription = supabase
-      .channel("facilities_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "facilities",
-        },
-        () => {
-          fetchFacilityCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchRequestCount = async () => {
-      try {
-        const tables = ["borrowing", "booking", "acquiring"];
-        let total = 0;
-
-        for (const table of tables) {
-          const { count, error } = await supabase
-            .from(table)
-            .select("*", { count: "exact", head: true });
-
-          if (!error) total += count || 0;
-        }
-
-        setRequestCount(total);
-      } catch (error) {
-        console.error("Error fetching request count:", error);
-        setRequestCount(0);
-      }
-    };
-
-    fetchRequestCount();
-
-    const channels = ["borrowing", "booking", "acquiring"].map((table) =>
-      supabase
-        .channel(`${table}_changes`)
-        .on("postgres_changes", { event: "*", schema: "public", table }, () => {
-          fetchRequestCount();
-        })
-        .subscribe()
-    );
-
-    return () => {
-      channels.forEach((ch) => ch.unsubscribe());
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchSupplyCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("supplies")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching supply count:", error);
-          setSupplyCount(0);
-        } else {
-          setSupplyCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching supply count:", error);
-        setSupplyCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSupplyCount();
-
-    const subscription = supabase
-      .channel("supplies_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "supplies",
-        },
-        () => {
-          fetchSupplyCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchEquipmentLogsCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("equipment_logs")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching equipment logs count:", error);
-          setEquipmentLogsCount(0);
-        } else {
-          setEquipmentLogsCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching equipment logs count:", error);
-        setEquipmentLogsCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEquipmentLogsCount();
-
-    const subscription = supabase
-      .channel("equipment_logs_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "equipment_logs",
-        },
-        () => {
-          fetchEquipmentLogsCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchFacilityLogsCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("facility_logs")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching facility logs count:", error);
-          setFacilityLogsCount(0);
-        } else {
-          setFacilityLogsCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching facility logs count:", error);
-        setFacilityLogsCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFacilityLogsCount();
-
-    const subscription = supabase
-      .channel("facility_logs_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "facility_logs",
-        },
-        () => {
-          fetchFacilityLogsCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchSupplyLogsCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("supply_logs")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching supply logs count:", error);
-          setSupplyLogsCount(0);
-        } else {
-          setSupplyLogsCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching supply logs count:", error);
-        setSupplyLogsCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSupplyLogsCount();
-
-    const subscription = supabase
-      .channel("supply_logs_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "supply_logs",
-        },
-        () => {
-          fetchSupplyLogsCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    const fetchAccountRequestsCount = async () => {
-      try {
-        setLoading(true);
-        const { count, error } = await supabase
-          .from("account_requests")
-          .select("*", { count: "exact", head: true })
-          .is("is_intern", null)
-          .is("is_supervisor", null);
-
-        if (error) {
-          console.error("Error fetching account requests count:", error);
-          setAccountRequestsCount(0);
-        } else {
-          setAccountRequestsCount(count || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching account requests count:", error);
-        setAccountRequestsCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAccountRequestsCount();
-
-    const subscription = supabase
-      .channel("account_requests_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "account_requests",
-        },
-        () => {
-          fetchAccountRequestsCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const toggleSection = (section: SectionKey) => {
     setExpandedSections((prev) => ({
@@ -511,19 +190,19 @@ const Sidebar: React.FC = () => {
     {
       icon: Monitor,
       label: "Equipments",
-      count: loading ? null : equipmentCount,
+      count: loading ? null : counts.equipments,
       path: "/dashboard-equipment",
     },
     {
       icon: Building,
       label: "Facilities",
-      count: loading ? null : facilityCount,
+      count: loading ? null : counts.facilities,
       path: "/dashboard-facilities",
     },
     {
       icon: Package,
       label: "Supplies",
-      count: loading ? null : supplyCount,
+      count: loading ? null : counts.supplies,
       path: "/dashboard-supplies",
     },
   ];
@@ -532,7 +211,7 @@ const Sidebar: React.FC = () => {
     {
       icon: FileText,
       label: "Request List",
-      count: loading ? null : requestCount,
+      count: loading ? null : counts.requests,
       path: "/dashboard-request",
     },
   ];
@@ -541,19 +220,19 @@ const Sidebar: React.FC = () => {
     {
       icon: Monitor,
       label: "Equipment Logs",
-      count: loading ? null : equipmentLogsCount,
+      count: loading ? null : counts.equipment_logs,
       path: "/monitor-equipment",
     },
     {
       icon: Building,
       label: "Facility Logs",
-      count: loading ? null : facilityLogsCount,
+      count: loading ? null : counts.facility_logs,
       path: "/monitor-facilities",
     },
     {
       icon: Activity,
       label: "Supply Logs",
-      count: loading ? null : supplyLogsCount,
+      count: loading ? null : counts.supply_logs,
       path: "/monitor-supplies",
     },
   ];
@@ -562,7 +241,7 @@ const Sidebar: React.FC = () => {
     {
       icon: Users,
       label: "Users",
-      count: loading ? null : accountRequestsCount,
+      count: loading ? null : counts.account_requests,
       path: "/dashboard-users",
     },
   ];
