@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store";
 
 export default function Home() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    // Check if user is authenticated via localStorage
-    const token = localStorage.getItem("authToken");
-    setIsAuthenticated(!!token);
-    setAuthChecked(true);
-  }, []);
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   const handleGetStarted = () => {
     router.push("/login");
@@ -59,7 +52,7 @@ export default function Home() {
                   facility and supply requests with ease.
                 </p>
 
-                {authChecked && !isAuthenticated && (
+                {!isLoading && !isAuthenticated && (
                   <div>
                     <button
                       onClick={handleGetStarted}
@@ -82,7 +75,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {authChecked && isAuthenticated && (
+                {!isLoading && isAuthenticated && (
                   <div>
                     <button
                       onClick={handleMyRequests}

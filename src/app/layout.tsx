@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import SessionTimeoutProvider from "@/components/SessionTimeoutProvider";
+import { StoreInitializer } from "@/components/StoreInitializer";
 
 const poppins = localFont({
   src: [
@@ -112,7 +113,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} font-sans antialiased`}>
-        <SessionTimeoutProvider>{children}</SessionTimeoutProvider>
+        <StoreInitializer>
+          <SessionTimeoutProvider>{children}</SessionTimeoutProvider>
+        </StoreInitializer>
       </body>
     </html>
   );
