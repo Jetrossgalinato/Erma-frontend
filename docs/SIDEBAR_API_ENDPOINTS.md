@@ -20,9 +20,11 @@ Authorization: Bearer <token>
 
 ## Required Endpoints for Sidebar Component
 
+## API Endpoints
+
 ### 1. Get Sidebar Counts
 
-**Endpoint:** `GET /sidebar/counts`
+**Endpoint:** `GET /api/sidebar/counts`
 
 **Description:** Fetches all counts for sidebar menu items in a single request for optimal performance.
 
@@ -41,10 +43,10 @@ Content-Type: application/json
   "facilities": 25,
   "supplies": 320,
   "requests": 45,
-  "equipment_logs": 1250,
-  "facility_logs": 780,
-  "supply_logs": 950,
-  "account_requests": 12
+  "equipment_logs": 45,
+  "facility_logs": 32,
+  "supply_logs": 28,
+  "users": 8
 }
 ```
 
@@ -87,7 +89,7 @@ SELECT
 
 ### 2. Get User Role
 
-**Endpoint:** `GET /users/me/role`
+**Endpoint:** `GET /api/users/me/role`
 
 **Description:** Fetches the current authenticated user's approved account role to determine sidebar menu visibility (e.g., Staff users should not see Requests and User Management sections).
 

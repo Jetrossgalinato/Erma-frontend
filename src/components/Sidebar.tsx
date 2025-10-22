@@ -124,7 +124,7 @@ const Sidebar: React.FC = () => {
     equipment_logs: 0,
     facility_logs: 0,
     supply_logs: 0,
-    account_requests: 0,
+    users: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
@@ -241,7 +241,7 @@ const Sidebar: React.FC = () => {
     {
       icon: Users,
       label: "Users",
-      count: loading ? null : counts.account_requests,
+      count: loading ? null : counts.users,
       path: "/dashboard-users",
     },
   ];

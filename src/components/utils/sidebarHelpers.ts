@@ -17,7 +17,7 @@ export interface SidebarCounts {
   equipment_logs: number;
   facility_logs: number;
   supply_logs: number;
-  account_requests: number;
+  users: number;
 }
 
 export interface UserRole {
@@ -32,7 +32,7 @@ export interface UserRole {
 export async function fetchSidebarCounts(): Promise<SidebarCounts> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/sidebar/counts`, {
+  const response = await fetch(`${API_BASE_URL}/api/sidebar/counts`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -55,7 +55,7 @@ export async function fetchSidebarCounts(): Promise<SidebarCounts> {
 export async function fetchUserRole(): Promise<UserRole> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/users/me/role`, {
+  const response = await fetch(`${API_BASE_URL}/api/users/me/role`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
