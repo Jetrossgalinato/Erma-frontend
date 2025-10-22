@@ -51,7 +51,6 @@ export default function DashboardFacilitiesPage() {
     facility_name: "",
     facility_type: "",
     floor_level: "",
-    capacity: 0,
     status: "Available",
   });
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -195,7 +194,15 @@ export default function DashboardFacilitiesPage() {
     >
   ) => {
     const { name, value } = e.target;
-    setEditingFacility((prev) => (prev ? { ...prev, [name]: value } : null));
+
+    // Convert capacity to number
+    if (name === "capacity") {
+      setEditingFacility((prev) =>
+        prev ? { ...prev, [name]: value ? parseInt(value, 10) : 0 } : null
+      );
+    } else {
+      setEditingFacility((prev) => (prev ? { ...prev, [name]: value } : null));
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -214,7 +221,7 @@ export default function DashboardFacilitiesPage() {
         floor_level: editingFacility.floor_level,
         cooling_tools: editingFacility.cooling_tools,
         building: editingFacility.building,
-        capacity: editingFacility.capacity || 0,
+        capacity: editingFacility.capacity,
         status: editingFacility.status || "Available",
         remarks: editingFacility.remarks,
       });
@@ -249,7 +256,16 @@ export default function DashboardFacilitiesPage() {
     >
   ) => {
     const { name, value } = e.target;
-    setNewFacility((prev) => ({ ...prev, [name]: value }));
+
+    // Convert capacity to number
+    if (name === "capacity") {
+      setNewFacility((prev) => ({
+        ...prev,
+        [name]: value ? parseInt(value, 10) : 0,
+      }));
+    } else {
+      setNewFacility((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleInsertFacility = async () => {
@@ -279,7 +295,6 @@ export default function DashboardFacilitiesPage() {
         facility_name: "",
         facility_type: "",
         floor_level: "",
-        capacity: 0,
         status: "Available",
       });
       loadFacilities(false);
@@ -299,7 +314,6 @@ export default function DashboardFacilitiesPage() {
       facility_name: "",
       facility_type: "",
       floor_level: "",
-      capacity: 0,
       status: "Available",
     });
   };

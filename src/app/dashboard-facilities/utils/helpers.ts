@@ -11,6 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface Facility {
   id: number;
+  facility_id?: number;
   facility_name: string;
   connection_type?: string;
   facility_type?: string;
@@ -19,7 +20,9 @@ export interface Facility {
   building?: string;
   capacity?: number;
   remarks?: string;
+  description?: string;
   status?: string;
+  image_url?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -31,7 +34,7 @@ export interface FacilityFormData {
   floor_level: string;
   cooling_tools?: string;
   building?: string;
-  capacity: number;
+  capacity?: number;
   status: string;
   remarks?: string;
 }
@@ -47,7 +50,6 @@ export async function fetchFacilities(): Promise<Facility[]> {
   const response = await fetch(`${API_BASE_URL}/api/facilities`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
   });
@@ -60,20 +62,21 @@ export async function fetchFacilities(): Promise<Facility[]> {
   }
 
   const data = await response.json();
+  console.log("Raw facilities response:", data);
+  console.log("Is array?", Array.isArray(data));
+  console.log("Has facilities property?", data.facilities);
 
-  // Ensure we always return an array
-  if (Array.isArray(data)) {
-    return data;
-  }
+  // Handle if backend returns an object with a facilities array
+  const facilitiesArray = Array.isArray(data) ? data : data.facilities || [];
 
-  // If the response is an object with a facilities property
-  if (data && Array.isArray(data.facilities)) {
-    return data.facilities;
-  }
+  console.log("Facilities array:", facilitiesArray);
+  console.log("First facility:", facilitiesArray[0]);
 
-  // Default to empty array if unexpected format
-  console.error("Unexpected facilities API response format:", data);
-  return [];
+  // Map facility_id to id if needed
+  return facilitiesArray.map((facility: Facility) => ({
+    ...facility,
+    id: facility.id || facility.facility_id || 0,
+  }));
 }
 
 /**
@@ -201,25 +204,29 @@ export async function logFacilityAction(
   facilityName?: string,
   additionalInfo?: string
 ): Promise<void> {
-  const token = localStorage.getItem("authToken");
+  try {
+    const token = localStorage.getItem("authToken");
 
-  const logMessage = additionalInfo
-    ? `${action}${
-        facilityName ? ` facility "${facilityName}"` : ""
-      }. ${additionalInfo}`
-    : `${action}${facilityName ? ` facility "${facilityName}"` : ""}`;
+    const logMessage = additionalInfo
+      ? `${action}${
+          facilityName ? ` facility "${facilityName}"` : ""
+        }. ${additionalInfo}`
+      : `${action}${facilityName ? ` facility "${facilityName}"` : ""}`;
 
-  const response = await fetch(`${API_BASE_URL}/api/facility-logs`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ log_message: logMessage }),
-  });
+    const response = await fetch(`${API_BASE_URL}/api/facility-logs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ log_message: logMessage }),
+    });
 
-  if (!response.ok) {
-    console.error("Failed to log facility action");
+    if (!response.ok) {
+      console.warn("Failed to log facility action:", response.status);
+    }
+  } catch (error) {
+    console.warn("Error logging facility action:", error);
   }
 }
 
