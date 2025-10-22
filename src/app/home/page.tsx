@@ -44,10 +44,10 @@ export default function Home() {
               {/* Reduced md:space-y-10 to md:space-y-8 */}
               <div className="space-y-4 md:space-y-5">
                 {/* Reduced md:space-y-6 to md:space-y-5 */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold text-gray-800 leading-tight">
                   Welcome to <span className="text-orange-500">CRMS</span>
                 </h1>
-                <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
+                <h1 className="text-xl md:text-3xl lg:text-4xl font-medium text-gray-800 leading-tight mt-4">
                   CCIS Resource Management System
                 </h1>
               </div>
