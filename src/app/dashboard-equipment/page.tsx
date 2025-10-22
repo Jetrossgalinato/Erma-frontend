@@ -13,6 +13,7 @@ import InsertEquipmentForm from "./components/insertEquipmentForm";
 import PageHeader from "./components/pageHeader";
 import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
+import EmptyState from "./components/emptyState";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import {
@@ -656,11 +657,7 @@ export default function DashboardEquipmentPage() {
                   </button>
                 </div>
               ) : equipments.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 dark:text-gray-500 text-lg">
-                    No equipments found.
-                  </div>
-                </div>
+                <EmptyState />
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
                   <InsertEquipmentForm
