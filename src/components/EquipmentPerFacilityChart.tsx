@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import { fetchEquipmentPerFacility } from "@/app/dashboard/utils/helpers";
 import {
   BarChart,
   Bar,
@@ -19,11 +20,11 @@ interface FacilityEquipmentData {
 }
 
 export default function EquipmentCountPerFacilityChart() {
+  const { isAuthenticated } = useAuthStore();
   const [data, setData] = useState<FacilityEquipmentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const supabase = createClientComponentClient();
 
   // Check for dark mode
   useEffect(() => {
@@ -45,50 +46,52 @@ export default function EquipmentCountPerFacilityChart() {
   }, []);
 
   useEffect(() => {
-    const fetchEquipmentCounts = async () => {
-      const { data: facilities, error: facilitiesError } = await supabase
-        .from("facilities")
-        .select("id, name");
-
-      if (facilitiesError) {
-        console.error("Error fetching facilities:", facilitiesError);
+    const loadFacilityData = async () => {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
-      const { data: equipment, error: equipmentError } = await supabase
-        .from("equipments")
-        .select("facility_id");
+      try {
+        setLoading(true);
+        setError(null);
+        const facilityData = await fetchEquipmentPerFacility();
 
-      if (equipmentError) {
-        console.error("Error fetching equipment:", equipmentError);
+        const formattedData: FacilityEquipmentData[] = facilityData.map(
+          (item) => ({
+            facility: item.facility_name || "Unnamed Facility",
+            count: item.equipment_count,
+          })
+        );
+
+        setData(formattedData);
+      } catch (err) {
+        console.error("Error fetching equipment per facility:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load facility data"
+        );
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const equipmentCount: Record<number, number> = {};
-      equipment.forEach((item) => {
-        equipmentCount[item.facility_id] =
-          (equipmentCount[item.facility_id] || 0) + 1;
-      });
-
-      const formattedData: FacilityEquipmentData[] = facilities.map((fac) => ({
-        facility: fac.name.trim() || "Unnamed Facility",
-        count: equipmentCount[fac.id] || 0,
-      }));
-
-      setData(formattedData);
-      setLoading(false);
     };
 
-    fetchEquipmentCounts();
-  }, [supabase]);
+    loadFacilityData();
+  }, [isAuthenticated]);
 
   if (loading)
     return (
-      <p className="text-gray-500 dark:text-gray-400 italic">
-        Loading equipment count chart...
-      </p>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          Loading facility chart...
+        </p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      </div>
     );
 
   const maxCount = Math.max(...data.map((d) => d.count), 1); // avoid divide by zero

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import { fetchEquipmentByStatus } from "@/app/dashboard/utils/helpers";
 import {
   BarChart,
   Bar,
@@ -19,11 +20,11 @@ interface EquipmentStatusData {
 }
 
 export default function EquipmentStatusChart() {
+  const { isAuthenticated } = useAuthStore();
   const [data, setData] = useState<EquipmentStatusData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const supabase = createClientComponentClient();
 
   // Check for dark mode
   useEffect(() => {
@@ -45,50 +46,44 @@ export default function EquipmentStatusChart() {
   }, []);
 
   useEffect(() => {
-    const fetchStatusCounts = async () => {
-      const { data: statuses, error } = await supabase
-        .from("equipments")
-        .select("status");
-
-      if (error) {
-        console.error("Error fetching equipment statuses:", error);
+    const loadStatusData = async () => {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
-      const statusCount: Record<string, number> = {
-        Working: 0,
-        "In Use": 0,
-        "For Repair": 0,
-      };
-
-      statuses.forEach((item) => {
-        const stat =
-          item.status && statusCount[item.status] !== undefined
-            ? item.status
-            : "Working"; // default if unknown
-        statusCount[stat] = (statusCount[stat] || 0) + 1;
-      });
-
-      const formattedData = Object.entries(statusCount).map(
-        ([status, count]) => ({
-          status,
-          count,
-        })
-      );
-
-      setData(formattedData);
-      setLoading(false);
+      try {
+        setLoading(true);
+        setError(null);
+        const statusData = await fetchEquipmentByStatus();
+        setData(statusData);
+      } catch (err) {
+        console.error("Error fetching equipment statuses:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load status data"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchStatusCounts();
-  }, [supabase]);
+    loadStatusData();
+  }, [isAuthenticated]);
 
   if (loading)
     return (
-      <p className="text-gray-500 dark:text-gray-400 italic">
-        Loading status chart...
-      </p>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          Loading status chart...
+        </p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      </div>
     );
 
   // Define colors for each status

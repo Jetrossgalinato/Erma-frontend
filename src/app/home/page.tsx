@@ -1,22 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store";
 
 export default function Home() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    // Check if user is authenticated via localStorage
-    const token = localStorage.getItem("authToken");
-    setIsAuthenticated(!!token);
-    setAuthChecked(true);
-  }, []);
+  const { isAuthenticated, isLoading } = useAuthStore();
 
   const handleGetStarted = () => {
     router.push("/login");
@@ -44,10 +36,10 @@ export default function Home() {
               {/* Reduced md:space-y-10 to md:space-y-8 */}
               <div className="space-y-4 md:space-y-5">
                 {/* Reduced md:space-y-6 to md:space-y-5 */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold text-gray-800 leading-tight">
                   Welcome to <span className="text-orange-500">CRMS</span>
                 </h1>
-                <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-800 leading-tight mt-4">
+                <h1 className="text-xl md:text-3xl lg:text-4xl font-medium text-gray-800 leading-tight mt-4">
                   CCIS Resource Management System
                 </h1>
               </div>
@@ -59,7 +51,7 @@ export default function Home() {
                   facility and supply requests with ease.
                 </p>
 
-                {authChecked && !isAuthenticated && (
+                {!isLoading && !isAuthenticated && (
                   <div>
                     <button
                       onClick={handleGetStarted}
@@ -82,7 +74,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {authChecked && isAuthenticated && (
+                {!isLoading && isAuthenticated && (
                   <div>
                     <button
                       onClick={handleMyRequests}

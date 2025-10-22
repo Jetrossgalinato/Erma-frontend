@@ -1,4 +1,14 @@
-// Type definitions
+/**
+ * Dashboard Equipment Page - API Utilities and Helpers
+ *
+ * This file contains all API functions, types, and utility functions
+ * for the dashboard-equipment page using FastAPI backend.
+ */
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// ==================== Types ====================
+
 export type Equipment = {
   id: number;
   po_number?: string;
@@ -29,6 +39,217 @@ export type Facility = {
   id: number;
   name: string;
 };
+
+// ==================== API Functions ====================
+
+/**
+ * Fetch all equipments from FastAPI backend
+ */
+export async function fetchEquipments(): Promise<Equipment[]> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipments`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to fetch equipments" }));
+    throw new Error(error.detail || "Failed to fetch equipments");
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch all facilities from FastAPI backend
+ */
+export async function fetchFacilities(): Promise<Facility[]> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/facilities`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to fetch facilities" }));
+    throw new Error(error.detail || "Failed to fetch facilities");
+  }
+
+  return response.json();
+}
+
+/**
+ * Create a new equipment
+ */
+export async function createEquipment(
+  equipment: Partial<Equipment>
+): Promise<Equipment> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipments`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(equipment),
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to create equipment" }));
+    throw new Error(error.detail || "Failed to create equipment");
+  }
+
+  return response.json();
+}
+
+/**
+ * Update an existing equipment
+ */
+export async function updateEquipment(
+  id: number,
+  equipment: Partial<Equipment>
+): Promise<Equipment> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(equipment),
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to update equipment" }));
+    throw new Error(error.detail || "Failed to update equipment");
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete equipments by IDs
+ */
+export async function deleteEquipments(ids: number[]): Promise<void> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipments/bulk-delete`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to delete equipments" }));
+    throw new Error(error.detail || "Failed to delete equipments");
+  }
+}
+
+/**
+ * Upload equipment image to storage
+ */
+export async function uploadEquipmentImage(file: File): Promise<string> {
+  const token = localStorage.getItem("authToken");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/equipments/upload-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to upload image" }));
+    throw new Error(error.detail || "Failed to upload image");
+  }
+
+  const data = await response.json();
+  return data.image_url;
+}
+
+/**
+ * Bulk import equipments
+ */
+export async function bulkImportEquipments(
+  equipments: Partial<Equipment>[]
+): Promise<{ imported: number; failed: number }> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipments/bulk-import`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ equipments }),
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to import equipments" }));
+    throw new Error(error.detail || "Failed to import equipments");
+  }
+
+  return response.json();
+}
+
+/**
+ * Log equipment action
+ */
+export async function logEquipmentAction(
+  action: string,
+  equipmentName?: string,
+  details?: string
+): Promise<void> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(`${API_BASE_URL}/equipment-logs`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action,
+      equipment_name: equipmentName,
+      details,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Failed to log equipment action");
+  }
+}
+
+// ==================== Helper Functions ====================
 
 // Image validation and processing helpers
 export const validateImageFile = (file: File): string | null => {

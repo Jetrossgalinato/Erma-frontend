@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
 import {
@@ -18,22 +19,28 @@ import {
   paginateFacilities,
   calculateTotalPages,
   fetchFacilitiesList,
-  checkUserAuthentication,
   createBookingRequest,
 } from "./utils/helpers";
 
 export default function FacilitiesPage() {
+  // Use stores for auth and UI state
+  const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const searchTerm = useUIStore((state) => state.searchTerms.facilities || "");
+  const setSearchTerm = useUIStore((state) => state.setSearchTerm);
+  const currentPage = useUIStore(
+    (state) => state.pagination.facilities?.currentPage || 1
+  );
+  const setCurrentPage = useUIStore((state) => state.setCurrentPage);
+
+  // Local state for facilities data (due to type conflicts)
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  // Local UI state
   const [showModal, setShowModal] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(
     null
   );
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userLoading, setUserLoading] = useState(true);
 
   // booking modal state
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -44,7 +51,6 @@ export default function FacilitiesPage() {
   });
   const [bookingLoading, setBookingLoading] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedFacilityType, setSelectedFacilityType] =
     useState("All Facility Types");
   const [selectedFloorLevel, setSelectedFloorLevel] =
@@ -52,16 +58,6 @@ export default function FacilitiesPage() {
   const [selectedStatus, setSelectedStatus] = useState<
     FacilityStatus | "All Statuses"
   >("All Statuses");
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await checkUserAuthentication();
-      setIsAuthenticated(authenticated);
-      setUserLoading(false);
-    };
-
-    checkAuth();
-  }, []);
 
   // Fetch data from FastAPI
   const fetchFacilities = useCallback(async () => {
@@ -126,8 +122,14 @@ export default function FacilitiesPage() {
   }, [filteredFacilities, currentPage]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedFacilityType, selectedFloorLevel, selectedStatus]);
+    setCurrentPage("facilities", 1);
+  }, [
+    searchTerm,
+    selectedFacilityType,
+    selectedFloorLevel,
+    selectedStatus,
+    setCurrentPage,
+  ]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -168,7 +170,7 @@ export default function FacilitiesPage() {
                   type="text"
                   placeholder="Search facilities..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchTerm("facilities", e.target.value)}
                   className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
@@ -340,7 +342,7 @@ export default function FacilitiesPage() {
                   }).map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentPage(i + 1)}
+                      onClick={() => setCurrentPage("facilities", i + 1)}
                       className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
                         currentPage === i + 1
                           ? "bg-orange-600 text-white"

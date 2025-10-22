@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import EquipmentsTable from "./components/equipmentsTable";
@@ -11,11 +13,8 @@ import InsertEquipmentForm from "./components/insertEquipmentForm";
 import PageHeader from "./components/pageHeader";
 import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Loader2, RefreshCw } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   type Equipment,
   type Facility,
@@ -26,6 +25,14 @@ import {
   parseCSVToEquipment,
   validateEquipmentName,
   validateCSVFile,
+  fetchEquipments,
+  fetchFacilities,
+  createEquipment,
+  updateEquipment,
+  deleteEquipments,
+  uploadEquipmentImage,
+  bulkImportEquipments,
+  logEquipmentAction,
 } from "./utils/helpers";
 
 // Define the shape of one row from your equipments table
@@ -77,97 +84,18 @@ export default function DashboardEquipmentPage() {
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
     name: "",
   });
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClientComponentClient();
-
-  const [currentUser, setCurrentUser] = useState<{
-    id: string;
-    email: string;
-    full_name?: string;
-  } | null>(null);
-
-  const [, setUser] = useState<SupabaseUser | null>(null);
-  const [, setAuthLoading] = useState(true);
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
 
+  // Authentication check
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Auth error:", error);
-          router.push("/login");
-          return;
-        }
-
-        if (!session?.user) {
-          router.push("/login");
-          return;
-        }
-
-        setUser(session.user);
-        setCurrentUser({
-          id: session.user.id,
-          email: session.user.email || "",
-          full_name:
-            session.user.user_metadata?.full_name || session.user.email,
-        });
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        router.push("/login");
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT" || !session) {
-        router.push("/login");
-      } else if (session?.user) {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router, supabase]);
-
-  const logEquipmentAction = async (
-    action: string,
-    equipmentName?: string,
-    details?: string
-  ) => {
-    if (!currentUser) return;
-
-    const logMessage = equipmentName
-      ? `${
-          currentUser.full_name || currentUser.email
-        } ${action} equipment: ${equipmentName}${
-          details ? ` - ${details}` : ""
-        }`
-      : `${currentUser.full_name || currentUser.email} ${action}${
-          details ? ` - ${details}` : ""
-        }`;
-
-    try {
-      await supabase.from("equipment_logs").insert([
-        {
-          log_message: logMessage,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Error logging equipment action:", error);
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
     }
-  };
+  }, [authLoading, isAuthenticated, router]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -221,24 +149,18 @@ export default function DashboardEquipmentPage() {
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
 
-    const { error } = await supabase
-      .from("equipments")
-      .delete()
-      .in("id", selectedRows);
-
-    if (error) {
-      console.error("Error deleting equipments:", error);
-      alert("Failed to delete selected equipments");
-    } else {
+    try {
       const deletedNames = equipments
         .filter((eq) => selectedRows.includes(eq.id))
         .map((eq) => eq.name)
         .join(", ");
 
+      await deleteEquipments(selectedRows);
+
       await logEquipmentAction(
-        `deleted ${selectedRows.length} equipment(s)`,
+        "deleted",
         undefined,
-        `Items: ${deletedNames}`
+        `Deleted ${selectedRows.length} equipment(s): ${deletedNames}`
       );
 
       setEquipments((prev) =>
@@ -246,6 +168,13 @@ export default function DashboardEquipmentPage() {
       );
       setSelectedRows([]);
       console.log(`Successfully deleted ${selectedRows.length} rows.`);
+    } catch (err) {
+      console.error("Error deleting equipments:", err);
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete selected equipments"
+      );
     }
 
     setShowDeleteModal(false);
@@ -257,54 +186,54 @@ export default function DashboardEquipmentPage() {
     );
   };
 
-  const fetchEquipments = useCallback(
+  const loadEquipments = useCallback(
     async (showAnimation = false) => {
+      if (!isAuthenticated) return;
+
       if (showAnimation) {
         setIsRefreshing(true);
       } else {
         setLoading(true);
       }
 
-      const { data, error } = await supabase
-        .from("equipments")
-        .select("*")
-        .order("id", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching equipments:", error);
-      } else {
-        setEquipments(data as Equipment[]);
-      }
-
-      if (showAnimation) {
-        setTimeout(() => {
-          setIsRefreshing(false);
-        }, 500);
-      } else {
-        setLoading(false);
+      try {
+        const data = await fetchEquipments();
+        setEquipments(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching equipments:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch equipments"
+        );
+      } finally {
+        if (showAnimation) {
+          setTimeout(() => {
+            setIsRefreshing(false);
+          }, 500);
+        } else {
+          setLoading(false);
+        }
       }
     },
-    [supabase]
+    [isAuthenticated]
   );
 
-  const fetchFacilities = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("facilities")
-      .select("id, name")
-      .order("name", { ascending: true });
+  const loadFacilities = useCallback(async () => {
+    if (!isAuthenticated) return;
 
-    if (error) {
-      console.error("Error fetching facilities:", error);
-    } else {
-      setFacilities(data as Facility[]);
+    try {
+      const data = await fetchFacilities();
+      setFacilities(data);
+    } catch (err) {
+      console.error("Error fetching facilities:", err);
     }
-  }, [supabase]);
+  }, [isAuthenticated]);
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
-      fetchEquipments(true);
+      loadEquipments(true);
     }
-  }, [isRefreshing, fetchEquipments]);
+  }, [isRefreshing, loadEquipments]);
 
   const handleInsertEquipment = async () => {
     if (!validateEquipmentName(newEquipment.name)) {
@@ -316,53 +245,34 @@ export default function DashboardEquipmentPage() {
 
     if (selectedImageFile) {
       try {
-        const fileExt = selectedImageFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("equipment-images")
-          .upload(fileName, selectedImageFile);
-
-        if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          alert(
-            `Failed to upload image: ${uploadError.message}. Equipment will be created without image.`
-          );
-        } else {
-          const { data: urlData } = supabase.storage
-            .from("equipment-images")
-            .getPublicUrl(fileName);
-
-          imageUrl = urlData.publicUrl;
-        }
+        imageUrl = await uploadEquipmentImage(selectedImageFile);
       } catch (error) {
-        console.error("Error processing image:", error);
+        console.error("Error uploading image:", error);
         alert(
-          "Failed to process image. Equipment will be created without image."
+          error instanceof Error
+            ? `Failed to upload image: ${error.message}. Equipment will be created without image.`
+            : "Failed to upload image. Equipment will be created without image."
         );
       }
     }
 
-    const { error } = await supabase.from("equipments").insert([
-      {
+    try {
+      await createEquipment({
         ...newEquipment,
-        image: imageUrl,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ]);
+        image: imageUrl || undefined,
+      });
 
-    if (error) {
-      console.error("Error inserting equipment:", error);
-      alert("Failed to insert equipment");
-    } else {
       await logEquipmentAction("added", newEquipment.name);
+
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
       clearImageSelection();
-      fetchEquipments(false);
+      loadEquipments(false);
+    } catch (error) {
+      console.error("Error inserting equipment:", error);
+      alert(
+        error instanceof Error ? error.message : "Failed to insert equipment"
+      );
     }
   };
 
@@ -499,35 +409,31 @@ export default function DashboardEquipmentPage() {
         return;
       }
 
-      const equipmentWithTimestamps = validData.map((equipment) => ({
-        ...equipment,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
+      const result = await bulkImportEquipments(validData);
 
-      const { error } = await supabase
-        .from("equipments")
-        .insert(equipmentWithTimestamps);
+      await logEquipmentAction(
+        "imported",
+        undefined,
+        `Imported ${result.imported} equipment(s) from CSV file: ${selectedFile?.name}`
+      );
 
-      if (error) {
-        console.error("Error importing equipment:", error);
-        alert("Failed to import equipment. Please try again.");
-      } else {
-        await logEquipmentAction(
-          `imported ${validData.length} equipment(s) from CSV`,
-          undefined,
-          `File: ${selectedFile?.name}`
-        );
+      alert(
+        `Successfully imported ${result.imported} equipment records!${
+          result.failed > 0 ? ` ${result.failed} failed.` : ""
+        }`
+      );
 
-        alert(`Successfully imported ${validData.length} equipment records!`);
-        setShowImportModal(false);
-        setSelectedFile(null);
-        setImportData([]);
-        fetchEquipments(false);
-      }
+      setShowImportModal(false);
+      setSelectedFile(null);
+      setImportData([]);
+      loadEquipments(false);
     } catch (error) {
       console.error("Error importing data:", error);
-      alert("An error occurred while importing data.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while importing data."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -562,49 +468,24 @@ export default function DashboardEquipmentPage() {
 
     if (editImageFile) {
       try {
-        const fileExt = editImageFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("equipment-images")
-          .upload(fileName, editImageFile);
-
-        if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          alert(
-            `Failed to upload image: ${uploadError.message}. Equipment will be updated without new image.`
-          );
-        } else {
-          const { data: urlData } = supabase.storage
-            .from("equipment-images")
-            .getPublicUrl(fileName);
-
-          updatedEquipment.image = urlData.publicUrl;
-        }
+        const imageUrl = await uploadEquipmentImage(editImageFile);
+        updatedEquipment.image = imageUrl;
       } catch (error) {
-        console.error("Error processing image:", error);
+        console.error("Error uploading image:", error);
         alert(
-          "Failed to process image. Equipment will be updated without new image."
+          error instanceof Error
+            ? `Failed to upload image: ${error.message}. Equipment will be updated without new image.`
+            : "Failed to upload image. Equipment will be updated without new image."
         );
       }
     }
 
-    const { id, ...updates } = updatedEquipment;
-    const { error } = await supabase
-      .from("equipments")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+    try {
+      const { id, ...updates } = updatedEquipment;
+      await updateEquipment(id, updates);
 
-    if (error) {
-      console.error("Error updating equipment:", error);
-      alert("Failed to update equipment");
-    } else {
       await logEquipmentAction("updated", updatedEquipment.name);
+
       setEquipments((prev) =>
         prev.map((eq) => (eq.id === id ? updatedEquipment : eq))
       );
@@ -613,6 +494,11 @@ export default function DashboardEquipmentPage() {
       setSelectedRows([]);
       clearEditImageSelection();
       alert("Equipment updated successfully!");
+    } catch (error) {
+      console.error("Error updating equipment:", error);
+      alert(
+        error instanceof Error ? error.message : "Failed to update equipment"
+      );
     }
   };
 
@@ -639,9 +525,11 @@ export default function DashboardEquipmentPage() {
   };
 
   useEffect(() => {
-    fetchFacilities();
-    fetchEquipments(false);
-  }, [fetchEquipments, fetchFacilities]);
+    if (isAuthenticated) {
+      loadFacilities();
+      loadEquipments(false);
+    }
+  }, [isAuthenticated, loadEquipments, loadFacilities]);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -749,6 +637,23 @@ export default function DashboardEquipmentPage() {
                   <span className="ml-3 text-gray-600 dark:text-gray-400">
                     Loading equipments...
                   </span>
+                </div>
+              ) : error ? (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="text-red-600 dark:text-red-400 font-semibold">
+                      Error loading equipments
+                    </div>
+                  </div>
+                  <p className="mt-2 text-red-600 dark:text-red-400 text-sm">
+                    {error}
+                  </p>
+                  <button
+                    onClick={() => loadEquipments(false)}
+                    className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-md text-sm font-medium transition-colors"
+                  >
+                    Retry
+                  </button>
                 </div>
               ) : equipments.length === 0 ? (
                 <div className="text-center py-12">

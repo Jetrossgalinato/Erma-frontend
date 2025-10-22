@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import { fetchEquipmentByCategory } from "@/app/dashboard/utils/helpers";
 import {
   BarChart,
   Bar,
@@ -18,11 +19,11 @@ interface EquipmentCategoryData {
 }
 
 export default function EquipmentCategoryChart() {
+  const { isAuthenticated } = useAuthStore();
   const [data, setData] = useState<EquipmentCategoryData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const supabase = createClientComponentClient();
 
   // Check for dark mode
   useEffect(() => {
@@ -44,42 +45,44 @@ export default function EquipmentCategoryChart() {
   }, []);
 
   useEffect(() => {
-    const fetchCategoryCounts = async () => {
-      const { data: categories, error } = await supabase
-        .from("equipments")
-        .select("category");
-
-      if (error) {
-        console.error("Error fetching equipment categories:", error);
+    const loadCategoryData = async () => {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
-      const categoryCount: Record<string, number> = {};
-      categories.forEach((item) => {
-        const cat = item.category || "Uncategorized";
-        categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-      });
-
-      const formattedData = Object.entries(categoryCount).map(
-        ([category, count]) => ({
-          category,
-          count,
-        })
-      );
-
-      setData(formattedData);
-      setLoading(false);
+      try {
+        setLoading(true);
+        setError(null);
+        const categoryData = await fetchEquipmentByCategory();
+        setData(categoryData);
+      } catch (err) {
+        console.error("Error fetching equipment categories:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load category data"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchCategoryCounts();
-  }, [supabase]);
+    loadCategoryData();
+  }, [isAuthenticated]);
 
   if (loading)
     return (
-      <p className="text-gray-500 dark:text-gray-400 italic">
-        Loading category chart...
-      </p>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          Loading category chart...
+        </p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      </div>
     );
 
   // Dynamic colors based on theme

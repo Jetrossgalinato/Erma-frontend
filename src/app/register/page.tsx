@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import EmployeeRegisterForm from "../../components/EmployeeRegisterForm";
@@ -11,23 +12,17 @@ export default function RegisterPage() {
   const [registerAs] = useState<"employee" | "intern" | "supervisor">(
     "employee"
   );
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      // Check if user is already authenticated
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        router.replace("/home");
-      } else {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, [router]);
+    // Redirect if already authenticated
+    if (!isLoading && isAuthenticated) {
+      router.replace("/home");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />

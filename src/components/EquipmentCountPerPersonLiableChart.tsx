@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import { fetchEquipmentPerPersonLiable } from "@/app/dashboard/utils/helpers";
 import {
   BarChart,
   Bar,
@@ -19,11 +20,11 @@ interface PersonEquipmentData {
 }
 
 export default function EquipmentCountPerPersonLiableChart() {
+  const { isAuthenticated } = useAuthStore();
   const [data, setData] = useState<PersonEquipmentData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const supabase = createClientComponentClient();
 
   // Check for dark mode
   useEffect(() => {
@@ -45,42 +46,52 @@ export default function EquipmentCountPerPersonLiableChart() {
   }, []);
 
   useEffect(() => {
-    const fetchEquipmentCounts = async () => {
-      const { data: equipment, error } = await supabase
-        .from("equipments")
-        .select("person_liable");
-
-      if (error) {
-        console.error("Error fetching equipment:", error);
+    const loadEquipmentData = async () => {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
-      const personCount: Record<string, number> = {};
-      equipment.forEach((item) => {
-        const person = item.person_liable?.trim() || "Unassigned";
-        personCount[person] = (personCount[person] || 0) + 1;
-      });
+      try {
+        setLoading(true);
+        setError(null);
+        const equipmentData = await fetchEquipmentPerPersonLiable();
 
-      const formattedData: PersonEquipmentData[] = Object.entries(personCount)
-        .map(([person, count]) => ({
-          person,
-          count,
-        }))
-        .sort((a, b) => b.count - a.count);
+        const formattedData: PersonEquipmentData[] = equipmentData
+          .map((item) => ({
+            person: item.person_liable || "Unassigned",
+            count: item.equipment_count,
+          }))
+          .sort((a, b) => b.count - a.count);
 
-      setData(formattedData);
-      setLoading(false);
+        setData(formattedData);
+      } catch (err) {
+        console.error("Error fetching equipment data:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load equipment data"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchEquipmentCounts();
-  }, [supabase]);
+    loadEquipmentData();
+  }, [isAuthenticated]);
 
   if (loading)
     return (
-      <p className="text-gray-500 dark:text-gray-400 italic">
-        Loading equipment count per person chart...
-      </p>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          Loading equipment count per person chart...
+        </p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      </div>
     );
 
   const lightOrange = "#f7a563ff"; // pastel light orange

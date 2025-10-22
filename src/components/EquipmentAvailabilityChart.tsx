@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useAuthStore } from "@/store/authStore";
+import { fetchEquipmentAvailability } from "@/app/dashboard/utils/helpers";
 import {
   BarChart,
   Bar,
@@ -21,9 +22,9 @@ interface AvailabilityData {
 export default function EquipmentAvailabilityChart() {
   const [data, setData] = useState<AvailabilityData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const supabase = createClientComponentClient();
+  const { isAuthenticated } = useAuthStore();
 
   // Check for dark mode
   useEffect(() => {
@@ -45,50 +46,68 @@ export default function EquipmentAvailabilityChart() {
   }, []);
 
   useEffect(() => {
-    const fetchAvailabilityCounts = async () => {
-      const { data: equipment, error } = await supabase
-        .from("equipments")
-        .select("availability");
-
-      if (error) {
-        console.error("Error fetching equipment availability:", error);
+    const loadAvailabilityData = async () => {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
-      // Initialize all statuses so labels always appear even if 0
-      const statusCount: Record<string, number> = {
-        Available: 0,
-        "For Disposal": 0,
-        Disposed: 0,
-      };
+      try {
+        setLoading(true);
+        setError(null);
+        const availabilityData = await fetchEquipmentAvailability();
 
-      equipment.forEach((item) => {
-        const status = item.availability?.trim() as keyof typeof statusCount;
-        if (status in statusCount) {
-          statusCount[status] += 1;
-        }
-      });
+        // Initialize all statuses so labels always appear even if 0
+        const statusCount: Record<string, number> = {
+          Available: 0,
+          "For Disposal": 0,
+          Disposed: 0,
+        };
 
-      const formattedData: AvailabilityData[] = Object.entries(statusCount).map(
-        ([status, count]) => ({
+        availabilityData.forEach((item) => {
+          const status = item.status as keyof typeof statusCount;
+          if (status in statusCount) {
+            statusCount[status] = item.count;
+          }
+        });
+
+        const formattedData: AvailabilityData[] = Object.entries(
+          statusCount
+        ).map(([status, count]) => ({
           status,
           count,
-        })
-      );
+        }));
 
-      setData(formattedData);
-      setLoading(false);
+        setData(formattedData);
+      } catch (err) {
+        console.error("Error fetching equipment availability:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load availability data"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchAvailabilityCounts();
-  }, [supabase]);
+    loadAvailabilityData();
+  }, [isAuthenticated]);
 
   if (loading)
     return (
-      <p className="text-gray-500 dark:text-gray-400 italic">
-        Loading equipment availability chart...
-      </p>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-gray-500 dark:text-gray-400 italic">
+          Loading availability chart...
+        </p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+        <p className="text-red-500 dark:text-red-400">Error: {error}</p>
+      </div>
     );
 
   // Assign fixed colors for each status

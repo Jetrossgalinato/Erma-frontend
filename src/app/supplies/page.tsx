@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
+import { useAuthStore, useUIStore } from "@/store";
 import {
   Supply,
   FACILITIES,
@@ -12,7 +13,6 @@ import {
   paginateSupplies,
   calculateTotalPages,
   fetchSuppliesList,
-  checkUserAuthentication,
   createAcquireRequest,
 } from "./utils/helpers";
 import SupplyDetailsModal from "./components/SupplyDetailsModal";
@@ -20,12 +20,20 @@ import AcquireSupplyModal from "./components/AcquireSupplyModal";
 import ImageModal from "./components/ImageModal";
 
 export default function SuppliesPage() {
+  // Use stores for auth and UI state
+  const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const searchTerm = useUIStore((state) => state.searchTerms.supplies || "");
+  const setSearchTerm = useUIStore((state) => state.setSearchTerm);
+  const currentPage = useUIStore(
+    (state) => state.pagination.supplies?.currentPage || 1
+  );
+  const setCurrentPage = useUIStore((state) => state.setCurrentPage);
+
+  // Local state for supplies data (due to type conflicts)
+  const [supplies, setSupplies] = useState<Supply[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userLoading, setUserLoading] = useState(true);
-  const [supplies, setSupplies] = useState<Supply[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  // Local UI state
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
@@ -42,19 +50,6 @@ export default function SuppliesPage() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
 
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = await checkUserAuthentication();
-      setIsAuthenticated(authenticated);
-      setUserLoading(false);
-    };
-
-    checkAuth();
-  }, []);
-
   // Fetch supplies from FastAPI
   const fetchSupplies = useCallback(async () => {
     setLoading(true);
@@ -68,8 +63,8 @@ export default function SuppliesPage() {
   }, [fetchSupplies]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategory, selectedFacility]);
+    setCurrentPage("supplies", 1);
+  }, [searchTerm, selectedCategory, selectedFacility, setCurrentPage]);
 
   const categories = useMemo(() => {
     return getUniqueCategories(supplies);
@@ -163,10 +158,10 @@ export default function SuppliesPage() {
                 <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-800 w-4 h-4 sm:w-5 sm:h-5" />
                 <input
                   type="text"
-                  placeholder="Search supply..."
+                  placeholder="Search supplies..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
+                  onChange={(e) => setSearchTerm("supplies", e.target.value)}
+                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
 
@@ -308,7 +303,7 @@ export default function SuppliesPage() {
             }).map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentPage(i + 1)}
+                onClick={() => setCurrentPage("supplies", i + 1)}
                 className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
                   currentPage === i + 1
                     ? "bg-orange-600 text-white"
