@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
 import ImageModal from "./components/ImageModal";
@@ -23,8 +24,19 @@ import {
 } from "./utils/helpers";
 
 export default function EquipmentPage() {
+  // Use stores for UI state only
+  const searchTerm = useUIStore((state) => state.searchTerms.equipment || "");
+  const setSearchTerm = useUIStore((state) => state.setSearchTerm);
+  const currentPage = useUIStore(
+    (state) => state.pagination.equipment?.currentPage || 1
+  );
+  const setCurrentPage = useUIStore((state) => state.setCurrentPage);
+
+  // Local state for equipment data (due to type conflicts)
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Local UI state
   const [showModal, setShowModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(
     null
@@ -35,8 +47,6 @@ export default function EquipmentPage() {
 
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -133,8 +143,8 @@ export default function EquipmentPage() {
   };
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategory, selectedFacility]);
+    setCurrentPage("equipment", 1);
+  }, [searchTerm, selectedCategory, selectedFacility, setCurrentPage]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -174,7 +184,7 @@ export default function EquipmentPage() {
                     type="text"
                     placeholder="Search equipment..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => setSearchTerm("equipment", e.target.value)}
                     className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   />
                 </div>
@@ -357,7 +367,7 @@ export default function EquipmentPage() {
                   }).map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentPage(i + 1)}
+                      onClick={() => setCurrentPage("equipment", i + 1)}
                       className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
                         currentPage === i + 1
                           ? "bg-orange-600 text-white"

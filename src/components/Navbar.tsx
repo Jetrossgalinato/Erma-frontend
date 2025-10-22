@@ -13,12 +13,15 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store";
 
 const Navbar: React.FC = () => {
+  // Use auth store
+  const { user, isAuthenticated, logout: logoutFromStore } = useAuthStore();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState<{
     email: string;
     first_name?: string;
@@ -58,9 +61,7 @@ const Navbar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
-    setIsAuthenticated(false);
+    logoutFromStore();
     setUserData(null);
     setIsAvatarDropdownOpen(false);
     alert("You have been logged out successfully.");
@@ -68,23 +69,37 @@ const Navbar: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check authentication status from localStorage
-    const token = localStorage.getItem("authToken");
-    const storedUserData = localStorage.getItem("userData");
-
-    if (token && storedUserData) {
-      setIsAuthenticated(true);
-      try {
-        const parsedUserData = JSON.parse(storedUserData);
-        setUserData(parsedUserData);
-        setApprovedAccRole(parsedUserData.acc_role || null);
-      } catch {
-        // If parsing fails, clear invalid data
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userData");
+    // Sync userData from store when user changes
+    if (user) {
+      // Fetch additional user data if needed from localStorage
+      const storedUserData = localStorage.getItem("userData");
+      if (storedUserData) {
+        try {
+          const parsedUserData = JSON.parse(storedUserData);
+          setUserData(parsedUserData);
+          setApprovedAccRole(parsedUserData.acc_role || user.role || null);
+        } catch {
+          // If parsing fails, use user from store
+          setUserData({
+            email: user.email,
+            first_name: undefined,
+            acc_role: user.role,
+          });
+          setApprovedAccRole(user.role || null);
+        }
+      } else {
+        setUserData({
+          email: user.email,
+          first_name: undefined,
+          acc_role: user.role,
+        });
+        setApprovedAccRole(user.role || null);
       }
+    } else {
+      setUserData(null);
+      setApprovedAccRole(null);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

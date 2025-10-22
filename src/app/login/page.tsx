@@ -2,42 +2,30 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-// import axios or use fetch for FastAPI requests
+import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, login } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated (e.g., via cookie or localStorage)
-    const checkAuth = async () => {
-      try {
-        // Example: check for token in localStorage
-        const token = localStorage.getItem("authToken");
-        if (token) {
-          // Optionally verify token with FastAPI
-          router.push("/home");
-        } else {
-          setLoading(false);
-        }
-      } catch {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, [router]);
+    // Redirect if already authenticated
+    if (!authLoading && isAuthenticated) {
+      router.push("/home");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+
     try {
       const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
@@ -50,38 +38,40 @@ export default function LoginPage() {
 
       if (!response.ok) {
         setError(result.detail || "Login failed.");
-        setLoading(false);
         return;
       }
 
       // Check if user data is returned
       if (!result.user) {
         setError("No user data returned.");
-        setLoading(false);
         return;
       }
 
       // Check if user is approved
       if (!result.user.is_approved) {
         setError("Your account is pending approval.");
-        setLoading(false);
         return;
       }
 
-      // Save token and user data
-      localStorage.setItem("authToken", result.access_token);
-      localStorage.setItem("userData", JSON.stringify(result.user));
+      // Use authStore login action
+      const userData = {
+        userId: result.user.id?.toString() || "",
+        email: result.user.email || email,
+        role: result.user.approved_acc_role || result.user.acc_role || "",
+        accountRequestId: result.user.id,
+      };
+
+      login(result.access_token, userData);
 
       setError("");
       alert("You have logged in successfully!");
       router.push("/home");
     } catch {
       setError("Login failed. Please try again.");
-      setLoading(false);
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
