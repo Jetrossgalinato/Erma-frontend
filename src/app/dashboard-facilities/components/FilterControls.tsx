@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Filter, X } from "lucide-react";
+import { Filter, ChevronDown, X, Building, Layers } from "lucide-react";
 
 interface FilterControlsProps {
   facilityTypeFilter: string;
@@ -37,83 +37,83 @@ const FilterControls: React.FC<FilterControlsProps> = ({
   dropdownRef,
 }) => {
   return (
-    <div className="flex gap-2 items-center">
-      {/* Filter Dropdown */}
+    <>
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={onToggleDropdown}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
+            activeFilter || facilityTypeFilter || floorLevelFilter
+              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
+              : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+          }`}
         >
-          <Filter className="h-4 w-4 mr-2" />
+          <Filter className="w-4 h-4 mr-2" />
           Filter
+          <ChevronDown className="w-4 h-4 ml-1" />
         </button>
 
         {showFilterDropdown && (
-          <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
+          <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
             <div className="py-1">
               <button
                 onClick={() => onFilterSelect("facility type")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
               >
-                By Facility Type
+                <Building className="w-4 h-4 mr-3" />
+                Filter by Facility Type
               </button>
               <button
                 onClick={() => onFilterSelect("floor level")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
               >
-                By Floor Level
+                <Layers className="w-4 h-4 mr-3" />
+                Filter by Floor Level
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Facility Type Filter */}
       {activeFilter === "facility type" && (
-        <div className="relative">
-          <select
-            value={facilityTypeFilter}
-            onChange={(e) => onFacilityTypeChange(e.target.value)}
-            className="appearance-none px-4 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          >
-            <option value="">All Facility Types</option>
-            {uniqueFacilityTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={facilityTypeFilter}
+          onChange={(e) => onFacilityTypeChange(e.target.value)}
+          className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Facility Types</option>
+          {uniqueFacilityTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
       )}
 
-      {/* Floor Level Filter */}
       {activeFilter === "floor level" && (
-        <div className="relative">
-          <select
-            value={floorLevelFilter}
-            onChange={(e) => onFloorLevelChange(e.target.value)}
-            className="appearance-none px-4 py-2 pr-8 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          >
-            <option value="">All Floor Levels</option>
-            {uniqueFloorLevels.map((level) => (
-              <option key={level} value={level}>
-                {level}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={floorLevelFilter}
+          onChange={(e) => onFloorLevelChange(e.target.value)}
+          className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Floor Levels</option>
+          {uniqueFloorLevels.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
+        </select>
       )}
 
-      {/* Clear Filters */}
       {(facilityTypeFilter || floorLevelFilter || activeFilter) && (
         <button
           onClick={onClearFilters}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
         >
-          <X className="h-4 w-4" />
+          <X className="w-4 h-4 mr-1 inline" />
+          Clear
         </button>
       )}
-    </div>
+    </>
   );
 };
 
