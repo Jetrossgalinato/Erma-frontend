@@ -17,7 +17,7 @@ export type Equipment = {
   description?: string;
   category?: string;
   status?: string;
-  date_acquired?: string;
+  date_acquire?: string;
   supplier?: string;
   amount?: string;
   estimated_life?: string;
@@ -358,10 +358,10 @@ export const parseCSVToEquipment = async (
         case "availability":
           equipment.availability = value;
           break;
-        case "date acquired":
-        case "date_acquired":
+        case "date acquire":
+        case "date_acquire":
         case "dateacquired":
-          equipment.date_acquired = value;
+          equipment.date_acquire = value;
           break;
         case "supplier":
           equipment.supplier = value;

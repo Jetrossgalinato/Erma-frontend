@@ -33,17 +33,17 @@ const EditModal: React.FC<EditModalProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden max-w-2xl w-full z-50">
         <div className="p-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-            Edit Facility: {facility.name}
+            Edit Facility: {facility.facility_name}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Name <span className="text-red-500">*</span>
+                Facility Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
-                name="name"
-                value={facility.name || ""}
+                name="facility_name"
+                value={facility.facility_name || ""}
                 onChange={onChange}
                 className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -105,6 +105,19 @@ const EditModal: React.FC<EditModalProps> = ({
                 name="building"
                 value={facility.building || ""}
                 onChange={onChange}
+                className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Capacity <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="capacity"
+                value={facility.capacity || ""}
+                onChange={onChange}
+                min="0"
                 className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

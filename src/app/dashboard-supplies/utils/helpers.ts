@@ -22,7 +22,9 @@ export interface Supply {
   updated_at?: string;
   facilities?: {
     id: number;
-    name: string;
+    facility_id?: number;
+    facility_name: string;
+    name?: string; // Fallback for compatibility
   };
 }
 
@@ -40,7 +42,9 @@ export interface SupplyFormData {
 
 export interface Facility {
   id: number;
-  name: string;
+  facility_id?: number;
+  facility_name: string;
+  name?: string; // Fallback for compatibility
 }
 
 /**
@@ -105,16 +109,13 @@ export async function fetchFacilities(): Promise<Facility[]> {
   const data = await response.json();
 
   // Ensure we always return an array
-  if (Array.isArray(data)) {
-    return data;
-  }
+  const facilitiesArray = Array.isArray(data) ? data : data.facilities || [];
 
-  if (data && Array.isArray(data.facilities)) {
-    return data.facilities;
-  }
-
-  console.error("Unexpected facilities API response format:", data);
-  return [];
+  // Map facility_id to id for consistency
+  return facilitiesArray.map((facility: Facility) => ({
+    ...facility,
+    id: facility.id || facility.facility_id || 0,
+  }));
 }
 
 /**
@@ -170,6 +171,34 @@ export async function updateSupply(
   }
 
   return response.json();
+}
+
+/**
+ * Upload supply image
+ */
+export async function uploadSupplyImage(file: File): Promise<string> {
+  const token = localStorage.getItem("authToken");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_BASE_URL}/api/supplies/upload-image`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to upload image" }));
+    throw new Error(error.detail || "Failed to upload image");
+  }
+
+  const data = await response.json();
+  return data.image_url;
 }
 
 /**

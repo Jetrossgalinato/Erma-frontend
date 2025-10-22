@@ -13,6 +13,7 @@ import InsertEquipmentForm from "./components/insertEquipmentForm";
 import PageHeader from "./components/pageHeader";
 import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
+import EmptyState from "./components/emptyState";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import {
@@ -236,16 +237,22 @@ export default function DashboardEquipmentPage() {
   }, [isRefreshing, loadEquipments]);
 
   const handleInsertEquipment = async () => {
+    console.log("Insert equipment called with:", newEquipment);
+
     if (!validateEquipmentName(newEquipment.name)) {
+      console.log("Validation failed: Equipment name is required");
       alert("Equipment name is required");
       return;
     }
 
+    console.log("Validation passed, proceeding with insert");
     let imageUrl = null;
 
     if (selectedImageFile) {
+      console.log("Uploading image:", selectedImageFile.name);
       try {
         imageUrl = await uploadEquipmentImage(selectedImageFile);
+        console.log("Image uploaded successfully:", imageUrl);
       } catch (error) {
         console.error("Error uploading image:", error);
         alert(
@@ -257,17 +264,25 @@ export default function DashboardEquipmentPage() {
     }
 
     try {
-      await createEquipment({
+      console.log("Creating equipment with data:", {
         ...newEquipment,
         image: imageUrl || undefined,
       });
+      const createdEquipment = await createEquipment({
+        ...newEquipment,
+        image: imageUrl || undefined,
+      });
+      console.log("Equipment created successfully:", createdEquipment);
 
       await logEquipmentAction("added", newEquipment.name);
+      console.log("Action logged successfully");
 
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
       clearImageSelection();
-      loadEquipments(false);
+      console.log("Reloading equipments list");
+      await loadEquipments(false);
+      console.log("Insert operation completed successfully");
     } catch (error) {
       console.error("Error inserting equipment:", error);
       alert(
@@ -631,6 +646,21 @@ export default function DashboardEquipmentPage() {
                 </div>
               </div>
 
+              <InsertEquipmentForm
+                isOpen={showInsertForm}
+                newEquipment={newEquipment}
+                facilities={facilities}
+                selectedImageFile={selectedImageFile}
+                imagePreview={imagePreview}
+                onChange={(field, value) =>
+                  setNewEquipment({ ...newEquipment, [field]: value })
+                }
+                onImageSelect={() => imageInputRef.current?.click()}
+                onImageClear={clearImageSelection}
+                onSave={handleInsertEquipment}
+                onCancel={handleCancelInsert}
+              />
+
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
@@ -656,28 +686,9 @@ export default function DashboardEquipmentPage() {
                   </button>
                 </div>
               ) : equipments.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 dark:text-gray-500 text-lg">
-                    No equipments found.
-                  </div>
-                </div>
+                <EmptyState />
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                  <InsertEquipmentForm
-                    isOpen={showInsertForm}
-                    newEquipment={newEquipment}
-                    facilities={facilities}
-                    selectedImageFile={selectedImageFile}
-                    imagePreview={imagePreview}
-                    onChange={(field, value) =>
-                      setNewEquipment({ ...newEquipment, [field]: value })
-                    }
-                    onImageSelect={() => imageInputRef.current?.click()}
-                    onImageClear={clearImageSelection}
-                    onSave={handleInsertEquipment}
-                    onCancel={handleCancelInsert}
-                  />
-
                   <EquipmentsTable
                     equipments={equipments}
                     facilities={facilities}

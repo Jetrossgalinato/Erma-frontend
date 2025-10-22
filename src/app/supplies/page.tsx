@@ -131,7 +131,7 @@ export default function SuppliesPage() {
         <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
           <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2">
                 Supplies
               </h1>
               <p className="text-gray-600 text-xs sm:text-sm">

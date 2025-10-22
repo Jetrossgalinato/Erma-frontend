@@ -41,12 +41,12 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Name <span className="text-red-500">*</span>
+            Facility Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            name="name"
-            value={facility.name || ""}
+            name="facility_name"
+            value={facility.facility_name || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Enter facility name"
@@ -62,11 +62,12 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
             value={facility.connection_type || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., Wi-Fi"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Facility Type
+            Facility Type <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -74,11 +75,12 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
             value={facility.facility_type || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., Computer Laboratory"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Floor Level
+            Floor Level <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -86,6 +88,21 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
             value={facility.floor_level || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., 1st Floor"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Capacity <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            name="capacity"
+            value={facility.capacity || ""}
+            onChange={onChange}
+            className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Enter capacity"
+            min="0"
           />
         </div>
         <div>
@@ -98,6 +115,7 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
             value={facility.cooling_tools || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., Aircon"
           />
         </div>
         <div>
@@ -110,11 +128,12 @@ const AddFacilityForm: React.FC<AddFacilityFormProps> = ({
             value={facility.building || ""}
             onChange={onChange}
             className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="e.g., HIRAYA"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Status
+            Status <span className="text-red-500">*</span>
           </label>
           <select
             name="status"

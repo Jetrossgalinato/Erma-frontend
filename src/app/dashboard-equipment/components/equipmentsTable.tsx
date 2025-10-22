@@ -191,7 +191,7 @@ export default function EquipmentsTable({
             type={
               column === "facility_id"
                 ? "number"
-                : column === "date_acquired"
+                : column === "date_acquire"
                 ? "date"
                 : "text"
             }
@@ -423,11 +423,11 @@ export default function EquipmentsTable({
 
               <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                 {editingCell?.rowId === eq.id &&
-                editingCell?.column === "date_acquired" ? (
-                  renderEditableCell(eq, "date_acquired", eq.date_acquired)
+                editingCell?.column === "date_acquire" ? (
+                  renderEditableCell(eq, "date_acquire", eq.date_acquire)
                 ) : (
                   <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
-                    {formatDate(eq.date_acquired)}
+                    {formatDate(eq.date_acquire)}
                   </div>
                 )}
               </td>

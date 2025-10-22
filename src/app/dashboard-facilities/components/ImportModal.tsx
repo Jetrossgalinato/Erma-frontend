@@ -98,7 +98,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
                         {importData.map((facility, index) => (
                           <tr key={index}>
                             <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                              {facility.name || "-"}
+                              {facility.facility_name || "-"}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                               {facility.connection_type || "-"}

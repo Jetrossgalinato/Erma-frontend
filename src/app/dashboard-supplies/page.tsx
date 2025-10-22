@@ -15,6 +15,7 @@ import Pagination from "./components/Pagination";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import ImageModal from "./components/ImageModal";
+import { RefreshCw } from "lucide-react";
 import {
   Supply,
   SupplyFormData,
@@ -23,6 +24,7 @@ import {
   fetchFacilities,
   createSupply,
   updateSupply,
+  uploadSupplyImage,
   deleteSupplies,
   bulkImportSupplies,
   logSupplyAction,
@@ -45,6 +47,7 @@ export default function DashboardSuppliesPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Data State
@@ -219,7 +222,15 @@ export default function DashboardSuppliesPage() {
         );
         return {
           ...prev,
-          facilities: selectedFacility || { id: 0, name: "" },
+          facility_id: selectedFacility?.id,
+          facilities: selectedFacility
+            ? {
+                id: selectedFacility.id,
+                facility_id: selectedFacility.facility_id,
+                facility_name: selectedFacility.facility_name,
+                name: selectedFacility.name,
+              }
+            : undefined,
         };
       }
 
@@ -327,6 +338,19 @@ export default function DashboardSuppliesPage() {
     }
 
     try {
+      let imageUrl = editingSupply.image;
+
+      // Upload new image if selected
+      if (editImageFile) {
+        try {
+          imageUrl = await uploadSupplyImage(editImageFile);
+          console.log("Image uploaded successfully:", imageUrl);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          alert("Failed to upload image. Proceeding without image update.");
+        }
+      }
+
       const supplyData: SupplyFormData = {
         name: editingSupply.name,
         description: editingSupply.description,
@@ -335,28 +359,29 @@ export default function DashboardSuppliesPage() {
         stocking_point: editingSupply.stocking_point,
         stock_unit: editingSupply.stock_unit,
         facility_id: editingSupply.facilities?.id,
-        image: editingSupply.image,
+        image: imageUrl,
         remarks: editingSupply.remarks,
       };
-
-      // TODO: Handle image upload to FastAPI when endpoint is ready
-      // For now, existing image URL is preserved
-      if (editImageFile) {
-        console.warn("Image upload to FastAPI not yet implemented");
-      }
 
       const updatedSupply = await updateSupply(editingSupply.id, supplyData);
 
       // Log the action
-      await logSupplyAction(
-        "update",
-        updatedSupply.name,
-        `Category: ${updatedSupply.category}, Quantity: ${
-          updatedSupply.quantity
-        } ${updatedSupply.stock_unit}, Facility: ${
-          updatedSupply.facilities?.name || "None"
-        }`
-      );
+      try {
+        await logSupplyAction(
+          "update",
+          updatedSupply.name,
+          `Category: ${updatedSupply.category}, Quantity: ${
+            updatedSupply.quantity
+          } ${updatedSupply.stock_unit}, Facility: ${
+            updatedSupply.facilities?.facility_name ||
+            updatedSupply.facilities?.name ||
+            "None"
+          }`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       // Update local state
       setSupplies((prev) =>
@@ -400,6 +425,19 @@ export default function DashboardSuppliesPage() {
     }
 
     try {
+      let imageUrl = newSupply.image;
+
+      // Upload new image if selected
+      if (selectedImageFile) {
+        try {
+          imageUrl = await uploadSupplyImage(selectedImageFile);
+          console.log("Image uploaded successfully:", imageUrl);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          alert("Failed to upload image. Proceeding without image.");
+        }
+      }
+
       const supplyData: SupplyFormData = {
         name: newSupply.name!,
         description: newSupply.description,
@@ -408,23 +446,23 @@ export default function DashboardSuppliesPage() {
         stocking_point: newSupply.stocking_point!,
         stock_unit: newSupply.stock_unit!,
         facility_id: newSupply.facility_id,
-        image: newSupply.image,
+        image: imageUrl,
         remarks: newSupply.remarks,
       };
-
-      // TODO: Handle image upload to FastAPI when endpoint is ready
-      if (selectedImageFile) {
-        console.warn("Image upload to FastAPI not yet implemented");
-      }
 
       const createdSupply = await createSupply(supplyData);
 
       // Log the action
-      await logSupplyAction(
-        "create",
-        createdSupply.name,
-        `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
-      );
+      try {
+        await logSupplyAction(
+          "create",
+          createdSupply.name,
+          `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       setShowInsertForm(false);
       setNewSupply({
@@ -516,11 +554,16 @@ export default function DashboardSuppliesPage() {
       const result = await bulkImportSupplies(validData as SupplyFormData[]);
 
       // Log the import action
-      await logSupplyAction(
-        "import",
-        undefined,
-        `${result.imported} supplies imported, ${result.failed} failed`
-      );
+      try {
+        await logSupplyAction(
+          "import",
+          undefined,
+          `${result.imported} supplies imported, ${result.failed} failed`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       alert(
         `Successfully imported ${result.imported} supplies! ${
@@ -554,11 +597,16 @@ export default function DashboardSuppliesPage() {
       await deleteSupplies(selectedRows);
 
       // Log the action
-      await logSupplyAction(
-        "delete",
-        undefined,
-        `${selectedRows.length} supplies deleted: ${supplyNames}`
-      );
+      try {
+        await logSupplyAction(
+          "delete",
+          undefined,
+          `${selectedRows.length} supplies deleted: ${supplyNames}`
+        );
+      } catch (logError) {
+        console.warn("Failed to log action:", logError);
+        // Don't disrupt the flow if logging fails
+      }
 
       setSupplies((prev) =>
         prev.filter((supply) => !selectedRows.includes(supply.id))
@@ -613,7 +661,7 @@ export default function DashboardSuppliesPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                  <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
                     Supplies
                   </h1>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -679,8 +727,52 @@ export default function DashboardSuppliesPage() {
                       onCancel={() => setShowDeleteModal(false)}
                     />
                   )}
+
+                  <button
+                    onClick={handleRefreshClick}
+                    disabled={isRefreshing}
+                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                      isRefreshing ? "cursor-not-allowed opacity-75" : ""
+                    }`}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </button>
                 </div>
               </div>
+
+              {/* Insert Form Row */}
+              {showInsertForm && (
+                <AddSupplyForm
+                  supply={newSupply}
+                  facilities={facilities}
+                  imagePreview={imagePreview}
+                  onChange={(e) => {
+                    const { name, value } = e.target;
+                    if (name === "quantity" || name === "stocking_point") {
+                      setNewSupply({
+                        ...newSupply,
+                        [name]: parseInt(value) || 0,
+                      });
+                    } else if (name === "facility_id") {
+                      setNewSupply({
+                        ...newSupply,
+                        facility_id: parseInt(value) || undefined,
+                      });
+                    } else {
+                      setNewSupply({ ...newSupply, [name]: value });
+                    }
+                  }}
+                  onSave={handleInsertSupply}
+                  onCancel={handleCancelInsert}
+                  onImageSelect={() => imageInputRef.current?.click()}
+                  onImageClear={clearImageSelection}
+                />
+              )}
 
               {loading ? (
                 <LoadingState />
@@ -688,35 +780,6 @@ export default function DashboardSuppliesPage() {
                 <EmptyState />
               ) : (
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                  {/* Insert Form Row */}
-                  {showInsertForm && (
-                    <AddSupplyForm
-                      supply={newSupply}
-                      facilities={facilities}
-                      imagePreview={imagePreview}
-                      onChange={(e) => {
-                        const { name, value } = e.target;
-                        if (name === "quantity" || name === "stocking_point") {
-                          setNewSupply({
-                            ...newSupply,
-                            [name]: parseInt(value) || 0,
-                          });
-                        } else if (name === "facility_id") {
-                          setNewSupply({
-                            ...newSupply,
-                            facility_id: parseInt(value) || undefined,
-                          });
-                        } else {
-                          setNewSupply({ ...newSupply, [name]: value });
-                        }
-                      }}
-                      onSave={handleInsertSupply}
-                      onCancel={handleCancelInsert}
-                      onImageSelect={() => imageInputRef.current?.click()}
-                      onImageClear={clearImageSelection}
-                    />
-                  )}
-
                   <SuppliesTable
                     supplies={filteredSupplies}
                     selectedRows={selectedRows}

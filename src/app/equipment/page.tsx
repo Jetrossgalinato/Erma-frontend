@@ -154,7 +154,7 @@ export default function EquipmentPage() {
           <div className="max-w-6xl mx-auto">
             <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <div>
-                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
+                <h1 className="text-xl sm:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2">
                   Equipments
                 </h1>
                 <p className="text-xs sm:text-base text-gray-600">
