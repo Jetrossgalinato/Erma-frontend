@@ -326,7 +326,7 @@ export default function MyRequestsPage() {
           {/* Header */}
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
                 My Requests
               </h1>
               <p className="text-sm sm:text-base text-gray-600">

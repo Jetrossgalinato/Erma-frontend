@@ -22,7 +22,7 @@ export default function DoneModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-xs sm:max-w-md mx-2 sm:mx-4">
         <div className="flex justify-between items-center mb-2 sm:mb-4">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">
