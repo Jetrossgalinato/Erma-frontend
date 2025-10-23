@@ -40,7 +40,7 @@ export default function ReturnModal({
             You are about to mark {selectedCount} item(s) as returned.
           </p>
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-            Receiver's Name *
+            {"Receiver's"} Name *
           </label>
           <input
             type="text"

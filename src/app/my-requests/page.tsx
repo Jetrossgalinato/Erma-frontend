@@ -1,9 +1,11 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuthStore } from "@/store/authStore";
+import { useRequestsStore } from "@/store/requestsStore";
 import RequestTypeSelector from "./components/RequestTypeSelector";
 import ActionButtons from "./components/ActionButtons";
 import BorrowingTable from "./components/BorrowingTable";
@@ -16,148 +18,156 @@ import DeleteModal from "./components/DeleteModal";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import {
-  verifyAuth,
   fetchBorrowingRequests,
   fetchBookingRequests,
   fetchAcquiringRequests,
   markAsReturned,
   markBookingAsDone,
   deleteRequests,
-  type Borrowing,
-  type Booking,
-  type Acquiring,
 } from "./utils/helpers";
 
 export default function MyRequestsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
 
-  // Request type state
-  const [requestType, setRequestType] = useState<
-    "borrowing" | "booking" | "acquiring"
-  >("borrowing");
+  // Auth store
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
 
-  // Data states
-  const [borrowingData, setBorrowingData] = useState<Borrowing[]>([]);
-  const [borrowingPage, setBorrowingPage] = useState(1);
-  const [borrowingTotalPages, setBorrowingTotalPages] = useState(1);
-
-  const [bookingData, setBookingData] = useState<Booking[]>([]);
-  const [bookingPage, setBookingPage] = useState(1);
-  const [bookingTotalPages, setBookingTotalPages] = useState(1);
-
-  const [acquiringData, setAcquiringData] = useState<Acquiring[]>([]);
-  const [acquiringPage, setAcquiringPage] = useState(1);
-  const [acquiringTotalPages, setAcquiringTotalPages] = useState(1);
-
-  // Selection state
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
-  // Modal states
-  const [showReturnModal, setShowReturnModal] = useState(false);
-  const [receiverName, setReceiverName] = useState("");
-  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
-
-  const [showDoneModal, setShowDoneModal] = useState(false);
-  const [completionNotes, setCompletionNotes] = useState("");
-  const [isSubmittingDone, setIsSubmittingDone] = useState(false);
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Requests store
+  const {
+    currentRequestType,
+    setCurrentRequestType,
+    borrowingRequests,
+    borrowingPage,
+    borrowingTotalPages,
+    setBorrowingRequests,
+    setBorrowingPage,
+    setBorrowingTotalPages,
+    bookingRequests,
+    bookingPage,
+    bookingTotalPages,
+    setBookingRequests,
+    setBookingPage,
+    setBookingTotalPages,
+    acquiringRequests,
+    acquiringPage,
+    acquiringTotalPages,
+    setAcquiringRequests,
+    setAcquiringPage,
+    setAcquiringTotalPages,
+    isLoading,
+    setIsLoading,
+    selectedIds,
+    clearSelection,
+    selectAll,
+    toggleSelection,
+    showReturnModal,
+    showDoneModal,
+    showDeleteModal,
+    setShowReturnModal,
+    setShowDoneModal,
+    setShowDeleteModal,
+    receiverName,
+    completionNotes,
+    setReceiverName,
+    setCompletionNotes,
+    isSubmitting,
+    setIsSubmitting,
+    clearModalForms,
+  } = useRequestsStore();
 
   // Get current data based on request type
   const getCurrentData = () => {
-    if (requestType === "borrowing") return borrowingData;
-    if (requestType === "booking") return bookingData;
-    return acquiringData;
+    if (currentRequestType === "borrowing") return borrowingRequests;
+    if (currentRequestType === "booking") return bookingRequests;
+    return acquiringRequests;
   };
 
   const getCurrentPage = () => {
-    if (requestType === "borrowing") return borrowingPage;
-    if (requestType === "booking") return bookingPage;
+    if (currentRequestType === "borrowing") return borrowingPage;
+    if (currentRequestType === "booking") return bookingPage;
     return acquiringPage;
   };
 
   const getTotalPages = () => {
-    if (requestType === "borrowing") return borrowingTotalPages;
-    if (requestType === "booking") return bookingTotalPages;
+    if (currentRequestType === "borrowing") return borrowingTotalPages;
+    if (currentRequestType === "booking") return bookingTotalPages;
     return acquiringTotalPages;
   };
 
   // Check authentication on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      const isAuthenticated = await verifyAuth();
-      if (!isAuthenticated) {
-        router.push("/login");
-        return;
-      }
-      setAuthenticated(true);
-      setAuthLoading(false);
-    };
-
-    checkAuth();
-  }, [router]);
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Fetch functions
-  const loadBorrowingRequests = useCallback(async (page: number) => {
-    setLoading(true);
-    try {
-      const response = await fetchBorrowingRequests(page);
-      setBorrowingData(response.data);
-      setBorrowingTotalPages(response.total_pages);
-    } catch (error) {
-      console.error("Failed to fetch borrowing requests:", error);
-      alert("Failed to load borrowing requests. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadBorrowingRequests = useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      try {
+        const response = await fetchBorrowingRequests(page);
+        setBorrowingRequests(response.data);
+        setBorrowingTotalPages(response.total_pages);
+      } catch (error) {
+        console.error("Failed to fetch borrowing requests:", error);
+        alert("Failed to load borrowing requests. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setBorrowingRequests, setBorrowingTotalPages, setIsLoading]
+  );
 
-  const loadBookingRequests = useCallback(async (page: number) => {
-    setLoading(true);
-    try {
-      const response = await fetchBookingRequests(page);
-      setBookingData(response.data);
-      setBookingTotalPages(response.total_pages);
-    } catch (error) {
-      console.error("Failed to fetch booking requests:", error);
-      alert("Failed to load booking requests. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadBookingRequests = useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      try {
+        const response = await fetchBookingRequests(page);
+        setBookingRequests(response.data);
+        setBookingTotalPages(response.total_pages);
+      } catch (error) {
+        console.error("Failed to fetch booking requests:", error);
+        alert("Failed to load booking requests. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setBookingRequests, setBookingTotalPages, setIsLoading]
+  );
 
-  const loadAcquiringRequests = useCallback(async (page: number) => {
-    setLoading(true);
-    try {
-      const response = await fetchAcquiringRequests(page);
-      setAcquiringData(response.data);
-      setAcquiringTotalPages(response.total_pages);
-    } catch (error) {
-      console.error("Failed to fetch acquiring requests:", error);
-      alert("Failed to load acquiring requests. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadAcquiringRequests = useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      try {
+        const response = await fetchAcquiringRequests(page);
+        setAcquiringRequests(response.data);
+        setAcquiringTotalPages(response.total_pages);
+      } catch (error) {
+        console.error("Failed to fetch acquiring requests:", error);
+        alert("Failed to load acquiring requests. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setAcquiringRequests, setAcquiringTotalPages, setIsLoading]
+  );
 
   // Load data when request type or page changes
   useEffect(() => {
-    if (!authenticated) return;
+    if (!isAuthenticated || authLoading) return;
 
-    if (requestType === "borrowing") {
+    if (currentRequestType === "borrowing") {
       loadBorrowingRequests(borrowingPage);
-    } else if (requestType === "booking") {
+    } else if (currentRequestType === "booking") {
       loadBookingRequests(bookingPage);
     } else {
       loadAcquiringRequests(acquiringPage);
     }
   }, [
-    authenticated,
-    requestType,
+    isAuthenticated,
+    authLoading,
+    currentRequestType,
     borrowingPage,
     bookingPage,
     acquiringPage,
@@ -166,26 +176,17 @@ export default function MyRequestsPage() {
     loadAcquiringRequests,
   ]);
 
-  // Clear selections when changing request type or page
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [requestType, borrowingPage, bookingPage, acquiringPage]);
-
   // Selection handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(getCurrentData().map((req) => req.id));
+      selectAll(getCurrentData().map((req) => req.id));
     } else {
-      setSelectedIds([]);
+      clearSelection();
     }
   };
 
-  const handleSelectOne = (id: number, checked: boolean) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, id]);
-    } else {
-      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
-    }
+  const handleSelectOne = (id: number) => {
+    toggleSelection(id);
   };
 
   // Action handlers
@@ -199,19 +200,19 @@ export default function MyRequestsPage() {
       return;
     }
 
-    setIsSubmittingReturn(true);
+    setIsSubmitting(true);
     try {
       await markAsReturned(selectedIds, receiverName.trim());
       alert("Return notification sent successfully!");
       setShowReturnModal(false);
-      setReceiverName("");
-      setSelectedIds([]);
+      clearModalForms();
+      clearSelection();
       loadBorrowingRequests(borrowingPage);
     } catch (error) {
       console.error("Failed to mark as returned:", error);
       alert("Failed to submit return notification. Please try again.");
     } finally {
-      setIsSubmittingReturn(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -220,19 +221,19 @@ export default function MyRequestsPage() {
   };
 
   const handleSubmitDone = async () => {
-    setIsSubmittingDone(true);
+    setIsSubmitting(true);
     try {
       await markBookingAsDone(selectedIds, completionNotes.trim() || undefined);
       alert("Booking marked as done successfully!");
       setShowDoneModal(false);
-      setCompletionNotes("");
-      setSelectedIds([]);
+      clearModalForms();
+      clearSelection();
       loadBookingRequests(bookingPage);
     } catch (error) {
       console.error("Failed to mark as done:", error);
       alert("Failed to mark booking as done. Please try again.");
     } finally {
-      setIsSubmittingDone(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -241,17 +242,17 @@ export default function MyRequestsPage() {
   };
 
   const handleConfirmDelete = async () => {
-    setIsDeleting(true);
+    setIsSubmitting(true);
     try {
-      await deleteRequests(requestType, selectedIds);
+      await deleteRequests(currentRequestType, selectedIds);
       alert("Requests deleted successfully!");
       setShowDeleteModal(false);
-      setSelectedIds([]);
+      clearSelection();
 
       // Reload current data
-      if (requestType === "borrowing") {
+      if (currentRequestType === "borrowing") {
         loadBorrowingRequests(borrowingPage);
-      } else if (requestType === "booking") {
+      } else if (currentRequestType === "booking") {
         loadBookingRequests(bookingPage);
       } else {
         loadAcquiringRequests(acquiringPage);
@@ -260,28 +261,34 @@ export default function MyRequestsPage() {
       console.error("Failed to delete requests:", error);
       alert("Failed to delete requests. Please try again.");
     } finally {
-      setIsDeleting(false);
+      setIsSubmitting(false);
     }
   };
 
   // Pagination handlers
   const handlePreviousPage = () => {
-    if (requestType === "borrowing" && borrowingPage > 1) {
+    if (currentRequestType === "borrowing" && borrowingPage > 1) {
       setBorrowingPage(borrowingPage - 1);
-    } else if (requestType === "booking" && bookingPage > 1) {
+    } else if (currentRequestType === "booking" && bookingPage > 1) {
       setBookingPage(bookingPage - 1);
-    } else if (requestType === "acquiring" && acquiringPage > 1) {
+    } else if (currentRequestType === "acquiring" && acquiringPage > 1) {
       setAcquiringPage(acquiringPage - 1);
     }
   };
 
   const handleNextPage = () => {
-    if (requestType === "borrowing" && borrowingPage < borrowingTotalPages) {
+    if (
+      currentRequestType === "borrowing" &&
+      borrowingPage < borrowingTotalPages
+    ) {
       setBorrowingPage(borrowingPage + 1);
-    } else if (requestType === "booking" && bookingPage < bookingTotalPages) {
+    } else if (
+      currentRequestType === "booking" &&
+      bookingPage < bookingTotalPages
+    ) {
       setBookingPage(bookingPage + 1);
     } else if (
-      requestType === "acquiring" &&
+      currentRequestType === "acquiring" &&
       acquiringPage < acquiringTotalPages
     ) {
       setAcquiringPage(acquiringPage + 1);
@@ -290,9 +297,9 @@ export default function MyRequestsPage() {
 
   // Refresh handler
   const handleRefresh = () => {
-    if (requestType === "borrowing") {
+    if (currentRequestType === "borrowing") {
       loadBorrowingRequests(borrowingPage);
-    } else if (requestType === "booking") {
+    } else if (currentRequestType === "booking") {
       loadBookingRequests(bookingPage);
     } else {
       loadAcquiringRequests(acquiringPage);
@@ -328,16 +335,16 @@ export default function MyRequestsPage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <RequestTypeSelector
-                currentType={requestType}
-                onChange={setRequestType}
+                currentType={currentRequestType}
+                onChange={setCurrentRequestType}
               />
               <button
                 onClick={handleRefresh}
-                disabled={loading}
+                disabled={isLoading}
                 className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 disabled:opacity-50 justify-center"
               >
                 <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                  className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
                 />
                 Refresh
               </button>
@@ -346,42 +353,46 @@ export default function MyRequestsPage() {
 
           {/* Action Buttons */}
           <ActionButtons
-            requestType={requestType}
+            requestType={currentRequestType}
             selectedCount={selectedIds.length}
             onMarkReturned={
-              requestType === "borrowing" ? handleMarkReturned : undefined
+              currentRequestType === "borrowing"
+                ? handleMarkReturned
+                : undefined
             }
-            onMarkDone={requestType === "booking" ? handleMarkDone : undefined}
+            onMarkDone={
+              currentRequestType === "booking" ? handleMarkDone : undefined
+            }
             onDelete={handleDelete}
           />
 
           {/* Content */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            {loading ? (
+            {isLoading ? (
               <LoadingState />
             ) : getCurrentData().length === 0 ? (
-              <EmptyState requestType={requestType} />
+              <EmptyState requestType={currentRequestType} />
             ) : (
               <>
-                {requestType === "borrowing" && (
+                {currentRequestType === "borrowing" && (
                   <BorrowingTable
-                    requests={borrowingData}
+                    requests={borrowingRequests}
                     selectedIds={selectedIds}
                     onSelectAll={handleSelectAll}
                     onSelectOne={handleSelectOne}
                   />
                 )}
-                {requestType === "booking" && (
+                {currentRequestType === "booking" && (
                   <BookingTable
-                    requests={bookingData}
+                    requests={bookingRequests}
                     selectedIds={selectedIds}
                     onSelectAll={handleSelectAll}
                     onSelectOne={handleSelectOne}
                   />
                 )}
-                {requestType === "acquiring" && (
+                {currentRequestType === "acquiring" && (
                   <AcquiringTable
-                    requests={acquiringData}
+                    requests={acquiringRequests}
                     selectedIds={selectedIds}
                     onSelectAll={handleSelectAll}
                     onSelectOne={handleSelectOne}
@@ -405,12 +416,12 @@ export default function MyRequestsPage() {
         isOpen={showReturnModal}
         selectedCount={selectedIds.length}
         receiverName={receiverName}
-        isSubmitting={isSubmittingReturn}
+        isSubmitting={isSubmitting}
         onReceiverNameChange={setReceiverName}
         onSubmit={handleSubmitReturn}
         onClose={() => {
           setShowReturnModal(false);
-          setReceiverName("");
+          clearModalForms();
         }}
       />
 
@@ -418,19 +429,19 @@ export default function MyRequestsPage() {
         isOpen={showDoneModal}
         selectedCount={selectedIds.length}
         completionNotes={completionNotes}
-        isSubmitting={isSubmittingDone}
+        isSubmitting={isSubmitting}
         onCompletionNotesChange={setCompletionNotes}
         onSubmit={handleSubmitDone}
         onClose={() => {
           setShowDoneModal(false);
-          setCompletionNotes("");
+          clearModalForms();
         }}
       />
 
       <DeleteModal
         isOpen={showDeleteModal}
         selectedCount={selectedIds.length}
-        isDeleting={isDeleting}
+        isDeleting={isSubmitting}
         onConfirm={handleConfirmDelete}
         onClose={() => setShowDeleteModal(false)}
       />
