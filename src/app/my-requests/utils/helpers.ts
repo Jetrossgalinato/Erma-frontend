@@ -346,6 +346,9 @@ export async function deleteRequests(
         ? "booking"
         : "acquiring";
 
+    const requestPayload = { ids: requestIds };
+    console.log(`DELETE ${endpoint} request payload:`, requestPayload);
+
     const response = await fetch(
       `${API_BASE_URL}/api/${endpoint}/bulk-delete`,
       {
@@ -354,14 +357,38 @@ export async function deleteRequests(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ids: requestIds,
-        }),
+        body: JSON.stringify(requestPayload),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to delete requests: ${response.statusText}`);
+      // Try to get more details from the error response
+      let errorMessage = response.statusText;
+      try {
+        const errorData = await response.json();
+        console.error("Backend error response:", errorData);
+
+        // Format validation errors nicely
+        if (errorData.detail && Array.isArray(errorData.detail)) {
+          const errors = errorData.detail
+            .map((err: { loc?: string[]; msg?: string }) => {
+              const field = err.loc ? err.loc.join(" -> ") : "unknown";
+              return `${field}: ${err.msg}`;
+            })
+            .join(", ");
+          errorMessage = errors;
+        } else if (errorData.detail) {
+          errorMessage =
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : JSON.stringify(errorData.detail);
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // If response is not JSON, use statusText
+      }
+      throw new Error(`Failed to delete requests: ${errorMessage}`);
     }
 
     return true;
