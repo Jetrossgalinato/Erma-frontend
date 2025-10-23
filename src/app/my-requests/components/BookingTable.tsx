@@ -1,0 +1,108 @@
+import { formatDate, getStatusColor } from "../utils/helpers";
+import type { Booking } from "../utils/helpers";
+
+interface BookingTableProps {
+  requests: Booking[];
+  selectedIds: number[];
+  onSelectAll: (checked: boolean) => void;
+  onSelectOne: (id: number, checked: boolean) => void;
+}
+
+export default function BookingTable({
+  requests,
+  selectedIds,
+  onSelectAll,
+  onSelectOne,
+}: BookingTableProps) {
+  const allSelected =
+    requests.length > 0 && selectedIds.length === requests.length;
+  const someSelected =
+    selectedIds.length > 0 && selectedIds.length < requests.length;
+
+  return (
+    <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-3 sm:px-6 py-3 text-left">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                ref={(input) => {
+                  if (input) input.indeterminate = someSelected;
+                }}
+                onChange={(e) => onSelectAll(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Facility
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Booking Date
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Time Slot
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Status
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Purpose
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {requests.map((request) => (
+            <tr key={request.id} className="hover:bg-gray-50">
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(request.id)}
+                  onChange={(e) => onSelectOne(request.id, e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              </td>
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
+                {request.facility_name}
+              </td>
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                {formatDate(request.booking_date)}
+              </td>
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                {request.start_time} - {request.end_time}
+              </td>
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                <span
+                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                    request.status
+                  )}`}
+                >
+                  {request.status}
+                </span>
+              </td>
+              <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-500 max-w-xs truncate">
+                {request.purpose}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

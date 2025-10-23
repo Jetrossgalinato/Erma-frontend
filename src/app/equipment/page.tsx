@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useUIStore } from "@/store";
+import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
 import ImageModal from "./components/ImageModal";
@@ -19,12 +19,12 @@ import {
   paginateEquipment as paginateEquipmentHelper,
   calculateTotalPages,
   fetchEquipmentList,
-  checkUserAuthorization,
   createBorrowingRequest,
 } from "./utils/helpers";
 
 export default function EquipmentPage() {
-  // Use stores for UI state only
+  // Use stores for auth and UI state
+  const { isAuthenticated, isLoading: userLoading } = useAuthStore();
   const searchTerm = useUIStore((state) => state.searchTerms.equipment || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -48,8 +48,6 @@ export default function EquipmentPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
 
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [borrowFormData, setBorrowFormData] = useState<BorrowingFormData>({
     purpose: "",
@@ -69,20 +67,6 @@ export default function EquipmentPage() {
   useEffect(() => {
     fetchEquipment();
   }, [fetchEquipment]);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const authorized = await checkUserAuthorization();
-        setIsAuthorized(authorized);
-      } catch (error) {
-        console.error("Failed to check authorization:", error);
-        setIsAuthorized(false);
-      }
-    };
-
-    checkUser();
-  }, []);
 
   const categories = useMemo(() => {
     return getUniqueCategories(equipmentData);
@@ -106,8 +90,8 @@ export default function EquipmentPage() {
   }, [filteredEquipment, currentPage]);
 
   const handleBorrow = async () => {
-    if (!isAuthorized) {
-      alert("You are not authorized to borrow equipment");
+    if (!isAuthenticated) {
+      alert("Please log in to borrow equipment");
       return;
     }
     if (
@@ -320,38 +304,44 @@ export default function EquipmentPage() {
                             View
                           </button>
 
-                          <button
-                            className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                              isAuthorized &&
-                              equipment.availability !== "Borrowed"
-                                ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            }`}
-                            onClick={
-                              isAuthorized &&
-                              equipment.availability !== "Borrowed"
-                                ? () => {
-                                    setSelectedEquipment(equipment);
-                                    setShowBorrowModal(true);
-                                  }
-                                : undefined
-                            }
-                            disabled={
-                              !isAuthorized ||
-                              equipment.availability === "Borrowed"
-                            }
-                            title={
-                              equipment.availability === "Borrowed"
-                                ? "This equipment is currently borrowed"
-                                : !isAuthorized
-                                ? "You are not authorized to borrow equipment"
-                                : "Borrow this equipment"
-                            }
-                          >
-                            {equipment.availability === "Borrowed"
-                              ? "Borrowed"
-                              : "Borrow"}
-                          </button>
+                          {userLoading ? (
+                            <div className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
+                              <div className="h-3 sm:h-4 bg-gray-300 rounded"></div>
+                            </div>
+                          ) : (
+                            <button
+                              className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                                isAuthenticated &&
+                                equipment.availability !== "Borrowed"
+                                  ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              }`}
+                              onClick={
+                                isAuthenticated &&
+                                equipment.availability !== "Borrowed"
+                                  ? () => {
+                                      setSelectedEquipment(equipment);
+                                      setShowBorrowModal(true);
+                                    }
+                                  : undefined
+                              }
+                              disabled={
+                                !isAuthenticated ||
+                                equipment.availability === "Borrowed"
+                              }
+                              title={
+                                equipment.availability === "Borrowed"
+                                  ? "This equipment is currently borrowed"
+                                  : !isAuthenticated
+                                  ? "Please log in to borrow equipment"
+                                  : "Borrow this equipment"
+                              }
+                            >
+                              {equipment.availability === "Borrowed"
+                                ? "Borrowed"
+                                : "Borrow"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

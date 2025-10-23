@@ -200,26 +200,36 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
 export async function fetchEquipmentList(): Promise<Equipment[]> {
   try {
     const token = getAuthToken();
-    if (!token) {
-      throw new Error("No authentication token found");
+
+    // Build headers - include token if available, but don't require it for viewing
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE_URL}/api/equipment`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch equipment: ${response.statusText}`);
+      // Log the error but don't show alert for viewing - backend needs to allow public access
+      console.error(
+        `Failed to fetch equipment: ${response.status} ${response.statusText}`
+      );
+      console.error(
+        "Backend API /api/equipment requires authentication to be removed for GET requests"
+      );
+      return [];
     }
 
     const data: Equipment[] = await response.json();
     return data;
   } catch (error) {
-    handleError(error, "Failed to fetch equipment");
+    console.error("Failed to fetch equipment:", error);
     return [];
   }
 }

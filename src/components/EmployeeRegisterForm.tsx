@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function EmployeeRegisterForm() {
@@ -18,6 +18,22 @@ export default function EmployeeRegisterForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const subtitles = [
+    "Ready to join the team?",
+    "Start your journey with us!",
+    "Your future begins here.",
+    "Let's build something great.",
+    "Welcome aboard!",
+  ];
+
+  const [subtitle, setSubtitle] = useState("");
+
+  useEffect(() => {
+    const randomSubtitle =
+      subtitles[Math.floor(Math.random() * subtitles.length)];
+    setSubtitle(randomSubtitle);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -103,6 +119,9 @@ export default function EmployeeRegisterForm() {
           Welcome! 👋
         </h2>
         Register to <span className="text-orange-600">CRMS</span>
+        <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
+          {subtitle}
+        </p>
       </div>
 
       <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>

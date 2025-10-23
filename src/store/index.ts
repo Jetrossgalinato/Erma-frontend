@@ -6,3 +6,6 @@ export { useResourceStore } from "./resourceStore";
 export type { Equipment, Facility, Supply } from "./resourceStore";
 
 export { useUIStore } from "./uiStore";
+
+export { useRequestsStore } from "./requestsStore";
+export type { RequestType } from "./requestsStore";

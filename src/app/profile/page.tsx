@@ -292,7 +292,7 @@ export default function MyProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 flex flex-col">
       <Navbar />
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-3 sm:p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
           <ProfileHeader

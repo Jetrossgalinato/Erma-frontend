@@ -25,14 +25,14 @@ export default function SecuritySection({
   onEdit,
 }: SecuritySectionProps) {
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
+    <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/50">
       {/* Header */}
-      <div className="p-8 border-b border-slate-200/50 flex justify-between items-center">
+      <div className="p-4 sm:p-6 md:p-8 border-b border-slate-200/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">
             Security Settings
           </h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 text-sm sm:text-base">
             Update your account password and security preferences
           </p>
         </div>
@@ -40,10 +40,10 @@ export default function SecuritySection({
         {!isEditingPassword ? (
           <button
             onClick={onEdit}
-            className="group inline-flex items-center px-6 py-3 border-2 border-amber-300 rounded-xl shadow-sm text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 transition-all duration-200"
+            className="group inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 border-amber-300 rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 transition-all duration-200 w-full sm:w-auto justify-center"
           >
             <svg
-              className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform"
+              className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:scale-110 transition-transform"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -58,23 +58,23 @@ export default function SecuritySection({
             Change Password
           </button>
         ) : (
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 sm:space-x-3 w-full sm:w-auto">
             <button
               onClick={onCancel}
               disabled={saving}
-              className="inline-flex items-center px-6 py-3 border-2 border-slate-300 rounded-xl shadow-sm text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-slate-300 rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Cancel
             </button>
             <button
               onClick={onSave}
               disabled={saving}
-              className="inline-flex items-center px-6 py-3 border-2 border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {saving ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white"
                     fill="none"
                     viewBox="0 0 24 24"
                   >
@@ -92,12 +92,13 @@ export default function SecuritySection({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     />
                   </svg>
-                  Saving...
+                  <span className="hidden sm:inline">Saving...</span>
+                  <span className="sm:hidden">Saving</span>
                 </>
               ) : (
                 <>
                   <svg
-                    className="w-5 h-5 mr-2"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -109,7 +110,8 @@ export default function SecuritySection({
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  Update Password
+                  <span className="hidden sm:inline">Update Password</span>
+                  <span className="sm:hidden">Update</span>
                 </>
               )}
             </button>
@@ -118,12 +120,12 @@ export default function SecuritySection({
       </div>
 
       {/* Content */}
-      <div className="p-8">
+      <div className="p-4 sm:p-6 md:p-8">
         {!isEditingPassword ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-6 sm:py-8">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <svg
-                className="w-8 h-8 text-slate-400"
+                className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-slate-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -136,20 +138,20 @@ export default function SecuritySection({
                 />
               </svg>
             </div>
-            <p className="text-slate-600 text-lg">
+            <p className="text-slate-600 text-base sm:text-lg">
               Keep your account secure by updating your password regularly
             </p>
-            <p className="text-slate-500 text-sm mt-2">
+            <p className="text-slate-500 text-xs sm:text-sm mt-2">
               Click &quot;Change Password&quot; above to get started
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {passwordError && (
-              <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-4 shadow-sm">
+              <div className="bg-red-50 border-l-4 border-red-400 rounded-lg p-3 sm:p-4 shadow-sm">
                 <div className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-red-400 mr-3"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mr-2 sm:mr-3 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -161,13 +163,15 @@ export default function SecuritySection({
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <p className="text-red-800 font-medium">{passwordError}</p>
+                  <p className="text-red-800 font-medium text-sm sm:text-base">
+                    {passwordError}
+                  </p>
                 </div>
               </div>
             )}
 
-            <div className="space-y-3">
-              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <div className="space-y-2 sm:space-y-3">
+              <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
                 Current Password
               </label>
               <input
@@ -176,13 +180,13 @@ export default function SecuritySection({
                 onChange={(e) =>
                   onPasswordChange("currentPassword", e.target.value)
                 }
-                className="w-full px-4 py-3 border-2 border-slate-200 text-orange-800 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-orange-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
                 placeholder="Enter your current password"
               />
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <div className="space-y-2 sm:space-y-3">
+              <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
                 New Password
               </label>
               <input
@@ -191,13 +195,13 @@ export default function SecuritySection({
                 onChange={(e) =>
                   onPasswordChange("newPassword", e.target.value)
                 }
-                className="w-full px-4 py-3 border-2 border-slate-200 text-orange-800 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-orange-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
                 placeholder="Enter your new password"
               />
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <div className="space-y-2 sm:space-y-3">
+              <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
                 Confirm New Password
               </label>
               <input
@@ -206,15 +210,15 @@ export default function SecuritySection({
                 onChange={(e) =>
                   onPasswordChange("confirmPassword", e.target.value)
                 }
-                className="w-full px-4 py-3 border-2 border-slate-200 text-orange-800 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-orange-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
                 placeholder="Confirm your new password"
               />
             </div>
 
-            <div className="bg-orange-50 border-l-4 border-orange-400 rounded-lg p-4 mt-6">
+            <div className="bg-orange-50 border-l-4 border-orange-400 rounded-lg p-3 sm:p-4 mt-4 sm:mt-6">
               <div className="flex items-start">
                 <svg
-                  className="w-5 h-5 text-orange-400 mr-3 mt-0.5"
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mr-2 sm:mr-3 mt-0.5 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -227,10 +231,10 @@ export default function SecuritySection({
                   />
                 </svg>
                 <div>
-                  <h4 className="text-orange-800 font-semibold text-sm">
+                  <h4 className="text-orange-800 font-semibold text-xs sm:text-sm">
                     Password Requirements
                   </h4>
-                  <ul className="text-orange-700 text-sm mt-2 space-y-1">
+                  <ul className="text-orange-700 text-xs sm:text-sm mt-2 space-y-1">
                     <li>• At least 6 characters long</li>
                     <li>• New password must match confirmation</li>
                     <li>• Current password is required for verification</li>

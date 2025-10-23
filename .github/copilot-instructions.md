@@ -12,5 +12,5 @@
 # System Tech Stack
 
 - Frontend: React, TypeScript, Next.js, Tailwind CSS
-- Backend: FastAPI, Python, PostgreSQL
+- Backend: FastAPI, Python
 - Database: PostgreSQL
