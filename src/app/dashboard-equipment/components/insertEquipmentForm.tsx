@@ -151,8 +151,8 @@ export default function InsertEquipmentForm({
             </label>
             <input
               type="date"
-              value={newEquipment.date_acquired || ""}
-              onChange={(e) => onChange("date_acquired", e.target.value)}
+              value={newEquipment.date_acquire || ""}
+              onChange={(e) => onChange("date_acquire", e.target.value)}
               className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
