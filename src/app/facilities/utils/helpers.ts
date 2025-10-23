@@ -254,6 +254,24 @@ export async function createBookingRequest(
 
     const accountData = await accountResponse.json();
 
+    // Format dates to ISO 8601 format with seconds
+    const formatDateForBackend = (dateString: string): string => {
+      // datetime-local gives us "2025-10-23T14:30"
+      // Backend likely expects "2025-10-23T14:30:00" or with timezone
+      return dateString.includes("T") ? `${dateString}:00` : dateString;
+    };
+
+    const requestPayload = {
+      bookers_id: accountData.id,
+      facility_id: facilityId,
+      purpose: formData.purpose.trim(),
+      start_date: formatDateForBackend(formData.start_date),
+      end_date: formatDateForBackend(formData.end_date),
+      status: "Pending",
+    };
+
+    console.log("Booking request payload:", requestPayload);
+
     // Create booking request
     const response = await fetch(`${API_BASE_URL}/api/booking`, {
       method: "POST",
@@ -261,20 +279,32 @@ export async function createBookingRequest(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        bookers_id: accountData.id,
-        facility_id: facilityId,
-        purpose: formData.purpose,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        status: "Pending",
-      }),
+      body: JSON.stringify(requestPayload),
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to create booking request: ${response.statusText}`
-      );
+      // Try to get more details from the error response
+      let errorMessage = response.statusText;
+      try {
+        const errorData = await response.json();
+        console.error("Backend error response:", errorData);
+
+        // Format validation errors nicely
+        if (errorData.detail && Array.isArray(errorData.detail)) {
+          const errors = errorData.detail
+            .map((err: { loc?: string[]; msg?: string }) => {
+              const field = err.loc ? err.loc.join(" -> ") : "unknown";
+              return `${field}: ${err.msg}`;
+            })
+            .join(", ");
+          errorMessage = errors;
+        } else {
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        }
+      } catch {
+        // If response is not JSON, use statusText
+      }
+      throw new Error(`Failed to create booking request: ${errorMessage}`);
     }
 
     return true;
