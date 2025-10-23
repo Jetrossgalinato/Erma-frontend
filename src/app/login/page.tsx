@@ -15,6 +15,22 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const subtitles = [
+    "You’ve got this — let’s go!",
+    "Every login is a fresh start.",
+    "Make today count!",
+    "Progress begins here.",
+    "Keep pushing forward.",
+  ];
+
+  const [subtitle, setSubtitle] = useState("");
+
+  useEffect(() => {
+    const randomSubtitle =
+      subtitles[Math.floor(Math.random() * subtitles.length)];
+    setSubtitle(randomSubtitle);
+  }, []);
+
   useEffect(() => {
     // Redirect if already authenticated
     if (!authLoading && isAuthenticated) {
@@ -92,7 +108,11 @@ export default function LoginPage() {
               Welcome back! 👋
             </h2>
             Login to <span className="text-orange-600">CRMS</span>
+            <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
+              {subtitle}
+            </p>
           </div>
+
           <form className="space-y-3 sm:space-y-4" onSubmit={handleLogin}>
             <div className="px-2">
               <label
