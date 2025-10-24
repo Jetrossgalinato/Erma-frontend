@@ -5,20 +5,27 @@ import Sidebar from "@/components/Sidebar";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { EquipmentLog, fetchEquipmentLogs } from "./utils/helpers";
+import { useMonitoringStore } from "@/store/monitoringStore";
+import { fetchEquipmentLogs } from "./utils/helpers";
 import PageHeader from "./components/PageHeader";
 import LogsCard from "./components/LogsCard";
+import ErrorMessage from "./components/ErrorMessage";
 
 export default function MonitorEquipmentPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [equipmentLogs, setEquipmentLogs] = useState<EquipmentLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const itemsPerPage = 10;
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+
+  const {
+    equipmentLogs,
+    isLoadingEquipmentLogs,
+    equipmentLogsPagination,
+    setEquipmentLogs,
+    setIsLoadingEquipmentLogs,
+    setEquipmentLogsPagination,
+  } = useMonitoringStore();
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -32,44 +39,65 @@ export default function MonitorEquipmentPage() {
   }, [isAuthenticated, authLoading, router]);
 
   // Fetch equipment logs
-  const loadEquipmentLogs = useCallback(async (page = 1) => {
-    try {
-      setLoading(true);
-      const response = await fetchEquipmentLogs({
-        page,
-        limit: itemsPerPage,
-      });
+  const loadEquipmentLogs = useCallback(
+    async (page = 1) => {
+      try {
+        setError(null);
+        setIsLoadingEquipmentLogs(true);
+        const response = await fetchEquipmentLogs({
+          page,
+          limit: equipmentLogsPagination.itemsPerPage,
+        });
 
-      setEquipmentLogs(response.logs);
-      setTotalCount(response.total_count);
-    } catch (error) {
-      console.error("Error fetching equipment logs:", error);
-      // Optionally show error toast/notification
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setEquipmentLogs(response.logs);
+        setEquipmentLogsPagination({
+          currentPage: response.page,
+          totalCount: response.total_count,
+          totalPages: response.total_pages,
+        });
+      } catch (error) {
+        console.error("Error fetching equipment logs:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load equipment logs"
+        );
+      } finally {
+        setIsLoadingEquipmentLogs(false);
+      }
+    },
+    [
+      equipmentLogsPagination.itemsPerPage,
+      setEquipmentLogs,
+      setIsLoadingEquipmentLogs,
+      setEquipmentLogsPagination,
+    ]
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadEquipmentLogs(currentPage);
+      loadEquipmentLogs(equipmentLogsPagination.currentPage);
     }
-  }, [currentPage, isAuthenticated, loadEquipmentLogs]);
+  }, [equipmentLogsPagination.currentPage, isAuthenticated, loadEquipmentLogs]);
 
   const handleRefresh = () => {
-    loadEquipmentLogs(currentPage);
+    loadEquipmentLogs(equipmentLogsPagination.currentPage);
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setEquipmentLogsPagination({ currentPage: page });
   };
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
         <span className="text-gray-500 dark:text-gray-300">Loading...</span>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
@@ -102,13 +130,19 @@ export default function MonitorEquipmentPage() {
               <PageHeader onRefresh={handleRefresh} />
             </div>
 
+            {error && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mb-4">
+                <ErrorMessage message={error} />
+              </div>
+            )}
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <LogsCard
                 logs={equipmentLogs}
-                loading={loading}
-                currentPage={currentPage}
-                totalCount={totalCount}
-                itemsPerPage={itemsPerPage}
+                loading={isLoadingEquipmentLogs}
+                currentPage={equipmentLogsPagination.currentPage}
+                totalCount={equipmentLogsPagination.totalCount}
+                itemsPerPage={equipmentLogsPagination.itemsPerPage}
                 onPageChange={handlePageChange}
               />
             </div>
