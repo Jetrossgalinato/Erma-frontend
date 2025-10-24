@@ -714,15 +714,13 @@ export default function DashboardEquipmentPage() {
                   />
 
                   {/* Pagination */}
-                  {getTotalPages() > 1 && (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={getTotalPages()}
-                      onPageChange={handlePageChange}
-                      totalItems={getFilteredEquipments().length}
-                      itemsPerPage={itemsPerPage}
-                    />
-                  )}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={getTotalPages()}
+                    onPageChange={handlePageChange}
+                    totalItems={getFilteredEquipments().length}
+                    itemsPerPage={itemsPerPage}
+                  />
                 </div>
               )}
             </div>
