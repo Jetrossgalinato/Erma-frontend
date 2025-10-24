@@ -6,6 +6,17 @@ Please implement the **Users Management API** endpoint with the following specif
 
 ---
 
+## ⚠️ CRITICAL REQUIREMENT: Always Exclude Current User
+
+**All endpoints that return user counts or user lists MUST exclude the current authenticated user.**
+
+This applies to:
+
+1. `GET /api/users` - User list endpoint (already implemented)
+2. `GET /api/sidebar/counts` - Sidebar counts endpoint (**IMPORTANT: Update the `users` count**)
+
+---
+
 ## Endpoint: GET /api/users
 
 ### Description
@@ -356,4 +367,80 @@ Authorization: Bearer {token}
   "limit": 10,
   "total_pages": 5
 }
+```
+
+---
+
+## 🔴 ALSO UPDATE: GET /api/sidebar/counts
+
+### Critical Update Required
+
+The sidebar endpoint also returns a `users` count. This count **MUST also exclude the current authenticated user**.
+
+### Endpoint: GET /api/sidebar/counts
+
+**Current Response:**
+
+```json
+{
+  "equipments": 150,
+  "facilities": 25,
+  "supplies": 320,
+  "requests": 45,
+  "equipment_logs": 45,
+  "facility_logs": 32,
+  "supply_logs": 28,
+  "users": 8 // ⚠️ This should NOT include current user
+}
+```
+
+### Implementation Example:
+
+```python
+@router.get("/api/sidebar/counts")
+async def get_sidebar_counts(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all sidebar counts. Users count excludes current user."""
+
+    counts = {
+        "equipments": db.query(Equipment).count(),
+        "facilities": db.query(Facility).count(),
+        "supplies": db.query(Supply).count(),
+        "requests": (
+            db.query(Borrowing).count() +
+            db.query(Booking).count() +
+            db.query(Acquiring).count()
+        ),
+        "equipment_logs": db.query(EquipmentLog).count(),
+        "facility_logs": db.query(FacilityLog).count(),
+        "supply_logs": db.query(SupplyLog).count(),
+        # ⚠️ IMPORTANT: Exclude current user from count
+        "users": db.query(AccountRequest).filter(
+            AccountRequest.id != current_user.id
+        ).count()
+    }
+
+    return counts
+```
+
+### Why This Matters:
+
+1. **Consistency:** Both the sidebar count and the users page should show the same number
+2. **Accuracy:** Sidebar shows "8 users" but table shows 7 users (confusing!)
+3. **User Experience:** Users expect counts to match what they see in the UI
+
+### Quick Fix:
+
+In your sidebar counts endpoint, change:
+
+```python
+# ❌ BEFORE (includes current user)
+"users": db.query(AccountRequest).count()
+
+# ✅ AFTER (excludes current user)
+"users": db.query(AccountRequest).filter(
+    AccountRequest.id != current_user.id
+).count()
 ```

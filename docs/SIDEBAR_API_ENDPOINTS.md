@@ -59,7 +59,7 @@ Content-Type: application/json
 - `equipment_logs` (integer): Total count of equipment transaction logs
 - `facility_logs` (integer): Total count of facility transaction logs
 - `supply_logs` (integer): Total count of supply transaction logs
-- `account_requests` (integer): Count of pending account requests (where `is_intern` and `is_supervisor` are both null)
+- `users` (integer): Count of users **excluding the current authenticated user**
 
 **Response (401 Unauthorized):**
 
@@ -71,9 +71,16 @@ Content-Type: application/json
 
 **Implementation Notes:**
 
-This endpoint should efficiently fetch all counts in a single database query or use parallel queries to minimize response time. Example SQL:
+This endpoint should efficiently fetch all counts in a single database query or use parallel queries to minimize response time.
+
+**IMPORTANT:** The `users` count must exclude the current authenticated user. Extract the user ID from the JWT token and exclude it from the count.
+
+Example SQL:
 
 ```sql
+-- Get current user ID from JWT token
+current_user_id = extract_user_id_from_token(jwt_token)
+
 SELECT
   (SELECT COUNT(*) FROM equipments) as equipments,
   (SELECT COUNT(*) FROM facilities) as facilities,
@@ -82,7 +89,7 @@ SELECT
   (SELECT COUNT(*) FROM equipment_logs) as equipment_logs,
   (SELECT COUNT(*) FROM facility_logs) as facility_logs,
   (SELECT COUNT(*) FROM supply_logs) as supply_logs,
-  (SELECT COUNT(*) FROM account_requests WHERE is_intern IS NULL AND is_supervisor IS NULL) as account_requests;
+  (SELECT COUNT(*) FROM account_requests WHERE id != current_user_id) as users;
 ```
 
 ---
