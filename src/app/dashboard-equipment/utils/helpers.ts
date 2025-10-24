@@ -48,7 +48,7 @@ export type Facility = {
 export async function fetchEquipments(): Promise<Equipment[]> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipments`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -71,7 +71,7 @@ export async function fetchEquipments(): Promise<Equipment[]> {
 export async function fetchFacilities(): Promise<Facility[]> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/facilities`, {
+  const response = await fetch(`${API_BASE_URL}/api/facilities`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export async function createEquipment(
 ): Promise<Equipment> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipments`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ export async function updateEquipment(
 ): Promise<Equipment> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -149,7 +149,7 @@ export async function updateEquipment(
 export async function deleteEquipments(ids: number[]): Promise<void> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipments/bulk-delete`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments/bulk-delete`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -175,7 +175,7 @@ export async function uploadEquipmentImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/equipments/upload-image`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments/upload-image`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -202,7 +202,7 @@ export async function bulkImportEquipments(
 ): Promise<{ imported: number; failed: number }> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipments/bulk-import`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipments/bulk-import`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -231,7 +231,7 @@ export async function logEquipmentAction(
 ): Promise<void> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/equipment-logs`, {
+  const response = await fetch(`${API_BASE_URL}/api/equipment-logs`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
