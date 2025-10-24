@@ -48,6 +48,9 @@ export default function EquipmentsTable({
 }: EquipmentsTableProps) {
   const getFacilityName = (facilityId?: number) => {
     if (!facilityId) return "-";
+    if (!Array.isArray(facilities) || facilities.length === 0) {
+      return `ID: ${facilityId}`;
+    }
     const facility = facilities.find((f) => f.id === facilityId);
     return facility ? facility.name : `ID: ${facilityId}`;
   };
