@@ -10,7 +10,7 @@ export default function PageHeader({ onRefresh }: PageHeaderProps) {
   return (
     <div className="mb-8 pt-8 flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
           Supply Monitoring
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">

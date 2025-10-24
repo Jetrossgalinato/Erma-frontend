@@ -19,3 +19,6 @@ export type {
   SupplyLog,
   PaginationState,
 } from "./monitoringStore";
+
+export { useUsersStore } from "./usersStore";
+export type { User as UsersStoreUser } from "./usersStore";
