@@ -161,6 +161,8 @@ const Sidebar: React.FC = () => {
       try {
         setLoading(true);
         const countsData = await fetchSidebarCounts();
+        console.log("Sidebar counts received:", countsData);
+        console.log("Equipment logs count:", countsData.equipment_logs);
         setCounts(countsData);
       } catch (error) {
         console.error("Error fetching sidebar counts:", error);
