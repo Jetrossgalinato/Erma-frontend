@@ -11,7 +11,6 @@ import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
 import AcquiringRequestsTable from "./components/AcquiringRequestsTable";
 import ActionButtons from "./components/ActionButtons";
-import ReturnNotificationsModal from "./components/ReturnNotificationsModal";
 import DoneNotificationsModal from "./components/DoneNotificationsModal";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
@@ -20,12 +19,10 @@ import {
   BorrowingRequest,
   BookingRequest,
   AcquiringRequest,
-  ReturnNotification,
   DoneNotification,
   fetchBorrowingRequests,
   fetchBookingRequests,
   fetchAcquiringRequests,
-  fetchReturnNotifications,
   fetchDoneNotifications,
   bulkUpdateBorrowingStatus,
   bulkUpdateBookingStatus,
@@ -45,7 +42,6 @@ export default function DashboardRequestsPage() {
     isLoading,
     selectedIds,
     showActionDropdown,
-    showReturnNotifications,
     showDoneNotifications,
     currentPage,
     totalPages,
@@ -55,7 +51,6 @@ export default function DashboardRequestsPage() {
     selectAll,
     toggleSelection,
     setShowActionDropdown,
-    setShowReturnNotifications,
     setShowDoneNotifications,
     setCurrentPage,
     setTotalPages,
@@ -67,9 +62,6 @@ export default function DashboardRequestsPage() {
   const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [acquiringRequests, setAcquiringRequests] = useState<
     AcquiringRequest[]
-  >([]);
-  const [returnNotifications, setReturnNotifications] = useState<
-    ReturnNotification[]
   >([]);
   const [doneNotifications, setDoneNotifications] = useState<
     DoneNotification[]
@@ -102,12 +94,9 @@ export default function DashboardRequestsPage() {
     }
   }, [currentRequestType, currentPage, setIsLoading, setTotalPages]);
 
-  // Load notifications
+  // Load notifications (only for booking/done notifications)
   const loadNotifications = async () => {
-    if (currentRequestType === "borrowing") {
-      const data = await fetchReturnNotifications();
-      setReturnNotifications(data);
-    } else if (currentRequestType === "booking") {
+    if (currentRequestType === "booking") {
       const data = await fetchDoneNotifications();
       setDoneNotifications(data);
     }
@@ -208,12 +197,10 @@ export default function DashboardRequestsPage() {
     }
   };
 
-  // Show notifications
+  // Show notifications (only for booking/done notifications)
   const handleShowNotifications = async () => {
     await loadNotifications();
-    if (currentRequestType === "borrowing") {
-      setShowReturnNotifications(true);
-    } else if (currentRequestType === "booking") {
+    if (currentRequestType === "booking") {
       setShowDoneNotifications(true);
     }
   };
@@ -269,7 +256,7 @@ export default function DashboardRequestsPage() {
               {/* Header */}
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                  <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
                     Requests List
                   </h1>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -293,22 +280,16 @@ export default function DashboardRequestsPage() {
                     onDelete={handleBulkDelete}
                     onRefresh={loadData}
                     onShowNotifications={
-                      currentRequestType !== "acquiring"
+                      currentRequestType === "booking"
                         ? handleShowNotifications
                         : undefined
                     }
                     notificationCount={
-                      currentRequestType === "borrowing"
-                        ? returnNotifications.length
-                        : currentRequestType === "booking"
+                      currentRequestType === "booking"
                         ? doneNotifications.length
                         : 0
                     }
-                    notificationLabel={
-                      currentRequestType === "borrowing"
-                        ? "Return Notifications"
-                        : "Done Notifications"
-                    }
+                    notificationLabel="Done Notifications"
                   />
                 </div>
               </div>
@@ -375,18 +356,7 @@ export default function DashboardRequestsPage() {
         </main>
       </div>
 
-      {/* Modals */}
-      {showReturnNotifications && (
-        <ReturnNotificationsModal
-          notifications={returnNotifications}
-          onClose={() => setShowReturnNotifications(false)}
-          onRefresh={() => {
-            loadData();
-            loadNotifications();
-          }}
-        />
-      )}
-
+      {/* Done Notifications Modal (Booking only) */}
       {showDoneNotifications && (
         <DoneNotificationsModal
           notifications={doneNotifications}
