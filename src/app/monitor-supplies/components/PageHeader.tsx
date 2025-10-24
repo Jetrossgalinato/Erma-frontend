@@ -10,13 +10,13 @@ export default function PageHeader({ onRefresh }: PageHeaderProps) {
   return (
     <div className="mb-8 pt-8 flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-          Facility Monitoring
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+          Supply Monitoring
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          View detailed logs of all user interactions with facility records and
-          reservation requests, including approvals, rejections, modifications,
-          and deletions.
+          View detailed logs of all user interactions with supply records and
+          inventory requests, including additions, modifications, deletions, and
+          stock updates.
         </p>
       </div>
       <button
