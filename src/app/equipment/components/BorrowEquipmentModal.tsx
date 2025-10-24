@@ -37,7 +37,7 @@ export default function BorrowEquipmentModal({
         >
           &times;
         </button>
-        <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-2 sm:mb-4">
+        <h2 className="text-lg sm:text-xl text-gray-800 font-semibold mb-2 sm:mb-4">
           Borrow Equipment: {equipment.name}
         </h2>
         <div className="space-y-2 sm:space-y-4">

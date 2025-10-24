@@ -14,6 +14,7 @@ import PageHeader from "./components/pageHeader";
 import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
 import EmptyState from "./components/emptyState";
+import Pagination from "./components/pagination";
 import { Loader2, RefreshCw } from "lucide-react";
 
 import {
@@ -712,46 +713,14 @@ export default function DashboardEquipmentPage() {
                     facilityFilter={facilityFilter}
                   />
 
-                  <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-t border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 flex items-center justify-between">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Showing{" "}
-                      {Math.min(
-                        (currentPage - 1) * itemsPerPage + 1,
-                        getFilteredEquipments().length
-                      )}{" "}
-                      to{" "}
-                      {Math.min(
-                        currentPage * itemsPerPage,
-                        getFilteredEquipments().length
-                      )}{" "}
-                      of {getFilteredEquipments().length} equipment
-                      {getFilteredEquipments().length !== 1 ? "s" : ""}
-                    </div>
-
-                    {getTotalPages() > 1 && (
-                      <div className="flex items-center space-x-4">
-                        <button
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Previous
-                        </button>
-
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          Page {currentPage} of {getTotalPages()}
-                        </span>
-
-                        <button
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === getTotalPages()}
-                          className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {/* Pagination */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={getTotalPages()}
+                    onPageChange={handlePageChange}
+                    totalItems={getFilteredEquipments().length}
+                    itemsPerPage={itemsPerPage}
+                  />
                 </div>
               )}
             </div>

@@ -29,7 +29,7 @@ export default function SupplyDetailsModal({
           &times;
         </button>
 
-        <h2 className="text-xl sm:text-2xl text-gray-800 font-bold mb-3 sm:mb-4">
+        <h2 className="text-xl sm:text-2xl text-gray-800 font-semibold mb-3 sm:mb-4">
           {supply.supply_name}
         </h2>
 

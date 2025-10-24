@@ -78,7 +78,7 @@ export default function SessionTimeoutProvider({
 
       {/* Session Timeout Warning Modal */}
       {showWarning && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-filter backdrop-blur-sm bg-opacity-60">
           <div
             className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
