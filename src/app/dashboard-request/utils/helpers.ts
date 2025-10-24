@@ -67,6 +67,18 @@ export interface DoneNotification {
   booker_name: string;
 }
 
+export interface RequestNotification {
+  id: number;
+  request_type: "borrowing" | "booking" | "acquiring";
+  request_id: number;
+  requester_name: string;
+  item_name: string;
+  status: string;
+  message: string;
+  created_at: string;
+  purpose: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -373,6 +385,36 @@ export async function fetchDoneNotifications(): Promise<DoneNotification[]> {
     return await response.json();
   } catch (error) {
     handleError(error, "Failed to fetch done notifications");
+    return [];
+  }
+}
+
+export async function fetchRequestNotifications(): Promise<
+  RequestNotification[]
+> {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("No authentication token found");
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/requests/pending-notifications`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch request notifications: ${response.statusText}`
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    handleError(error, "Failed to fetch request notifications");
     return [];
   }
 }

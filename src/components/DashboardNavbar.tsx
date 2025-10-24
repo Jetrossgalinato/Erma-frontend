@@ -13,6 +13,7 @@ import {
   Package,
   CheckCircle,
   XCircle,
+  ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,8 +21,10 @@ import { useAuthStore } from "@/store";
 import {
   ReturnNotification,
   DoneNotification,
+  RequestNotification,
   fetchReturnNotifications,
   fetchDoneNotifications,
+  fetchRequestNotifications,
   confirmReturn,
   rejectReturn,
   confirmDone,
@@ -60,8 +63,14 @@ const DashboardNavbar: React.FC = () => {
   >([]);
   const [doneNotificationsCount, setDoneNotificationsCount] = useState(0);
 
+  // Request Notifications State
+  const [requestNotifications, setRequestNotifications] = useState<
+    RequestNotification[]
+  >([]);
+  const [requestNotificationsCount, setRequestNotificationsCount] = useState(0);
+
   const [activeNotificationTab, setActiveNotificationTab] = useState<
-    "general" | "returns" | "done"
+    "general" | "returns" | "done" | "requests"
   >("general");
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -214,17 +223,31 @@ const DashboardNavbar: React.FC = () => {
     }
   }, [isAuthenticated]);
 
+  const fetchRequestNotificationsData = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    try {
+      const data = await fetchRequestNotifications();
+      setRequestNotifications(data || []);
+      setRequestNotificationsCount(data?.length || 0);
+    } catch (error) {
+      console.error("Error fetching request notifications:", error);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
       fetchReturnNotificationsData();
       fetchDoneNotificationsData();
+      fetchRequestNotificationsData();
 
       // Set up polling for all notifications every 30 seconds
       const interval = setInterval(() => {
         fetchNotifications();
         fetchReturnNotificationsData();
         fetchDoneNotificationsData();
+        fetchRequestNotificationsData();
       }, 30000);
 
       return () => {
@@ -236,6 +259,7 @@ const DashboardNavbar: React.FC = () => {
     fetchNotifications,
     fetchReturnNotificationsData,
     fetchDoneNotificationsData,
+    fetchRequestNotificationsData,
   ]);
 
   const markNotificationAsRead = async (notificationId: string) => {
@@ -434,16 +458,19 @@ const DashboardNavbar: React.FC = () => {
                 <Bell size={25} />
                 {(unreadCount > 0 ||
                   returnNotificationsCount > 0 ||
-                  doneNotificationsCount > 0) && (
+                  doneNotificationsCount > 0 ||
+                  requestNotificationsCount > 0) && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {unreadCount +
                       returnNotificationsCount +
-                      doneNotificationsCount >
+                      doneNotificationsCount +
+                      requestNotificationsCount >
                     99
                       ? "99+"
                       : unreadCount +
                         returnNotificationsCount +
-                        doneNotificationsCount}
+                        doneNotificationsCount +
+                        requestNotificationsCount}
                   </span>
                 )}
               </button>
@@ -454,17 +481,17 @@ const DashboardNavbar: React.FC = () => {
                   <div className="flex border-b border-gray-200 dark:border-gray-700">
                     <button
                       onClick={() => setActiveNotificationTab("general")}
-                      className={`flex-1 px-3 py-3 text-xs font-medium transition-colors ${
+                      className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
                         activeNotificationTab === "general"
                           ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-b-2 border-orange-500"
                           : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex flex-col items-center gap-0.5">
                         <Bell size={14} />
-                        <span>General</span>
+                        <span className="text-[10px]">General</span>
                         {unreadCount > 0 && (
-                          <span className="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                          <span className="bg-red-500 text-white text-[9px] rounded-full px-1 py-0.5">
                             {unreadCount > 99 ? "99+" : unreadCount}
                           </span>
                         )}
@@ -472,17 +499,17 @@ const DashboardNavbar: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActiveNotificationTab("returns")}
-                      className={`flex-1 px-3 py-3 text-xs font-medium transition-colors ${
+                      className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
                         activeNotificationTab === "returns"
                           ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-b-2 border-orange-500"
                           : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex flex-col items-center gap-0.5">
                         <Package size={14} />
-                        <span>Returns</span>
+                        <span className="text-[10px]">Returns</span>
                         {returnNotificationsCount > 0 && (
-                          <span className="bg-orange-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                          <span className="bg-orange-500 text-white text-[9px] rounded-full px-1 py-0.5">
                             {returnNotificationsCount > 99
                               ? "99+"
                               : returnNotificationsCount}
@@ -492,23 +519,43 @@ const DashboardNavbar: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActiveNotificationTab("done")}
-                      className={`flex-1 px-3 py-3 text-xs font-medium transition-colors ${
+                      className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
                         activeNotificationTab === "done"
                           ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-b-2 border-orange-500"
                           : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex flex-col items-center gap-0.5">
                         <LayoutDashboard size={14} />
-                        <span>Done</span>
+                        <span className="text-[10px]">Done</span>
                         {doneNotificationsCount > 0 && (
-                          <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                          <span className="bg-blue-500 text-white text-[9px] rounded-full px-1 py-0.5">
                             {doneNotificationsCount > 99
                               ? "99+"
                               : doneNotificationsCount}
                           </span>
                         )}
                       </div>
+                    </button>
+                    <button
+                      onClick={() => setActiveNotificationTab("requests")}
+                      className={`relative flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
+                        activeNotificationTab === "requests"
+                          ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-b-2 border-orange-500"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-0.5">
+                        <ClipboardList size={14} />
+                        <span className="text-[10px]">Requests</span>
+                      </div>
+                      {requestNotificationsCount > 0 && (
+                        <span className="absolute top-1 right-1 bg-purple-500 text-white text-[9px] rounded-full px-1.5 py-0.5 min-w-[16px] flex items-center justify-center">
+                          {requestNotificationsCount > 99
+                            ? "99+"
+                            : requestNotificationsCount}
+                        </span>
+                      )}
                     </button>
                   </div>
 
@@ -660,7 +707,7 @@ const DashboardNavbar: React.FC = () => {
                           </div>
                         )}
                       </>
-                    ) : (
+                    ) : activeNotificationTab === "done" ? (
                       <>
                         <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
                           <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
@@ -755,7 +802,87 @@ const DashboardNavbar: React.FC = () => {
                           </div>
                         )}
                       </>
-                    )}
+                    ) : activeNotificationTab === "requests" ? (
+                      <>
+                        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800">
+                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                            New Requests
+                          </span>
+                        </div>
+                        {requestNotifications.length === 0 ? (
+                          <div className="px-4 py-8 text-gray-500 dark:text-gray-400 text-center">
+                            <ClipboardList
+                              className="mx-auto mb-2 opacity-50"
+                              size={32}
+                            />
+                            <p>No pending requests</p>
+                          </div>
+                        ) : (
+                          requestNotifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                    {notification.requester_name}
+                                  </div>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    {notification.request_type === "borrowing"
+                                      ? "Equipment: "
+                                      : notification.request_type === "booking"
+                                      ? "Facility: "
+                                      : "Supply: "}
+                                    <span className="font-medium">
+                                      {notification.item_name}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                    Purpose: {notification.purpose}
+                                  </div>
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    {new Date(
+                                      notification.created_at
+                                    ).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                      notification.request_type === "borrowing"
+                                        ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
+                                        : notification.request_type ===
+                                          "booking"
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                                        : "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+                                    }`}
+                                  >
+                                    {notification.request_type}
+                                  </span>
+                                  <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                                    {notification.status}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        {requestNotifications.length > 0 && (
+                          <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 text-center">
+                            <button
+                              onClick={() => {
+                                setIsNotificationDropdownOpen(false);
+                                router.push("/dashboard-request");
+                              }}
+                              className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
+                            >
+                              View All Requests →
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : null}
                   </div>
                 </div>
               )}
