@@ -1,7 +1,7 @@
 /**
  * Pagination Component
  *
- * Provides pagination controls for the facilities table
+ * Provides pagination controls for equipment table
  */
 
 import React from "react";
@@ -29,7 +29,8 @@ const Pagination: React.FC<PaginationProps> = ({
     <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-700 dark:text-gray-300">
-          Showing {startIndex} to {endIndex} of {totalItems} facilities
+          Showing {startIndex} to {endIndex} of {totalItems} equipment
+          {totalItems !== 1 ? "s" : ""}
         </div>
         <div className="flex gap-2">
           <button
