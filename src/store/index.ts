@@ -9,3 +9,5 @@ export { useUIStore } from "./uiStore";
 
 export { useRequestsStore } from "./requestsStore";
 export type { RequestType } from "./requestsStore";
+
+export { useDashboardRequestsStore } from "./dashboardRequestsStore";
