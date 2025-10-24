@@ -42,7 +42,7 @@ export default function AcquireSupplyModal({
           &times;
         </button>
 
-        <h2 className="text-lg sm:text-xl text-gray-800 font-bold mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl text-gray-800 font-semibold mb-3 sm:mb-4">
           Acquire Supply
         </h2>
 
