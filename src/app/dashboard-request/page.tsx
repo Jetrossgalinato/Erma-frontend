@@ -11,16 +11,23 @@ import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
 import AcquiringRequestsTable from "./components/AcquiringRequestsTable";
 import ActionButtons from "./components/ActionButtons";
+import ReturnNotificationsModal from "./components/ReturnNotificationsModal";
+import DoneNotificationsModal from "./components/DoneNotificationsModal";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
+import { Package, LayoutDashboard } from "lucide-react";
 import {
   BorrowingRequest,
   BookingRequest,
   AcquiringRequest,
+  ReturnNotification,
+  DoneNotification,
   fetchBorrowingRequests,
   fetchBookingRequests,
   fetchAcquiringRequests,
+  fetchReturnNotifications,
+  fetchDoneNotifications,
   bulkUpdateBorrowingStatus,
   bulkUpdateBookingStatus,
   bulkUpdateAcquiringStatus,
@@ -58,6 +65,14 @@ export default function DashboardRequestsPage() {
   const [acquiringRequests, setAcquiringRequests] = useState<
     AcquiringRequest[]
   >([]);
+  const [returnNotifications, setReturnNotifications] = useState<
+    ReturnNotification[]
+  >([]);
+  const [doneNotifications, setDoneNotifications] = useState<
+    DoneNotification[]
+  >([]);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [showDoneModal, setShowDoneModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load data function
@@ -85,6 +100,32 @@ export default function DashboardRequestsPage() {
       setIsLoading(false);
     }
   }, [currentRequestType, currentPage, setIsLoading, setTotalPages]);
+
+  // Load notifications
+  const loadNotifications = useCallback(async () => {
+    try {
+      const [returnData, doneData] = await Promise.all([
+        fetchReturnNotifications(),
+        fetchDoneNotifications(),
+      ]);
+      setReturnNotifications(returnData || []);
+      setDoneNotifications(doneData || []);
+    } catch (err) {
+      console.error("Error loading notifications:", err);
+    }
+  }, []);
+
+  // Handle opening return notifications modal
+  const handleShowReturnNotifications = async () => {
+    await loadNotifications();
+    setShowReturnModal(true);
+  };
+
+  // Handle opening done notifications modal
+  const handleShowDoneNotifications = async () => {
+    await loadNotifications();
+    setShowDoneModal(true);
+  };
 
   // Bulk approve
   const handleBulkApprove = async () => {
@@ -202,8 +243,15 @@ export default function DashboardRequestsPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
+      loadNotifications();
     }
-  }, [currentRequestType, currentPage, isAuthenticated, loadData]);
+  }, [
+    currentRequestType,
+    currentPage,
+    isAuthenticated,
+    loadData,
+    loadNotifications,
+  ]);
 
   if (!isAuthenticated) {
     return (
@@ -230,32 +278,74 @@ export default function DashboardRequestsPage() {
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               {/* Header */}
-              <div className="mb-8 pt-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-                    Requests List
-                  </h1>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Monitor requests for borrowing equipment, booking
-                    facilities, and acquiring supplies—all in one place.
-                  </p>
+              <div className="mb-6 pt-8">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
+                      Requests List
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                      Monitor requests for borrowing equipment, booking
+                      facilities, and acquiring supplies—all in one place.
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <RequestTypeSelector
-                    currentType={currentRequestType}
-                    onChange={setCurrentRequestType}
-                  />
-                  <ActionButtons
-                    selectedCount={selectedIds.length}
-                    showActionDropdown={showActionDropdown}
-                    onToggleDropdown={() =>
-                      setShowActionDropdown(!showActionDropdown)
-                    }
-                    onApprove={handleBulkApprove}
-                    onReject={handleBulkReject}
-                    onDelete={handleBulkDelete}
-                    onRefresh={loadData}
-                  />
+
+                {/* Notification and Action Controls */}
+                <div className="flex items-center justify-between">
+                  {/* Left side - Notification Buttons */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Confirmations:
+                    </span>
+                    <button
+                      onClick={handleShowReturnNotifications}
+                      className="relative flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors text-sm font-medium shadow-sm"
+                    >
+                      <Package size={16} />
+                      Returns
+                      {returnNotifications.length > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                          {returnNotifications.length > 99
+                            ? "99+"
+                            : returnNotifications.length}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleShowDoneNotifications}
+                      className="relative flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors text-sm font-medium shadow-sm"
+                    >
+                      <LayoutDashboard size={16} />
+                      Done
+                      {doneNotifications.length > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                          {doneNotifications.length > 99
+                            ? "99+"
+                            : doneNotifications.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Right side - Action Controls */}
+                  <div className="flex items-center gap-3">
+                    <RequestTypeSelector
+                      currentType={currentRequestType}
+                      onChange={setCurrentRequestType}
+                    />
+                    <ActionButtons
+                      selectedCount={selectedIds.length}
+                      showActionDropdown={showActionDropdown}
+                      onToggleDropdown={() =>
+                        setShowActionDropdown(!showActionDropdown)
+                      }
+                      onApprove={handleBulkApprove}
+                      onReject={handleBulkReject}
+                      onDelete={handleBulkDelete}
+                      onRefresh={loadData}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -320,6 +410,30 @@ export default function DashboardRequestsPage() {
           </div>
         </main>
       </div>
+
+      {/* Return Notifications Modal */}
+      {showReturnModal && (
+        <ReturnNotificationsModal
+          notifications={returnNotifications}
+          onClose={() => setShowReturnModal(false)}
+          onRefresh={() => {
+            loadNotifications();
+            loadData();
+          }}
+        />
+      )}
+
+      {/* Done Notifications Modal */}
+      {showDoneModal && (
+        <DoneNotificationsModal
+          notifications={doneNotifications}
+          onClose={() => setShowDoneModal(false)}
+          onRefresh={() => {
+            loadNotifications();
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 }

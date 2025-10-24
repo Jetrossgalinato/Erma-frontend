@@ -11,6 +11,8 @@ import {
   Palette,
   Bell,
   Package,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,6 +22,10 @@ import {
   DoneNotification,
   fetchReturnNotifications,
   fetchDoneNotifications,
+  confirmReturn,
+  rejectReturn,
+  confirmDone,
+  dismissDone,
 } from "@/app/dashboard-request/utils/helpers";
 
 type Notification = {
@@ -287,6 +293,44 @@ const DashboardNavbar: React.FC = () => {
     }
   };
 
+  // Handle confirm return
+  const handleConfirmReturn = async (
+    notificationId: number,
+    borrowingId: number
+  ) => {
+    const success = await confirmReturn(notificationId, borrowingId);
+    if (success) {
+      await fetchReturnNotificationsData();
+    }
+  };
+
+  // Handle reject return
+  const handleRejectReturn = async (notificationId: number) => {
+    const success = await rejectReturn(notificationId);
+    if (success) {
+      await fetchReturnNotificationsData();
+    }
+  };
+
+  // Handle confirm done
+  const handleConfirmDone = async (
+    notificationId: number,
+    bookingId: number
+  ) => {
+    const success = await confirmDone(notificationId, bookingId);
+    if (success) {
+      await fetchDoneNotificationsData();
+    }
+  };
+
+  // Handle dismiss done
+  const handleDismissDone = async (notificationId: number) => {
+    const success = await dismissDone(notificationId);
+    if (success) {
+      await fetchDoneNotificationsData();
+    }
+  };
+
   return (
     <nav className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm px-6 md:py-1 flex justify-between items-center relative">
       <div className="flex items-center pl-40">
@@ -540,7 +584,7 @@ const DashboardNavbar: React.FC = () => {
                           returnNotifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -561,6 +605,33 @@ const DashboardNavbar: React.FC = () => {
                                       notification.created_at
                                     ).toLocaleDateString()}
                                   </div>
+
+                                  {/* Action Buttons - Only show if pending */}
+                                  {notification.status === "pending" && (
+                                    <div className="flex gap-2 mt-2">
+                                      <button
+                                        onClick={() =>
+                                          handleConfirmReturn(
+                                            notification.id,
+                                            notification.borrowing_id
+                                          )
+                                        }
+                                        className="flex items-center gap-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors"
+                                      >
+                                        <CheckCircle size={14} />
+                                        Confirm
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleRejectReturn(notification.id)
+                                        }
+                                        className="flex items-center gap-1 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md transition-colors"
+                                      >
+                                        <XCircle size={14} />
+                                        Reject
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                                 <span
                                   className={`text-xs px-2 py-1 rounded-full ${
@@ -580,12 +651,7 @@ const DashboardNavbar: React.FC = () => {
                             <button
                               onClick={() => {
                                 setIsNotificationDropdownOpen(false);
-                                setTimeout(
-                                  () =>
-                                    (window.location.href =
-                                      "/dashboard-request"),
-                                  100
-                                );
+                                router.push("/dashboard-request");
                               }}
                               className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
                             >
@@ -613,7 +679,7 @@ const DashboardNavbar: React.FC = () => {
                           doneNotifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -634,6 +700,33 @@ const DashboardNavbar: React.FC = () => {
                                       notification.created_at
                                     ).toLocaleDateString()}
                                   </div>
+
+                                  {/* Action Buttons - Only show if pending */}
+                                  {notification.status === "pending" && (
+                                    <div className="flex gap-2 mt-2">
+                                      <button
+                                        onClick={() =>
+                                          handleConfirmDone(
+                                            notification.id,
+                                            notification.booking_id
+                                          )
+                                        }
+                                        className="flex items-center gap-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors"
+                                      >
+                                        <CheckCircle size={14} />
+                                        Confirm
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDismissDone(notification.id)
+                                        }
+                                        className="flex items-center gap-1 px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-md transition-colors"
+                                      >
+                                        <XCircle size={14} />
+                                        Dismiss
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                                 <span
                                   className={`text-xs px-2 py-1 rounded-full ${
@@ -653,12 +746,7 @@ const DashboardNavbar: React.FC = () => {
                             <button
                               onClick={() => {
                                 setIsNotificationDropdownOpen(false);
-                                setTimeout(
-                                  () =>
-                                    (window.location.href =
-                                      "/dashboard-request"),
-                                  100
-                                );
+                                router.push("/dashboard-request");
                               }}
                               className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
                             >
