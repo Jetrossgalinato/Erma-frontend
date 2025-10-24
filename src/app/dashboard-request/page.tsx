@@ -11,7 +11,6 @@ import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
 import AcquiringRequestsTable from "./components/AcquiringRequestsTable";
 import ActionButtons from "./components/ActionButtons";
-import DoneNotificationsModal from "./components/DoneNotificationsModal";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
@@ -19,11 +18,9 @@ import {
   BorrowingRequest,
   BookingRequest,
   AcquiringRequest,
-  DoneNotification,
   fetchBorrowingRequests,
   fetchBookingRequests,
   fetchAcquiringRequests,
-  fetchDoneNotifications,
   bulkUpdateBorrowingStatus,
   bulkUpdateBookingStatus,
   bulkUpdateAcquiringStatus,
@@ -42,7 +39,6 @@ export default function DashboardRequestsPage() {
     isLoading,
     selectedIds,
     showActionDropdown,
-    showDoneNotifications,
     currentPage,
     totalPages,
     setCurrentRequestType,
@@ -51,7 +47,6 @@ export default function DashboardRequestsPage() {
     selectAll,
     toggleSelection,
     setShowActionDropdown,
-    setShowDoneNotifications,
     setCurrentPage,
     setTotalPages,
   } = useDashboardRequestsStore();
@@ -62,9 +57,6 @@ export default function DashboardRequestsPage() {
   const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [acquiringRequests, setAcquiringRequests] = useState<
     AcquiringRequest[]
-  >([]);
-  const [doneNotifications, setDoneNotifications] = useState<
-    DoneNotification[]
   >([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,14 +85,6 @@ export default function DashboardRequestsPage() {
       setIsLoading(false);
     }
   }, [currentRequestType, currentPage, setIsLoading, setTotalPages]);
-
-  // Load notifications (only for booking/done notifications)
-  const loadNotifications = async () => {
-    if (currentRequestType === "booking") {
-      const data = await fetchDoneNotifications();
-      setDoneNotifications(data);
-    }
-  };
 
   // Bulk approve
   const handleBulkApprove = async () => {
@@ -197,14 +181,6 @@ export default function DashboardRequestsPage() {
     }
   };
 
-  // Show notifications (only for booking/done notifications)
-  const handleShowNotifications = async () => {
-    await loadNotifications();
-    if (currentRequestType === "booking") {
-      setShowDoneNotifications(true);
-    }
-  };
-
   // Get current requests based on type
   const currentRequests =
     currentRequestType === "borrowing"
@@ -279,17 +255,6 @@ export default function DashboardRequestsPage() {
                     onReject={handleBulkReject}
                     onDelete={handleBulkDelete}
                     onRefresh={loadData}
-                    onShowNotifications={
-                      currentRequestType === "booking"
-                        ? handleShowNotifications
-                        : undefined
-                    }
-                    notificationCount={
-                      currentRequestType === "booking"
-                        ? doneNotifications.length
-                        : 0
-                    }
-                    notificationLabel="Done Notifications"
                   />
                 </div>
               </div>
@@ -355,18 +320,6 @@ export default function DashboardRequestsPage() {
           </div>
         </main>
       </div>
-
-      {/* Done Notifications Modal (Booking only) */}
-      {showDoneNotifications && (
-        <DoneNotificationsModal
-          notifications={doneNotifications}
-          onClose={() => setShowDoneNotifications(false)}
-          onRefresh={() => {
-            loadData();
-            loadNotifications();
-          }}
-        />
-      )}
     </div>
   );
 }
