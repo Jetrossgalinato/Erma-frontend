@@ -28,7 +28,7 @@ export default function FacilityDetailsModal({
         >
           &times;
         </button>
-        <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
+        <h2 className="text-lg sm:text-2xl text-gray-800 font-semibold mb-2 sm:mb-4">
           {facility.facility_name}
         </h2>
         <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-700">

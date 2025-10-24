@@ -36,7 +36,7 @@ export default function BookFacilityModal({
         >
           &times;
         </button>
-        <h2 className="text-lg sm:text-2xl text-gray-800 font-bold mb-2 sm:mb-4">
+        <h2 className="text-lg sm:text-2xl text-gray-800 font-semibold mb-2 sm:mb-4">
           Book {facility.facility_name}
         </h2>
 
