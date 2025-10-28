@@ -5,6 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import Alert from "@/components/Alert";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
@@ -51,6 +52,11 @@ export default function FacilitiesPage() {
     end_date: "",
   });
   const [bookingLoading, setBookingLoading] = useState(false);
+
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
 
   const [selectedFacilityType, setSelectedFacilityType] =
     useState("All Facility Types");
@@ -102,7 +108,10 @@ export default function FacilitiesPage() {
     );
 
     if (success) {
-      alert("Booking request submitted successfully!");
+      setAlert({
+        type: "success",
+        message: "Booking request submitted successfully!",
+      });
       setBookingData({ purpose: "", start_date: "", end_date: "" });
       setShowBookingModal(false);
       setSelectedFacility(null);
@@ -377,6 +386,14 @@ export default function FacilitiesPage() {
       <div className="mt-auto">
         <Footer />
       </div>
+
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
     </div>
   );
 }

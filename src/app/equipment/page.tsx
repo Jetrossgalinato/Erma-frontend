@@ -5,6 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import Alert from "@/components/Alert";
 import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
@@ -56,6 +57,12 @@ export default function EquipmentPage() {
     end_date: "",
     return_date: "",
   });
+
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
+
   const [borrowing, setBorrowing] = useState(false);
 
   const fetchEquipment = useCallback(async () => {
@@ -92,7 +99,10 @@ export default function EquipmentPage() {
 
   const handleBorrow = async () => {
     if (!isAuthenticated) {
-      alert("Please log in to borrow equipment");
+      setAlert({
+        type: "warning",
+        message: "Please log in to borrow equipment",
+      });
       return;
     }
     if (
@@ -102,7 +112,10 @@ export default function EquipmentPage() {
       !borrowFormData.end_date ||
       !borrowFormData.return_date
     ) {
-      alert("Please fill in all required fields");
+      setAlert({
+        type: "error",
+        message: "Please fill in all required fields",
+      });
       return;
     }
 
@@ -113,7 +126,10 @@ export default function EquipmentPage() {
     );
 
     if (success) {
-      alert("Borrowing request submitted successfully!");
+      setAlert({
+        type: "success",
+        message: "Borrowing request submitted successfully!",
+      });
       setShowBorrowModal(false);
       setBorrowFormData({
         purpose: "",
@@ -406,6 +422,14 @@ export default function EquipmentPage() {
         equipmentName={selectedEquipment?.name || null}
         onClose={() => setShowImageModal(false)}
       />
+
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
     </div>
   );
 }

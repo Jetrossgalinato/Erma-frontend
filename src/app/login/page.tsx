@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { Eye, EyeOff } from "lucide-react";
 
 // API Configuration
@@ -14,6 +15,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, login } = useAuthStore();
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -84,8 +86,11 @@ export default function LoginPage() {
       login(result.access_token, userData);
 
       setError("");
-      alert("You have logged in successfully!");
-      router.push("/home");
+      showAlert({
+        type: "success",
+        message: "You have logged in successfully!",
+      });
+      setTimeout(() => router.push("/home"), 1500);
     } catch {
       setError("Login failed. Please try again.");
     }
