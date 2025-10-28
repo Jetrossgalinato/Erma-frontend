@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, User, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import { useRouter } from "next/navigation";
 import StatisticsCards from "./components/StatisticsCards";
@@ -278,18 +279,7 @@ export default function AccountRequestsPage() {
           />
 
           {/* Loading State */}
-          {(loading || authLoading) && (
-            <div className="text-center py-12">
-              <RefreshCw
-                className={`w-8 h-8 mx-auto text-orange-500 mb-4 animate-spin`}
-              />
-              <p className="text-gray-600">
-                {authLoading
-                  ? "Checking authentication..."
-                  : "Loading requests..."}
-              </p>
-            </div>
-          )}
+          {(loading || authLoading) && <Loader />}
 
           {/* Account Requests Grid */}
           {!loading && (
