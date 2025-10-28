@@ -42,9 +42,9 @@ export const FLOOR_LEVELS = [
   "3rd Floor",
 ];
 
-export const ITEMS_PER_PAGE = 6;
+export const ITEMS_PER_PAGE = 9;
 
-export const API_BASE_URL = "http://localhost:8000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper Functions
 export function getAuthToken(): string | null {

@@ -26,6 +26,9 @@ export interface UsersResponse {
   total_pages: number;
 }
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // API Functions
 export async function fetchUsers(
   params: PaginationParams
@@ -52,15 +55,12 @@ export async function fetchUsers(
     queryParams.append("exclude_user_id", params.excludeUserId);
   }
 
-  const response = await fetch(
-    `http://localhost:8000/api/users?${queryParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/api/users?${queryParams}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
   if (response.status === 401) {
     localStorage.removeItem("authToken");
@@ -86,7 +86,7 @@ export async function updateUser(
     throw new Error("Not authenticated");
   }
 
-  const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -116,7 +116,7 @@ export async function deleteUsers(userIds: string[]): Promise<void> {
     throw new Error("Not authenticated");
   }
 
-  const response = await fetch(`http://localhost:8000/api/users/batch`, {
+  const response = await fetch(`${API_BASE_URL}/api/users/batch`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,

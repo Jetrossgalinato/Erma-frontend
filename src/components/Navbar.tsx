@@ -15,6 +15,9 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const Navbar: React.FC = () => {
   // Use auth store
   const { user, isAuthenticated, logout: logoutFromStore } = useAuthStore();
@@ -137,7 +140,7 @@ const Navbar: React.FC = () => {
       if (!token) return;
 
       // Call FastAPI endpoint to get notifications
-      const response = await fetch("http://localhost:8000/api/notifications", {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -176,7 +179,7 @@ const Navbar: React.FC = () => {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:8000/api/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/api/notifications/${notificationId}/read`,
         {
           method: "PATCH",
           headers: {
@@ -207,7 +210,7 @@ const Navbar: React.FC = () => {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch("http://localhost:8000/api/notifications", {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function EmployeeRegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
@@ -66,7 +69,7 @@ export default function EmployeeRegisterForm() {
 
     try {
       // Call FastAPI registration endpoint
-      const response = await fetch("http://localhost:8000/api/register", {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
