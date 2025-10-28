@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
+import Loader from "@/components/Loader";
 import FacilitiesTable from "./components/FacilitiesTable";
 import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
@@ -13,7 +14,6 @@ import AddFacilityForm from "./components/AddFacilityForm";
 import ImportModal from "./components/ImportModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import Pagination from "./components/Pagination";
-import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import { RefreshCw } from "lucide-react";
 import {
@@ -432,7 +432,7 @@ export default function DashboardFacilitiesPage() {
   );
 
   if (isLoading) {
-    return <LoadingState />;
+    return <Loader />;
   }
 
   return (
@@ -545,7 +545,7 @@ export default function DashboardFacilitiesPage() {
               )}
 
               {loading ? (
-                <LoadingState />
+                <Loader />
               ) : facilities.length === 0 ? (
                 <EmptyState />
               ) : (

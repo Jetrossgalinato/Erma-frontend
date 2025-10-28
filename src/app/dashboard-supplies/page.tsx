@@ -1,6 +1,7 @@
 "use client";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
+import Loader from "@/components/Loader";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -12,7 +13,6 @@ import AddSupplyForm from "./components/AddSupplyForm";
 import ImportModal from "./components/ImportModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import Pagination from "./components/Pagination";
-import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import ImageModal from "./components/ImageModal";
 import { RefreshCw } from "lucide-react";
@@ -775,7 +775,7 @@ export default function DashboardSuppliesPage() {
               )}
 
               {loading ? (
-                <LoadingState />
+                <Loader />
               ) : supplies.length === 0 ? (
                 <EmptyState />
               ) : (
