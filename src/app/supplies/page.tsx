@@ -1,6 +1,7 @@
 "use client";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import Loader from "@/components/Loader";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useAuthStore, useUIStore } from "@/store";
@@ -196,11 +197,8 @@ export default function SuppliesPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {loading ? (
-              <div className="col-span-full flex justify-center items-center py-8 sm:py-12">
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-orange-500" />
-                <span className="ml-2 text-gray-600 text-sm sm:text-base">
-                  Loading supplies...
-                </span>
+              <div className="col-span-full">
+                <Loader />
               </div>
             ) : filteredSupplies.length === 0 ? (
               <div className="col-span-full text-center py-8 sm:py-12">

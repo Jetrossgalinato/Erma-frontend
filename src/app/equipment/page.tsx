@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
 import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
@@ -204,12 +205,7 @@ export default function EquipmentPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8 sm:py-12">
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-3 sm:mb-4 animate-spin" />
-                <p className="text-xs sm:text-base text-gray-600">
-                  Loading equipment...
-                </p>
-              </div>
+              <Loader />
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">

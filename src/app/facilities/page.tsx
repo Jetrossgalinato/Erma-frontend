@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
@@ -223,12 +224,7 @@ export default function FacilitiesPage() {
           {/* Facilities Content */}
           {loading ? (
             // Loading State
-            <div className="text-center py-8 sm:py-12">
-              <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-2 sm:mb-4 animate-spin" />
-              <p className="text-xs sm:text-base text-gray-600">
-                Loading facilities...
-              </p>
-            </div>
+            <Loader />
           ) : (
             <>
               {/* Facilities Grid */}
