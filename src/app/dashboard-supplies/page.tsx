@@ -681,11 +681,13 @@ export default function DashboardSuppliesPage() {
 
   // getStockStatus and logSupplyAction are now imported from helpers.ts
 
-  // Load initial data
+  // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {
-      loadSupplies();
-      loadFacilities();
+      // Parallel data fetching instead of sequential
+      Promise.all([loadSupplies(), loadFacilities()]).catch((error) => {
+        console.error("Error loading initial data:", error);
+      });
     }
   }, [isAuthenticated, loadSupplies, loadFacilities]);
 

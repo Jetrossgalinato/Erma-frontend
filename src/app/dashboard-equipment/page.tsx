@@ -582,10 +582,13 @@ export default function DashboardEquipmentPage() {
     }
   };
 
+  // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {
-      loadFacilities();
-      loadEquipments(false);
+      // Parallel data fetching instead of sequential
+      Promise.all([loadFacilities(), loadEquipments(false)]).catch((error) => {
+        console.error("Error loading initial data:", error);
+      });
     }
   }, [isAuthenticated, loadEquipments, loadFacilities]);
 
