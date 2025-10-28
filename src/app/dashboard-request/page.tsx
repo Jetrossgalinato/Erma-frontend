@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
+import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store";
 import { useDashboardRequestsStore } from "@/store";
 import RequestTypeSelector from "./components/RequestTypeSelector";
@@ -254,11 +255,7 @@ export default function DashboardRequestsPage() {
   ]);
 
   if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <span className="text-gray-500 dark:text-gray-300">Loading...</span>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

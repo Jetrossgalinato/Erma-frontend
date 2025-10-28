@@ -5,8 +5,8 @@ import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import EmployeeRegisterForm from "../../components/EmployeeRegisterForm";
+import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const [registerAs] = useState<"employee" | "intern" | "supervisor">(
@@ -23,11 +23,7 @@ export default function RegisterPage() {
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-12 w-12 text-orange-600 animate-spin" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

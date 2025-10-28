@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import Loader from "@/components/Loader";
+import { Eye, EyeOff } from "lucide-react";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -91,11 +92,7 @@ export default function LoginPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

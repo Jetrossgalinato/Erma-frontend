@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import Loader from "@/components/Loader";
 import EquipmentsTable from "./components/equipmentsTable";
 import ImageModal from "./components/imageModal";
 import EditModal from "./components/editModal";
@@ -15,7 +16,7 @@ import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
 import EmptyState from "./components/emptyState";
 import Pagination from "./components/pagination";
-import { Loader2, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 import {
   type Equipment,
@@ -663,12 +664,7 @@ export default function DashboardEquipmentPage() {
               />
 
               {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
-                  <span className="ml-3 text-gray-600 dark:text-gray-400">
-                    Loading equipments...
-                  </span>
-                </div>
+                <Loader />
               ) : error ? (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
                   <div className="flex items-center gap-3">

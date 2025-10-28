@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useUsersStore } from "@/store/usersStore";
@@ -272,11 +273,7 @@ const UsersPage: React.FC = () => {
 
   // Loading state
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-        <span className="text-gray-500 dark:text-gray-300">Loading...</span>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!isAuthenticated) {
