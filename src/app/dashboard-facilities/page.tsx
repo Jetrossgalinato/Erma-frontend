@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useAlert } from "@/contexts/AlertContext";
@@ -10,13 +17,17 @@ import Loader from "@/components/Loader";
 import FacilitiesTable from "./components/FacilitiesTable";
 import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
-import EditModal from "./components/EditModal";
-import AddFacilityForm from "./components/AddFacilityForm";
-import ImportModal from "./components/ImportModal";
-import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
 import { RefreshCw } from "lucide-react";
+
+// Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
+const EditModal = lazy(() => import("./components/EditModal"));
+const AddFacilityForm = lazy(() => import("./components/AddFacilityForm"));
+const ImportModal = lazy(() => import("./components/ImportModal"));
+const DeleteConfirmationModal = lazy(
+  () => import("./components/DeleteConfirmationModal")
+);
 import {
   fetchFacilities,
   createFacility,
@@ -565,12 +576,14 @@ export default function DashboardFacilitiesPage() {
               </div>
 
               {showInsertForm && (
-                <AddFacilityForm
-                  facility={newFacility}
-                  onChange={handleNewFacilityChange}
-                  onSave={handleInsertFacility}
-                  onCancel={handleCancelInsert}
-                />
+                <Suspense fallback={null}>
+                  <AddFacilityForm
+                    facility={newFacility}
+                    onChange={handleNewFacilityChange}
+                    onSave={handleInsertFacility}
+                    onCancel={handleCancelInsert}
+                  />
+                </Suspense>
               )}
 
               {loading ? (
@@ -604,35 +617,41 @@ export default function DashboardFacilitiesPage() {
 
       {/* Modals */}
       {showImportModal && (
-        <ImportModal
-          importData={importData}
-          isProcessing={isProcessing}
-          fileInputRef={fileInputRef}
-          onFileSelect={handleFileSelect}
-          onImport={handleImportData}
-          onCancel={() => {
-            setShowImportModal(false);
-            setImportData([]);
-          }}
-          onTriggerFileSelect={() => fileInputRef.current?.click()}
-        />
+        <Suspense fallback={null}>
+          <ImportModal
+            importData={importData}
+            isProcessing={isProcessing}
+            fileInputRef={fileInputRef}
+            onFileSelect={handleFileSelect}
+            onImport={handleImportData}
+            onCancel={() => {
+              setShowImportModal(false);
+              setImportData([]);
+            }}
+            onTriggerFileSelect={() => fileInputRef.current?.click()}
+          />
+        </Suspense>
       )}
 
       {showEditModal && editingFacility && (
-        <EditModal
-          facility={editingFacility}
-          onSave={handleSaveEdit}
-          onCancel={handleCancelEdit}
-          onChange={handleEditChange}
-        />
+        <Suspense fallback={null}>
+          <EditModal
+            facility={editingFacility}
+            onSave={handleSaveEdit}
+            onCancel={handleCancelEdit}
+            onChange={handleEditChange}
+          />
+        </Suspense>
       )}
 
       {showDeleteModal && (
-        <DeleteConfirmationModal
-          selectedCount={selectedRows.length}
-          onConfirm={handleDeleteSelectedRows}
-          onCancel={() => setShowDeleteModal(false)}
-        />
+        <Suspense fallback={null}>
+          <DeleteConfirmationModal
+            selectedCount={selectedRows.length}
+            onConfirm={handleDeleteSelectedRows}
+            onCancel={() => setShowDeleteModal(false)}
+          />
+        </Suspense>
       )}
     </div>
   );

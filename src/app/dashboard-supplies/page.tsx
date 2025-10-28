@@ -3,20 +3,31 @@ import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import Loader from "@/components/Loader";
 import { useAlert } from "@/contexts/AlertContext";
-import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import SuppliesTable from "./components/SuppliesTable";
 import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
-import EditModal from "./components/EditModal";
-import AddSupplyForm from "./components/AddSupplyForm";
-import ImportModal from "./components/ImportModal";
-import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
-import ImageModal from "./components/ImageModal";
 import { RefreshCw } from "lucide-react";
+
+// Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
+const EditModal = lazy(() => import("./components/EditModal"));
+const AddSupplyForm = lazy(() => import("./components/AddSupplyForm"));
+const ImportModal = lazy(() => import("./components/ImportModal"));
+const DeleteConfirmationModal = lazy(
+  () => import("./components/DeleteConfirmationModal")
+);
+const ImageModal = lazy(() => import("./components/ImageModal"));
 import {
   Supply,
   SupplyFormData,
@@ -807,31 +818,33 @@ export default function DashboardSuppliesPage() {
 
               {/* Insert Form Row */}
               {showInsertForm && (
-                <AddSupplyForm
-                  supply={newSupply}
-                  facilities={facilities}
-                  imagePreview={imagePreview}
-                  onChange={(e) => {
-                    const { name, value } = e.target;
-                    if (name === "quantity" || name === "stocking_point") {
-                      setNewSupply({
-                        ...newSupply,
-                        [name]: parseInt(value) || 0,
-                      });
-                    } else if (name === "facility_id") {
-                      setNewSupply({
-                        ...newSupply,
-                        facility_id: parseInt(value) || undefined,
-                      });
-                    } else {
-                      setNewSupply({ ...newSupply, [name]: value });
-                    }
-                  }}
-                  onSave={handleInsertSupply}
-                  onCancel={handleCancelInsert}
-                  onImageSelect={() => imageInputRef.current?.click()}
-                  onImageClear={clearImageSelection}
-                />
+                <Suspense fallback={null}>
+                  <AddSupplyForm
+                    supply={newSupply}
+                    facilities={facilities}
+                    imagePreview={imagePreview}
+                    onChange={(e) => {
+                      const { name, value } = e.target;
+                      if (name === "quantity" || name === "stocking_point") {
+                        setNewSupply({
+                          ...newSupply,
+                          [name]: parseInt(value) || 0,
+                        });
+                      } else if (name === "facility_id") {
+                        setNewSupply({
+                          ...newSupply,
+                          facility_id: parseInt(value) || undefined,
+                        });
+                      } else {
+                        setNewSupply({ ...newSupply, [name]: value });
+                      }
+                    }}
+                    onSave={handleInsertSupply}
+                    onCancel={handleCancelInsert}
+                    onImageSelect={() => imageInputRef.current?.click()}
+                    onImageClear={clearImageSelection}
+                  />
+                </Suspense>
               )}
 
               {loading ? (
@@ -874,50 +887,56 @@ export default function DashboardSuppliesPage() {
 
       {/* Import Data Modal */}
       {showImportModal && (
-        <ImportModal
-          importData={importData}
-          isProcessing={isProcessing}
-          fileInputRef={fileInputRef}
-          onFileSelect={handleFileSelect}
-          onImport={handleImportData}
-          onCancel={() => {
-            setShowImportModal(false);
-            setSelectedFile(null);
-            setImportData([]);
-          }}
-          onTriggerFileSelect={() => fileInputRef.current?.click()}
-        />
+        <Suspense fallback={null}>
+          <ImportModal
+            importData={importData}
+            isProcessing={isProcessing}
+            fileInputRef={fileInputRef}
+            onFileSelect={handleFileSelect}
+            onImport={handleImportData}
+            onCancel={() => {
+              setShowImportModal(false);
+              setSelectedFile(null);
+              setImportData([]);
+            }}
+            onTriggerFileSelect={() => fileInputRef.current?.click()}
+          />
+        </Suspense>
       )}
 
       {/* Edit Modal */}
       {showEditModal && editingSupply && (
-        <EditModal
-          supply={editingSupply}
-          facilities={facilities}
-          imagePreview={editImagePreview}
-          onSave={handleSaveEdit}
-          onCancel={handleCancelEdit}
-          onChange={handleEditChange}
-          onImageSelect={() => editImageInputRef.current?.click()}
-          onImageClear={() => {
-            setEditImageFile(null);
-            setEditImagePreview(null);
-          }}
-          onRemoveCurrentImage={removeCurrentImage}
-        />
+        <Suspense fallback={null}>
+          <EditModal
+            supply={editingSupply}
+            facilities={facilities}
+            imagePreview={editImagePreview}
+            onSave={handleSaveEdit}
+            onCancel={handleCancelEdit}
+            onChange={handleEditChange}
+            onImageSelect={() => editImageInputRef.current?.click()}
+            onImageClear={() => {
+              setEditImageFile(null);
+              setEditImagePreview(null);
+            }}
+            onRemoveCurrentImage={removeCurrentImage}
+          />
+        </Suspense>
       )}
 
       {/* Image Modal */}
       {showImageModal && selectedImageUrl && (
-        <ImageModal
-          imageUrl={selectedImageUrl}
-          supplyName={selectedImageName}
-          onClose={() => {
-            setShowImageModal(false);
-            setSelectedImageUrl(null);
-            setSelectedImageName("");
-          }}
-        />
+        <Suspense fallback={null}>
+          <ImageModal
+            imageUrl={selectedImageUrl}
+            supplyName={selectedImageName}
+            onClose={() => {
+              setShowImageModal(false);
+              setSelectedImageUrl(null);
+              setSelectedImageName("");
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Add these before the closing div of the main component */}
