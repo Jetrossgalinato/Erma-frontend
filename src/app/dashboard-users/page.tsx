@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useUsersStore } from "@/store/usersStore";
+import { useAlert } from "@/contexts/AlertContext";
 import {
   fetchUsers,
   updateUser,
@@ -41,6 +42,7 @@ const UsersPage: React.FC = () => {
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
+  const { showAlert } = useAlert();
 
   const {
     users,
@@ -197,17 +199,26 @@ const UsersPage: React.FC = () => {
     if (!editingUser) return;
 
     if (!editingUser.first_name?.trim()) {
-      alert("First name is required");
+      showAlert({
+        type: "warning",
+        message: "First name is required",
+      });
       return;
     }
 
     if (!editingUser.last_name?.trim()) {
-      alert("Last name is required");
+      showAlert({
+        type: "warning",
+        message: "Last name is required",
+      });
       return;
     }
 
     if (!editingUser.department?.trim()) {
-      alert("Department is required");
+      showAlert({
+        type: "warning",
+        message: "Department is required",
+      });
       return;
     }
 
@@ -229,7 +240,11 @@ const UsersPage: React.FC = () => {
       setSelectedRows([]);
     } catch (error) {
       console.error("Error updating user:", error);
-      alert(error instanceof Error ? error.message : "Failed to update user");
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to update user",
+      });
     }
   };
 
@@ -253,7 +268,11 @@ const UsersPage: React.FC = () => {
       loadUsers(usersPagination.currentPage);
     } catch (error) {
       console.error("Error deleting users:", error);
-      alert(error instanceof Error ? error.message : "Failed to delete users");
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to delete users",
+      });
     }
 
     setShowDeleteModal(false);

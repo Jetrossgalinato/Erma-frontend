@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { useAlert } from "@/contexts/AlertContext";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import Loader from "@/components/Loader";
@@ -34,6 +35,7 @@ import {
 export default function DashboardFacilitiesPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { showAlert } = useAlert();
 
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -209,7 +211,10 @@ export default function DashboardFacilitiesPage() {
     if (!editingFacility) return;
 
     if (!editingFacility.facility_name?.trim()) {
-      alert("Facility name is required");
+      showAlert({
+        type: "warning",
+        message: "Facility name is required",
+      });
       return;
     }
 
@@ -241,7 +246,10 @@ export default function DashboardFacilitiesPage() {
       setSelectedRows([]);
     } catch (error) {
       console.error("Error updating facility:", error);
-      alert("Failed to update facility");
+      showAlert({
+        type: "error",
+        message: "Failed to update facility",
+      });
     }
   };
 
@@ -270,7 +278,10 @@ export default function DashboardFacilitiesPage() {
 
   const handleInsertFacility = async () => {
     if (!newFacility.facility_name?.trim()) {
-      alert("Facility name is required");
+      showAlert({
+        type: "warning",
+        message: "Facility name is required",
+      });
       return;
     }
 
@@ -300,11 +311,13 @@ export default function DashboardFacilitiesPage() {
       loadFacilities(false);
     } catch (error) {
       console.error("Error creating facility:", error);
-      alert(
-        error instanceof Error
-          ? `Failed to create facility: ${error.message}`
-          : "Failed to create facility"
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error
+            ? `Failed to create facility: ${error.message}`
+            : "Failed to create facility",
+      });
     }
   };
 
@@ -325,7 +338,10 @@ export default function DashboardFacilitiesPage() {
     if (!file) return;
 
     if (!file.name.endsWith(".csv")) {
-      alert("Please select a CSV file");
+      showAlert({
+        type: "error",
+        message: "Please select a CSV file",
+      });
       return;
     }
 
@@ -337,11 +353,13 @@ export default function DashboardFacilitiesPage() {
       setImportData(facilitiesData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Error reading CSV file. Please make sure it's properly formatted."
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error reading CSV file. Please make sure it's properly formatted.",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -359,9 +377,11 @@ export default function DashboardFacilitiesPage() {
       );
 
       if (validData.length === 0) {
-        alert(
-          "No valid facilities found. Make sure each row has a facility_name."
-        );
+        showAlert({
+          type: "warning",
+          message:
+            "No valid facilities found. Make sure each row has a facility_name.",
+        });
         return;
       }
 
@@ -377,13 +397,19 @@ export default function DashboardFacilitiesPage() {
         `Imported ${result.imported} facilities: ${facilityNames}`
       );
 
-      alert(`Successfully imported ${result.imported} facilities!`);
+      showAlert({
+        type: "success",
+        message: `Successfully imported ${result.imported} facilities!`,
+      });
       setShowImportModal(false);
       setImportData([]);
       loadFacilities(false);
     } catch (error) {
       console.error("Error importing data:", error);
-      alert("An error occurred while importing data.");
+      showAlert({
+        type: "error",
+        message: "An error occurred while importing data.",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -415,7 +441,10 @@ export default function DashboardFacilitiesPage() {
       setShowDeleteModal(false);
     } catch (error) {
       console.error("Error deleting facilities:", error);
-      alert("Failed to delete selected facilities");
+      showAlert({
+        type: "error",
+        message: "Failed to delete selected facilities",
+      });
     }
   };
 
