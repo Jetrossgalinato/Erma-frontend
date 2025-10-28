@@ -4,6 +4,7 @@ import { Search, User, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import { useRouter } from "next/navigation";
 import StatisticsCards from "./components/StatisticsCards";
@@ -28,6 +29,7 @@ import {
 } from "./utils/helpers";
 
 export default function AccountRequestsPage() {
+  const { showAlert } = useAlert();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDepartment, setSelectedDepartment] =
@@ -80,11 +82,14 @@ export default function AccountRequestsPage() {
       setRequests(data);
     } catch (error) {
       const errorMessage = handleError(error, "fetch requests");
-      alert(`Failed to fetch requests: ${errorMessage}`);
+      showAlert({
+        type: "error",
+        message: `Failed to fetch requests: ${errorMessage}`,
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showAlert]);
 
   const openDeleteModal = (requestId: number) => {
     setRequestToDelete(requestId);
@@ -172,16 +177,20 @@ export default function AccountRequestsPage() {
         )
       );
 
-      alert(
-        `Account approved! Role ${
+      showAlert({
+        type: "success",
+        message: `Account approved! Role ${
           is_supervisor || is_intern
             ? "copied as-is"
             : `mapped from "${originalRole}" to "${approvedRole}"`
-        }`
-      );
+        }`,
+      });
     } catch (error) {
       const errorMessage = handleError(error, "approve request");
-      alert(`Failed to approve request: ${errorMessage}`);
+      showAlert({
+        type: "error",
+        message: `Failed to approve request: ${errorMessage}`,
+      });
     }
   };
 
@@ -198,10 +207,16 @@ export default function AccountRequestsPage() {
         )
       );
 
-      alert("Request rejected successfully!");
+      showAlert({
+        type: "success",
+        message: "Request rejected successfully!",
+      });
     } catch (error) {
       const errorMessage = handleError(error, "reject request");
-      alert(`Failed to reject request: ${errorMessage}`);
+      showAlert({
+        type: "error",
+        message: `Failed to reject request: ${errorMessage}`,
+      });
     }
   };
 
@@ -213,10 +228,16 @@ export default function AccountRequestsPage() {
         prevRequests.filter((request) => request.id !== requestId)
       );
 
-      alert("Request removed successfully!");
+      showAlert({
+        type: "success",
+        message: "Request removed successfully!",
+      });
     } catch (error) {
       const errorMessage = handleError(error, "remove request");
-      alert(`Failed to remove request: ${errorMessage}`);
+      showAlert({
+        type: "error",
+        message: `Failed to remove request: ${errorMessage}`,
+      });
     }
   };
 

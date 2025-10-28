@@ -5,7 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
-import Alert from "@/components/Alert";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
@@ -27,6 +27,7 @@ import {
 export default function FacilitiesPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.facilities || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -52,11 +53,6 @@ export default function FacilitiesPage() {
     end_date: "",
   });
   const [bookingLoading, setBookingLoading] = useState(false);
-
-  const [alert, setAlert] = useState<{
-    type: "success" | "error" | "warning" | "info";
-    message: string;
-  } | null>(null);
 
   const [selectedFacilityType, setSelectedFacilityType] =
     useState("All Facility Types");
@@ -108,7 +104,7 @@ export default function FacilitiesPage() {
     );
 
     if (success) {
-      setAlert({
+      showAlert({
         type: "success",
         message: "Booking request submitted successfully!",
       });
@@ -386,14 +382,6 @@ export default function FacilitiesPage() {
       <div className="mt-auto">
         <Footer />
       </div>
-
-      {alert && (
-        <Alert
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
-import Alert from "@/components/Alert";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
@@ -27,6 +27,7 @@ import {
 export default function EquipmentPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.equipment || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -57,11 +58,6 @@ export default function EquipmentPage() {
     end_date: "",
     return_date: "",
   });
-
-  const [alert, setAlert] = useState<{
-    type: "success" | "error" | "warning" | "info";
-    message: string;
-  } | null>(null);
 
   const [borrowing, setBorrowing] = useState(false);
 
@@ -99,7 +95,7 @@ export default function EquipmentPage() {
 
   const handleBorrow = async () => {
     if (!isAuthenticated) {
-      setAlert({
+      showAlert({
         type: "warning",
         message: "Please log in to borrow equipment",
       });
@@ -112,7 +108,7 @@ export default function EquipmentPage() {
       !borrowFormData.end_date ||
       !borrowFormData.return_date
     ) {
-      setAlert({
+      showAlert({
         type: "error",
         message: "Please fill in all required fields",
       });
@@ -126,7 +122,7 @@ export default function EquipmentPage() {
     );
 
     if (success) {
-      setAlert({
+      showAlert({
         type: "success",
         message: "Borrowing request submitted successfully!",
       });
@@ -422,14 +418,6 @@ export default function EquipmentPage() {
         equipmentName={selectedEquipment?.name || null}
         onClose={() => setShowImageModal(false)}
       />
-
-      {alert && (
-        <Alert
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
     </div>
   );
 }

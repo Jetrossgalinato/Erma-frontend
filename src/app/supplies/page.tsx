@@ -2,7 +2,7 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
-import Alert from "@/components/Alert";
+import { useAlert } from "@/contexts/AlertContext";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useAuthStore, useUIStore } from "@/store";
@@ -24,6 +24,7 @@ import ImageModal from "./components/ImageModal";
 export default function SuppliesPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.supplies || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -51,11 +52,6 @@ export default function SuppliesPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
-
-  const [alert, setAlert] = useState<{
-    type: "success" | "error" | "warning" | "info";
-    message: string;
-  } | null>(null);
 
   // Fetch supplies from FastAPI
   const fetchSupplies = useCallback(async () => {
@@ -110,7 +106,7 @@ export default function SuppliesPage() {
     );
 
     if (success) {
-      setAlert({
+      showAlert({
         type: "success",
         message: "Acquire request submitted successfully!",
       });
@@ -362,14 +358,6 @@ export default function SuppliesPage() {
           setSelectedSupply(null);
         }}
       />
-
-      {alert && (
-        <Alert
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
     </div>
   );
 }
