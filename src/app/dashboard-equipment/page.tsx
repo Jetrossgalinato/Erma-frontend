@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { useAlert } from "@/contexts/AlertContext";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Loader from "@/components/Loader";
@@ -47,6 +48,7 @@ type EditingCell = {
 };
 
 export default function DashboardEquipmentPage() {
+  const { showAlert } = useAlert();
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
@@ -173,11 +175,13 @@ export default function DashboardEquipmentPage() {
       console.log(`Successfully deleted ${selectedRows.length} rows.`);
     } catch (err) {
       console.error("Error deleting equipments:", err);
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Failed to delete selected equipments"
-      );
+      showAlert({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Failed to delete selected equipments",
+      });
     }
 
     setShowDeleteModal(false);
@@ -243,7 +247,10 @@ export default function DashboardEquipmentPage() {
 
     if (!validateEquipmentName(newEquipment.name)) {
       console.log("Validation failed: Equipment name is required");
-      alert("Equipment name is required");
+      showAlert({
+        type: "warning",
+        message: "Equipment name is required",
+      });
       return;
     }
 
@@ -257,11 +264,13 @@ export default function DashboardEquipmentPage() {
         console.log("Image uploaded successfully:", imageUrl);
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert(
-          error instanceof Error
-            ? `Failed to upload image: ${error.message}. Equipment will be created without image.`
-            : "Failed to upload image. Equipment will be created without image."
-        );
+        showAlert({
+          type: "error",
+          message:
+            error instanceof Error
+              ? `Failed to upload image: ${error.message}. Equipment will be created without image.`
+              : "Failed to upload image. Equipment will be created without image.",
+        });
       }
     }
 
@@ -287,9 +296,11 @@ export default function DashboardEquipmentPage() {
       console.log("Insert operation completed successfully");
     } catch (error) {
       console.error("Error inserting equipment:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to insert equipment"
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to insert equipment",
+      });
     }
   };
 
@@ -301,7 +312,10 @@ export default function DashboardEquipmentPage() {
 
     const error = validateImageFile(file);
     if (error) {
-      alert(error);
+      showAlert({
+        type: "error",
+        message: error,
+      });
       return;
     }
 
@@ -312,7 +326,10 @@ export default function DashboardEquipmentPage() {
       setImagePreview(dataURL);
     } catch (error) {
       console.error("Error reading image file:", error);
-      alert("Failed to read image file");
+      showAlert({
+        type: "error",
+        message: "Failed to read image file",
+      });
     }
   };
 
@@ -332,7 +349,10 @@ export default function DashboardEquipmentPage() {
 
     const error = validateImageFile(file);
     if (error) {
-      alert(error);
+      showAlert({
+        type: "error",
+        message: error,
+      });
       return;
     }
 
@@ -343,7 +363,10 @@ export default function DashboardEquipmentPage() {
       setEditImagePreview(dataURL);
     } catch (error) {
       console.error("Error reading image file:", error);
-      alert("Failed to read image file");
+      showAlert({
+        type: "error",
+        message: "Failed to read image file",
+      });
     }
   };
 
@@ -389,7 +412,10 @@ export default function DashboardEquipmentPage() {
 
     const error = validateCSVFile(file);
     if (error) {
-      alert(error);
+      showAlert({
+        type: "error",
+        message: error,
+      });
       return;
     }
 
@@ -401,11 +427,13 @@ export default function DashboardEquipmentPage() {
       setImportData(equipmentData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Error reading CSV file. Please make sure it's properly formatted."
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error reading CSV file. Please make sure it's properly formatted.",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -422,7 +450,10 @@ export default function DashboardEquipmentPage() {
       );
 
       if (validData.length === 0) {
-        alert("No valid equipment found. Make sure each row has a name.");
+        showAlert({
+          type: "warning",
+          message: "No valid equipment found. Make sure each row has a name.",
+        });
         return;
       }
 
@@ -434,11 +465,12 @@ export default function DashboardEquipmentPage() {
         `Imported ${result.imported} equipment(s) from CSV file: ${selectedFile?.name}`
       );
 
-      alert(
-        `Successfully imported ${result.imported} equipment records!${
+      showAlert({
+        type: "success",
+        message: `Successfully imported ${result.imported} equipment records!${
           result.failed > 0 ? ` ${result.failed} failed.` : ""
-        }`
-      );
+        }`,
+      });
 
       setShowImportModal(false);
       setSelectedFile(null);
@@ -446,11 +478,13 @@ export default function DashboardEquipmentPage() {
       loadEquipments(false);
     } catch (error) {
       console.error("Error importing data:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "An error occurred while importing data."
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while importing data.",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -489,11 +523,13 @@ export default function DashboardEquipmentPage() {
         updatedEquipment.image = imageUrl;
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert(
-          error instanceof Error
-            ? `Failed to upload image: ${error.message}. Equipment will be updated without new image.`
-            : "Failed to upload image. Equipment will be updated without new image."
-        );
+        showAlert({
+          type: "error",
+          message:
+            error instanceof Error
+              ? `Failed to upload image: ${error.message}. Equipment will be updated without new image.`
+              : "Failed to upload image. Equipment will be updated without new image.",
+        });
       }
     }
 
@@ -510,12 +546,17 @@ export default function DashboardEquipmentPage() {
       setShowEditModal(false);
       setSelectedRows([]);
       clearEditImageSelection();
-      alert("Equipment updated successfully!");
+      showAlert({
+        type: "success",
+        message: "Equipment updated successfully!",
+      });
     } catch (error) {
       console.error("Error updating equipment:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to update equipment"
-      );
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Failed to update equipment",
+      });
     }
   };
 
