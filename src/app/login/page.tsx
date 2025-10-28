@@ -7,6 +7,9 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, login } = useAuthStore();
@@ -43,7 +46,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

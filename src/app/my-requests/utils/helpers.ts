@@ -41,7 +41,11 @@ export interface PaginatedResponse<T> {
 
 // Constants
 export const PAGE_SIZE = 10;
-export const API_BASE_URL = "http://localhost:8000";
+export const ITEMS_PER_PAGE = 9;
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Helper Functions
 
 // Helper Functions
 export function getAuthToken(): string | null {

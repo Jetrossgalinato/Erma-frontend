@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // Types
 export interface User {
   userId: string;
@@ -97,16 +100,13 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Verify token with backend
-          const response = await fetch(
-            "http://localhost:8000/api/auth/verify",
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
 
           if (!response.ok) {
             // Token is invalid
