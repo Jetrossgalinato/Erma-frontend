@@ -76,7 +76,7 @@ const Alert: React.FC<AlertProps> = ({
   const colors = getColors();
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-md w-full sm:w-96 animate-in slide-in-from-top-5 fade-in duration-300">
+    <div className="fixed top-25 right-4 z-50 max-w-md w-full sm:w-96 animate-in slide-in-from-top-5 fade-in duration-300">
       <div
         className={`${colors.bg} ${colors.border} border-2 rounded-lg shadow-xl p-4`}
       >

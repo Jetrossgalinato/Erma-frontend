@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
+import { useAlert } from "@/contexts/AlertContext";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -21,6 +22,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const Navbar: React.FC = () => {
   // Use auth store
   const { user, isAuthenticated, logout: logoutFromStore } = useAuthStore();
+  const { showAlert } = useAlert();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
@@ -67,8 +69,13 @@ const Navbar: React.FC = () => {
     logoutFromStore();
     setUserData(null);
     setIsAvatarDropdownOpen(false);
-    alert("You have been logged out successfully.");
-    window.location.href = "/home";
+    showAlert({
+      type: "success",
+      message: "You have been logged out successfully.",
+    });
+    setTimeout(() => {
+      window.location.href = "/home";
+    }, 1500);
   };
 
   useEffect(() => {
