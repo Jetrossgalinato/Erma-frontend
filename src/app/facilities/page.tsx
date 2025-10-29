@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
@@ -25,6 +27,7 @@ import {
 export default function FacilitiesPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.facilities || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -101,7 +104,10 @@ export default function FacilitiesPage() {
     );
 
     if (success) {
-      alert("Booking request submitted successfully!");
+      showAlert({
+        type: "success",
+        message: "Booking request submitted successfully!",
+      });
       setBookingData({ purpose: "", start_date: "", end_date: "" });
       setShowBookingModal(false);
       setSelectedFacility(null);
@@ -223,12 +229,7 @@ export default function FacilitiesPage() {
           {/* Facilities Content */}
           {loading ? (
             // Loading State
-            <div className="text-center py-8 sm:py-12">
-              <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-2 sm:mb-4 animate-spin" />
-              <p className="text-xs sm:text-base text-gray-600">
-                Loading facilities...
-              </p>
-            </div>
+            <Loader />
           ) : (
             <>
               {/* Facilities Grid */}

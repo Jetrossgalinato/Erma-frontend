@@ -18,6 +18,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
+import { useAlert } from "@/contexts/AlertContext";
 import {
   ReturnNotification,
   DoneNotification,
@@ -46,6 +47,7 @@ type Notification = {
 const DashboardNavbar: React.FC = () => {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { showAlert } = useAlert();
   const [isOpen, setIsOpen] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [theme, setTheme] = useState("light");
@@ -91,10 +93,19 @@ const DashboardNavbar: React.FC = () => {
     try {
       await logout();
       setIsAvatarDropdownOpen(false);
-      router.push("/login");
+      showAlert({
+        type: "success",
+        message: "You have been logged out successfully.",
+      });
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
     } catch (error) {
       console.error("Logout error:", error);
-      alert("Failed to logout. Please try again.");
+      showAlert({
+        type: "error",
+        message: "Failed to logout. Please try again.",
+      });
     }
   };
 

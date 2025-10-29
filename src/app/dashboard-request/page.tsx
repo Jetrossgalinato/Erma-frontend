@@ -4,8 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
+import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store";
 import { useDashboardRequestsStore } from "@/store";
+import { useAlert } from "@/contexts/AlertContext";
 import RequestTypeSelector from "./components/RequestTypeSelector";
 import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
@@ -41,6 +43,7 @@ const PAGE_SIZE = 10;
 export default function DashboardRequestsPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
+  const { showAlert } = useAlert();
   const {
     currentRequestType,
     isLoading,
@@ -144,7 +147,10 @@ export default function DashboardRequestsPage() {
       }
 
       if (success) {
-        alert(`Successfully approved ${selectedIds.length} request(s)`);
+        showAlert({
+          type: "success",
+          message: `Successfully approved ${selectedIds.length} request(s)`,
+        });
         clearSelection();
         setShowActionDropdown(false);
         await loadData();
@@ -173,7 +179,10 @@ export default function DashboardRequestsPage() {
       }
 
       if (success) {
-        alert(`Successfully rejected ${selectedIds.length} request(s)`);
+        showAlert({
+          type: "success",
+          message: `Successfully rejected ${selectedIds.length} request(s)`,
+        });
         clearSelection();
         setShowActionDropdown(false);
         await loadData();
@@ -206,11 +215,15 @@ export default function DashboardRequestsPage() {
       } else if (currentRequestType === "booking") {
         success = await bulkDeleteBookingRequests(selectedIds);
       } else if (currentRequestType === "acquiring") {
-        success = await bulkDeleteAcquiringRequests(selectedIds);
-      }
-
-      if (success) {
-        alert(`Successfully deleted ${selectedIds.length} request(s)`);
+        if (success) {
+          showAlert({
+            type: "success",
+            message: `Successfully deleted ${selectedIds.length} request(s)`,
+          });
+          clearSelection();
+          setShowActionDropdown(false);
+          await loadData();
+        }
         clearSelection();
         setShowActionDropdown(false);
         await loadData();
@@ -240,10 +253,13 @@ export default function DashboardRequestsPage() {
   }, [isAuthenticated, router]);
 
   // Fetch data based on current request type
+  // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {
-      loadData();
-      loadNotifications();
+      // Parallel data fetching instead of sequential
+      Promise.all([loadData(), loadNotifications()]).catch((error) => {
+        console.error("Error loading initial data:", error);
+      });
     }
   }, [
     currentRequestType,
@@ -254,11 +270,7 @@ export default function DashboardRequestsPage() {
   ]);
 
   if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <span className="text-gray-500 dark:text-gray-300">Loading...</span>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

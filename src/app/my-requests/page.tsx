@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore } from "@/store/authStore";
 import { useRequestsStore } from "@/store/requestsStore";
 import RequestTypeSelector from "./components/RequestTypeSelector";
@@ -28,6 +30,7 @@ import {
 
 export default function MyRequestsPage() {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   // Auth store
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -111,12 +114,15 @@ export default function MyRequestsPage() {
         setBorrowingTotalPages(response.total_pages);
       } catch (error) {
         console.error("Failed to fetch borrowing requests:", error);
-        alert("Failed to load borrowing requests. Please try again.");
+        showAlert({
+          type: "error",
+          message: "Failed to load borrowing requests. Please try again.",
+        });
       } finally {
         setIsLoading(false);
       }
     },
-    [setBorrowingRequests, setBorrowingTotalPages, setIsLoading]
+    [setBorrowingRequests, setBorrowingTotalPages, setIsLoading, showAlert]
   );
 
   const loadBookingRequests = useCallback(
@@ -128,12 +134,15 @@ export default function MyRequestsPage() {
         setBookingTotalPages(response.total_pages);
       } catch (error) {
         console.error("Failed to fetch booking requests:", error);
-        alert("Failed to load booking requests. Please try again.");
+        showAlert({
+          type: "error",
+          message: "Failed to load booking requests. Please try again.",
+        });
       } finally {
         setIsLoading(false);
       }
     },
-    [setBookingRequests, setBookingTotalPages, setIsLoading]
+    [setBookingRequests, setBookingTotalPages, setIsLoading, showAlert]
   );
 
   const loadAcquiringRequests = useCallback(
@@ -145,12 +154,15 @@ export default function MyRequestsPage() {
         setAcquiringTotalPages(response.total_pages);
       } catch (error) {
         console.error("Failed to fetch acquiring requests:", error);
-        alert("Failed to load acquiring requests. Please try again.");
+        showAlert({
+          type: "error",
+          message: "Failed to load acquiring requests. Please try again.",
+        });
       } finally {
         setIsLoading(false);
       }
     },
-    [setAcquiringRequests, setAcquiringTotalPages, setIsLoading]
+    [setAcquiringRequests, setAcquiringTotalPages, setIsLoading, showAlert]
   );
 
   // Load data when request type or page changes
@@ -196,21 +208,30 @@ export default function MyRequestsPage() {
 
   const handleSubmitReturn = async () => {
     if (!receiverName.trim()) {
-      alert("Please enter the receiver's name");
+      showAlert({
+        type: "warning",
+        message: "Please enter the receiver's name",
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
       await markAsReturned(selectedIds, receiverName.trim());
-      alert("Return notification sent successfully!");
+      showAlert({
+        type: "success",
+        message: "Return notification sent successfully!",
+      });
       setShowReturnModal(false);
       clearModalForms();
       clearSelection();
       loadBorrowingRequests(borrowingPage);
     } catch (error) {
       console.error("Failed to mark as returned:", error);
-      alert("Failed to submit return notification. Please try again.");
+      showAlert({
+        type: "error",
+        message: "Failed to submit return notification. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -224,14 +245,20 @@ export default function MyRequestsPage() {
     setIsSubmitting(true);
     try {
       await markBookingAsDone(selectedIds, completionNotes.trim() || undefined);
-      alert("Booking marked as done successfully!");
+      showAlert({
+        type: "success",
+        message: "Booking marked as done successfully!",
+      });
       setShowDoneModal(false);
       clearModalForms();
       clearSelection();
       loadBookingRequests(bookingPage);
     } catch (error) {
       console.error("Failed to mark as done:", error);
-      alert("Failed to mark booking as done. Please try again.");
+      showAlert({
+        type: "error",
+        message: "Failed to mark booking as done. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -245,7 +272,10 @@ export default function MyRequestsPage() {
     setIsSubmitting(true);
     try {
       await deleteRequests(currentRequestType, selectedIds);
-      alert("Requests deleted successfully!");
+      showAlert({
+        type: "success",
+        message: "Requests deleted successfully!",
+      });
       setShowDeleteModal(false);
       clearSelection();
 
@@ -259,7 +289,10 @@ export default function MyRequestsPage() {
       }
     } catch (error) {
       console.error("Failed to delete requests:", error);
-      alert("Failed to delete requests. Please try again.");
+      showAlert({
+        type: "error",
+        message: "Failed to delete requests. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -307,15 +340,7 @@ export default function MyRequestsPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingState />
-        </div>
-        <Footer />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

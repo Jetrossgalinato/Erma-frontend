@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
+import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store/authStore";
 
 // Import components
 import DashboardHeader from "./components/DashboardHeader";
 import StatsGrid from "./components/StatsGrid";
 import ChartsSection from "./components/ChartsSection";
-import LoadingState from "./components/LoadingState";
 import ErrorMessage from "./components/ErrorMessage";
 
 // Import utilities
@@ -84,7 +84,7 @@ export default function DashboardPage() {
 
   // Show loading state while mounting or authenticating
   if (!mounted || authLoading) {
-    return <LoadingState />;
+    return <Loader />;
   }
 
   // Don't render if not authenticated (will redirect)

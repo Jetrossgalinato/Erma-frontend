@@ -1,6 +1,8 @@
 "use client";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useAuthStore, useUIStore } from "@/store";
@@ -22,6 +24,7 @@ import ImageModal from "./components/ImageModal";
 export default function SuppliesPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.supplies || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -103,7 +106,10 @@ export default function SuppliesPage() {
     );
 
     if (success) {
-      alert("Acquire request submitted successfully!");
+      showAlert({
+        type: "success",
+        message: "Acquire request submitted successfully!",
+      });
       setShowAcquireModal(false);
       setSelectedSupply(null);
       setAcquireQuantity(1);
@@ -196,11 +202,8 @@ export default function SuppliesPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {loading ? (
-              <div className="col-span-full flex justify-center items-center py-8 sm:py-12">
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-orange-500" />
-                <span className="ml-2 text-gray-600 text-sm sm:text-base">
-                  Loading supplies...
-                </span>
+              <div className="col-span-full">
+                <Loader />
               </div>
             ) : filteredSupplies.length === 0 ? (
               <div className="col-span-full text-center py-8 sm:py-12">

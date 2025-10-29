@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
+import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
@@ -25,6 +27,7 @@ import {
 export default function EquipmentPage() {
   // Use stores for auth and UI state
   const { isAuthenticated, isLoading: userLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const searchTerm = useUIStore((state) => state.searchTerms.equipment || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
@@ -55,6 +58,7 @@ export default function EquipmentPage() {
     end_date: "",
     return_date: "",
   });
+
   const [borrowing, setBorrowing] = useState(false);
 
   const fetchEquipment = useCallback(async () => {
@@ -91,7 +95,10 @@ export default function EquipmentPage() {
 
   const handleBorrow = async () => {
     if (!isAuthenticated) {
-      alert("Please log in to borrow equipment");
+      showAlert({
+        type: "warning",
+        message: "Please log in to borrow equipment",
+      });
       return;
     }
     if (
@@ -101,7 +108,10 @@ export default function EquipmentPage() {
       !borrowFormData.end_date ||
       !borrowFormData.return_date
     ) {
-      alert("Please fill in all required fields");
+      showAlert({
+        type: "error",
+        message: "Please fill in all required fields",
+      });
       return;
     }
 
@@ -112,7 +122,10 @@ export default function EquipmentPage() {
     );
 
     if (success) {
-      alert("Borrowing request submitted successfully!");
+      showAlert({
+        type: "success",
+        message: "Borrowing request submitted successfully!",
+      });
       setShowBorrowModal(false);
       setBorrowFormData({
         purpose: "",
@@ -204,12 +217,7 @@ export default function EquipmentPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-8 sm:py-12">
-                <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 mx-auto text-orange-500 mb-3 sm:mb-4 animate-spin" />
-                <p className="text-xs sm:text-base text-gray-600">
-                  Loading equipment...
-                </p>
-              </div>
+              <Loader />
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">

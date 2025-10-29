@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
 import ProfileHeader from "./components/ProfileHeader";
 import ProfileForm from "./components/ProfileForm";
 import SecuritySection from "./components/SecuritySection";
 import SuccessMessage from "./components/SuccessMessage";
-import LoadingState from "./components/LoadingState";
 import ErrorMessage from "./components/ErrorMessage";
 import {
   ProfileData,
@@ -255,19 +255,7 @@ export default function MyProfilePage() {
 
   // Loading State
   if (loading || authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 flex flex-col">
-        <Navbar />
-        <LoadingState
-          message={
-            authLoading
-              ? "Checking authentication..."
-              : "Loading your profile..."
-          }
-        />
-        <Footer />
-      </div>
-    );
+    return <Loader />;
   }
 
   // Error State
