@@ -169,12 +169,16 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchNotifications();
+      // Defer notification fetch to avoid blocking critical page load
+      const timer = setTimeout(() => {
+        fetchNotifications();
+      }, 1500); // Wait 1.5s after authentication to fetch notifications
 
       // Optional: Set up polling for notifications every 30 seconds
       const interval = setInterval(fetchNotifications, 30000);
 
       return () => {
+        clearTimeout(timer);
         clearInterval(interval);
       };
     }

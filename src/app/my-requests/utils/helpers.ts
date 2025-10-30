@@ -125,7 +125,8 @@ export async function verifyAuth(): Promise<{ user_id: string } | null> {
 
 // Fetch Borrowing Requests
 export async function fetchBorrowingRequests(
-  page: number = 1
+  page: number = 1,
+  skipAuthVerify = false
 ): Promise<PaginatedResponse<Borrowing>> {
   try {
     const token = getAuthToken();
@@ -133,9 +134,12 @@ export async function fetchBorrowingRequests(
       throw new Error("No authentication token found");
     }
 
-    const authData = await verifyAuth();
-    if (!authData) {
-      throw new Error("User not authenticated");
+    // Skip redundant auth verification if already verified
+    if (!skipAuthVerify) {
+      const authData = await verifyAuth();
+      if (!authData) {
+        throw new Error("User not authenticated");
+      }
     }
 
     const response = await fetch(
@@ -171,7 +175,8 @@ export async function fetchBorrowingRequests(
 
 // Fetch Booking Requests
 export async function fetchBookingRequests(
-  page: number = 1
+  page: number = 1,
+  skipAuthVerify = false
 ): Promise<PaginatedResponse<Booking>> {
   try {
     const token = getAuthToken();
@@ -179,9 +184,12 @@ export async function fetchBookingRequests(
       throw new Error("No authentication token found");
     }
 
-    const authData = await verifyAuth();
-    if (!authData) {
-      throw new Error("User not authenticated");
+    // Skip redundant auth verification if already verified
+    if (!skipAuthVerify) {
+      const authData = await verifyAuth();
+      if (!authData) {
+        throw new Error("User not authenticated");
+      }
     }
 
     const response = await fetch(
@@ -217,7 +225,8 @@ export async function fetchBookingRequests(
 
 // Fetch Acquiring Requests
 export async function fetchAcquiringRequests(
-  page: number = 1
+  page: number = 1,
+  skipAuthVerify = false
 ): Promise<PaginatedResponse<Acquiring>> {
   try {
     const token = getAuthToken();
@@ -225,9 +234,12 @@ export async function fetchAcquiringRequests(
       throw new Error("No authentication token found");
     }
 
-    const authData = await verifyAuth();
-    if (!authData) {
-      throw new Error("User not authenticated");
+    // Skip redundant auth verification if already verified
+    if (!skipAuthVerify) {
+      const authData = await verifyAuth();
+      if (!authData) {
+        throw new Error("User not authenticated");
+      }
     }
 
     const response = await fetch(
@@ -399,5 +411,36 @@ export async function deleteRequests(
   } catch (error) {
     handleError(error, "Failed to delete requests");
     return false;
+  }
+}
+
+// Parallel data loading with single auth verification
+export async function loadAllRequestsParallel(
+  borrowingPage: number,
+  bookingPage: number,
+  acquiringPage: number
+) {
+  try {
+    // Verify authentication ONCE for all requests
+    const authData = await verifyAuth();
+    if (!authData) {
+      throw new Error("User not authenticated");
+    }
+
+    // Fetch all three types in parallel (skipping redundant auth checks)
+    const [borrowingRes, bookingRes, acquiringRes] = await Promise.all([
+      fetchBorrowingRequests(borrowingPage, true),
+      fetchBookingRequests(bookingPage, true),
+      fetchAcquiringRequests(acquiringPage, true),
+    ]);
+
+    return {
+      borrowing: borrowingRes,
+      booking: bookingRes,
+      acquiring: acquiringRes,
+    };
+  } catch (error) {
+    console.error("Failed to load requests in parallel:", error);
+    throw error;
   }
 }
