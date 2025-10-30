@@ -1,0 +1,81 @@
+
+> erma-frontend@0.1.0 build
+> next build
+
+   ▲ Next.js 15.4.5
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ optimizeCss
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 25.0s
+   Linting and checking validity of types ...
+
+./src/app/dashboard/page.tsx
+94:5  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+
+./src/app/dashboard-equipment/components/editModal.tsx
+287:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+348:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard-equipment/components/equipmentsTable.tsx
+349:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard-equipment/components/imageModal.tsx
+48:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard-equipment/components/importDataModal.tsx
+22:3  Warning: 'onFileSelect' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard-equipment/components/insertEquipmentForm.tsx
+319:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/dashboard-request/page.tsx
+38:3  Warning: 'bulkDeleteAcquiringRequests' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/dashboard-supplies/components/ImageModal.tsx
+50:9  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/equipment/components/ImageModal.tsx
+63:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/equipment/page.tsx
+232:27  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/login/page.tsx
+38:6  Warning: React Hook useEffect has a missing dependency: 'subtitles'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/my-requests/components/RequestTypeSelector.tsx
+12:9  Warning: 'getTypeName' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/profile/components/SuccessMessage.tsx
+1:10  Warning: 'X' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/supplies/components/ImageModal.tsx
+61:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/supplies/page.tsx
+225:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/EmployeeRegisterForm.tsx
+39:6  Warning: React Hook useEffect has a missing dependency: 'subtitles'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/23) ...
+Error occurred prerendering page "/404". Read more: https://nextjs.org/docs/messages/prerender-error
+[Error: Cannot find module 'critters'
+Require stack:
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/.next/server/pages/_document.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/server/require.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/server/load-components.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/build/utils.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/build/worker.js
+- /home/jetrossneri/Thesis_Erma/frontend/erma-frontend/node_modules/next/dist/compiled/jest-worker/processChild.js] {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+Export encountered an error on /_error: /404, exiting the build.
+ ⨯ Next.js build worker exited with code: 1 and signal: null
