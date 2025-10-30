@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Loader from "@/components/Loader";
@@ -10,11 +11,29 @@ import { useAuthStore } from "@/store/authStore";
 // Import components
 import DashboardHeader from "./components/DashboardHeader";
 import StatsGrid from "./components/StatsGrid";
-import ChartsSection from "./components/ChartsSection";
 import ErrorMessage from "./components/ErrorMessage";
+import SkeletonLoader from "./components/SkeletonLoader";
+
+// Lazy load charts for better initial load performance
+const ChartsSection = dynamic(() => import("./components/ChartsSection"), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-8">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 animate-pulse"
+        >
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
+          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </div>
+      ))}
+    </div>
+  ),
+});
 
 // Import utilities
-import { fetchDashboardStats, DashboardStats } from "./utils/helpers";
+import { loadAllDashboardData, DashboardStats } from "./utils/helpers";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,6 +42,7 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null
   );
@@ -35,15 +55,18 @@ export default function DashboardPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Fetch dashboard statistics
-  const loadDashboardData = useCallback(async (showAnimation = false) => {
+  // Fetch dashboard statistics with parallel loading for optimal performance
+  const loadDashboardData = async (showAnimation = false) => {
     if (showAnimation) {
       setIsRefreshing(true);
+    } else {
+      setIsInitialLoad(true);
     }
 
     try {
       setError(null);
-      const stats = await fetchDashboardStats();
+      // Load all dashboard data in parallel (stats + all chart data)
+      const { stats } = await loadAllDashboardData();
       setDashboardStats(stats);
     } catch (err) {
       const errorMessage =
@@ -56,17 +79,20 @@ export default function DashboardPage() {
         setTimeout(() => {
           setIsRefreshing(false);
         }, 500);
+      } else {
+        setIsInitialLoad(false);
       }
     }
-  }, []);
+  };
 
   // Initial data load
   useEffect(() => {
     setMounted(true);
-    if (isAuthenticated) {
+    if (isAuthenticated && !authLoading) {
       loadDashboardData(false);
     }
-  }, [isAuthenticated, loadDashboardData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, authLoading]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -125,14 +151,16 @@ export default function DashboardPage() {
                 isRefreshing={isRefreshing}
               />
 
-              {error ? (
+              {isInitialLoad ? (
+                <SkeletonLoader />
+              ) : error ? (
                 <ErrorMessage message={error} onRetry={handleRetry} />
               ) : (
                 <>
                   {/* Stats cards */}
                   <StatsGrid stats={dashboardStats} />
 
-                  {/* Charts */}
+                  {/* Charts - Lazy loaded */}
                   <ChartsSection />
                 </>
               )}
