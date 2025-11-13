@@ -177,7 +177,7 @@ export default function FacilitiesPage() {
                   placeholder="Search facilities..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm("facilities", e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
                 />
               </div>
 
@@ -185,7 +185,7 @@ export default function FacilitiesPage() {
               <select
                 value={selectedFacilityType}
                 onChange={(e) => setSelectedFacilityType(e.target.value)}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
               >
                 {FACILITY_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -198,7 +198,7 @@ export default function FacilitiesPage() {
               <select
                 value={selectedFloorLevel}
                 onChange={(e) => setSelectedFloorLevel(e.target.value)}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
               >
                 {FLOOR_LEVELS.map((level) => (
                   <option key={level} value={level}>
@@ -215,7 +215,7 @@ export default function FacilitiesPage() {
                     e.target.value as FacilityStatus | "All Statuses"
                   )
                 }
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
               >
                 <option value="All Statuses">All Statuses</option>
                 <option value="Available">Available</option>
