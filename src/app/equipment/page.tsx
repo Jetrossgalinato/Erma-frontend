@@ -10,6 +10,7 @@ import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
 import BorrowEquipmentModal from "./components/BorrowEquipmentModal";
 import ImageModal from "./components/ImageModal";
+import Image from "next/image";
 import {
   Equipment,
   BorrowingFormData,
@@ -229,10 +230,13 @@ export default function EquipmentPage() {
                       {/* Image section */}
                       <div className="h-32 sm:h-48 bg-gray-200 relative">
                         {equipment.image ? (
-                          <img
+                          <Image
                             src={equipment.image}
                             alt={equipment.name}
                             className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            width={500}
+                            height={500}
+                            sizes="100vw"
                             onClick={() => {
                               setSelectedImage(equipment.image!);
                               setSelectedEquipment(equipment);
