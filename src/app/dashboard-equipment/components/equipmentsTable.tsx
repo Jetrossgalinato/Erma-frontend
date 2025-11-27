@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import {
   type Equipment,
   type Facility,
@@ -51,8 +52,8 @@ export default function EquipmentsTable({
     if (!Array.isArray(facilities) || facilities.length === 0) {
       return `ID: ${facilityId}`;
     }
-    const facility = facilities.find((f) => f.id === facilityId);
-    return facility ? facility.name : `ID: ${facilityId}`;
+    const facility = facilities.find((f) => f.facility_id === facilityId);
+    return facility ? facility.facility_name : `ID: ${facilityId}`;
   };
 
   const formatDate = (dateString?: string) => {
@@ -346,10 +347,12 @@ export default function EquipmentsTable({
                   <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors">
                     {eq.image ? (
                       <div className="flex items-center justify-center">
-                        <img
+                        <Image
                           src={eq.image}
                           alt={`${eq.name} equipment`}
                           className="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
+                          width={48}
+                          height={48}
                           onClick={() => onImageClick(eq.image!, eq.name)}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;

@@ -96,8 +96,8 @@ export default function FilterControls({
         >
           <option value="">All Facilities</option>
           {facilities.map((facility) => (
-            <option key={facility.id} value={facility.id}>
-              {facility.name}
+            <option key={facility.facility_id} value={facility.facility_id}>
+              {facility.facility_name}
             </option>
           ))}
         </select>

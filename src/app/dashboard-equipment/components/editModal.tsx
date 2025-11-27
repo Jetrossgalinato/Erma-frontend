@@ -1,5 +1,6 @@
 import React from "react";
 import { Upload } from "lucide-react";
+import Image from "next/image";
 import { type Equipment, type Facility } from "../utils/helpers";
 
 type EditModalProps = {
@@ -266,11 +267,15 @@ export default function EditModal({
                 className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select facility</option>
-                {facilities.map((facility) => (
-                  <option key={facility.id} value={facility.id}>
-                    {facility.name}
-                  </option>
-                ))}
+                {Array.isArray(facilities) &&
+                  facilities.map((facility) => (
+                    <option
+                      key={facility.facility_id}
+                      value={facility.facility_id}
+                    >
+                      {facility.facility_name}
+                    </option>
+                  ))}
               </select>
             </div>
             <div className="md:col-span-2">
@@ -284,15 +289,18 @@ export default function EditModal({
                       Current Image:
                     </div>
                     <div className="flex items-center space-x-2">
-                      <img
+                      <Image
                         src={equipment.image}
                         alt="Current equipment"
                         className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
+                        width={64}
+                        height={64}
                         onClick={() =>
                           onImageClick(equipment.image!, equipment.name)
                         }
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
                         }}
                       />
                       <button
@@ -345,10 +353,12 @@ export default function EditModal({
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                         Preview:
                       </div>
-                      <img
+                      <Image
                         src={editImagePreview}
                         alt="Preview"
                         className="w-16 h-16 rounded border object-cover cursor-pointer hover:scale-105 hover:shadow-md transition-all"
+                        width={64}
+                        height={64}
                         onClick={() =>
                           onImageClick(
                             editImagePreview,

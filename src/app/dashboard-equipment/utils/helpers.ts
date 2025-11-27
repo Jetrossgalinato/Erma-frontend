@@ -36,8 +36,11 @@ export type Equipment = {
 };
 
 export type Facility = {
-  id: number;
-  name: string;
+  facility_id: number;
+  facility_name: string;
+  facility_type?: string;
+  botic_hub?: string;
+  capacity?: number;
 };
 
 // ==================== API Functions ====================
@@ -85,7 +88,9 @@ export async function fetchFacilities(): Promise<Facility[]> {
     throw new Error(error.detail || "Failed to fetch facilities");
   }
 
-  return response.json();
+  const data = await response.json();
+  // Handle both direct array and wrapped object responses
+  return Array.isArray(data) ? data : data.facilities || [];
 }
 
 /**

@@ -277,8 +277,8 @@ export default function InsertEquipmentForm({
             >
               <option value="">Select facility</option>
               {facilities.map((facility) => (
-                <option key={facility.id} value={facility.id}>
-                  {facility.name}
+                <option key={facility.facility_id} value={facility.facility_id}>
+                  {facility.facility_name}
                 </option>
               ))}
             </select>

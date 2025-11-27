@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -60,7 +61,7 @@ export default function ImageModal({
           className="relative w-full h-full flex items-center justify-center cursor-pointer"
           onClick={onClose}
         >
-          <img
+          <Image
             src={imageUrl}
             alt="Equipment preview"
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
@@ -68,6 +69,9 @@ export default function ImageModal({
               maxWidth: "90vw",
               maxHeight: "70vh",
             }}
+            width={500}
+            height={500}
+            sizes="100vw"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = "none";

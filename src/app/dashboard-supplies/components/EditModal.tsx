@@ -7,6 +7,7 @@
 import React from "react";
 import { Save, X, Upload, Trash2 } from "lucide-react";
 import { Supply, Facility } from "../utils/helpers";
+import Image from "next/image";
 
 interface EditModalProps {
   supply: Supply;
@@ -184,11 +185,16 @@ const EditModal: React.FC<EditModalProps> = ({
                   )}
                 </div>
                 {(imagePreview || supply.image) && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={imagePreview || supply.image}
+                  <Image
+                    src={imagePreview || supply.image || "/fallback-image.png"} // Provide fallback
                     alt="Preview"
                     className="mt-2 h-24 w-24 object-cover rounded"
+                    width={96} // Adjust width as needed
+                    height={96} // Adjust height as needed
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                    }}
                   />
                 )}
               </div>

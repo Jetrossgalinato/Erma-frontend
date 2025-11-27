@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface ImageModalProps {
   isOpen: boolean;
   imageUrl: string | null;
@@ -58,11 +60,14 @@ export default function ImageModal({
           className="relative w-full h-full flex items-center justify-center cursor-pointer"
           onClick={onClose}
         >
-          <img
+          <Image
             src={imageUrl}
             alt={`${imageName} supply preview`}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
             style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+            width={500}
+            height={500}
+            sizes="100vw"
           />
         </div>
       </div>
