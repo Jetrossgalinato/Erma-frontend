@@ -243,11 +243,16 @@ export default function DashboardEquipmentPage() {
 
     try {
       const data = await fetchFacilities();
+      console.log("Facilities loaded:", data);
       setFacilities(data);
     } catch (err) {
       console.error("Error fetching facilities:", err);
+      showAlert({
+        type: "error",
+        message: "Failed to load facilities",
+      });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, showAlert]);
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
