@@ -6,6 +6,7 @@
 
 import React from "react";
 import { X } from "lucide-react";
+import Image from "next/image";
 
 interface ImageModalProps {
   imageUrl: string;
@@ -47,11 +48,13 @@ const ImageModal: React.FC<ImageModalProps> = ({
         </div>
 
         {/* Image container */}
-        <img
+        <Image
           src={imageUrl}
           alt={`${supplyName} supply preview`}
           className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
           style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+          width={0} // Adjust width as needed
+          height={0} // Adjust height as needed
           onClick={(e) => e.stopPropagation()}
         />
       </div>
