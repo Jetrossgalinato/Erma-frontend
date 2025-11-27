@@ -20,6 +20,7 @@ import {
 import SupplyDetailsModal from "./components/SupplyDetailsModal";
 import AcquireSupplyModal from "./components/AcquireSupplyModal";
 import ImageModal from "./components/ImageModal";
+import Image from "next/image";
 
 export default function SuppliesPage() {
   // Use stores for auth and UI state
@@ -222,10 +223,13 @@ export default function SuppliesPage() {
                 >
                   {supply.image_url && (
                     <div className="h-32 sm:h-40 md:h-48 bg-gray-100 rounded-t-lg overflow-hidden">
-                      <img
+                      <Image
                         src={supply.image_url}
                         alt={supply.supply_name}
                         className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                        width={500}
+                        height={500}
+                        sizes="100vw"
                         onClick={() =>
                           handleImageClick(
                             supply.image_url!,
