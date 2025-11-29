@@ -190,7 +190,8 @@ export default function Home() {
                               alt="Projector"
                               width={96}
                               height={96}
-                              className="w-full h-full object-contain"
+                              className="object-contain"
+                              style={{ width: "auto", height: "auto" }}
                             />
                           </div>
                         </div>
