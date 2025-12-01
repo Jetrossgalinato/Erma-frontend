@@ -118,7 +118,7 @@ export default function EmployeeRegisterForm() {
         <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700">
           Welcome! 👋
         </h2>
-        Register to <span className="text-orange-600">CRMS</span>
+        Register to <span className="text-orange-500">CRMS</span>
         <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
           {subtitle}
         </p>
@@ -320,7 +320,7 @@ export default function EmployeeRegisterForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
+            className="w-full bg-orange-500 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
           >
             {loading ? "Registering..." : "Register"}
           </button>
@@ -330,7 +330,7 @@ export default function EmployeeRegisterForm() {
           Already have an account?{" "}
           <a
             href="/login"
-            className="text-orange-600 font-semibold hover:underline decoration-2 underline-offset-4"
+            className="text-orange-500 font-semibold hover:underline decoration-2 underline-offset-4"
           >
             Login
           </a>

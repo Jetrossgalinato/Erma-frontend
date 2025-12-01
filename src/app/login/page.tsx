@@ -99,7 +99,7 @@ export default function LoginPage() {
             <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
-            Login to <span className="text-orange-600">CRMS</span>
+            Login to <span className="text-orange-500">CRMS</span>
             <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
               {subtitle}
             </p>
@@ -165,7 +165,7 @@ export default function LoginPage() {
             <div className="px-2 pt-2">
               <button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm"
+                className="w-full bg-orange-500 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm"
               >
                 Sign In
               </button>
@@ -176,7 +176,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{" "}
             <a
               href="/register"
-              className="text-orange-600 font-semibold hover:underline decoration-2 underline-offset-4"
+              className="text-orange-500 font-semibold hover:underline decoration-2 underline-offset-4"
             >
               Register
             </a>
