@@ -33,9 +33,7 @@ export default function EmployeeRegisterForm() {
   const [subtitle, setSubtitle] = useState("");
 
   useEffect(() => {
-    const randomSubtitle =
-      subtitles[Math.floor(Math.random() * subtitles.length)];
-    setSubtitle(randomSubtitle);
+    setSubtitle(subtitles[Math.floor(Math.random() * subtitles.length)]);
   }, []);
 
   const handleChange = (
@@ -68,7 +66,6 @@ export default function EmployeeRegisterForm() {
     }
 
     try {
-      // Call FastAPI registration endpoint
       const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,12 +124,12 @@ export default function EmployeeRegisterForm() {
         </p>
       </div>
 
-      <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         {/* Email */}
         <div className="px-2">
           <label
             htmlFor="email"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Email
           </label>
@@ -142,7 +139,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           />
         </div>
 
@@ -150,7 +147,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="firstName"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             First Name
           </label>
@@ -160,7 +157,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.firstName}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           />
         </div>
 
@@ -168,7 +165,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="lastName"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Last Name
           </label>
@@ -178,7 +175,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.lastName}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           />
         </div>
 
@@ -186,7 +183,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="department"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Department
           </label>
@@ -195,7 +192,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.department}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           >
             <option value="" disabled>
               Select department
@@ -210,7 +207,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="phoneNumber"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Phone Number
           </label>
@@ -220,7 +217,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.phoneNumber}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           />
         </div>
 
@@ -228,7 +225,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="password"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Password
           </label>
@@ -239,17 +236,17 @@ export default function EmployeeRegisterForm() {
               required
               value={formData.password}
               onChange={handleChange}
-              className="mt-1 sm:mt-1.5 w-full pr-10 sm:pr-12 px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+              className="input-depth pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
             >
               {showPassword ? (
-                <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                <EyeOff className="w-5 h-5" />
               ) : (
-                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Eye className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -259,7 +256,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="confirmpassword"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Confirm Password
           </label>
@@ -270,17 +267,17 @@ export default function EmployeeRegisterForm() {
               required
               value={formData.confirmpassword}
               onChange={handleChange}
-              className="mt-1 sm:mt-1.5 w-full pr-10 sm:pr-12 px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+              className="input-depth pr-12"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
             >
               {showConfirmPassword ? (
-                <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                <EyeOff className="w-5 h-5" />
               ) : (
-                <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Eye className="w-5 h-5" />
               )}
             </button>
           </div>
@@ -290,7 +287,7 @@ export default function EmployeeRegisterForm() {
         <div className="px-2">
           <label
             htmlFor="acc_role"
-            className="block text-xs sm:text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 ml-1"
           >
             Role
           </label>
@@ -299,7 +296,7 @@ export default function EmployeeRegisterForm() {
             required
             value={formData.acc_role}
             onChange={handleChange}
-            className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+            className="input-depth"
           >
             <option value="" disabled>
               Select a role
@@ -319,21 +316,21 @@ export default function EmployeeRegisterForm() {
         </div>
 
         {/* Submit */}
-        <div className="px-2">
+        <div className="px-2 pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 sm:py-2.5 px-3 rounded shadow transition text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-orange-600 hover:bg-orange-700 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md"
           >
             {loading ? "Registering..." : "Register"}
           </button>
         </div>
 
-        <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 text-center">
+        <p className="mt-4 text-sm text-gray-600 text-center">
           Already have an account?{" "}
           <a
             href="/login"
-            className="text-orange-600 font-semibold hover:underline"
+            className="text-orange-600 font-semibold hover:underline decoration-2 underline-offset-4"
           >
             Login
           </a>
