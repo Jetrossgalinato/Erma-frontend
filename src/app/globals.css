@@ -27,8 +27,25 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Optional: Add smooth transitions for better UX */
 * {
   transition: background-color 0.3s ease, border-color 0.3s ease,
     color 0.3s ease;
+}
+
+@layer components {
+  .input-depth {
+    /* Base Layout & Text */
+    @apply mt-1.5 w-full px-4 py-2.5 text-black text-sm placeholder:text-gray-400;
+
+    /* Visual Depth Look */
+    @apply bg-gray-50 border border-gray-300 rounded-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)];
+
+    /* Animation */
+    @apply transition-all duration-200 ease-in-out;
+
+    /* Focus State (Removes depth, adds glow) */
+    &:focus {
+      @apply outline-none bg-white border-orange-500 ring-4 ring-orange-500/10 shadow-none;
+    }
+  }
 }

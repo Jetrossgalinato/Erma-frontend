@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [subtitle, setSubtitle] = useState("");
 
   const subtitles = [
     "You’ve got this — let’s go!",
@@ -29,16 +30,11 @@ export default function LoginPage() {
     "Keep pushing forward.",
   ];
 
-  const [subtitle, setSubtitle] = useState("");
-
   useEffect(() => {
-    const randomSubtitle =
-      subtitles[Math.floor(Math.random() * subtitles.length)];
-    setSubtitle(randomSubtitle);
+    setSubtitle(subtitles[Math.floor(Math.random() * subtitles.length)]);
   }, []);
 
   useEffect(() => {
-    // Redirect if already authenticated
     if (!authLoading && isAuthenticated) {
       router.push("/home");
     }
@@ -56,26 +52,20 @@ export default function LoginPage() {
       });
       const result = await response.json();
 
-      console.log("FastAPI Response:", result);
-
       if (!response.ok) {
         setError(result.detail || "Login failed.");
         return;
       }
 
-      // Check if user data is returned
-      if (!result.user) {
-        setError("No user data returned.");
+      if (!result.user || !result.user.is_approved) {
+        setError(
+          result.user
+            ? "Your account is pending approval."
+            : "No user data returned."
+        );
         return;
       }
 
-      // Check if user is approved
-      if (!result.user.is_approved) {
-        setError("Your account is pending approval.");
-        return;
-      }
-
-      // Use authStore login action
       const userData = {
         userId: result.user.id?.toString() || "",
         email: result.user.email || email,
@@ -84,7 +74,6 @@ export default function LoginPage() {
       };
 
       login(result.access_token, userData);
-
       setError("");
       showAlert({
         type: "success",
@@ -96,9 +85,7 @@ export default function LoginPage() {
     }
   };
 
-  if (authLoading) {
-    return <Loader />;
-  }
+  if (authLoading) return <Loader />;
 
   return (
     <div
@@ -112,17 +99,17 @@ export default function LoginPage() {
             <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
-            Login to <span className="text-orange-600">CRMS</span>
+            Login to <span className="text-orange-500">CRMS</span>
             <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
               {subtitle}
             </p>
           </div>
 
-          <form className="space-y-3 sm:space-y-4" onSubmit={handleLogin}>
+          <form className="space-y-4" onSubmit={handleLogin}>
             <div className="px-2">
               <label
                 htmlFor="email"
-                className="block text-xs sm:text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 ml-1"
               >
                 Email
               </label>
@@ -132,13 +119,15 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 sm:mt-1.5 w-full px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+                placeholder="Enter your email"
+                className="input-depth"
               />
             </div>
+
             <div className="px-2">
               <label
                 htmlFor="password"
-                className="block text-xs sm:text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 ml-1"
               >
                 Password
               </label>
@@ -149,42 +138,45 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 sm:mt-1.5 w-full pr-10 sm:pr-12 px-3 sm:px-4 py-2 sm:py-2.5 text-black border rounded focus:outline-none focus:ring-1 focus:ring-orange-400 text-xs sm:text-sm"
+                  placeholder="Enter your password"
+                  // We add pr-12 here specifically for the icon space
+                  className="input-depth pr-12"
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  tabIndex={0}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 pt-1 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <EyeOff className="w-5 h-5" />
                   ) : (
-                    <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Eye className="w-5 h-5" />
                   )}
                 </button>
               </div>
             </div>
+
             {error && (
-              <p className="text-xs sm:text-sm text-red-500 text-center px-2">
+              <p className="text-sm text-red-500 text-center px-2 bg-red-50 py-1 rounded border border-red-100 mt-2">
                 {error}
               </p>
             )}
-            <div className="px-2">
+
+            <div className="px-2 pt-2">
               <button
                 type="submit"
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 sm:py-2.5 px-3 rounded shadow transition text-xs sm:text-sm"
+                className="w-full bg-orange-500 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5 text-white font-semibold py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 text-sm"
               >
                 Sign In
               </button>
             </div>
           </form>
-          <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 text-center">
+
+          <p className="mt-4 text-sm text-gray-600 text-center">
             Don&apos;t have an account?{" "}
             <a
               href="/register"
-              className="text-orange-600 font-semibold hover:underline"
+              className="text-orange-500 font-semibold hover:underline decoration-2 underline-offset-4"
             >
               Register
             </a>
