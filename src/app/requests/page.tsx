@@ -253,7 +253,7 @@ export default function AccountRequestsPage() {
           {/* Header */}
           <div className="mb-8 flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-semibold text-gray-900 mb-2">
                 Account Requests Management
               </h1>
               <p className="text-gray-600">
