@@ -237,6 +237,7 @@ export default function EquipmentPage() {
                             width={500}
                             height={500}
                             sizes="100vw"
+                            priority
                             onClick={() => {
                               setSelectedImage(equipment.image!);
                               setSelectedEquipment(equipment);
