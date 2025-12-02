@@ -62,12 +62,28 @@ const UsersPage: React.FC = () => {
     setSidebarOpen(false);
   };
 
-  // Auth guard logic
+  // Role-based access control - Only Super Admin can access user management
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.replace("/login");
+        return;
+      }
+
+      const userRole = user?.role;
+      const allowedRoles = [
+        "Super Admin",
+        "CCIS Dean",
+        "Lab Technician",
+        "Comlab Adviser",
+      ];
+
+      if (!allowedRoles.includes(userRole || "")) {
+        router.replace("/home");
+        return;
+      }
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, user, router]);
 
   // Fetch users
   const loadUsers = useCallback(

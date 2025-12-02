@@ -37,7 +37,7 @@ import { loadAllDashboardData, DashboardStats } from "./utils/helpers";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -47,6 +47,27 @@ export default function DashboardPage() {
     null
   );
   const [error, setError] = useState<string | null>(null);
+
+  // Role-based access control - Faculty users should not access dashboard
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
+      }
+
+      // Check if user is Faculty - they should not access dashboard
+      const userRole = user?.role;
+      if (
+        userRole === "Faculty" ||
+        userRole === "Lecturer" ||
+        userRole === "Instructor"
+      ) {
+        router.push("/home");
+        return;
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   // Authentication check
   useEffect(() => {

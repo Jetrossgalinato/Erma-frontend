@@ -48,8 +48,10 @@ const Navbar: React.FC = () => {
     useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Track user's approved_acc_role
-  const [approvedAccRole, setApprovedAccRole] = useState<string | null>(null);
+  // Track user's approved_acc_role - Initialize immediately from store
+  const [approvedAccRole, setApprovedAccRole] = useState<string | null>(
+    user?.role || null
+  );
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -240,11 +242,13 @@ const Navbar: React.FC = () => {
   };
 
   // Utility for checking if user is Staff/Faculty/Admin
+  // Use user.role directly from store for immediate access, fallback to state
+  const currentRole = user?.role || approvedAccRole;
   const isPrivileged =
-    approvedAccRole === "Staff" ||
-    approvedAccRole === "Faculty" ||
-    approvedAccRole === "Admin";
-  const isFaculty = approvedAccRole === "Faculty";
+    currentRole === "Staff" ||
+    currentRole === "Faculty" ||
+    currentRole === "Admin";
+  const isFaculty = currentRole === "Faculty";
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
