@@ -139,7 +139,6 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("verifyAuth: No auth token found");
       return null;
     }
 
@@ -246,17 +245,14 @@ export async function checkUserAuthentication(): Promise<boolean> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("checkUserAuthentication: No auth token found");
       return false;
     }
 
     const authData = await verifyAuth();
     if (!authData) {
-      console.log("checkUserAuthentication: Auth verification failed");
       return false;
     }
 
-    console.log("User authenticated:", authData);
     return true;
   } catch (error) {
     handleError(error, "checkUserAuthentication");

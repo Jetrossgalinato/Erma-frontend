@@ -306,7 +306,6 @@ export default function DashboardFacilitiesPage() {
         }
       });
 
-      console.log("Sending facility data:", cleanedData);
       await createFacility(cleanedData as FacilityFormData);
 
       // Log the insert action

@@ -79,7 +79,6 @@ export default function AccountRequestsPage() {
           return;
         }
 
-        console.log("User role:", authData.role);
 
         // Allow all authenticated users for now
         // TODO: Re-enable role check once we confirm the role structure

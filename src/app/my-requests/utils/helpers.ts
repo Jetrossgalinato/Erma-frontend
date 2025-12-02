@@ -98,7 +98,6 @@ export async function verifyAuth(): Promise<{ user_id: string } | null> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("verifyAuth: No token found in localStorage");
       return null;
     }
 
@@ -111,7 +110,6 @@ export async function verifyAuth(): Promise<{ user_id: string } | null> {
     });
 
     if (!response.ok) {
-      console.log("verifyAuth: Response not OK");
       return null;
     }
 
@@ -363,7 +361,6 @@ export async function deleteRequests(
         : "acquiring";
 
     const requestPayload = { ids: requestIds };
-    console.log(`DELETE ${endpoint} request payload:`, requestPayload);
 
     const response = await fetch(
       `${API_BASE_URL}/api/${endpoint}/bulk-delete`,

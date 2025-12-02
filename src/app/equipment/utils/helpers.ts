@@ -166,14 +166,9 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("verifyAuth: No token found in localStorage");
       return null;
     }
 
-    console.log(
-      "verifyAuth: Making request to",
-      `${API_BASE_URL}/api/auth/verify`
-    );
     const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
       method: "GET",
       headers: {
@@ -182,14 +177,11 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
       },
     });
 
-    console.log("verifyAuth: Response status:", response.status);
     if (!response.ok) {
-      console.log("verifyAuth: Response not OK");
       return null;
     }
 
     const data: AuthVerifyResponse = await response.json();
-    console.log("verifyAuth: Response data:", data);
     return data;
   } catch (error) {
     console.error("Auth verification failed:", error);
@@ -238,7 +230,6 @@ export async function checkUserAuthorization(): Promise<boolean> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("checkUserAuthorization: No auth token found");
       return false;
     }
 
@@ -247,16 +238,6 @@ export async function checkUserAuthorization(): Promise<boolean> {
     if (userDataStr) {
       try {
         const userData = JSON.parse(userDataStr);
-        console.log(
-          "checkUserAuthorization: Found userData in localStorage:",
-          userData
-        );
-        console.log(
-          "checkUserAuthorization: is_employee value:",
-          userData.is_employee,
-          "type:",
-          typeof userData.is_employee
-        );
         // If userData has is_employee, use it directly (can be boolean or number)
         if (
           userData.is_employee !== undefined &&
@@ -264,17 +245,7 @@ export async function checkUserAuthorization(): Promise<boolean> {
         ) {
           // Convert to boolean: 1 or true = true, 0 or false = false
           const isEmployee = Boolean(userData.is_employee);
-          console.log(
-            "checkUserAuthorization: Using localStorage is_employee:",
-            userData.is_employee,
-            "-> converted to:",
-            isEmployee
-          );
           return isEmployee;
-        } else {
-          console.log(
-            "checkUserAuthorization: is_employee is undefined or null, will check backend"
-          );
         }
       } catch (e) {
         console.error("Failed to parse userData:", e);
@@ -282,25 +253,10 @@ export async function checkUserAuthorization(): Promise<boolean> {
     }
 
     const authData = await verifyAuth();
-    console.log("checkUserAuthorization: authData =", authData);
-    console.log(
-      "checkUserAuthorization: authData.user_id =",
-      authData?.user_id,
-      "type:",
-      typeof authData?.user_id
-    );
 
     if (!authData || !authData.user_id) {
-      console.log(
-        "checkUserAuthorization: Auth verification failed or no user_id"
-      );
       return false;
     }
-
-    console.log(
-      "checkUserAuthorization: Auth OK, fetching account data for user_id:",
-      authData.user_id
-    );
 
     const response = await fetch(
       `${API_BASE_URL}/api/users/${authData.user_id}/account`,
@@ -314,10 +270,6 @@ export async function checkUserAuthorization(): Promise<boolean> {
     );
 
     if (!response.ok) {
-      console.log(
-        "checkUserAuthorization: Failed to fetch account data:",
-        response.status
-      );
       return false;
     }
 

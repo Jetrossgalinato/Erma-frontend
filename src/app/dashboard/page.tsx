@@ -7,7 +7,6 @@ import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store/authStore";
-import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 
 // Import components
 import DashboardHeader from "./components/DashboardHeader";

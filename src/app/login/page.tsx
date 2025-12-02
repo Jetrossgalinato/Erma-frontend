@@ -22,15 +22,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [subtitle, setSubtitle] = useState("");
 
-  const subtitles = [
-    "You’ve got this — let’s go!",
-    "Every login is a fresh start.",
-    "Make today count!",
-    "Progress begins here.",
-    "Keep pushing forward.",
-  ];
-
   useEffect(() => {
+    const subtitles = [
+      "You've got this — let's go!",
+      "Every login is a fresh start.",
+      "Make today count!",
+      "Progress begins here.",
+      "Keep pushing forward.",
+    ];
     setSubtitle(subtitles[Math.floor(Math.random() * subtitles.length)]);
   }, []);
 

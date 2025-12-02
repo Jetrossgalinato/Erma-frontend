@@ -63,7 +63,6 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("verifyAuth: No auth token found");
       return null;
     }
 

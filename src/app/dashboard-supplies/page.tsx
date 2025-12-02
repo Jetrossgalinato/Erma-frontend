@@ -378,7 +378,6 @@ export default function DashboardSuppliesPage() {
       if (editImageFile) {
         try {
           imageUrl = await uploadSupplyImage(editImageFile);
-          console.log("Image uploaded successfully:", imageUrl);
         } catch (error) {
           console.error("Error uploading image:", error);
           showAlert({
@@ -431,7 +430,6 @@ export default function DashboardSuppliesPage() {
       setEditingSupply(null);
       setSelectedRows([]);
       clearEditImageSelection();
-      console.log("Supply updated successfully");
     } catch (error) {
       console.error("Error updating supply:", error);
       showAlert({
@@ -480,7 +478,6 @@ export default function DashboardSuppliesPage() {
       if (selectedImageFile) {
         try {
           imageUrl = await uploadSupplyImage(selectedImageFile);
-          console.log("Image uploaded successfully:", imageUrl);
         } catch (error) {
           console.error("Error uploading image:", error);
           showAlert({
@@ -678,7 +675,6 @@ export default function DashboardSuppliesPage() {
         prev.filter((supply) => !selectedRows.includes(supply.id))
       );
       setSelectedRows([]);
-      console.log(`Successfully deleted ${selectedRows.length} rows.`);
     } catch (error) {
       console.error("Error deleting supplies:", error);
       showAlert({
