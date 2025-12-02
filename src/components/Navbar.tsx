@@ -256,14 +256,25 @@ const Navbar: React.FC = () => {
   };
 
   // Utility for checking if user is Staff/Faculty/Admin
-  // Use user.role directly from store for immediate access, fallback to state
-  const rawRole = user?.role || approvedAccRole;
+  // Use user.role directly from store for immediate access, fallback to state, then localStorage
+  const rawRole =
+    user?.role ||
+    approvedAccRole ||
+    (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
   const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
-  const isPrivileged =
-    currentRole === "Staff" ||
-    currentRole === "Faculty" ||
-    currentRole === "Admin";
+  const isSuperAdmin = currentRole === "Super Admin";
   const isFaculty = currentRole === "Faculty";
+
+  // Debug logging
+  console.log("DEBUG Navbar - rawRole:", rawRole);
+  console.log("DEBUG Navbar - currentRole:", currentRole);
+  console.log("DEBUG Navbar - isFaculty:", isFaculty);
+  console.log("DEBUG Navbar - user?.role:", user?.role);
+  console.log("DEBUG Navbar - approvedAccRole:", approvedAccRole);
+  console.log(
+    "DEBUG Navbar - localStorage userRole:",
+    typeof window !== "undefined" ? localStorage.getItem("userRole") : null
+  );
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -333,8 +344,8 @@ const Navbar: React.FC = () => {
           )}
         </div>
 
-        {/* Hide Account Requests for Staff, Faculty, Admin */}
-        {isAuthenticated && !isPrivileged && (
+        {/* Account Requests - Only for Super Admin */}
+        {isAuthenticated && isSuperAdmin && (
           <a
             href="/requests"
             className={`hover:text-black transition-colors duration-300 ${
@@ -535,8 +546,8 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Hide Account Requests for Staff, Faculty, Admin */}
-          {isAuthenticated && !isPrivileged && (
+          {/* Account Requests - Only for Super Admin */}
+          {isAuthenticated && isSuperAdmin && (
             <a
               href="/requests"
               className={`py-2 text-gray-700 ${

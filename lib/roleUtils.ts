@@ -1,9 +1,14 @@
 // Helper function to map original roles to system roles
 export function mapRoleToSystemRole(originalRole: string): string {
-  const superAdminRoles = ["CCIS Dean", "Lab Technician", "Comlab Adviser"];
-  const adminRoles = ["Department Chairperson", "Associate Dean"];
-  const staffRoles = ["College Clerk", "Student Assistant"];
-  const facultyRoles = ["Lecturer", "Instructor"];
+  const superAdminRoles = [
+    "CCIS Dean",
+    "Lab Technician",
+    "Comlab Adviser",
+    "Super Admin",
+  ];
+  const adminRoles = ["Department Chairperson", "Associate Dean", "Admin"];
+  const staffRoles = ["College Clerk", "Student Assistant", "Staff"];
+  const facultyRoles = ["Faculty", "Lecturer", "Instructor"];
 
   if (superAdminRoles.includes(originalRole)) {
     return "Super Admin";

@@ -66,10 +66,25 @@ export default function LoginPage() {
         return;
       }
 
+      const userRole =
+        result.user.role ||
+        result.user.approved_acc_role ||
+        result.user.acc_role ||
+        "";
+
+      console.log("DEBUG Login - Backend response:", result.user);
+      console.log("DEBUG Login - role:", result.user.role);
+      console.log(
+        "DEBUG Login - approved_acc_role:",
+        result.user.approved_acc_role
+      );
+      console.log("DEBUG Login - acc_role:", result.user.acc_role);
+      console.log("DEBUG Login - Final userRole:", userRole);
+
       const userData = {
         userId: result.user.id?.toString() || "",
         email: result.user.email || email,
-        role: result.user.approved_acc_role || result.user.acc_role || "",
+        role: userRole,
         accountRequestId: result.user.id,
       };
 
@@ -78,9 +93,12 @@ export default function LoginPage() {
         email: result.user.email || email,
         first_name: result.user.first_name || "",
         last_name: result.user.last_name || "",
-        acc_role: result.user.approved_acc_role || result.user.acc_role || "",
+        acc_role: userRole,
       };
       localStorage.setItem("userData", JSON.stringify(fullUserData));
+
+      console.log("DEBUG Login - userData being passed to login():", userData);
+      console.log("DEBUG Login - localStorage userData:", fullUserData);
 
       login(result.access_token, userData);
       setError("");
