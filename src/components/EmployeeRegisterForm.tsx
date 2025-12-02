@@ -22,17 +22,16 @@ export default function EmployeeRegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const subtitles = [
-    "Ready to join the team?",
-    "Start your journey with us!",
-    "Your future begins here.",
-    "Let's build something great.",
-    "Welcome aboard!",
-  ];
-
   const [subtitle, setSubtitle] = useState("");
 
   useEffect(() => {
+    const subtitles = [
+      "Ready to join the team?",
+      "Start your journey with us!",
+      "Your future begins here.",
+      "Let's build something great.",
+      "Welcome aboard!",
+    ];
     setSubtitle(subtitles[Math.floor(Math.random() * subtitles.length)]);
   }, []);
 

@@ -188,10 +188,10 @@ export default function Home() {
                             <Image
                               src="/images/projector.png"
                               alt="Projector"
-                              width={96}
-                              height={96}
-                              className="object-contain"
-                              style={{ width: "auto", height: "auto" }}
+                              width={80}
+                              height={80}
+                              className="object-contain h-auto"
+                              style={{ height: "auto", width: "auto" }}
                             />
                           </div>
                         </div>

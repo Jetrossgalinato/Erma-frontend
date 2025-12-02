@@ -22,15 +22,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [subtitle, setSubtitle] = useState("");
 
-  const subtitles = [
-    "You’ve got this — let’s go!",
-    "Every login is a fresh start.",
-    "Make today count!",
-    "Progress begins here.",
-    "Keep pushing forward.",
-  ];
-
   useEffect(() => {
+    const subtitles = [
+      "You've got this — let's go!",
+      "Every login is a fresh start.",
+      "Make today count!",
+      "Progress begins here.",
+      "Keep pushing forward.",
+    ];
     setSubtitle(subtitles[Math.floor(Math.random() * subtitles.length)]);
   }, []);
 
@@ -66,12 +65,27 @@ export default function LoginPage() {
         return;
       }
 
+      const userRole =
+        result.user.role ||
+        result.user.approved_acc_role ||
+        result.user.acc_role ||
+        "";
+
       const userData = {
         userId: result.user.id?.toString() || "",
         email: result.user.email || email,
-        role: result.user.approved_acc_role || result.user.acc_role || "",
+        role: userRole,
         accountRequestId: result.user.id,
       };
+
+      // Store additional user data in localStorage for navbar
+      const fullUserData = {
+        email: result.user.email || email,
+        first_name: result.user.first_name || "",
+        last_name: result.user.last_name || "",
+        acc_role: userRole,
+      };
+      localStorage.setItem("userData", JSON.stringify(fullUserData));
 
       login(result.access_token, userData);
       setError("");

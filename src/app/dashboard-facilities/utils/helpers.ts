@@ -62,15 +62,10 @@ export async function fetchFacilities(): Promise<Facility[]> {
   }
 
   const data = await response.json();
-  console.log("Raw facilities response:", data);
-  console.log("Is array?", Array.isArray(data));
-  console.log("Has facilities property?", data.facilities);
 
   // Handle if backend returns an object with a facilities array
   const facilitiesArray = Array.isArray(data) ? data : data.facilities || [];
 
-  console.log("Facilities array:", facilitiesArray);
-  console.log("First facility:", facilitiesArray[0]);
 
   // Map facility_id to id if needed
   return facilitiesArray.map((facility: Facility) => ({

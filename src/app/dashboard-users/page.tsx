@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useUsersStore } from "@/store/usersStore";
 import { useAlert } from "@/contexts/AlertContext";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import {
   fetchUsers,
   updateUser,
@@ -62,12 +63,23 @@ const UsersPage: React.FC = () => {
     setSidebarOpen(false);
   };
 
-  // Auth guard logic
+  // Role-based access control - Only Super Admin can access user management
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.replace("/login");
+        return;
+      }
+
+      const userRole = user?.role;
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
+
+      if (mappedRole !== "Super Admin") {
+        router.replace("/home");
+        return;
+      }
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, user, router]);
 
   // Fetch users
   const loadUsers = useCallback(

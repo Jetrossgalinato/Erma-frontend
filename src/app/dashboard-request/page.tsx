@@ -8,6 +8,7 @@ import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store";
 import { useDashboardRequestsStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import RequestTypeSelector from "./components/RequestTypeSelector";
 import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
@@ -42,7 +43,7 @@ const PAGE_SIZE = 10;
 
 export default function DashboardRequestsPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const { showAlert } = useAlert();
   const {
     currentRequestType,
@@ -77,6 +78,23 @@ export default function DashboardRequestsPage() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Role-based access control - Faculty users should not access dashboard requests
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
+      }
+
+      const userRole = user?.role;
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
+      if (mappedRole === "Faculty") {
+        router.push("/home");
+        return;
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   // Load data function
   const loadData = useCallback(async () => {
@@ -215,15 +233,14 @@ export default function DashboardRequestsPage() {
       } else if (currentRequestType === "booking") {
         success = await bulkDeleteBookingRequests(selectedIds);
       } else if (currentRequestType === "acquiring") {
-        if (success) {
-          showAlert({
-            type: "success",
-            message: `Successfully deleted ${selectedIds.length} request(s)`,
-          });
-          clearSelection();
-          setShowActionDropdown(false);
-          await loadData();
-        }
+        success = await bulkDeleteAcquiringRequests(selectedIds);
+      }
+
+      if (success) {
+        showAlert({
+          type: "success",
+          message: `Successfully deleted ${selectedIds.length} request(s)`,
+        });
         clearSelection();
         setShowActionDropdown(false);
         await loadData();
@@ -245,14 +262,6 @@ export default function DashboardRequestsPage() {
 
   const totalItems = currentRequests.length;
 
-  // Auth guard
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/home");
-    }
-  }, [isAuthenticated, router]);
-
-  // Fetch data based on current request type
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {

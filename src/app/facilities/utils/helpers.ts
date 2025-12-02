@@ -133,7 +133,6 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("verifyAuth: No token found in localStorage");
       return null;
     }
 
@@ -146,7 +145,6 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
     });
 
     if (!response.ok) {
-      console.log("verifyAuth: Response not OK");
       return null;
     }
 
@@ -204,13 +202,11 @@ export async function checkUserAuthentication(): Promise<boolean> {
   try {
     const token = getAuthToken();
     if (!token) {
-      console.log("checkUserAuthentication: No auth token found");
       return false;
     }
 
     const authData = await verifyAuth();
     if (!authData || !authData.user_id) {
-      console.log("checkUserAuthentication: Auth verification failed");
       return false;
     }
 
@@ -270,7 +266,6 @@ export async function createBookingRequest(
       status: "Pending",
     };
 
-    console.log("Booking request payload:", requestPayload);
 
     // Create booking request
     const response = await fetch(`${API_BASE_URL}/api/booking`, {

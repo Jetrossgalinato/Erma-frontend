@@ -185,7 +185,6 @@ export default function DashboardEquipmentPage() {
         prev.filter((eq) => !selectedRows.includes(eq.id))
       );
       setSelectedRows([]);
-      console.log(`Successfully deleted ${selectedRows.length} rows.`);
     } catch (err) {
       console.error("Error deleting equipments:", err);
       showAlert({
@@ -243,7 +242,6 @@ export default function DashboardEquipmentPage() {
 
     try {
       const data = await fetchFacilities();
-      console.log("Facilities loaded:", data);
       setFacilities(data);
     } catch (err) {
       console.error("Error fetching facilities:", err);
@@ -261,10 +259,7 @@ export default function DashboardEquipmentPage() {
   }, [isRefreshing, loadEquipments]);
 
   const handleInsertEquipment = async () => {
-    console.log("Insert equipment called with:", newEquipment);
-
     if (!validateEquipmentName(newEquipment.name)) {
-      console.log("Validation failed: Equipment name is required");
       showAlert({
         type: "warning",
         message: "Equipment name is required",
@@ -272,14 +267,11 @@ export default function DashboardEquipmentPage() {
       return;
     }
 
-    console.log("Validation passed, proceeding with insert");
     let imageUrl = null;
 
     if (selectedImageFile) {
-      console.log("Uploading image:", selectedImageFile.name);
       try {
         imageUrl = await uploadEquipmentImage(selectedImageFile);
-        console.log("Image uploaded successfully:", imageUrl);
       } catch (error) {
         console.error("Error uploading image:", error);
         showAlert({
@@ -293,25 +285,17 @@ export default function DashboardEquipmentPage() {
     }
 
     try {
-      console.log("Creating equipment with data:", {
+      await createEquipment({
         ...newEquipment,
         image: imageUrl || undefined,
       });
-      const createdEquipment = await createEquipment({
-        ...newEquipment,
-        image: imageUrl || undefined,
-      });
-      console.log("Equipment created successfully:", createdEquipment);
 
       await logEquipmentAction("added", newEquipment.name);
-      console.log("Action logged successfully");
 
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
       clearImageSelection();
-      console.log("Reloading equipments list");
       await loadEquipments(false);
-      console.log("Insert operation completed successfully");
     } catch (error) {
       console.error("Error inserting equipment:", error);
       showAlert({

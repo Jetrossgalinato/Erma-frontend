@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import { useAlert } from "@/contexts/AlertContext";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store";
 import StatisticsCards from "./components/StatisticsCards";
 import FilterControls from "./components/FilterControls";
 import RequestCard from "./components/RequestCard";
@@ -30,6 +31,9 @@ import {
 
 export default function AccountRequestsPage() {
   const { showAlert } = useAlert();
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
   const [selectedDepartment, setSelectedDepartment] =
@@ -43,11 +47,27 @@ export default function AccountRequestsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<number | null>(null);
 
-  const [authLoading, setAuthLoading] = useState(true);
-  const router = useRouter();
-
   const [requestedAtOptions] = useState(getDateOptions());
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
+
+  // Role-based access control - Only Super Admin can access account requests
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+        return;
+      }
+
+      // Check if user has permission - only Super Admin
+      const userRole = user?.role;
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
+
+      if (mappedRole !== "Super Admin") {
+        router.push("/home");
+        return;
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -59,20 +79,19 @@ export default function AccountRequestsPage() {
           return;
         }
 
-        console.log("User role:", authData.role);
 
         // Allow all authenticated users for now
         // TODO: Re-enable role check once we confirm the role structure
       } catch (error) {
         console.error("Auth check failed:", error);
         router.push("/login");
-      } finally {
-        setAuthLoading(false);
       }
     };
 
-    checkAuth();
-  }, [router]);
+    if (isAuthenticated && !authLoading) {
+      checkAuth();
+    }
+  }, [router, isAuthenticated, authLoading]);
 
   // Fetch requests function with FastAPI
   const fetchRequests = useCallback(async () => {
