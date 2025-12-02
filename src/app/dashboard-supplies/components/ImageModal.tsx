@@ -53,8 +53,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
           alt={`${supplyName} supply preview`}
           className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
           style={{ maxWidth: "90vw", maxHeight: "90vh" }}
-          width={0} // Adjust width as needed
-          height={0} // Adjust height as needed
+          width={500} // Adjust width as needed
+          height={500} // Adjust height as needed
           onClick={(e) => e.stopPropagation()}
         />
       </div>
