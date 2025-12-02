@@ -265,17 +265,6 @@ const Navbar: React.FC = () => {
   const isSuperAdmin = currentRole === "Super Admin";
   const isFaculty = currentRole === "Faculty";
 
-  // Debug logging
-  console.log("DEBUG Navbar - rawRole:", rawRole);
-  console.log("DEBUG Navbar - currentRole:", currentRole);
-  console.log("DEBUG Navbar - isFaculty:", isFaculty);
-  console.log("DEBUG Navbar - user?.role:", user?.role);
-  console.log("DEBUG Navbar - approvedAccRole:", approvedAccRole);
-  console.log(
-    "DEBUG Navbar - localStorage userRole:",
-    typeof window !== "undefined" ? localStorage.getItem("userRole") : null
-  );
-
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
       {/* Logo: Left-aligned with padding on all screens */}
