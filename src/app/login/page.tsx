@@ -73,6 +73,15 @@ export default function LoginPage() {
         accountRequestId: result.user.id,
       };
 
+      // Store additional user data in localStorage for navbar
+      const fullUserData = {
+        email: result.user.email || email,
+        first_name: result.user.first_name || "",
+        last_name: result.user.last_name || "",
+        acc_role: result.user.approved_acc_role || result.user.acc_role || "",
+      };
+      localStorage.setItem("userData", JSON.stringify(fullUserData));
+
       login(result.access_token, userData);
       setError("");
       showAlert({

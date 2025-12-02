@@ -60,14 +60,9 @@ export default function AccountRequestsPage() {
 
       // Check if user has permission - only Super Admin
       const userRole = user?.role;
-      const allowedRoles = [
-        "Super Admin",
-        "CCIS Dean",
-        "Lab Technician",
-        "Comlab Adviser",
-      ];
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
 
-      if (!allowedRoles.includes(userRole || "")) {
+      if (mappedRole !== "Super Admin") {
         router.push("/home");
         return;
       }

@@ -15,6 +15,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -30,6 +31,7 @@ const Navbar: React.FC = () => {
   const [userData, setUserData] = useState<{
     email: string;
     first_name?: string;
+    last_name?: string;
     acc_role?: string;
   } | null>(null);
   const pathname = usePathname();
@@ -131,8 +133,20 @@ const Navbar: React.FC = () => {
 
   const getInitial = () => {
     if (!userData) return "?";
-    const name = userData.first_name || userData.email;
-    return name ? name.charAt(0).toUpperCase() : "?";
+
+    // Get first and last name initials
+    const firstName = userData.first_name;
+    const lastName = userData.last_name;
+
+    if (firstName && lastName) {
+      return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+    } else if (firstName) {
+      return firstName.substring(0, 2).toUpperCase();
+    } else if (userData.email) {
+      return userData.email.substring(0, 2).toUpperCase();
+    }
+
+    return "?";
   };
 
   const toggleNotificationDropdown = () => {
@@ -243,7 +257,8 @@ const Navbar: React.FC = () => {
 
   // Utility for checking if user is Staff/Faculty/Admin
   // Use user.role directly from store for immediate access, fallback to state
-  const currentRole = user?.role || approvedAccRole;
+  const rawRole = user?.role || approvedAccRole;
+  const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
   const isPrivileged =
     currentRole === "Staff" ||
     currentRole === "Faculty" ||

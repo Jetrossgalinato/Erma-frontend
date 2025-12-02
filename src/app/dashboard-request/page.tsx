@@ -8,6 +8,7 @@ import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store";
 import { useDashboardRequestsStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import RequestTypeSelector from "./components/RequestTypeSelector";
 import BorrowingRequestsTable from "./components/BorrowingRequestsTable";
 import BookingRequestsTable from "./components/BookingRequestsTable";
@@ -87,11 +88,8 @@ export default function DashboardRequestsPage() {
       }
 
       const userRole = user?.role;
-      if (
-        userRole === "Faculty" ||
-        userRole === "Lecturer" ||
-        userRole === "Instructor"
-      ) {
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
+      if (mappedRole === "Faculty") {
         router.push("/home");
         return;
       }

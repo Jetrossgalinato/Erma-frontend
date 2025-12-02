@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useUsersStore } from "@/store/usersStore";
 import { useAlert } from "@/contexts/AlertContext";
+import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import {
   fetchUsers,
   updateUser,
@@ -71,14 +72,9 @@ const UsersPage: React.FC = () => {
       }
 
       const userRole = user?.role;
-      const allowedRoles = [
-        "Super Admin",
-        "CCIS Dean",
-        "Lab Technician",
-        "Comlab Adviser",
-      ];
+      const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
 
-      if (!allowedRoles.includes(userRole || "")) {
+      if (mappedRole !== "Super Admin") {
         router.replace("/home");
         return;
       }
