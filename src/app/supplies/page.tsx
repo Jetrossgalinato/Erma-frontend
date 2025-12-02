@@ -230,6 +230,7 @@ export default function SuppliesPage() {
                         width={500}
                         height={500}
                         sizes="100vw"
+                        priority
                         onClick={() =>
                           handleImageClick(
                             supply.image_url!,
