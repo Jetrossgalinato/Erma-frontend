@@ -121,13 +121,57 @@ export async function updateFacility(
 ): Promise<Facility> {
   const token = localStorage.getItem("authToken");
 
+  // Create FormData for multipart/form-data submission
+  const formData = new FormData();
+
+  // Append all fields to FormData
+  if (facilityData.facility_name !== undefined) {
+    formData.append("facility_name", facilityData.facility_name);
+  }
+  if (
+    facilityData.facility_type !== undefined &&
+    facilityData.facility_type !== null
+  ) {
+    formData.append("facility_type", facilityData.facility_type);
+  }
+  if (
+    facilityData.floor_level !== undefined &&
+    facilityData.floor_level !== null
+  ) {
+    formData.append("floor_level", facilityData.floor_level);
+  }
+  if (facilityData.capacity !== undefined && facilityData.capacity !== null) {
+    formData.append("capacity", facilityData.capacity.toString());
+  }
+  if (
+    facilityData.connection_type !== undefined &&
+    facilityData.connection_type !== null
+  ) {
+    formData.append("connection_type", facilityData.connection_type);
+  }
+  if (
+    facilityData.cooling_tools !== undefined &&
+    facilityData.cooling_tools !== null
+  ) {
+    formData.append("cooling_tools", facilityData.cooling_tools);
+  }
+  if (facilityData.building !== undefined && facilityData.building !== null) {
+    formData.append("building", facilityData.building);
+  }
+  if (facilityData.remarks !== undefined && facilityData.remarks !== null) {
+    formData.append("remarks", facilityData.remarks);
+  }
+  if (facilityData.status !== undefined && facilityData.status !== null) {
+    formData.append("status", facilityData.status);
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/facilities/${id}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      // Don't set Content-Type - browser will set it with boundary for FormData
     },
-    body: JSON.stringify(facilityData),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -137,7 +181,8 @@ export async function updateFacility(
     throw new Error(error.detail || "Failed to update facility");
   }
 
-  return response.json();
+  const result = await response.json();
+  return result.facility || result;
 }
 
 /**
