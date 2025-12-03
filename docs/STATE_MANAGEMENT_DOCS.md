@@ -2,7 +2,7 @@
 
 ## Overview
 
-The CRMS system now uses **Zustand** for centralized state management. This eliminates prop drilling, reduces code duplication, and provides a single source of truth for application state.
+The ERMA v2 (Equipment and Resource Management Application v2) system uses **Zustand** for centralized state management. This eliminates prop drilling, reduces code duplication, and provides a single source of truth for application state.
 
 ## Architecture
 

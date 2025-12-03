@@ -519,10 +519,10 @@ export default function MyRequestsPage() {
 
       <DeleteModal
         isOpen={showDeleteModal}
-        selectedCount={selectedIds.length}
-        isDeleting={isSubmitting}
+        itemCount={selectedIds.length}
+        itemType="request"
         onConfirm={handleConfirmDelete}
-        onClose={() => setShowDeleteModal(false)}
+        onCancel={() => setShowDeleteModal(false)}
       />
     </div>
   );

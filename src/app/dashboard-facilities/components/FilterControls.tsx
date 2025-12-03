@@ -78,11 +78,20 @@ const FilterControls: React.FC<FilterControlsProps> = ({
         <select
           value={facilityTypeFilter}
           onChange={(e) => onFacilityTypeChange(e.target.value)}
-          className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
         >
-          <option value="">All Facility Types</option>
+          <option
+            value=""
+            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          >
+            All Facility Types
+          </option>
           {uniqueFacilityTypes.map((type) => (
-            <option key={type} value={type}>
+            <option
+              key={type}
+              value={type}
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
               {type}
             </option>
           ))}
@@ -93,11 +102,20 @@ const FilterControls: React.FC<FilterControlsProps> = ({
         <select
           value={floorLevelFilter}
           onChange={(e) => onFloorLevelChange(e.target.value)}
-          className="px-3 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
         >
-          <option value="">All Floor Levels</option>
+          <option
+            value=""
+            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+          >
+            All Floor Levels
+          </option>
           {uniqueFloorLevels.map((level) => (
-            <option key={level} value={level}>
+            <option
+              key={level}
+              value={level}
+              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
               {level}
             </option>
           ))}
@@ -107,9 +125,9 @@ const FilterControls: React.FC<FilterControlsProps> = ({
       {(facilityTypeFilter || floorLevelFilter || activeFilter) && (
         <button
           onClick={onClearFilters}
-          className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
-          <X className="w-4 h-4 mr-1 inline" />
+          <X className="w-4 h-4 mr-2" />
           Clear
         </button>
       )}

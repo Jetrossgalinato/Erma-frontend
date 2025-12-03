@@ -185,6 +185,13 @@ export default function DashboardEquipmentPage() {
         prev.filter((eq) => !selectedRows.includes(eq.id))
       );
       setSelectedRows([]);
+
+      showAlert({
+        type: "success",
+        message: `Successfully deleted ${selectedRows.length} equipment${
+          selectedRows.length > 1 ? "s" : ""
+        }!`,
+      });
     } catch (err) {
       console.error("Error deleting equipments:", err);
       showAlert({
@@ -291,6 +298,11 @@ export default function DashboardEquipmentPage() {
       });
 
       await logEquipmentAction("added", newEquipment.name);
+
+      showAlert({
+        type: "success",
+        message: `Equipment "${newEquipment.name}" has been successfully added!`,
+      });
 
       setShowInsertForm(false);
       setNewEquipment({ name: "" });
@@ -548,9 +560,10 @@ export default function DashboardEquipmentPage() {
       setShowEditModal(false);
       setSelectedRows([]);
       clearEditImageSelection();
+
       showAlert({
         type: "success",
-        message: "Equipment updated successfully!",
+        message: `Equipment "${updatedEquipment.name}" has been successfully updated!`,
       });
     } catch (error) {
       console.error("Error updating equipment:", error);
@@ -673,7 +686,8 @@ export default function DashboardEquipmentPage() {
                   <Suspense fallback={null}>
                     <DeleteConfirmationModal
                       isOpen={showDeleteModal}
-                      selectedCount={selectedRows.length}
+                      itemCount={selectedRows.length}
+                      itemType="equipment"
                       onConfirm={handleDeleteSelectedRows}
                       onCancel={() => setShowDeleteModal(false)}
                     />
