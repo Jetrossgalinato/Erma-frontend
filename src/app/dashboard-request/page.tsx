@@ -260,13 +260,20 @@ export default function DashboardRequestsPage() {
 
   const totalItems = currentRequests.length;
 
-  // Check if any selected borrowing requests have return_status "Returned"
+  // Check if any selected requests should disable approve/reject
+  // - Borrowing: return_status is "Returned"
+  // - Booking: status is "Completed"
   const hasReturnedRequests =
-    currentRequestType === "borrowing" &&
-    selectedIds.some((id) => {
-      const request = borrowingRequests.find((r) => r.id === id);
-      return request?.return_status === "Returned";
-    });
+    (currentRequestType === "borrowing" &&
+      selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return request?.return_status === "Returned";
+      })) ||
+    (currentRequestType === "booking" &&
+      selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Completed";
+      }));
 
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
