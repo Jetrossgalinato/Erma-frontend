@@ -112,13 +112,15 @@ export default function MyRequestsPage() {
     if (currentRequestType === "borrowing") {
       return selectedIds.some((id) => {
         const request = borrowingRequests.find((r) => r.id === id);
-        return request?.return_status === "Returned";
+        return (
+          request?.return_status === "Returned" || request?.status === "Pending"
+        );
       });
     }
     if (currentRequestType === "booking") {
       return selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Completed";
+        return request?.status === "Completed" || request?.status === "Pending";
       });
     }
     return false;
