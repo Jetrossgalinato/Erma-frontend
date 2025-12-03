@@ -107,6 +107,23 @@ export default function MyRequestsPage() {
     return acquiringTotalPages;
   };
 
+  // Check if mark action should be disabled
+  const shouldDisableMarkAction = () => {
+    if (currentRequestType === "borrowing") {
+      return selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return request?.return_status === "Returned";
+      });
+    }
+    if (currentRequestType === "booking") {
+      return selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Completed";
+      });
+    }
+    return false;
+  };
+
   // Check authentication on mount
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -443,6 +460,7 @@ export default function MyRequestsPage() {
                   currentRequestType === "booking" ? handleMarkDone : undefined
                 }
                 onDelete={handleDelete}
+                disableMarkAction={shouldDisableMarkAction()}
               />
 
               {/* Content */}
