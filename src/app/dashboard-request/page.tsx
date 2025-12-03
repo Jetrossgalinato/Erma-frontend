@@ -263,6 +263,7 @@ export default function DashboardRequestsPage() {
   // Check if any selected requests should disable approve/reject
   // - Borrowing: return_status is "Returned"
   // - Booking: status is "Completed"
+  // - Acquiring: status is "Approved"
   const hasReturnedRequests =
     (currentRequestType === "borrowing" &&
       selectedIds.some((id) => {
@@ -273,6 +274,11 @@ export default function DashboardRequestsPage() {
       selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
         return request?.status === "Completed";
+      })) ||
+    (currentRequestType === "acquiring" &&
+      selectedIds.some((id) => {
+        const request = acquiringRequests.find((r) => r.id === id);
+        return request?.status === "Approved";
       }));
 
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
