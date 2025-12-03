@@ -103,7 +103,8 @@ export default function SuppliesPage() {
     const success = await createAcquireRequest(
       selectedSupply.supply_id,
       acquireQuantity,
-      acquireReason
+      acquireReason,
+      showAlert
     );
 
     if (success) {

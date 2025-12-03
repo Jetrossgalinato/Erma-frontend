@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { sessionTimeout, SESSION_CONFIG } from "@/utils/sessionTimeout";
+import { useAlert } from "@/contexts/AlertContext";
 
 export default function SessionTimeoutProvider({
   children,
@@ -11,12 +12,15 @@ export default function SessionTimeoutProvider({
   const [remainingTime, setRemainingTime] = useState(
     SESSION_CONFIG.WARNING_MINUTES
   );
+  const { showAlert } = useAlert();
 
   const handleLogout = useCallback(() => {
     setShowWarning(false);
-    alert(
-      "Your session has expired due to inactivity. You will be redirected to the login page."
-    );
+    showAlert({
+      type: "warning",
+      message:
+        "Your session has expired due to inactivity. You will be redirected to the login page.",
+    });
     sessionTimeout.stop();
 
     // Perform logout
@@ -25,9 +29,11 @@ export default function SessionTimeoutProvider({
       localStorage.removeItem("userId");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userRole");
-      window.location.href = "/login";
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
     }
-  }, []);
+  }, [showAlert]);
 
   const handleWarning = useCallback(() => {
     setShowWarning(true);

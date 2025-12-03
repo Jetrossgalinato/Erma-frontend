@@ -257,7 +257,7 @@ export default function MyRequestsPage() {
 
     setIsSubmitting(true);
     try {
-      await markAsReturned(selectedIds, receiverName.trim());
+      await markAsReturned(selectedIds, receiverName.trim(), showAlert);
       showAlert({
         type: "success",
         message: "Return notification sent successfully!",
@@ -287,7 +287,11 @@ export default function MyRequestsPage() {
   const handleSubmitDone = async () => {
     setIsSubmitting(true);
     try {
-      await markBookingAsDone(selectedIds, completionNotes.trim() || undefined);
+      await markBookingAsDone(
+        selectedIds,
+        completionNotes.trim() || undefined,
+        showAlert
+      );
       showAlert({
         type: "success",
         message: "Booking marked as done successfully!",
@@ -317,7 +321,7 @@ export default function MyRequestsPage() {
   const handleConfirmDelete = async () => {
     setIsSubmitting(true);
     try {
-      await deleteRequests(currentRequestType, selectedIds);
+      await deleteRequests(currentRequestType, selectedIds, showAlert);
       showAlert({
         type: "success",
         message: "Requests deleted successfully!",
