@@ -16,6 +16,8 @@ interface ActionButtonsProps {
   onShowNotifications?: () => void;
   notificationCount?: number;
   notificationLabel?: string;
+  disableApprove?: boolean;
+  disableReject?: boolean;
 }
 
 export default function ActionButtons({
@@ -29,6 +31,8 @@ export default function ActionButtons({
   onShowNotifications,
   notificationCount,
   notificationLabel = "Notifications",
+  disableApprove = false,
+  disableReject = false,
 }: ActionButtonsProps) {
   return (
     <div className="flex items-center gap-2">
@@ -48,14 +52,16 @@ export default function ActionButtons({
             <div className="py-1">
               <button
                 onClick={onApprove}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-2"
+                disabled={disableApprove}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               >
                 <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                 Approve Selected
               </button>
               <button
                 onClick={onReject}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                disabled={disableReject}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               >
                 <X className="w-4 h-4 text-red-600 dark:text-red-400" />
                 Reject Selected

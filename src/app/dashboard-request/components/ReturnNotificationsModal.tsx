@@ -12,6 +12,7 @@ import {
   rejectReturn,
 } from "../utils/helpers";
 import { useState } from "react";
+import { useAlert } from "@/contexts/AlertContext";
 
 interface ReturnNotificationsModalProps {
   notifications: ReturnNotification[];
@@ -25,16 +26,23 @@ export default function ReturnNotificationsModal({
   onRefresh,
 }: ReturnNotificationsModalProps) {
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const { showAlert } = useAlert();
 
   const handleConfirm = async (notificationId: number, borrowingId: number) => {
     try {
       setProcessingId(notificationId);
       await confirmReturn(notificationId, borrowingId);
-      alert("Return confirmed successfully");
+      showAlert({
+        type: "success",
+        message: "Return confirmed successfully",
+      });
       onRefresh();
     } catch (error) {
       console.error("Error confirming return:", error);
-      alert("Failed to confirm return");
+      showAlert({
+        type: "error",
+        message: "Failed to confirm return",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -44,11 +52,17 @@ export default function ReturnNotificationsModal({
     try {
       setProcessingId(notificationId);
       await rejectReturn(notificationId);
-      alert("Return rejected successfully");
+      showAlert({
+        type: "success",
+        message: "Return rejected successfully",
+      });
       onRefresh();
     } catch (error) {
       console.error("Error rejecting return:", error);
-      alert("Failed to reject return");
+      showAlert({
+        type: "error",
+        message: "Failed to reject return",
+      });
     } finally {
       setProcessingId(null);
     }

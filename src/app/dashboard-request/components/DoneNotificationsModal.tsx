@@ -12,6 +12,7 @@ import {
   dismissDone,
 } from "../utils/helpers";
 import { useState } from "react";
+import { useAlert } from "@/contexts/AlertContext";
 
 interface DoneNotificationsModalProps {
   notifications: DoneNotification[];
@@ -25,16 +26,23 @@ export default function DoneNotificationsModal({
   onRefresh,
 }: DoneNotificationsModalProps) {
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const { showAlert } = useAlert();
 
   const handleConfirm = async (notificationId: number, bookingId: number) => {
     try {
       setProcessingId(notificationId);
       await confirmDone(notificationId, bookingId);
-      alert("Booking completion confirmed successfully");
+      showAlert({
+        type: "success",
+        message: "Booking completion confirmed successfully",
+      });
       onRefresh();
     } catch (error) {
       console.error("Error confirming done:", error);
-      alert("Failed to confirm completion");
+      showAlert({
+        type: "error",
+        message: "Failed to confirm completion",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -44,11 +52,17 @@ export default function DoneNotificationsModal({
     try {
       setProcessingId(notificationId);
       await dismissDone(notificationId);
-      alert("Notification dismissed successfully");
+      showAlert({
+        type: "success",
+        message: "Notification dismissed successfully",
+      });
       onRefresh();
     } catch (error) {
       console.error("Error dismissing notification:", error);
-      alert("Failed to dismiss notification");
+      showAlert({
+        type: "error",
+        message: "Failed to dismiss notification",
+      });
     } finally {
       setProcessingId(null);
     }

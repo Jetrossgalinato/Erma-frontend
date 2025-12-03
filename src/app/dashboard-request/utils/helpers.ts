@@ -96,12 +96,19 @@ export function getAuthToken(): string | null {
   return null;
 }
 
-export function handleError(error: unknown, context: string): void {
+export function handleError(
+  error: unknown,
+  context: string,
+  showAlert?: (alert: { type: "error"; message: string }) => void
+): void {
   console.error(`${context}:`, error);
-  if (error instanceof Error) {
-    alert(`${context}: ${error.message}`);
-  } else {
-    alert(`${context}: An unknown error occurred`);
+  const message =
+    error instanceof Error
+      ? `${context}: ${error.message}`
+      : `${context}: An unknown error occurred`;
+
+  if (showAlert) {
+    showAlert({ type: "error", message });
   }
 }
 

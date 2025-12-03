@@ -260,6 +260,48 @@ export default function DashboardRequestsPage() {
 
   const totalItems = currentRequests.length;
 
+  // Check if approve should be disabled (already approved or rejected)
+  const disableApprove =
+    (currentRequestType === "borrowing" &&
+      selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return (
+          request?.request_status === "Approved" ||
+          request?.request_status === "Rejected"
+        );
+      })) ||
+    (currentRequestType === "booking" &&
+      selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
+      })) ||
+    (currentRequestType === "acquiring" &&
+      selectedIds.some((id) => {
+        const request = acquiringRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
+      }));
+
+  // Check if reject should be disabled (already approved or rejected)
+  const disableReject =
+    (currentRequestType === "borrowing" &&
+      selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return (
+          request?.request_status === "Approved" ||
+          request?.request_status === "Rejected"
+        );
+      })) ||
+    (currentRequestType === "booking" &&
+      selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
+      })) ||
+    (currentRequestType === "acquiring" &&
+      selectedIds.some((id) => {
+        const request = acquiringRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
+      }));
+
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {
@@ -363,6 +405,8 @@ export default function DashboardRequestsPage() {
                       onReject={handleBulkReject}
                       onDelete={handleBulkDelete}
                       onRefresh={loadData}
+                      disableApprove={disableApprove}
+                      disableReject={disableReject}
                     />
                   </div>
                 </div>

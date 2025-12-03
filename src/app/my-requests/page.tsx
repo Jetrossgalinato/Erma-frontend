@@ -107,6 +107,25 @@ export default function MyRequestsPage() {
     return acquiringTotalPages;
   };
 
+  // Check if mark action should be disabled
+  const shouldDisableMarkAction = () => {
+    if (currentRequestType === "borrowing") {
+      return selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return (
+          request?.return_status === "Returned" || request?.status === "Pending"
+        );
+      });
+    }
+    if (currentRequestType === "booking") {
+      return selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Completed" || request?.status === "Pending";
+      });
+    }
+    return false;
+  };
+
   // Check authentication on mount
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -238,7 +257,7 @@ export default function MyRequestsPage() {
 
     setIsSubmitting(true);
     try {
-      await markAsReturned(selectedIds, receiverName.trim());
+      await markAsReturned(selectedIds, receiverName.trim(), showAlert);
       showAlert({
         type: "success",
         message: "Return notification sent successfully!",
@@ -268,7 +287,11 @@ export default function MyRequestsPage() {
   const handleSubmitDone = async () => {
     setIsSubmitting(true);
     try {
-      await markBookingAsDone(selectedIds, completionNotes.trim() || undefined);
+      await markBookingAsDone(
+        selectedIds,
+        completionNotes.trim() || undefined,
+        showAlert
+      );
       showAlert({
         type: "success",
         message: "Booking marked as done successfully!",
@@ -298,7 +321,7 @@ export default function MyRequestsPage() {
   const handleConfirmDelete = async () => {
     setIsSubmitting(true);
     try {
-      await deleteRequests(currentRequestType, selectedIds);
+      await deleteRequests(currentRequestType, selectedIds, showAlert);
       showAlert({
         type: "success",
         message: "Requests deleted successfully!",
@@ -443,6 +466,7 @@ export default function MyRequestsPage() {
                   currentRequestType === "booking" ? handleMarkDone : undefined
                 }
                 onDelete={handleDelete}
+                disableMarkAction={shouldDisableMarkAction()}
               />
 
               {/* Content */}

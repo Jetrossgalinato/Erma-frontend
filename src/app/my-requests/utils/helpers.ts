@@ -10,6 +10,7 @@ export interface Borrowing {
   expected_return_date: string;
   purpose: string | null;
   receiver_name?: string;
+  return_status?: string | null;
 }
 
 export interface Booking {
@@ -84,12 +85,19 @@ export function formatDate(dateString: string | null): string {
   });
 }
 
-export function handleError(error: unknown, context: string): void {
+export function handleError(
+  error: unknown,
+  context: string,
+  showAlert?: (alert: { type: "error"; message: string }) => void
+): void {
   console.error(`${context}:`, error);
-  if (error instanceof Error) {
-    alert(`${context}: ${error.message}`);
-  } else {
-    alert(`${context}: An unknown error occurred`);
+  const message =
+    error instanceof Error
+      ? `${context}: ${error.message}`
+      : `${context}: An unknown error occurred`;
+
+  if (showAlert) {
+    showAlert({ type: "error", message });
   }
 }
 
@@ -274,7 +282,8 @@ export async function fetchAcquiringRequests(
 // Mark items as returned
 export async function markAsReturned(
   borrowingIds: number[],
-  receiverName: string
+  receiverName: string,
+  showAlert?: (alert: { type: "error"; message: string }) => void
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -303,7 +312,7 @@ export async function markAsReturned(
 
     return true;
   } catch (error) {
-    handleError(error, "Failed to mark items as returned");
+    handleError(error, "Failed to mark items as returned", showAlert);
     return false;
   }
 }
@@ -311,7 +320,8 @@ export async function markAsReturned(
 // Mark booking as done
 export async function markBookingAsDone(
   bookingIds: number[],
-  completionNotes?: string
+  completionNotes?: string,
+  showAlert?: (alert: { type: "error"; message: string }) => void
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -337,7 +347,7 @@ export async function markBookingAsDone(
 
     return true;
   } catch (error) {
-    handleError(error, "Failed to mark booking as done");
+    handleError(error, "Failed to mark booking as done", showAlert);
     return false;
   }
 }
@@ -345,7 +355,8 @@ export async function markBookingAsDone(
 // Delete requests
 export async function deleteRequests(
   requestType: "borrowing" | "booking" | "acquiring",
-  requestIds: number[]
+  requestIds: number[],
+  showAlert?: (alert: { type: "error"; message: string }) => void
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -406,7 +417,7 @@ export async function deleteRequests(
 
     return true;
   } catch (error) {
-    handleError(error, "Failed to delete requests");
+    handleError(error, "Failed to delete requests", showAlert);
     return false;
   }
 }

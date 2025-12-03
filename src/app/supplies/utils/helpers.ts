@@ -119,10 +119,22 @@ export function calculateTotalPages(
   return Math.ceil(totalItems / itemsPerPage);
 }
 
-export function handleError(error: unknown, context: string): void {
+export function handleError(
+  error: unknown,
+  context: string,
+  showAlert?: (alert: { type: "error"; message: string }) => void
+): void {
   console.error(`Error in ${context}:`, error);
   if (error instanceof Error) {
     console.error("Error message:", error.message);
+    if (showAlert) {
+      showAlert({ type: "error", message: `${context}: ${error.message}` });
+    }
+  } else if (showAlert) {
+    showAlert({
+      type: "error",
+      message: `${context}: An unknown error occurred`,
+    });
   }
 }
 
@@ -304,18 +316,29 @@ export async function getUserAccountId(): Promise<number | null> {
 export async function createAcquireRequest(
   supplyId: number,
   quantity: number,
-  purpose: string
+  purpose: string,
+  showAlert?: (alert: { type: "error" | "warning"; message: string }) => void
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
     if (!token) {
-      alert("Please log in to acquire supplies");
+      if (showAlert) {
+        showAlert({
+          type: "warning",
+          message: "Please log in to acquire supplies",
+        });
+      }
       return false;
     }
 
     const acquirersId = await getUserAccountId();
     if (!acquirersId) {
-      alert("Unable to get your account information");
+      if (showAlert) {
+        showAlert({
+          type: "error",
+          message: "Unable to get your account information",
+        });
+      }
       return false;
     }
 
@@ -343,9 +366,12 @@ export async function createAcquireRequest(
 
     return true;
   } catch (error) {
-    handleError(error, "createAcquireRequest");
-    if (error instanceof Error) {
-      alert(`Failed to submit acquire request: ${error.message}`);
+    handleError(error, "createAcquireRequest", showAlert);
+    if (error instanceof Error && showAlert) {
+      showAlert({
+        type: "error",
+        message: `Failed to submit acquire request: ${error.message}`,
+      });
     }
     return false;
   }

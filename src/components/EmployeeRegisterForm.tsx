@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useAlert } from "@/contexts/AlertContext";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -23,6 +24,7 @@ export default function EmployeeRegisterForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [subtitle, setSubtitle] = useState("");
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     const subtitles = [
@@ -59,7 +61,10 @@ export default function EmployeeRegisterForm() {
     } = formData;
 
     if (password !== confirmpassword) {
-      alert("Passwords do not match!");
+      showAlert({
+        type: "error",
+        message: "Passwords do not match!",
+      });
       setLoading(false);
       return;
     }
@@ -87,9 +92,11 @@ export default function EmployeeRegisterForm() {
         throw new Error(result.detail || "Registration failed.");
       }
 
-      alert(
-        "Registration submitted successfully! Please wait for approval from the Super Admin before logging in."
-      );
+      showAlert({
+        type: "success",
+        message:
+          "Registration submitted successfully! Please wait for approval from the Super Admin before logging in.",
+      });
 
       setFormData({
         email: "",
@@ -102,10 +109,16 @@ export default function EmployeeRegisterForm() {
         acc_role: "",
       });
 
-      window.location.href = "/login";
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
     } catch (error) {
       console.error("Registration failed:", error);
-      alert(error instanceof Error ? error.message : "Registration failed.");
+      showAlert({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Registration failed.",
+      });
     } finally {
       setLoading(false);
     }
