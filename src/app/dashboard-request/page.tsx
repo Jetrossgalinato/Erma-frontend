@@ -260,6 +260,14 @@ export default function DashboardRequestsPage() {
 
   const totalItems = currentRequests.length;
 
+  // Check if any selected borrowing requests have return_status "Returned"
+  const hasReturnedRequests =
+    currentRequestType === "borrowing" &&
+    selectedIds.some((id) => {
+      const request = borrowingRequests.find((r) => r.id === id);
+      return request?.return_status === "Returned";
+    });
+
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
   useEffect(() => {
     if (isAuthenticated) {
@@ -363,6 +371,7 @@ export default function DashboardRequestsPage() {
                       onReject={handleBulkReject}
                       onDelete={handleBulkDelete}
                       onRefresh={loadData}
+                      disableApproveReject={hasReturnedRequests}
                     />
                   </div>
                 </div>
