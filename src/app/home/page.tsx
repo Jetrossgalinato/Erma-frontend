@@ -32,21 +32,18 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Reduced gap-16 to gap-12 for less vertical space */}
             {/* Left Content */}
-            <div className="space-y-4 md:space-y-8 pl-4">
-              {/* Reduced md:space-y-10 to md:space-y-8 */}
-              <div className="space-y-4 md:space-y-5">
-                {/* Reduced md:space-y-6 to md:space-y-5 */}
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold text-gray-800 leading-tight">
-                  Welcome to <span className="text-orange-500">CRMS</span>
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-3 md:space-y-4">
+                <h1 className="text-3xl md:text-5xl lg:text-5xl font-semibold text-gray-800 leading-tight">
+                  Welcome to <span className="text-orange-500">ERMA v2</span>
                 </h1>
-                <h1 className="text-xl md:text-3xl lg:text-4xl font-medium text-gray-800 leading-tight mt-4">
-                  CCIS Resource Management System
-                </h1>
+                <h2 className="text-lg md:text-2xl lg:text-2xl font-medium text-gray-700 leading-snug">
+                  Equipment and Resource Management Application v2
+                </h2>
               </div>
 
-              <div className="space-y-4 md:space-y-5">
-                {/* Reduced md:space-y-6 to md:space-y-5 */}
-                <p className="text-md md:text-lg text-gray-700 max-w-lg leading-relaxed">
+              <div className="space-y-5 md:space-y-6">
+                <p className="text-base md:text-lg text-gray-700 max-w-xl leading-relaxed">
                   Your one-stop platform for managing college equipment,
                   facility and supply requests with ease.
                 </p>

@@ -10,7 +10,7 @@ const Footer = () => {
           Philippines
         </p>
         <p className="text-slate-400 text-xs sm:text-sm mb-2 sm:mb-3">
-          © 2025 CSU CRMS. All rights reserved.
+          © 2025 CSU ERMA v2. All rights reserved.
         </p>
         <div className="flex justify-center items-center gap-2 sm:gap-3">
           {/* Facebook Icon */}

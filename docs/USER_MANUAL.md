@@ -60,7 +60,7 @@ ERMA (Equipment and Resource Management Application) is a comprehensive web-base
 ### Accessing the System
 
 1. Open your web browser
-2. Navigate to your organization's ERMA portal URL (e.g., `https://csu-crms.vercel.app`)
+2. Navigate to your organization's ERMA portal URL (e.g., `https://csu-erma.vercel.app`)
 3. You will see the ERMA landing page with login and registration options
 
 ### First-Time Access

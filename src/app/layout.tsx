@@ -36,8 +36,8 @@ const poppins = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CSU - CRMS",
-  description: "CSU CCIS Resource Management System",
+  title: "CSU - ERMA v2",
+  description: "CSU Equipment and Resource Management Application v2",
 };
 
 export default function RootLayout({

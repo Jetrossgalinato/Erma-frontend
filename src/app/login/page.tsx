@@ -113,7 +113,7 @@ export default function LoginPage() {
             <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-700">
               Welcome back! 👋
             </h2>
-            Login to <span className="text-orange-500">CRMS</span>
+            Login to <span className="text-orange-500">ERMA v2</span>
             <p className="text-xs font-normal sm:text-sm text-gray-500 mt-1">
               {subtitle}
             </p>
