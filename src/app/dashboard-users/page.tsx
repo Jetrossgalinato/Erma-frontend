@@ -250,6 +250,11 @@ const UsersPage: React.FC = () => {
       setShowEditModal(false);
       setEditingUser(null);
       setSelectedRows([]);
+
+      showAlert({
+        type: "success",
+        message: "User updated successfully",
+      });
     } catch (error) {
       console.error("Error updating user:", error);
       showAlert({
@@ -276,8 +281,16 @@ const UsersPage: React.FC = () => {
 
     try {
       await deleteUsers(selectedRows);
+      const deletedCount = selectedRows.length;
       setSelectedRows([]);
       loadUsers(usersPagination.currentPage);
+
+      showAlert({
+        type: "success",
+        message: `Successfully deleted ${deletedCount} user${
+          deletedCount > 1 ? "s" : ""
+        }`,
+      });
     } catch (error) {
       console.error("Error deleting users:", error);
       showAlert({
