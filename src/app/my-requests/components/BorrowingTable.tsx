@@ -69,6 +69,12 @@ export default function BorrowingTable({
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
+              Return Status
+            </th>
+            <th
+              scope="col"
+              className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
               Purpose
             </th>
           </tr>
@@ -103,6 +109,15 @@ export default function BorrowingTable({
                   )}`}
                 >
                   {request.status}
+                </span>
+              </td>
+              <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                <span
+                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                    request.return_status ?? "Not returned"
+                  )}`}
+                >
+                  {request.return_status ?? "Not returned"}
                 </span>
               </td>
               <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-500 max-w-xs truncate">

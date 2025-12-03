@@ -10,6 +10,7 @@ export interface Borrowing {
   expected_return_date: string;
   purpose: string | null;
   receiver_name?: string;
+  return_status?: string | null;
 }
 
 export interface Booking {
