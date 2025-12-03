@@ -426,6 +426,11 @@ export default function DashboardSuppliesPage() {
         )
       );
 
+      showAlert({
+        type: "success",
+        message: `Supply "${updatedSupply.name}" has been successfully updated!`,
+      });
+
       setShowEditModal(false);
       setEditingSupply(null);
       setSelectedRows([]);
@@ -512,6 +517,11 @@ export default function DashboardSuppliesPage() {
         console.warn("Failed to log action:", logError);
         // Don't disrupt the flow if logging fails
       }
+
+      showAlert({
+        type: "success",
+        message: `Supply "${createdSupply.name}" has been successfully added!`,
+      });
 
       setShowInsertForm(false);
       setNewSupply({
@@ -675,6 +685,13 @@ export default function DashboardSuppliesPage() {
         prev.filter((supply) => !selectedRows.includes(supply.id))
       );
       setSelectedRows([]);
+
+      showAlert({
+        type: "success",
+        message: `Successfully deleted ${selectedRows.length} ${
+          selectedRows.length > 1 ? "supplies" : "supply"
+        }!`,
+      });
     } catch (error) {
       console.error("Error deleting supplies:", error);
       showAlert({

@@ -252,6 +252,11 @@ export default function DashboardFacilitiesPage() {
         )
       );
 
+      showAlert({
+        type: "success",
+        message: `Facility "${editingFacility.facility_name}" has been successfully updated!`,
+      });
+
       setShowEditModal(false);
       setEditingFacility(null);
       setSelectedRows([]);
@@ -310,6 +315,11 @@ export default function DashboardFacilitiesPage() {
 
       // Log the insert action
       await logFacilityAction("created", newFacility.facility_name);
+
+      showAlert({
+        type: "success",
+        message: `Facility "${newFacility.facility_name}" has been successfully created!`,
+      });
 
       setShowInsertForm(false);
       setNewFacility({
@@ -449,6 +459,13 @@ export default function DashboardFacilitiesPage() {
       );
       setSelectedRows([]);
       setShowDeleteModal(false);
+
+      showAlert({
+        type: "success",
+        message: `Successfully deleted ${selectedRows.length} ${
+          selectedRows.length > 1 ? "facilities" : "facility"
+        }!`,
+      });
     } catch (error) {
       console.error("Error deleting facilities:", error);
       showAlert({
