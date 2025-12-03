@@ -66,7 +66,6 @@ export async function fetchFacilities(): Promise<Facility[]> {
   // Handle if backend returns an object with a facilities array
   const facilitiesArray = Array.isArray(data) ? data : data.facilities || [];
 
-
   // Map facility_id to id if needed
   return facilitiesArray.map((facility: Facility) => ({
     ...facility,
@@ -153,7 +152,7 @@ export async function deleteFacilities(ids: number[]): Promise<void> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ ids }),
+    body: JSON.stringify({ facility_ids: ids }),
   });
 
   if (!response.ok) {
