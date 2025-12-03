@@ -789,7 +789,9 @@ export default function DashboardSuppliesPage() {
 
                   {showDeleteModal && (
                     <DeleteConfirmationModal
-                      selectedCount={selectedRows.length}
+                      isOpen={showDeleteModal}
+                      itemCount={selectedRows.length}
+                      itemType="supply"
                       onConfirm={handleDeleteSelectedRows}
                       onCancel={() => setShowDeleteModal(false)}
                     />

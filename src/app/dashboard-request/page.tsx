@@ -19,6 +19,7 @@ import DoneNotificationsModal from "./components/DoneNotificationsModal";
 import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { Package, LayoutDashboard } from "lucide-react";
 import {
   BorrowingRequest,
@@ -77,6 +78,7 @@ export default function DashboardRequestsPage() {
   >([]);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Role-based access control - Faculty users should not access dashboard requests
@@ -213,17 +215,12 @@ export default function DashboardRequestsPage() {
   };
 
   // Bulk delete
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
+    setShowDeleteModal(true);
+  };
 
-    if (
-      !confirm(
-        `Are you sure you want to delete ${selectedIds.length} request(s)?`
-      )
-    ) {
-      return;
-    }
-
+  const confirmBulkDelete = async () => {
     try {
       setIsLoading(true);
       let success = false;
@@ -243,6 +240,7 @@ export default function DashboardRequestsPage() {
         });
         clearSelection();
         setShowActionDropdown(false);
+        setShowDeleteModal(false);
         await loadData();
       }
     } catch (error) {
@@ -455,6 +453,15 @@ export default function DashboardRequestsPage() {
           }}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        itemCount={selectedIds.length}
+        itemType="request"
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

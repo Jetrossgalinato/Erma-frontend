@@ -79,7 +79,6 @@ export default function AccountRequestsPage() {
           return;
         }
 
-
         // Allow all authenticated users for now
         // TODO: Re-enable role check once we confirm the role structure
       } catch (error) {
@@ -385,8 +384,12 @@ export default function AccountRequestsPage() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
-        onClose={closeDeleteModal}
+        title="Remove Account Request"
+        message="Are you sure you want to remove this account request? This action cannot be undone and will permanently delete the request from the system."
+        itemType="account request"
+        confirmText="Remove"
         onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
       />
     </div>
   );

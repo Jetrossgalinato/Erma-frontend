@@ -10,7 +10,7 @@ import { useAlert } from "@/contexts/AlertContext";
 import { Eye, EyeOff } from "lucide-react";
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LoginPage() {
   const router = useRouter();

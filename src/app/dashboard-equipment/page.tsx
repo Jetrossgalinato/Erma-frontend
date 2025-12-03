@@ -673,7 +673,8 @@ export default function DashboardEquipmentPage() {
                   <Suspense fallback={null}>
                     <DeleteConfirmationModal
                       isOpen={showDeleteModal}
-                      selectedCount={selectedRows.length}
+                      itemCount={selectedRows.length}
+                      itemType="equipment"
                       onConfirm={handleDeleteSelectedRows}
                       onCancel={() => setShowDeleteModal(false)}
                     />

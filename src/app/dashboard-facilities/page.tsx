@@ -646,7 +646,9 @@ export default function DashboardFacilitiesPage() {
       {showDeleteModal && (
         <Suspense fallback={null}>
           <DeleteConfirmationModal
-            selectedCount={selectedRows.length}
+            isOpen={showDeleteModal}
+            itemCount={selectedRows.length}
+            itemType="facility"
             onConfirm={handleDeleteSelectedRows}
             onCancel={() => setShowDeleteModal(false)}
           />

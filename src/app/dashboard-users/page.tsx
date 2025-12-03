@@ -434,13 +434,13 @@ const UsersPage: React.FC = () => {
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <DeleteModal
-          selectedCount={selectedRows.length}
-          onConfirm={handleDeleteConfirm}
-          onCancel={handleDeleteCancel}
-        />
-      )}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        itemCount={selectedRows.length}
+        itemType="user"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 };
