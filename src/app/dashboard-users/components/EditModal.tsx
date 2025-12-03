@@ -90,14 +90,17 @@ export default function EditModal({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Department <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="department"
                     value={user.department || ""}
                     onChange={onChange}
                     className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Department"
-                  />
+                  >
+                    <option value="">Select Department</option>
+                    <option value="BSIT">BSIT</option>
+                    <option value="BSIS">BSIS</option>
+                    <option value="BSCS">BSCS</option>
+                  </select>
                 </div>
 
                 <div>
@@ -118,14 +121,25 @@ export default function EditModal({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Account Role
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="acc_role"
                     value={user.acc_role || ""}
                     onChange={onChange}
                     className="w-full px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Account role"
-                  />
+                  >
+                    <option value="">Select a role</option>
+                    <option value="CCIS Dean">CCIS Dean</option>
+                    <option value="Lab Technician">Lab Technician</option>
+                    <option value="Comlab Adviser">Comlab Adviser</option>
+                    <option value="Department Chairperson">
+                      Department Chairperson
+                    </option>
+                    <option value="Associate Dean">Associate Dean</option>
+                    <option value="College Clerk">College Clerk</option>
+                    <option value="Student Assistant">Student Assistant</option>
+                    <option value="Lecturer">Lecturer</option>
+                    <option value="Instructor">Instructor</option>
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

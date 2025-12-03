@@ -213,7 +213,7 @@ export async function deleteSupplies(ids: number[]): Promise<void> {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ ids }),
+    body: JSON.stringify({ supply_ids: ids }),
   });
 
   if (!response.ok) {
