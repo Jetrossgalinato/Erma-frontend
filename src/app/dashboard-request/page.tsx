@@ -260,25 +260,46 @@ export default function DashboardRequestsPage() {
 
   const totalItems = currentRequests.length;
 
-  // Check if any selected requests should disable approve/reject
-  // - Borrowing: return_status is "Returned"
-  // - Booking: status is "Completed"
-  // - Acquiring: status is "Approved"
-  const hasReturnedRequests =
+  // Check if approve should be disabled (already approved or rejected)
+  const disableApprove =
     (currentRequestType === "borrowing" &&
       selectedIds.some((id) => {
         const request = borrowingRequests.find((r) => r.id === id);
-        return request?.return_status === "Returned";
+        return (
+          request?.request_status === "Approved" ||
+          request?.request_status === "Rejected"
+        );
       })) ||
     (currentRequestType === "booking" &&
       selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Completed";
+        return request?.status === "Approved" || request?.status === "Rejected";
       })) ||
     (currentRequestType === "acquiring" &&
       selectedIds.some((id) => {
         const request = acquiringRequests.find((r) => r.id === id);
-        return request?.status === "Approved";
+        return request?.status === "Approved" || request?.status === "Rejected";
+      }));
+
+  // Check if reject should be disabled (already approved or rejected)
+  const disableReject =
+    (currentRequestType === "borrowing" &&
+      selectedIds.some((id) => {
+        const request = borrowingRequests.find((r) => r.id === id);
+        return (
+          request?.request_status === "Approved" ||
+          request?.request_status === "Rejected"
+        );
+      })) ||
+    (currentRequestType === "booking" &&
+      selectedIds.some((id) => {
+        const request = bookingRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
+      })) ||
+    (currentRequestType === "acquiring" &&
+      selectedIds.some((id) => {
+        const request = acquiringRequests.find((r) => r.id === id);
+        return request?.status === "Approved" || request?.status === "Rejected";
       }));
 
   // Load initial data - Use Promise.all for parallel fetching (50% faster)
@@ -384,7 +405,8 @@ export default function DashboardRequestsPage() {
                       onReject={handleBulkReject}
                       onDelete={handleBulkDelete}
                       onRefresh={loadData}
-                      disableApproveReject={hasReturnedRequests}
+                      disableApprove={disableApprove}
+                      disableReject={disableReject}
                     />
                   </div>
                 </div>
