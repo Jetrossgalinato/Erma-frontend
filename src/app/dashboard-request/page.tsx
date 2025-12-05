@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
 import Loader from "@/components/Loader";
@@ -44,6 +44,7 @@ const PAGE_SIZE = 10;
 
 export default function DashboardRequestsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const { showAlert } = useAlert();
   const {
@@ -97,6 +98,14 @@ export default function DashboardRequestsPage() {
       }
     }
   }, [authLoading, isAuthenticated, user, router]);
+
+  // Handle tab parameter from URL
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && ["borrowing", "booking", "acquiring"].includes(tab)) {
+      setCurrentRequestType(tab as "borrowing" | "booking" | "acquiring");
+    }
+  }, [searchParams, setCurrentRequestType]);
 
   // Load data function
   const loadData = useCallback(async () => {
@@ -317,6 +326,19 @@ export default function DashboardRequestsPage() {
     loadData,
     loadNotifications,
   ]);
+
+  // Set up polling for notifications every 2 seconds
+  useEffect(() => {
+    if (isAuthenticated) {
+      const interval = setInterval(() => {
+        loadNotifications();
+      }, 2000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [isAuthenticated, loadNotifications]);
 
   if (!isAuthenticated) {
     return <Loader />;

@@ -152,28 +152,43 @@ const Sidebar: React.FC = () => {
 
   // Fetch all sidebar counts
   useEffect(() => {
-    const loadCounts = async () => {
+    const loadCounts = async (isInitialLoad = false) => {
       if (!isAuthenticated) {
         setLoading(false);
         return;
       }
 
       try {
-        setLoading(true);
+        // Only show loading state on initial load to prevent blinking
+        if (isInitialLoad) {
+          setLoading(true);
+        }
         const countsData = await fetchSidebarCounts();
-        setCounts(countsData);
+
+        // Only update state if counts have actually changed to prevent unnecessary re-renders
+        setCounts((prevCounts) => {
+          const hasChanged = Object.keys(countsData).some(
+            (key) =>
+              countsData[key as keyof SidebarCounts] !==
+              prevCounts[key as keyof SidebarCounts]
+          );
+          return hasChanged ? countsData : prevCounts;
+        });
       } catch (error) {
         console.error("Error fetching sidebar counts:", error);
         // Keep existing counts on error
       } finally {
-        setLoading(false);
+        if (isInitialLoad) {
+          setLoading(false);
+        }
       }
     };
 
-    loadCounts();
+    // Initial load with loading state
+    loadCounts(true);
 
-    // Refresh counts every 30 seconds
-    const interval = setInterval(loadCounts, 30000);
+    // Refresh counts every 2 seconds without showing loading state
+    const interval = setInterval(() => loadCounts(false), 2000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
