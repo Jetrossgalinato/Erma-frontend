@@ -286,8 +286,30 @@ const DashboardNavbar: React.FC = () => {
     // Close dropdown
     setIsNotificationDropdownOpen(false);
 
-    // Navigate to dashboard-request page for all notifications
-    router.push("/dashboard-request");
+    // Navigate based on notification type
+    const title = notificationTitle.toLowerCase();
+    if (
+      title.includes("return") ||
+      title.includes("borrowed") ||
+      title.includes("borrowing")
+    ) {
+      router.push("/dashboard-request?tab=borrowing");
+    } else if (
+      title.includes("booking") ||
+      title.includes("facility") ||
+      title.includes("done")
+    ) {
+      router.push("/dashboard-request?tab=booking");
+    } else if (
+      title.includes("acquiring") ||
+      title.includes("supply") ||
+      title.includes("supplies")
+    ) {
+      router.push("/dashboard-request?tab=acquiring");
+    } else {
+      // Default to dashboard-request page
+      router.push("/dashboard-request");
+    }
   };
 
   const markNotificationAsRead = async (notificationId: string) => {
@@ -862,7 +884,10 @@ const DashboardNavbar: React.FC = () => {
                               key={notification.id}
                               onClick={() => {
                                 setIsNotificationDropdownOpen(false);
-                                router.push("/dashboard-request");
+                                // Navigate to the correct tab based on request type
+                                router.push(
+                                  `/dashboard-request?tab=${notification.request_type}`
+                                );
                               }}
                               className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                             >
