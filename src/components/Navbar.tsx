@@ -12,7 +12,7 @@ import {
   Bell,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
@@ -24,6 +24,7 @@ const Navbar: React.FC = () => {
   // Use auth store
   const { user, isAuthenticated, logout: logoutFromStore } = useAuthStore();
   const { showAlert } = useAlert();
+  const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
@@ -199,6 +200,44 @@ const Navbar: React.FC = () => {
       };
     }
   }, [isAuthenticated, fetchNotifications]);
+
+  const handleNotificationClick = async (
+    notificationId: string,
+    notificationTitle: string
+  ) => {
+    // Mark as read
+    await markNotificationAsRead(notificationId);
+
+    // Close dropdown
+    setIsNotificationDropdownOpen(false);
+
+    // Navigate based on notification type
+    const title = notificationTitle.toLowerCase();
+    if (
+      title.includes("return") ||
+      title.includes("borrowed") ||
+      title.includes("borrowing")
+    ) {
+      router.push("/my-requests");
+    } else if (
+      title.includes("booking") ||
+      title.includes("facility") ||
+      title.includes("done")
+    ) {
+      router.push("/my-requests");
+    } else if (
+      title.includes("acquiring") ||
+      title.includes("supply") ||
+      title.includes("supplies")
+    ) {
+      router.push("/my-requests");
+    } else if (title.includes("approved") || title.includes("rejected")) {
+      router.push("/my-requests");
+    } else {
+      // Default to my-requests page
+      router.push("/my-requests");
+    }
+  };
 
   const markNotificationAsRead = async (notificationId: string) => {
     try {
@@ -434,7 +473,12 @@ const Navbar: React.FC = () => {
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      onClick={() => markNotificationAsRead(notification.id)}
+                      onClick={() =>
+                        handleNotificationClick(
+                          notification.id,
+                          notification.title
+                        )
+                      }
                       className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
                         !notification.is_read ? "bg-orange-50" : ""
                       }`}

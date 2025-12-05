@@ -276,6 +276,20 @@ const DashboardNavbar: React.FC = () => {
     fetchRequestNotificationsData,
   ]);
 
+  const handleNotificationClick = async (
+    notificationId: string,
+    notificationTitle: string
+  ) => {
+    // Mark as read
+    await markNotificationAsRead(notificationId);
+
+    // Close dropdown
+    setIsNotificationDropdownOpen(false);
+
+    // Navigate to dashboard-request page for all notifications
+    router.push("/dashboard-request");
+  };
+
   const markNotificationAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem("authToken");
@@ -603,7 +617,10 @@ const DashboardNavbar: React.FC = () => {
                             <div
                               key={notification.id}
                               onClick={() =>
-                                markNotificationAsRead(notification.id)
+                                handleNotificationClick(
+                                  notification.id,
+                                  notification.title
+                                )
                               }
                               className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
                                 !notification.is_read
@@ -645,7 +662,11 @@ const DashboardNavbar: React.FC = () => {
                           returnNotifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700"
+                              onClick={() => {
+                                setIsNotificationDropdownOpen(false);
+                                router.push("/dashboard-request");
+                              }}
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -740,7 +761,11 @@ const DashboardNavbar: React.FC = () => {
                           doneNotifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700"
+                              onClick={() => {
+                                setIsNotificationDropdownOpen(false);
+                                router.push("/dashboard-request");
+                              }}
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
@@ -835,7 +860,11 @@ const DashboardNavbar: React.FC = () => {
                           requestNotifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                              onClick={() => {
+                                setIsNotificationDropdownOpen(false);
+                                router.push("/dashboard-request");
+                              }}
+                              className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1">
