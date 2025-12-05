@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import SessionTimeoutProvider from "@/components/SessionTimeoutProvider";
 import { StoreInitializer } from "@/components/StoreInitializer";
 import { AlertProvider } from "@/contexts/AlertContext";
 
@@ -49,9 +48,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} font-sans antialiased`}>
         <AlertProvider>
-          <StoreInitializer>
-            <SessionTimeoutProvider>{children}</SessionTimeoutProvider>
-          </StoreInitializer>
+          <StoreInitializer>{children}</StoreInitializer>
         </AlertProvider>
       </body>
     </html>
