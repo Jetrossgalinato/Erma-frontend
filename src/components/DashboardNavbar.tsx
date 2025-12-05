@@ -256,13 +256,13 @@ const DashboardNavbar: React.FC = () => {
       fetchDoneNotificationsData();
       fetchRequestNotificationsData();
 
-      // Set up polling for all notifications every 30 seconds
+      // Set up polling for all notifications every 2 seconds
       const interval = setInterval(() => {
         fetchNotifications();
         fetchReturnNotificationsData();
         fetchDoneNotificationsData();
         fetchRequestNotificationsData();
-      }, 30000);
+      }, 2000);
 
       return () => {
         clearInterval(interval);

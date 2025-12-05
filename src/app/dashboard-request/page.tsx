@@ -318,6 +318,19 @@ export default function DashboardRequestsPage() {
     loadNotifications,
   ]);
 
+  // Set up polling for notifications every 2 seconds
+  useEffect(() => {
+    if (isAuthenticated) {
+      const interval = setInterval(() => {
+        loadNotifications();
+      }, 2000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [isAuthenticated, loadNotifications]);
+
   if (!isAuthenticated) {
     return <Loader />;
   }

@@ -190,8 +190,8 @@ const Navbar: React.FC = () => {
         fetchNotifications();
       }, 1500); // Wait 1.5s after authentication to fetch notifications
 
-      // Optional: Set up polling for notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
+      // Set up polling for notifications every 2 seconds
+      const interval = setInterval(fetchNotifications, 2000);
 
       return () => {
         clearTimeout(timer);
