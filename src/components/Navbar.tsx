@@ -218,19 +218,19 @@ const Navbar: React.FC = () => {
       title.includes("borrowed") ||
       title.includes("borrowing")
     ) {
-      router.push("/my-requests");
+      router.push("/my-requests?tab=borrowing");
     } else if (
       title.includes("booking") ||
       title.includes("facility") ||
       title.includes("done")
     ) {
-      router.push("/my-requests");
+      router.push("/my-requests?tab=booking");
     } else if (
       title.includes("acquiring") ||
       title.includes("supply") ||
       title.includes("supplies")
     ) {
-      router.push("/my-requests");
+      router.push("/my-requests?tab=acquiring");
     } else if (title.includes("approved") || title.includes("rejected")) {
       router.push("/my-requests");
     } else {

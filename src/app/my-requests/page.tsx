@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -40,6 +40,7 @@ const DeleteModal = dynamic(() => import("./components/DeleteModal"), {
 
 export default function MyRequestsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showAlert } = useAlert();
 
   // Auth store
@@ -132,6 +133,14 @@ export default function MyRequestsPage() {
       router.push("/login");
     }
   }, [authLoading, isAuthenticated, router]);
+
+  // Handle tab parameter from URL
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && ["borrowing", "booking", "acquiring"].includes(tab)) {
+      setCurrentRequestType(tab as "borrowing" | "booking" | "acquiring");
+    }
+  }, [searchParams, setCurrentRequestType]);
 
   // Initial parallel data load - Optimized for performance
   useEffect(() => {
