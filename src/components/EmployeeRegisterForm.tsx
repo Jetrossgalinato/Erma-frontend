@@ -253,7 +253,7 @@ export default function EmployeeRegisterForm() {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center px-3 pt-1 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -284,7 +284,7 @@ export default function EmployeeRegisterForm() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center px-3 pt-1 text-gray-400 hover:text-orange-600 transition-colors focus:outline-none"
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-5 h-5" />
