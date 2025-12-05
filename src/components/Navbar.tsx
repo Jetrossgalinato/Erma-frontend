@@ -211,31 +211,66 @@ const Navbar: React.FC = () => {
     // Close dropdown
     setIsNotificationDropdownOpen(false);
 
-    // Navigate based on notification type
+    // Check user role for navigation
+    const rawRole =
+      user?.role ||
+      approvedAccRole ||
+      (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
+    const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
+    const isAdminOrSuperAdmin =
+      currentRole === "Super Admin" || currentRole === "Admin";
+
+    // Navigate based on notification type and user role
     const title = notificationTitle.toLowerCase();
-    if (
-      title.includes("return") ||
-      title.includes("borrowed") ||
-      title.includes("borrowing")
-    ) {
-      router.push("/my-requests?tab=borrowing");
-    } else if (
-      title.includes("booking") ||
-      title.includes("facility") ||
-      title.includes("done")
-    ) {
-      router.push("/my-requests?tab=booking");
-    } else if (
-      title.includes("acquiring") ||
-      title.includes("supply") ||
-      title.includes("supplies")
-    ) {
-      router.push("/my-requests?tab=acquiring");
-    } else if (title.includes("approved") || title.includes("rejected")) {
-      router.push("/my-requests");
+
+    if (isAdminOrSuperAdmin) {
+      // Admin/Super Admin users go to dashboard-request
+      if (
+        title.includes("return") ||
+        title.includes("borrowed") ||
+        title.includes("borrowing")
+      ) {
+        router.push("/dashboard-request?tab=borrowing");
+      } else if (
+        title.includes("booking") ||
+        title.includes("facility") ||
+        title.includes("done")
+      ) {
+        router.push("/dashboard-request?tab=booking");
+      } else if (
+        title.includes("acquiring") ||
+        title.includes("supply") ||
+        title.includes("supplies")
+      ) {
+        router.push("/dashboard-request?tab=acquiring");
+      } else {
+        router.push("/dashboard-request");
+      }
     } else {
-      // Default to my-requests page
-      router.push("/my-requests");
+      // Regular users go to my-requests
+      if (
+        title.includes("return") ||
+        title.includes("borrowed") ||
+        title.includes("borrowing")
+      ) {
+        router.push("/my-requests?tab=borrowing");
+      } else if (
+        title.includes("booking") ||
+        title.includes("facility") ||
+        title.includes("done")
+      ) {
+        router.push("/my-requests?tab=booking");
+      } else if (
+        title.includes("acquiring") ||
+        title.includes("supply") ||
+        title.includes("supplies")
+      ) {
+        router.push("/my-requests?tab=acquiring");
+      } else if (title.includes("approved") || title.includes("rejected")) {
+        router.push("/my-requests");
+      } else {
+        router.push("/my-requests");
+      }
     }
   };
 
