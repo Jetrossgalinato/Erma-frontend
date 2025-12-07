@@ -6,11 +6,10 @@ import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
+import { useAlert } from "@/contexts/AlertContext";
 import ProfileHeader from "./components/ProfileHeader";
 import ProfileForm from "./components/ProfileForm";
 import SecuritySection from "./components/SecuritySection";
-import SuccessMessage from "./components/SuccessMessage";
-import ErrorMessage from "./components/ErrorMessage";
 import {
   ProfileData,
   UpdatePasswordData,
@@ -25,6 +24,7 @@ import {
 export default function MyProfilePage() {
   // State management
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +51,6 @@ export default function MyProfilePage() {
     confirmPassword: "",
   });
   const [passwordError, setPasswordError] = useState<string | null>(null);
-
-  // UI feedback
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -107,20 +104,9 @@ export default function MyProfilePage() {
     checkAuthAndFetchProfile();
   }, [authLoading, isAuthenticated, router, fetchProfile]);
 
-  // Auto-hide success message after 5 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
   const handleEditClick = () => {
     setIsEditing(true);
     setError(null);
-    setSuccessMessage(null);
   };
 
   const handleCancelEdit = () => {
@@ -165,7 +151,10 @@ export default function MyProfilePage() {
 
       setProfile(updatedProfile);
       setIsEditing(false);
-      setSuccessMessage("Profile updated successfully!");
+      showAlert({
+        type: "success",
+        message: "Profile updated successfully!",
+      });
     } catch (err) {
       console.error("Error updating profile:", err);
       setError(
@@ -222,7 +211,10 @@ export default function MyProfilePage() {
         confirmPassword: "",
       });
       setIsEditingPassword(false);
-      setSuccessMessage("Password updated successfully!");
+      showAlert({
+        type: "success",
+        message: "Password updated successfully!",
+      });
     } catch (err) {
       console.error("Error updating password:", err);
       setPasswordError(
@@ -260,20 +252,11 @@ export default function MyProfilePage() {
 
   // Error State
   if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 flex flex-col">
-        <Navbar />
-        <div className="flex-1 p-6">
-          <div className="max-w-4xl mx-auto">
-            <ErrorMessage
-              message={error}
-              onRetry={() => window.location.reload()}
-            />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    // Show error alert
+    showAlert({
+      type: "error",
+      message: error,
+    });
   }
 
   return (
@@ -289,14 +272,6 @@ export default function MyProfilePage() {
             role={profile?.acc_role}
             department={profile?.department}
           />
-
-          {/* Success Message */}
-          {successMessage && (
-            <SuccessMessage
-              message={successMessage}
-              onDismiss={() => setSuccessMessage(null)}
-            />
-          )}
 
           {/* Profile Information Card */}
           <ProfileForm
