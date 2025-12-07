@@ -40,7 +40,7 @@ export default function SecuritySection({
         {!isEditingPassword ? (
           <button
             onClick={onEdit}
-            className="group inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 border-amber-300 rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 hover:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/20 transition-all duration-200 w-full sm:w-auto justify-center"
+            className="group inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 w-full sm:w-auto justify-center"
           >
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:scale-110 transition-transform"
@@ -69,7 +69,7 @@ export default function SecuritySection({
             <button
               onClick={onSave}
               disabled={saving}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {saving ? (
                 <>
