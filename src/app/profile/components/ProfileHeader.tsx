@@ -22,7 +22,7 @@ export default function ProfileHeader({
           </span>
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-1 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-800  ">
             {formatFullName(firstName, lastName)}
           </h1>
           <p className="text-slate-600 text-sm sm:text-base md:text-lg">
