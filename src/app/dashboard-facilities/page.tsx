@@ -435,6 +435,66 @@ export default function DashboardFacilitiesPage() {
     }
   };
 
+  const handleExportClick = () => {
+    if (facilities.length === 0) {
+      showAlert({
+        type: "info",
+        message: "No data to export.",
+      });
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Name",
+      "Type",
+      "Floor Level",
+      "Capacity",
+      "Cooling Tools",
+      "Connection Type",
+      "Status",
+      "Remarks",
+      "Image URL",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...facilities.map((facility) =>
+        [
+          facility.facility_id,
+          `"${facility.facility_name || ""}"`,
+          `"${facility.facility_type || ""}"`,
+          `"${facility.floor_level || ""}"`,
+          `"${facility.capacity || ""}"`,
+          `"${facility.cooling_tools || ""}"`,
+          `"${facility.connection_type || ""}"`,
+          `"${facility.status || ""}"`,
+          `"${facility.remarks || ""}"`,
+          `"${facility.image || ""}"`,
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `facilities_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setShowActionsDropdown(false);
+    showAlert({
+      type: "success",
+      message: "Data exported successfully!",
+    });
+  };
+
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
 
@@ -571,6 +631,7 @@ export default function DashboardFacilitiesPage() {
                       setShowImportModal(true);
                       setShowActionsDropdown(false);
                     }}
+                    onExport={handleExportClick}
                     dropdownRef={actionsDropdownRef}
                   />
 
