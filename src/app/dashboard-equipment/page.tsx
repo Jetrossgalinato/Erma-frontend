@@ -525,7 +525,6 @@ export default function DashboardEquipmentPage() {
       "Date Acquired",
       "Supplier",
       "Facility",
-      "Image URL",
     ];
 
     const csvContent = [
@@ -546,7 +545,6 @@ export default function DashboardEquipmentPage() {
           `"${eq.date_acquire || ""}"`,
           `"${eq.supplier || ""}"`,
           `"${facilityName}"`,
-          `"${eq.image || ""}"`,
         ].join(",");
       }),
     ].join("\n");

@@ -561,7 +561,6 @@ export default function DashboardSuppliesPage() {
       "Status",
       "Facility",
       "Remarks",
-      "Image URL",
     ];
 
     const csvContent = [
@@ -580,7 +579,6 @@ export default function DashboardSuppliesPage() {
           `"${supply.status || ""}"`,
           `"${facilityName}"`,
           `"${supply.remarks || ""}"`,
-          `"${supply.image || ""}"`,
         ].join(",");
       }),
     ].join("\n");

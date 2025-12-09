@@ -454,7 +454,6 @@ export default function DashboardFacilitiesPage() {
       "Connection Type",
       "Status",
       "Remarks",
-      "Image URL",
     ];
 
     const csvContent = [
@@ -470,7 +469,6 @@ export default function DashboardFacilitiesPage() {
           `"${facility.connection_type || ""}"`,
           `"${facility.status || ""}"`,
           `"${facility.remarks || ""}"`,
-          `"${facility.image || ""}"`,
         ].join(",")
       ),
     ].join("\n");
