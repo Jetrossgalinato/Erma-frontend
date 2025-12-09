@@ -11,6 +11,7 @@ import {
   Edit,
   Trash2,
   Plus,
+  Download,
   Upload,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ interface ActionsDropdownProps {
   onEdit: () => void;
   onDelete: () => void;
   onImport: () => void;
+  onExport: () => void;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -35,6 +37,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   onEdit,
   onDelete,
   onImport,
+  onExport,
   dropdownRef,
 }) => {
   return (
@@ -51,38 +54,65 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
         </button>
 
         {showActionsDropdown && (
-          <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
+          <div className="absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
             <div className="py-1">
               <button
                 onClick={onAddNew}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
                 Add New Supply
               </button>
               <button
+                onClick={onImport}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <Download className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
+                Import Data from CSV File
+              </button>
+              <button
+                onClick={onExport}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
+              >
+                <Upload className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
+                Export Data to CSV File
+              </button>
+              <div className="border-t border-gray-100 dark:border-gray-600 my-1"></div>
+              <button
                 onClick={onEdit}
                 disabled={selectedRows.length !== 1}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                  selectedRows.length !== 1
+                    ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
+                }`}
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit
+                  className={`w-4 h-4 mr-3 ${
+                    selectedRows.length !== 1
+                      ? "text-gray-400 dark:text-gray-500"
+                      : "text-blue-600 dark:text-blue-400"
+                  }`}
+                />
                 Edit Selected
               </button>
               <button
                 onClick={onDelete}
                 disabled={selectedRows.length === 0}
-                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center w-full px-4 py-2 text-sm transition-all duration-200 ${
+                  selectedRows.length === 0
+                    ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-900 dark:hover:text-red-400"
+                }`}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2
+                  className={`w-4 h-4 mr-3 ${
+                    selectedRows.length === 0
+                      ? "text-gray-400 dark:text-gray-500"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                />
                 Delete Selected
-              </button>
-              <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-              <button
-                onClick={onImport}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import from CSV
               </button>
             </div>
           </div>
