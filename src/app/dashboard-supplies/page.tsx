@@ -542,7 +542,68 @@ export default function DashboardSuppliesPage() {
     }
   };
 
-  // Use helper functions from helpers.ts for filtering
+  const handleExportClick = () => {
+    if (supplies.length === 0) {
+      showAlert({
+        type: "info",
+        message: "No data to export.",
+      });
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Name",
+      "Category",
+      "Quantity",
+      "Stock Unit",
+      "Stocking Point",
+      "Status",
+      "Facility",
+      "Remarks",
+      "Image URL",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...supplies.map((supply) => {
+        const facilityName =
+          facilities.find((f) => f.facility_id === supply.facility_id)
+            ?.facility_name || "-";
+        return [
+          supply.id,
+          `"${supply.name || ""}"`,
+          `"${supply.category || ""}"`,
+          `"${supply.quantity || ""}"`,
+          `"${supply.stock_unit || ""}"`,
+          `"${supply.stocking_point || ""}"`,
+          `"${supply.status || ""}"`,
+          `"${facilityName}"`,
+          `"${supply.remarks || ""}"`,
+          `"${supply.image || ""}"`,
+        ].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `supplies_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setShowActionsDropdown(false);
+    showAlert({
+      type: "success",
+      message: "Data exported successfully!",
+    });
+  };
   const filteredSupplies = filterSupplies(
     supplies,
     categoryFilter,
@@ -801,6 +862,7 @@ export default function DashboardSuppliesPage() {
                       setShowImportModal(true);
                       setShowActionsDropdown(false);
                     }}
+                    onExport={handleExportClick}
                     dropdownRef={actionsDropdownRef}
                   />
 

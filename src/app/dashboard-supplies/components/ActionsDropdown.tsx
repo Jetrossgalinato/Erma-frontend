@@ -24,6 +24,7 @@ interface ActionsDropdownProps {
   onEdit: () => void;
   onDelete: () => void;
   onImport: () => void;
+  onExport: () => void;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -35,6 +36,7 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   onEdit,
   onDelete,
   onImport,
+  onExport,
   dropdownRef,
 }) => {
   return (
@@ -61,6 +63,21 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
                 Add New Supply
               </button>
               <button
+                onClick={onImport}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Import from CSV
+              </button>
+              <button
+                onClick={onExport}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Upload className="h-4 w-4 mr-2 rotate-180" />
+                Export to CSV
+              </button>
+              <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+              <button
                 onClick={onEdit}
                 disabled={selectedRows.length !== 1}
                 className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -75,14 +92,6 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Selected
-              </button>
-              <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-              <button
-                onClick={onImport}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Import from CSV
               </button>
             </div>
           </div>
