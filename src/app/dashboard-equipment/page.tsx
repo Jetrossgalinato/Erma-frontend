@@ -524,7 +524,16 @@ export default function DashboardEquipmentPage() {
       "Availability",
       "Date Acquired",
       "Supplier",
+      "Amount",
+      "Estimated Life",
+      "Item Number",
+      "Control Number",
+      "Serial Number",
+      "Property Number",
+      "Person Liable",
       "Facility",
+      "Description",
+      "Remarks",
     ];
 
     const csvContent = [
@@ -544,7 +553,16 @@ export default function DashboardEquipmentPage() {
           `"${eq.availability || ""}"`,
           `"${eq.date_acquire || ""}"`,
           `"${eq.supplier || ""}"`,
+          `"${eq.amount || ""}"`,
+          `"${eq.estimated_life || ""}"`,
+          `"${eq.item_number || ""}"`,
+          `"${eq.control_number || ""}"`,
+          `"${eq.serial_number || ""}"`,
+          `"${eq.property_number || ""}"`,
+          `"${eq.person_liable || ""}"`,
           `"${facilityName}"`,
+          `"${eq.description || ""}"`,
+          `"${eq.remarks || ""}"`,
         ].join(",");
       }),
     ].join("\n");

@@ -44,6 +44,7 @@ import {
   getUniqueCategories,
   getUniqueFacilities,
   filterSupplies,
+  getStockStatus,
 } from "./utils/helpers";
 
 export default function DashboardSuppliesPage() {
@@ -569,6 +570,10 @@ export default function DashboardSuppliesPage() {
         const facilityName =
           facilities.find((f) => f.facility_id === supply.facility_id)
             ?.facility_name || "-";
+        const status = getStockStatus(
+          supply.quantity,
+          supply.stocking_point
+        ).status;
         return [
           supply.id,
           `"${supply.name || ""}"`,
@@ -576,7 +581,7 @@ export default function DashboardSuppliesPage() {
           `"${supply.quantity || ""}"`,
           `"${supply.stock_unit || ""}"`,
           `"${supply.stocking_point || ""}"`,
-          `"${supply.status || ""}"`,
+          `"${status}"`,
           `"${facilityName}"`,
           `"${supply.remarks || ""}"`,
         ].join(",");

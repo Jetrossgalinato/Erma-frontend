@@ -452,6 +452,7 @@ export default function DashboardFacilitiesPage() {
       "Capacity",
       "Cooling Tools",
       "Connection Type",
+      "Building",
       "Status",
       "Remarks",
     ];
@@ -467,6 +468,7 @@ export default function DashboardFacilitiesPage() {
           `"${facility.capacity || ""}"`,
           `"${facility.cooling_tools || ""}"`,
           `"${facility.connection_type || ""}"`,
+          `"${facility.building || ""}"`,
           `"${facility.status || ""}"`,
           `"${facility.remarks || ""}"`,
         ].join(",")
