@@ -568,8 +568,11 @@ export default function DashboardSuppliesPage() {
       headers.join(","),
       ...supplies.map((supply) => {
         const facilityName =
+          supply.facilities?.facility_name ||
+          supply.facilities?.name ||
           facilities.find((f) => f.facility_id === supply.facility_id)
-            ?.facility_name || "-";
+            ?.facility_name ||
+          "-";
         const status = getStockStatus(
           supply.quantity,
           supply.stocking_point
