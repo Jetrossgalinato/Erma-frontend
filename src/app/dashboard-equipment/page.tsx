@@ -504,6 +504,73 @@ export default function DashboardEquipmentPage() {
     }
   };
 
+  const handleExportClick = () => {
+    if (equipments.length === 0) {
+      showAlert({
+        type: "info",
+        message: "No data to export.",
+      });
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "Name",
+      "PO Number",
+      "Unit Number",
+      "Brand",
+      "Category",
+      "Status",
+      "Availability",
+      "Date Acquired",
+      "Supplier",
+      "Facility",
+      "Image URL",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...equipments.map((eq) => {
+        const facilityName =
+          facilities.find((f) => f.facility_id === eq.facility_id)
+            ?.facility_name || "-";
+        return [
+          eq.id,
+          `"${eq.name || ""}"`,
+          `"${eq.po_number || ""}"`,
+          `"${eq.unit_number || ""}"`,
+          `"${eq.brand_name || ""}"`,
+          `"${eq.category || ""}"`,
+          `"${eq.status || ""}"`,
+          `"${eq.availability || ""}"`,
+          `"${eq.date_acquire || ""}"`,
+          `"${eq.supplier || ""}"`,
+          `"${facilityName}"`,
+          `"${eq.image || ""}"`,
+        ].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `equipments_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setShowActionsDropdown(false);
+    showAlert({
+      type: "success",
+      message: "Data exported successfully!",
+    });
+  };
+
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
     const rowToEdit = equipments.find((eq) => eq.id === selectedRows[0]);
@@ -673,6 +740,7 @@ export default function DashboardEquipmentPage() {
                       setShowImportModal(true);
                       setShowActionsDropdown(false);
                     }}
+                    onExportClick={handleExportClick}
                     onEditClick={() => {
                       handleEditClick();
                       setShowActionsDropdown(false);
