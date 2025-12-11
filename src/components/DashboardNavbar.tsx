@@ -109,6 +109,14 @@ const DashboardNavbar: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    // Prefetch common pages for faster navigation
+    router.prefetch("/dashboard-request");
+    router.prefetch("/my-requests");
+    router.prefetch("/profile");
+    router.prefetch("/login");
+  }, [router]);
+
   const applyTheme = (newTheme: string) => {
     const root = document.documentElement;
 
@@ -957,11 +965,11 @@ const DashboardNavbar: React.FC = () => {
             </div>
           </>
         ) : (
-          <a href="/login">
+          <Link href="/login">
             <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300">
               Sign In
             </button>
-          </a>
+          </Link>
         )}
       </div>
 
@@ -1093,28 +1101,28 @@ const DashboardNavbar: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                    <a
+                    <Link
                       href="/home"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition"
                     >
                       <Home size={16} />
                       Back to Home
-                    </a>
+                    </Link>
                     <hr className="border-gray-200 dark:border-gray-700" />
-                    <a
+                    <Link
                       href="/dashboard"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition"
                     >
                       <LayoutDashboard size={16} />
                       My Dashboard
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition"
                     >
                       <User size={16} />
                       My Profile
-                    </a>
+                    </Link>
                     <hr className="border-gray-200 dark:border-gray-700" />
                     <button
                       onClick={() => {
@@ -1131,11 +1139,11 @@ const DashboardNavbar: React.FC = () => {
               </div>
             </>
           ) : (
-            <a href="/login" className="w-full mt-2">
+            <Link href="/login" className="w-full mt-2">
               <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md w-full transition">
                 Sign In
               </button>
-            </a>
+            </Link>
           )}
         </div>
       )}

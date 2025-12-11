@@ -5,6 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import Pagination from "@/components/Pagination";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
@@ -334,26 +335,14 @@ export default function FacilitiesPage() {
 
               {/* Pagination - Only show if there are items to paginate */}
               {filteredFacilities.length > ITEMS_PER_PAGE && (
-                <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
-                  {Array.from({
-                    length: calculateTotalPages(
-                      filteredFacilities.length,
-                      ITEMS_PER_PAGE
-                    ),
-                  }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage("facilities", i + 1)}
-                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
-                        currentPage === i + 1
-                          ? "bg-orange-600 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={calculateTotalPages(
+                    filteredFacilities.length,
+                    ITEMS_PER_PAGE
+                  )}
+                  onPageChange={(page) => setCurrentPage("facilities", page)}
+                />
               )}
             </>
           )}

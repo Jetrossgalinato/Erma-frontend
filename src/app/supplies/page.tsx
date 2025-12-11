@@ -2,6 +2,7 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
+import Pagination from "@/components/Pagination";
 import { useAlert } from "@/contexts/AlertContext";
 import { RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
@@ -35,7 +36,7 @@ export default function SuppliesPage() {
 
   // Local state for supplies data (due to type conflicts)
   const [supplies, setSupplies] = useState<Supply[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Local UI state
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -303,26 +304,14 @@ export default function SuppliesPage() {
               ))
             )}
           </div>
-          <div className="flex justify-center mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
-            {Array.from({
-              length: calculateTotalPages(
-                filteredSupplies.length,
-                ITEMS_PER_PAGE
-              ),
-            }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage("supplies", i + 1)}
-                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
-                  currentPage === i + 1
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={calculateTotalPages(
+              filteredSupplies.length,
+              ITEMS_PER_PAGE
+            )}
+            onPageChange={(page) => setCurrentPage("supplies", page)}
+          />
         </div>
       </div>
       <Footer />
