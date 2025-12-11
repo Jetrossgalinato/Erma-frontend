@@ -36,7 +36,7 @@ export default function SuppliesPage() {
 
   // Local state for supplies data (due to type conflicts)
   const [supplies, setSupplies] = useState<Supply[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Local UI state
   const [selectedCategory, setSelectedCategory] = useState("All Categories");

@@ -39,7 +39,7 @@ export default function EquipmentPage() {
 
   // Local state for equipment data (due to type conflicts)
   const [equipmentData, setEquipmentData] = useState<Equipment[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Local UI state
   const [showModal, setShowModal] = useState(false);
