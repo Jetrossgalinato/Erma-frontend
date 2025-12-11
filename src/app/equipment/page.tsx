@@ -5,6 +5,7 @@ import { Search, RefreshCw } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import Pagination from "@/components/Pagination";
 import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import EquipmentDetailsModal from "./components/EquipmentDetailsModal";
@@ -361,26 +362,14 @@ export default function EquipmentPage() {
                   ))}
                 </div>
 
-                <div className="flex justify-center mt-1 sm:mt-2 mb-8 sm:mb-12 space-x-1 sm:space-x-2">
-                  {Array.from({
-                    length: calculateTotalPages(
-                      filteredEquipment.length,
-                      ITEMS_PER_PAGE
-                    ),
-                  }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage("equipment", i + 1)}
-                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded text-xs sm:text-base ${
-                        currentPage === i + 1
-                          ? "bg-orange-600 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={calculateTotalPages(
+                    filteredEquipment.length,
+                    ITEMS_PER_PAGE
+                  )}
+                  onPageChange={(page) => setCurrentPage("equipment", page)}
+                />
 
                 {filteredEquipment.length === 0 && (
                   <div className="text-center py-8 sm:py-12">
