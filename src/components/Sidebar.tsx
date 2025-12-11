@@ -77,11 +77,11 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
     </>
   );
 
-  const className = \`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors \${
+  const className = `flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
     active
       ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-r-2 border-orange-500"
       : "text-gray-600 dark:text-gray-300"
-  } \${isSubItem ? "pl-10" : ""}\`;
+  } ${isSubItem ? "pl-10" : ""}`;
 
   if (path) {
     return (
@@ -91,11 +91,7 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
     );
   }
 
-  return (
-    <div className={className}>
-      {content}
-    </div>
-  );
+  return <div className={className}>{content}</div>;
 };
 
 const SidebarSectionHeader: React.FC<SectionHeaderProps> = ({
