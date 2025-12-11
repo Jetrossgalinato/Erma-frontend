@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   Menu,
   X,
@@ -79,9 +80,17 @@ const Navbar: React.FC = () => {
       message: "You have been logged out successfully.",
     });
     setTimeout(() => {
-      window.location.href = "/home";
+      router.push("/home");
     }, 1500);
   };
+
+  useEffect(() => {
+    // Prefetch common pages for faster navigation
+    router.prefetch("/dashboard-request");
+    router.prefetch("/my-requests");
+    router.prefetch("/profile");
+    router.prefetch("/login");
+  }, [router]);
 
   useEffect(() => {
     // Sync userData from store when user changes
@@ -440,20 +449,20 @@ const Navbar: React.FC = () => {
                     My Dashboard
                   </a>
                 )}
-                <a
+                <Link
                   href="/my-requests"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
                   <FileText size={16} />
                   My Requests
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/profile"
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                 >
                   <User size={16} />
                   My Profile
-                </a>
+                </Link>
                 <hr className="border-gray-200" />
                 <button
                   onClick={handleLogout}
@@ -466,11 +475,11 @@ const Navbar: React.FC = () => {
             )}
           </div>
         ) : (
-          <a href="/login">
+          <Link href="/login">
             <button className="bg-orange-500 hover:bg-orange-600 cursor-pointer text-white px-4 py-2 rounded-md transition-colors duration-300">
               Sign In
             </button>
-          </a>
+          </Link>
         )}
 
         {isAuthenticated && (
@@ -548,14 +557,14 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-16 left-0 text-sm md:text-lg w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
-          <a
+          <Link
             href="/home"
             className={`py-2 text-gray-700 ${
               pathname === "/home" ? "text-orange-500" : ""
             }`}
           >
             Home
-          </a>
+          </Link>
 
           <div className="w-full">
             <button
@@ -574,7 +583,7 @@ const Navbar: React.FC = () => {
             {/* MODIFIED: Make dropdown options always clickable on mobile */}
             {(isResourcesOpen || isOpen) && (
               <div className="pl-4 flex flex-col">
-                <a
+                <Link
                   href="/equipment"
                   className={`py-1 text-gray-600 ${
                     pathname.startsWith("/equipment") ? "text-orange-500" : ""
@@ -585,8 +594,8 @@ const Navbar: React.FC = () => {
                   }}
                 >
                   Equipments
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/facilities"
                   className={`py-1 text-gray-600 ${
                     pathname.startsWith("/facilities") ? "text-orange-500" : ""
@@ -597,8 +606,8 @@ const Navbar: React.FC = () => {
                   }}
                 >
                   Facilities
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/supplies"
                   className={`py-1 text-gray-600 ${
                     pathname.startsWith("/supplies") ? "text-orange-500" : ""
@@ -609,14 +618,14 @@ const Navbar: React.FC = () => {
                   }}
                 >
                   Supplies
-                </a>
+                </Link>
               </div>
             )}
           </div>
 
           {/* Account Requests - Only for Super Admin */}
           {isAuthenticated && isSuperAdmin && (
-            <a
+            <Link
               href="/requests"
               className={`py-2 text-gray-700 ${
                 pathname === "/requests" ? "text-orange-500" : ""
@@ -624,7 +633,7 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Account Requests
-            </a>
+            </Link>
           )}
 
           {isAuthenticated ? (
@@ -640,31 +649,31 @@ const Navbar: React.FC = () => {
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
                   {/* Hide My Dashboard for Faculty */}
                   {!isFaculty && (
-                    <a
+                    <Link
                       href="/dashboard"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                       onClick={() => setIsOpen(false)}
                     >
                       <LayoutDashboard size={16} />
                       My Dashboard
-                    </a>
+                    </Link>
                   )}
-                  <a
+                  <Link
                     href="/my-requests"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                     onClick={() => setIsOpen(false)}
                   >
                     <FileText size={16} />
                     My Requests
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/profile"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-black transition"
                     onClick={() => setIsOpen(false)}
                   >
                     <User size={16} />
                     My Profile
-                  </a>
+                  </Link>
                   <hr className="border-gray-200" />
                   <button
                     onClick={() => {
@@ -680,11 +689,11 @@ const Navbar: React.FC = () => {
               )}
             </div>
           ) : (
-            <a href="/login" className="w-full mt-2">
+            <Link href="/login" className="w-full mt-2">
               <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md w-full transition">
                 Sign In
               </button>
-            </a>
+            </Link>
           )}
 
           {isAuthenticated && (

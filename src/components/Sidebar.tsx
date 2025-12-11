@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Home,
   Monitor,
@@ -13,7 +14,7 @@ import {
   ChevronRight,
   LucideIcon,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import {
   fetchSidebarCounts,
@@ -52,19 +53,11 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
   isSubItem = false,
   path,
 }) => {
-  const router = useRouter();
   const pathname = usePathname();
   const active = path && pathname === path;
 
-  return (
-    <div
-      onClick={() => path && router.push(path)}
-      className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-        active
-          ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-r-2 border-orange-500"
-          : "text-gray-600 dark:text-gray-300"
-      } ${isSubItem ? "pl-10" : ""}`}
-    >
+  const content = (
+    <>
       <div className="flex items-center space-x-3">
         <Icon
           size={16}
@@ -81,6 +74,26 @@ const SidebarMenuItem: React.FC<MenuItemProps> = ({
           {count}
         </span>
       )}
+    </>
+  );
+
+  const className = \`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors \${
+    active
+      ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-r-2 border-orange-500"
+      : "text-gray-600 dark:text-gray-300"
+  } \${isSubItem ? "pl-10" : ""}\`;
+
+  if (path) {
+    return (
+      <Link href={path} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={className}>
+      {content}
     </div>
   );
 };

@@ -3,20 +3,11 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/store";
 
 export default function Home() {
-  const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthStore();
-
-  const handleGetStarted = () => {
-    router.push("/login");
-  };
-
-  const handleMyRequests = () => {
-    router.push("/my-requests");
-  };
 
   return (
     <div
@@ -50,47 +41,49 @@ export default function Home() {
 
                 {!isLoading && !isAuthenticated && (
                   <div>
-                    <button
-                      onClick={handleGetStarted}
-                      className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
-                      aria-label="Get started with CRIMS"
-                    >
-                      Get Started
-                      <svg
-                        className="w-3 h-3 md:w-5 md:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        viewBox="0 0 24 24"
+                    <Link href="/login">
+                      <button
+                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                        aria-label="Get started with CRIMS"
                       >
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </button>
+                        Get Started
+                        <svg
+                          className="w-3 h-3 md:w-5 md:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </button>
+                    </Link>
                   </div>
                 )}
 
                 {!isLoading && isAuthenticated && (
                   <div>
-                    <button
-                      onClick={handleMyRequests}
-                      className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
-                      aria-label="Go to My requests"
-                    >
-                      My Requests
-                      <svg
-                        className="w-3 h-3 md:w-5 md:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        viewBox="0 0 24 24"
+                    <Link href="/my-requests">
+                      <button
+                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                        aria-label="Go to My requests"
                       >
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </button>
+                        My Requests
+                        <svg
+                          className="w-3 h-3 md:w-5 md:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </button>
+                    </Link>
                   </div>
                 )}
               </div>
