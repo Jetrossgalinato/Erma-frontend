@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
 
 const DailyMaintenancePage = () => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const router = useRouter();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
@@ -57,6 +57,8 @@ const DailyMaintenancePage = () => {
 
   // Role Check
   useEffect(() => {
+    if (authLoading) return;
+
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -70,7 +72,7 @@ const DailyMaintenancePage = () => {
       // Optional: Redirect if not Student Assistant
       // router.push("/home");
     }
-  }, [isAuthenticated, user, router]);
+  }, [isAuthenticated, user, router, authLoading]);
 
   const handleStatusChange = (item: string, status: string) => {
     setChecklist((prev) => ({
