@@ -314,6 +314,8 @@ const DashboardNavbar: React.FC = () => {
       title.includes("supplies")
     ) {
       router.push("/dashboard-request?tab=acquiring");
+    } else if (title.includes("maintenance")) {
+      router.push("/monitor-maintenance");
     } else {
       // Default to dashboard-request page
       router.push("/dashboard-request");
