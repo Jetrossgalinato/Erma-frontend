@@ -173,11 +173,8 @@ export default function AccountRequestsPage() {
 
       const { is_supervisor, is_intern } = request;
 
-      // Conditionally map or copy role
-      const approvedRole =
-        !is_supervisor && !is_intern
-          ? mapRoleToSystemRole(originalRole)
-          : originalRole;
+      // Use original role directly - do not map to system role
+      const approvedRole = originalRole;
 
       // Call FastAPI to approve the request
       await approveAccountRequest(requestId, approvedRole);
@@ -197,11 +194,7 @@ export default function AccountRequestsPage() {
 
       showAlert({
         type: "success",
-        message: `Account approved! Role ${
-          is_supervisor || is_intern
-            ? "copied as-is"
-            : `mapped from "${originalRole}" to "${approvedRole}"`
-        }`,
+        message: `Account approved! Role set to "${approvedRole}"`,
       });
     } catch (error) {
       const errorMessage = handleError(error, "approve request");

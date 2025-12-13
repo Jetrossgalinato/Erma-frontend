@@ -17,6 +17,7 @@ export interface SidebarCounts {
   equipment_logs: number;
   facility_logs: number;
   supply_logs: number;
+  maintenance_logs: number;
   users: number;
 }
 
