@@ -259,6 +259,12 @@ const Sidebar: React.FC = () => {
       count: loading ? null : counts.supply_logs,
       path: "/monitor-supplies",
     },
+    {
+      icon: FileText,
+      label: "Maintenance Logs",
+      count: null, // You might want to add a count for pending logs later
+      path: "/monitor-maintenance",
+    },
   ];
 
   const userManagementItems: MenuItemData[] = [
