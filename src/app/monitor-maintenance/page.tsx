@@ -31,7 +31,7 @@ export default function MonitorMaintenancePage() {
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const router = useRouter();
   const { showAlert } = useAlert();
 
@@ -44,6 +44,7 @@ export default function MonitorMaintenancePage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
+      console.log("Current User Role:", user?.role);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance`,
         {
@@ -56,7 +57,14 @@ export default function MonitorMaintenancePage() {
         const data = await response.json();
         setLogs(data);
       } else {
-        console.error("Failed to fetch logs");
+        console.error(
+          "Failed to fetch logs:",
+          response.status,
+          response.statusText
+        );
+        if (response.status === 403) {
+          console.error("User role not authorized. Role:", user?.role);
+        }
       }
     } catch (error) {
       console.error("Error fetching logs:", error);

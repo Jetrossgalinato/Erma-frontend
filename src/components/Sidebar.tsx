@@ -259,13 +259,24 @@ const Sidebar: React.FC = () => {
       count: loading ? null : counts.supply_logs,
       path: "/monitor-supplies",
     },
-    {
+  ];
+
+  // Only show Maintenance Logs for Super Admin roles
+  const superAdminRoles = [
+    "CCIS Dean",
+    "Lab Technician",
+    "Comlab Adviser",
+    "Super Admin",
+  ];
+
+  if (approvedAccRole && superAdminRoles.includes(approvedAccRole)) {
+    monitoringItems.push({
       icon: FileText,
       label: "Maintenance Logs",
-      count: null, // You might want to add a count for pending logs later
+      count: null,
       path: "/monitor-maintenance",
-    },
-  ];
+    });
+  }
 
   const userManagementItems: MenuItemData[] = [
     {
