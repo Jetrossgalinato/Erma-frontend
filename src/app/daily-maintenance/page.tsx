@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { fetchFacilitiesList, Facility } from "../facilities/utils/helpers";
 
 const DailyMaintenancePage = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -15,6 +16,7 @@ const DailyMaintenancePage = () => {
 
   // Form State
   const [laboratory, setLaboratory] = useState("");
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [checklist, setChecklist] = useState<
     Record<string, { status: string; remarks: string }>
@@ -42,6 +44,15 @@ const DailyMaintenancePage = () => {
       "Notify technician immediately for any malfunctioning unit",
     ],
   };
+
+  // Fetch facilities
+  useEffect(() => {
+    const loadFacilities = async () => {
+      const data = await fetchFacilitiesList();
+      setFacilities(data);
+    };
+    loadFacilities();
+  }, []);
 
   // Initialize checklist state
   useEffect(() => {
@@ -156,13 +167,24 @@ const DailyMaintenancePage = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Assigned Laboratory
                 </label>
-                <input
-                  type="text"
+                <select
                   required
                   value={laboratory}
                   onChange={(e) => setLaboratory(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                />
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
+                >
+                  <option value="" disabled>
+                    Select Laboratory
+                  </option>
+                  {facilities.map((facility) => (
+                    <option
+                      key={facility.facility_id}
+                      value={facility.facility_name}
+                    >
+                      {facility.facility_name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
