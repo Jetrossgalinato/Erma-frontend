@@ -133,6 +133,7 @@ const Sidebar: React.FC = () => {
     equipment_logs: 0,
     facility_logs: 0,
     supply_logs: 0,
+    maintenance_logs: 0,
     users: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -273,7 +274,7 @@ const Sidebar: React.FC = () => {
     monitoringItems.push({
       icon: FileText,
       label: "Maintenance Logs",
-      count: null,
+      count: loading ? null : counts.maintenance_logs,
       path: "/monitor-maintenance",
     });
   }
