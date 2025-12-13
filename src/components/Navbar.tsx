@@ -347,7 +347,14 @@ const Navbar: React.FC = () => {
   const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
   const isSuperAdmin = currentRole === "Super Admin";
   const isFaculty = currentRole === "Faculty";
-  const isStudentAssistant = rawRole === "Student Assistant";
+  const isStudentAssistant = rawRole?.toLowerCase() === "student assistant";
+
+  console.log("Navbar Role Debug:", {
+    rawRole,
+    currentRole,
+    isStudentAssistant,
+    userRole: user?.role,
+  });
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">

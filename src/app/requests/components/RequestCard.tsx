@@ -53,15 +53,6 @@ export default function RequestCard({
             <div className="text-sm text-gray-600">
               <span className="font-medium">Requested Role:</span>{" "}
               {request.acc_role}
-              {request.status === "Pending" &&
-                !(request.is_supervisor || request.is_intern) && (
-                  <div className="flex items-center gap-2 mt-1 text-xs text-blue-600">
-                    <ArrowRight className="w-3 h-3" />
-                    <span>
-                      Will map to: {mapRoleToSystemRole(request.acc_role)}
-                    </span>
-                  </div>
-                )}
               {request.approved_acc_role && request.status === "Approved" && (
                 <div className="flex items-center gap-2 mt-1 text-xs text-green-600">
                   <ArrowRight className="w-3 h-3" />
