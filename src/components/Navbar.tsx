@@ -347,6 +347,7 @@ const Navbar: React.FC = () => {
   const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
   const isSuperAdmin = currentRole === "Super Admin";
   const isFaculty = currentRole === "Faculty";
+  const isStudentAssistant = rawRole === "Student Assistant";
 
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
@@ -425,6 +426,18 @@ const Navbar: React.FC = () => {
             }`}
           >
             Account Requests
+          </a>
+        )}
+
+        {/* Daily Maintenance - Only for Student Assistant */}
+        {isAuthenticated && isStudentAssistant && (
+          <a
+            href="/daily-maintenance"
+            className={`hover:text-black transition-colors duration-300 ${
+              pathname === "/daily-maintenance" ? "text-orange-500" : ""
+            }`}
+          >
+            Daily Maintenance
           </a>
         )}
 
@@ -633,6 +646,19 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Account Requests
+            </Link>
+          )}
+
+          {/* Daily Maintenance - Only for Student Assistant */}
+          {isAuthenticated && isStudentAssistant && (
+            <Link
+              href="/daily-maintenance"
+              className={`py-2 text-gray-700 ${
+                pathname === "/daily-maintenance" ? "text-orange-500" : ""
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              Daily Maintenance
             </Link>
           )}
 
