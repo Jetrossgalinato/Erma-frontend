@@ -348,11 +348,13 @@ const Navbar: React.FC = () => {
   const isSuperAdmin = currentRole === "Super Admin";
   const isFaculty = currentRole === "Faculty";
   const isStudentAssistant = rawRole?.toLowerCase() === "student assistant";
+  const isLabTechnician = rawRole === "Lab Technician";
 
   console.log("Navbar Role Debug:", {
     rawRole,
     currentRole,
     isStudentAssistant,
+    isLabTechnician,
     userRole: user?.role,
   });
 
@@ -445,6 +447,18 @@ const Navbar: React.FC = () => {
             }`}
           >
             Daily Maintenance
+          </a>
+        )}
+
+        {/* Maintenance Check - Only for Lab Technician */}
+        {isAuthenticated && isLabTechnician && (
+          <a
+            href="/maintenance-check"
+            className={`hover:text-black transition-colors duration-300 ${
+              pathname === "/maintenance-check" ? "text-orange-500" : ""
+            }`}
+          >
+            Maintenance Check
           </a>
         )}
 
@@ -666,6 +680,19 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Daily Maintenance
+            </Link>
+          )}
+
+          {/* Maintenance Check - Only for Lab Technician */}
+          {isAuthenticated && isLabTechnician && (
+            <Link
+              href="/maintenance-check"
+              className={`py-2 text-gray-700 ${
+                pathname === "/maintenance-check" ? "text-orange-500" : ""
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              Maintenance Check
             </Link>
           )}
 
