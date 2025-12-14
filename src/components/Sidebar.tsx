@@ -263,12 +263,7 @@ const Sidebar: React.FC = () => {
   ];
 
   // Only show Maintenance Logs for Super Admin roles
-  const superAdminRoles = [
-    "CCIS Dean",
-    "Lab Technician",
-    "Comlab Adviser",
-    "Super Admin",
-  ];
+  const superAdminRoles = ["CCIS Dean", "Comlab Adviser", "Super Admin"];
 
   if (approvedAccRole && superAdminRoles.includes(approvedAccRole)) {
     monitoringItems.push({

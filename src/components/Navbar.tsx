@@ -43,6 +43,7 @@ const Navbar: React.FC = () => {
     title: string;
     user_id: string;
     message: string;
+    type: string;
     is_read: boolean;
     created_at: string;
   };
@@ -182,8 +183,21 @@ const Navbar: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data || []);
-        const unread = (data || []).filter(
+
+        // Filter notifications for Lab Technician
+        let filteredData = data || [];
+        if (approvedAccRole === "Lab Technician") {
+          filteredData = filteredData.filter((notif: Notification) => {
+            // If it's a maintenance notification, only show if it's a confirmation (type="success")
+            if (notif.title.includes("Maintenance")) {
+              return notif.type === "success";
+            }
+            return true;
+          });
+        }
+
+        setNotifications(filteredData);
+        const unread = filteredData.filter(
           (notif: Notification) => !notif.is_read
         ).length;
         setUnreadCount(unread);
@@ -191,7 +205,7 @@ const Navbar: React.FC = () => {
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, approvedAccRole]);
 
   useEffect(() => {
     if (isAuthenticated) {

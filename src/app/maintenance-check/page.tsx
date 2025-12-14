@@ -386,12 +386,13 @@ const MaintenanceCheckPage = () => {
       const payload = {
         laboratory: laboratory,
         date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
+        checklist_type: selectedType,
         checklist_data: JSON.stringify(checklistData),
         additional_concerns: additionalConcerns,
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/technician-maintenance`,
         {
           method: "POST",
           headers: {
