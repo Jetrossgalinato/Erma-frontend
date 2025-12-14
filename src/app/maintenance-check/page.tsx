@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAlert } from "@/contexts/AlertContext";
+import { useRouter } from "next/navigation";
 
 type ChecklistType = "Daily" | "Weekly" | "Monthly";
 
@@ -21,9 +23,14 @@ interface ChecklistSection {
 const MaintenanceCheckPage = () => {
   const [selectedType, setSelectedType] = useState<ChecklistType>("Daily");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [laboratory, setLaboratory] = useState("");
+  const [additionalConcerns, setAdditionalConcerns] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showAlert } = useAlert();
+  const router = useRouter();
 
-  // Data for checklists
-  const dailyChecklist: ChecklistSection[] = [
+  // Data for checklists - Initial State
+  const initialDailyChecklist: ChecklistSection[] = [
     {
       title: "General maintenance",
       items: [
@@ -124,7 +131,7 @@ const MaintenanceCheckPage = () => {
     },
   ];
 
-  const weeklyChecklist: ChecklistSection[] = [
+  const initialWeeklyChecklist: ChecklistSection[] = [
     {
       title: "Computer Systems",
       items: [
@@ -198,7 +205,7 @@ const MaintenanceCheckPage = () => {
     },
   ];
 
-  const monthlyChecklist: ChecklistSection[] = [
+  const initialMonthlyChecklist: ChecklistSection[] = [
     {
       title: "Computer Systems",
       items: [
@@ -281,6 +288,16 @@ const MaintenanceCheckPage = () => {
     },
   ];
 
+  const [dailyChecklist, setDailyChecklist] = useState<ChecklistSection[]>(
+    initialDailyChecklist
+  );
+  const [weeklyChecklist, setWeeklyChecklist] = useState<ChecklistSection[]>(
+    initialWeeklyChecklist
+  );
+  const [monthlyChecklist, setMonthlyChecklist] = useState<ChecklistSection[]>(
+    initialMonthlyChecklist
+  );
+
   const getChecklist = () => {
     switch (selectedType) {
       case "Daily":
@@ -291,6 +308,114 @@ const MaintenanceCheckPage = () => {
         return monthlyChecklist;
       default:
         return dailyChecklist;
+    }
+  };
+
+  const setChecklist = (newChecklist: ChecklistSection[]) => {
+    switch (selectedType) {
+      case "Daily":
+        setDailyChecklist(newChecklist);
+        break;
+      case "Weekly":
+        setWeeklyChecklist(newChecklist);
+        break;
+      case "Monthly":
+        setMonthlyChecklist(newChecklist);
+        break;
+    }
+  };
+
+  const handleStatusChange = (
+    sectionIndex: number,
+    itemIndex: number,
+    checked: boolean
+  ) => {
+    const currentChecklist = [...getChecklist()];
+    currentChecklist[sectionIndex].items[itemIndex].status = checked;
+    setChecklist(currentChecklist);
+  };
+
+  const handleRemarksChange = (
+    sectionIndex: number,
+    itemIndex: number,
+    value: string
+  ) => {
+    const currentChecklist = [...getChecklist()];
+    currentChecklist[sectionIndex].items[itemIndex].remarks = value;
+    setChecklist(currentChecklist);
+  };
+
+  const handleSubmit = async () => {
+    if (!laboratory.trim()) {
+      showAlert({
+        type: "error",
+        message: "Please enter the laboratory name.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        showAlert({
+          type: "error",
+          message: "You are not authenticated. Please login again.",
+        });
+        router.push("/login");
+        return;
+      }
+
+      const checklistData = {
+        type: selectedType,
+        sections: getChecklist(),
+      };
+
+      const payload = {
+        laboratory: laboratory,
+        date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
+        checklist_data: JSON.stringify(checklistData),
+        additional_concerns: additionalConcerns,
+      };
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        showAlert({
+          type: "success",
+          message: "Maintenance log submitted successfully!",
+        });
+        // Reset form or redirect
+        setAdditionalConcerns("");
+        setLaboratory("");
+        // Reset checklist state if needed, or redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        const errorData = await response.json();
+        showAlert({
+          type: "error",
+          message: errorData.detail || "Failed to submit maintenance log.",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting maintenance log:", error);
+      showAlert({
+        type: "error",
+        message: "An error occurred while submitting the log.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,13 +468,30 @@ const MaintenanceCheckPage = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
             <div className="p-6">
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                  {selectedType} Preventive Maintenance Checklist
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Directions: Update the status by marking check if the task is
-                  performed, or if an issue is found. Add remarks if necessary.
-                </p>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                      {selectedType} Preventive Maintenance Checklist
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Directions: Update the status by marking check if the task
+                      is performed, or if an issue is found. Add remarks if
+                      necessary.
+                    </p>
+                  </div>
+                  <div className="w-1/3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Laboratory Name
+                    </label>
+                    <input
+                      type="text"
+                      value={laboratory}
+                      onChange={(e) => setLaboratory(e.target.value)}
+                      className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white px-3 py-2 border"
+                      placeholder="e.g. ComLab 1"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-8">
@@ -391,13 +533,29 @@ const MaintenanceCheckPage = () => {
                               <td className="px-6 py-4 text-center">
                                 <input
                                   type="checkbox"
+                                  checked={item.status}
+                                  onChange={(e) =>
+                                    handleStatusChange(
+                                      sectionIndex,
+                                      itemIndex,
+                                      e.target.checked
+                                    )
+                                  }
                                   className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                                 />
                               </td>
                               <td className="px-6 py-4">
                                 <input
                                   type="text"
-                                  className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white"
+                                  value={item.remarks}
+                                  onChange={(e) =>
+                                    handleRemarksChange(
+                                      sectionIndex,
+                                      itemIndex,
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white px-2 py-1 border"
                                   placeholder="Add remarks..."
                                 />
                               </td>
@@ -416,7 +574,9 @@ const MaintenanceCheckPage = () => {
                 </label>
                 <textarea
                   rows={4}
-                  className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                  value={additionalConcerns}
+                  onChange={(e) => setAdditionalConcerns(e.target.value)}
+                  className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white px-3 py-2 border"
                   placeholder="Enter additional concerns here..."
                 />
               </div>
@@ -424,9 +584,13 @@ const MaintenanceCheckPage = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   type="button"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 ${
+                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Submit Report
+                  {isSubmitting ? "Submitting..." : "Submit Report"}
                 </button>
               </div>
             </div>

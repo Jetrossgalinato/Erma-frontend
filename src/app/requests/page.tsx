@@ -171,7 +171,7 @@ export default function AccountRequestsPage() {
         throw new Error("Request not found");
       }
 
-      const { is_supervisor, is_intern } = request;
+      // const { is_supervisor, is_intern } = request;
 
       // Use original role directly - do not map to system role
       const approvedRole = originalRole;
