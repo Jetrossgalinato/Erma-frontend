@@ -391,7 +391,7 @@ export default function MonitorMaintenancePage() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => openDetails(log)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-indigo-600 hover:text-white hover:bg-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-500 rounded-lg transition-all duration-200 border border-indigo-600 dark:border-indigo-400"
+                                  className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-white hover:bg-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-500 rounded-lg transition-all duration-200 border border-indigo-600 dark:border-indigo-400"
                                   title="View Details"
                                 >
                                   <Eye className="w-4 h-4" />
@@ -399,7 +399,7 @@ export default function MonitorMaintenancePage() {
                                 {log.status !== "Confirmed" && (
                                   <button
                                     onClick={() => handleConfirm(log.id)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
+                                    className="inline-flex items-center justify-center p-2 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
                                     title="Confirm"
                                   >
                                     <CheckCircle className="w-4 h-4" />
@@ -409,7 +409,7 @@ export default function MonitorMaintenancePage() {
                                   onClick={() =>
                                     handleDelete(log.id, log.log_type)
                                   }
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
+                                  className="inline-flex items-center justify-center p-2 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
                                   title="Delete"
                                 >
                                   <Trash2 className="w-4 h-4" />
