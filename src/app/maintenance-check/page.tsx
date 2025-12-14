@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAlert } from "@/contexts/AlertContext";
 import { useRouter } from "next/navigation";
+import { fetchFacilitiesList, Facility } from "../facilities/utils/helpers";
 
 type ChecklistType = "Daily" | "Weekly" | "Monthly";
 
@@ -24,10 +25,20 @@ const MaintenanceCheckPage = () => {
   const [selectedType, setSelectedType] = useState<ChecklistType>("Daily");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [laboratory, setLaboratory] = useState("");
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [additionalConcerns, setAdditionalConcerns] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showAlert } = useAlert();
   const router = useRouter();
+
+  // Fetch facilities
+  useEffect(() => {
+    const loadFacilities = async () => {
+      const data = await fetchFacilitiesList();
+      setFacilities(data);
+    };
+    loadFacilities();
+  }, []);
 
   // Data for checklists - Initial State
   const initialDailyChecklist: ChecklistSection[] = [
@@ -483,13 +494,24 @@ const MaintenanceCheckPage = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Laboratory Name
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={laboratory}
                       onChange={(e) => setLaboratory(e.target.value)}
                       className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white px-3 py-2 border"
-                      placeholder="e.g. ComLab 1"
-                    />
+                    >
+                      <option value="" disabled className="text-gray-500">
+                        Select Laboratory
+                      </option>
+                      {facilities.map((facility) => (
+                        <option
+                          key={facility.facility_id}
+                          value={facility.facility_name}
+                          className="text-gray-900 dark:text-gray-900"
+                        >
+                          {facility.facility_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
