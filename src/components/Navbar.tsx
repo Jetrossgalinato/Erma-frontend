@@ -695,10 +695,6 @@ const Navbar: React.FC = () => {
               Maintenance Check
             </Link>
           )}
-            >
-              Daily Maintenance
-            </Link>
-          )}
 
           {isAuthenticated ? (
             <div className="relative dropdown-container w-full mt-2">
