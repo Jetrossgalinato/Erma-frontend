@@ -17,6 +17,9 @@ import {
   AlertCircle,
   RefreshCw,
   User,
+  Trash2,
+  Filter,
+  Clock,
 } from "lucide-react";
 
 interface ChecklistItem {
@@ -36,6 +39,8 @@ interface MaintenanceLog {
   user_first_name: string;
   user_last_name: string;
   user_role: string;
+  checklist_type: string;
+  log_type: string;
 }
 
 export default function MonitorMaintenancePage() {
@@ -44,6 +49,7 @@ export default function MonitorMaintenancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string>("All");
 
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const router = useRouter();
@@ -116,15 +122,19 @@ export default function MonitorMaintenancePage() {
       );
 
       if (response.ok) {
+        setLogs((prevLogs) =>
+          prevLogs.map((log) =>
+            log.id === id ? { ...log, status: "Confirmed" } : log
+          )
+        );
         showAlert({
           type: "success",
           message: "Maintenance log confirmed successfully",
         });
-        fetchLogs(); // Refresh list
       } else {
         showAlert({
           type: "error",
-          message: "Failed to confirm log",
+          message: "Failed to confirm maintenance log",
         });
       }
     } catch (error) {
@@ -136,10 +146,52 @@ export default function MonitorMaintenancePage() {
     }
   };
 
+  const handleDelete = async (id: number, logType: string) => {
+    if (!confirm("Are you sure you want to delete this log?")) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}?log_type=${logType}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setLogs((prevLogs) =>
+          prevLogs.filter((log) => !(log.id === id && log.log_type === logType))
+        );
+        showAlert({
+          type: "success",
+          message: "Maintenance log deleted successfully",
+        });
+      } else {
+        showAlert({
+          type: "error",
+          message: "Failed to delete maintenance log",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting log:", error);
+      showAlert({
+        type: "error",
+        message: "An error occurred",
+      });
+    }
+  };
+
   const openDetails = (log: MaintenanceLog) => {
     setSelectedLog(log);
     setIsModalOpen(true);
   };
+
+  const filteredLogs = logs.filter((log) => {
+    if (filterType === "All") return true;
+    return log.checklist_type === filterType;
+  });
 
   const closeDetails = () => {
     setSelectedLog(null);
@@ -185,21 +237,37 @@ export default function MonitorMaintenancePage() {
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-                    Daily Maintenance Logs
+                    Maintenance Logs
                   </h1>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Review and confirm maintenance reports submitted by student
-                    assistants. Track laboratory maintenance activities and
-                    ensure all tasks are completed properly.
+                    assistants and lab technicians.
                   </p>
                 </div>
-                <button
-                  onClick={fetchLogs}
-                  className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
-                </button>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Filter className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="All">All Types</option>
+                      <option value="Daily">Daily</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={fetchLogs}
+                    className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
               </div>
 
               <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -210,7 +278,7 @@ export default function MonitorMaintenancePage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            Date
+                            Date & Time
                           </div>
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
@@ -246,7 +314,7 @@ export default function MonitorMaintenancePage() {
                             </div>
                           </td>
                         </tr>
-                      ) : logs.length === 0 ? (
+                      ) : filteredLogs.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -255,16 +323,15 @@ export default function MonitorMaintenancePage() {
                                 No maintenance logs found
                               </p>
                               <p className="text-sm">
-                                Student assistants {"haven't"} submitted any
-                                reports yet.
+                                No logs match the selected filter.
                               </p>
                             </div>
                           </td>
                         </tr>
                       ) : (
-                        logs.map((log, index) => (
+                        filteredLogs.map((log, index) => (
                           <tr
-                            key={log.id}
+                            key={`${log.log_type}-${log.id}`}
                             className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                               index % 2 === 0
                                 ? "bg-white dark:bg-gray-800"
@@ -272,7 +339,19 @@ export default function MonitorMaintenancePage() {
                             }`}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
-                              {log.date}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{log.date}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(log.created_at).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
                               {log.laboratory}
@@ -288,39 +367,53 @@ export default function MonitorMaintenancePage() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
-                              <span
-                                className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full ${
-                                  log.status === "Confirmed"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                }`}
-                              >
-                                {log.status === "Confirmed" ? (
-                                  <CheckCircle className="w-3.5 h-3.5" />
-                                ) : (
-                                  <AlertCircle className="w-3.5 h-3.5" />
-                                )}
-                                {log.status}
-                              </span>
+                              <div className="flex flex-col gap-1">
+                                <span
+                                  className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full w-fit ${
+                                    log.status === "Confirmed"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                  }`}
+                                >
+                                  {log.status === "Confirmed" ? (
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <AlertCircle className="w-3.5 h-3.5" />
+                                  )}
+                                  {log.status}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                  Type: {log.checklist_type}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => openDetails(log)}
                                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-indigo-600 hover:text-white hover:bg-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-500 rounded-lg transition-all duration-200 border border-indigo-600 dark:border-indigo-400"
+                                  title="View Details"
                                 >
                                   <Eye className="w-4 h-4" />
-                                  View Details
                                 </button>
                                 {log.status !== "Confirmed" && (
                                   <button
                                     onClick={() => handleConfirm(log.id)}
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
+                                    title="Confirm"
                                   >
                                     <CheckCircle className="w-4 h-4" />
-                                    Confirm
                                   </button>
                                 )}
+                                <button
+                                  onClick={() =>
+                                    handleDelete(log.id, log.log_type)
+                                  }
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
