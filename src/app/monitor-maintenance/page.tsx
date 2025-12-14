@@ -16,6 +16,7 @@ import {
   ClipboardList,
   AlertCircle,
   RefreshCw,
+  User,
 } from "lucide-react";
 
 interface ChecklistItem {
@@ -32,6 +33,9 @@ interface MaintenanceLog {
   additional_concerns: string | null;
   status: string;
   created_at: string;
+  user_first_name: string;
+  user_last_name: string;
+  user_role: string;
 }
 
 export default function MonitorMaintenancePage() {
@@ -217,6 +221,12 @@ export default function MonitorMaintenancePage() {
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                           <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Submitted By
+                          </div>
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center gap-2">
                             <ClipboardList className="w-4 h-4" />
                             Status
                           </div>
@@ -229,7 +239,7 @@ export default function MonitorMaintenancePage() {
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {loading ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
+                          <td colSpan={5} className="px-6 py-12 text-center">
                             <div className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
                               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
                               <span>Loading maintenance logs...</span>
@@ -238,7 +248,7 @@ export default function MonitorMaintenancePage() {
                         </tr>
                       ) : logs.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
+                          <td colSpan={5} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
                               <ClipboardList className="w-12 h-12 text-gray-300 dark:text-gray-600" />
                               <p className="text-lg font-medium">
@@ -266,6 +276,16 @@ export default function MonitorMaintenancePage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
                               {log.laboratory}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {log.user_first_name} {log.user_last_name}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {log.user_role}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
                               <span
