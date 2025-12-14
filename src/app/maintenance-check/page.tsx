@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAlert } from "@/contexts/AlertContext";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store";
 import { fetchFacilitiesList, Facility } from "../facilities/utils/helpers";
 import { ChecklistType, ChecklistSection } from "./utils/types";
 import {
@@ -24,6 +25,7 @@ const MaintenanceCheckPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showAlert } = useAlert();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   // Fetch facilities
   useEffect(() => {
@@ -143,11 +145,29 @@ const MaintenanceCheckPage = () => {
           type: "success",
           message: "Maintenance log submitted successfully!",
         });
-        // Reset form or redirect
+        // Reset form
         setAdditionalConcerns("");
         setLaboratory("");
-        // Reset checklist state if needed, or redirect to dashboard
-        router.push("/dashboard");
+
+        // Reset checklists
+        const resetItems = (list: ChecklistSection[]) =>
+          list.map((section) => ({
+            ...section,
+            items: section.items.map((item) => ({
+              ...item,
+              status: false,
+              remarks: "",
+            })),
+          }));
+
+        setDailyChecklist((prev) => resetItems(prev));
+        setWeeklyChecklist((prev) => resetItems(prev));
+        setMonthlyChecklist((prev) => resetItems(prev));
+
+        // Only redirect if NOT Lab Technician
+        if (user?.role !== "Lab Technician") {
+          router.push("/dashboard");
+        }
       } else {
         const errorData = await response.json();
         showAlert({

@@ -46,10 +46,18 @@ export default function MonitorMaintenancePage() {
   const { showAlert } = useAlert();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role === "Lab Technician") {
+        router.push("/dashboard");
+        showAlert({
+          type: "error",
+          message: "Access denied. Lab Technicians cannot access this page.",
+        });
+      }
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router, user, showAlert]);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -138,7 +146,9 @@ export default function MonitorMaintenancePage() {
     setSidebarOpen(false);
   };
 
-  if (authLoading) return <Loader />;
+  if (authLoading || (isAuthenticated && user?.role === "Lab Technician")) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
