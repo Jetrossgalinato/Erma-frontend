@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 type ChecklistType = "Daily" | "Weekly" | "Monthly";
 
@@ -293,141 +295,145 @@ const MaintenanceCheckPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Maintenance Checklist
-          </h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <Navbar />
+      <div className="flex-grow p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-semibold text-gray-800 dark:text-white">
+              Maintenance Checklist
+            </h1>
 
-          <div className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              <span>{selectedType} Maintenance</span>
-              <ChevronDown size={16} />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                <span>{selectedType} Maintenance</span>
+                <ChevronDown size={16} />
+              </button>
 
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
-                <div className="py-1">
-                  {(["Daily", "Weekly", "Monthly"] as ChecklistType[]).map(
-                    (type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setSelectedType(type);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`block w-full text-left px-4 py-2 text-sm ${
-                          selectedType === type
-                            ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
-                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {type} Maintenance
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                {selectedType} Preventive Maintenance Checklist
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Directions: Update the status by marking check if the task is
-                performed, or if an issue is found. Add remarks if necessary.
-              </p>
-            </div>
-
-            <div className="space-y-8">
-              {getChecklist().map((section, sectionIndex) => (
-                <div key={sectionIndex}>
-                  <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                    {section.title}
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-800">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/2"
-                          >
-                            Task
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6"
-                          >
-                            Status
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3"
-                          >
-                            Remarks
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        {section.items.map((item, itemIndex) => (
-                          <tr key={itemIndex}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                              {item.task}
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <input
-                                type="text"
-                                className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white"
-                                placeholder="Add remarks..."
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                  <div className="py-1">
+                    {(["Daily", "Weekly", "Monthly"] as ChecklistType[]).map(
+                      (type) => (
+                        <button
+                          key={type}
+                          onClick={() => {
+                            setSelectedType(type);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`block w-full text-left px-4 py-2 text-sm ${
+                            selectedType === type
+                              ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                              : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          }`}
+                        >
+                          {type} Maintenance
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
+          </div>
 
-            <div className="mt-8">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                List any additional concerns or issues found
-              </label>
-              <textarea
-                rows={4}
-                className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                placeholder="Enter additional concerns here..."
-              />
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+            <div className="p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+                  {selectedType} Preventive Maintenance Checklist
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Directions: Update the status by marking check if the task is
+                  performed, or if an issue is found. Add remarks if necessary.
+                </p>
+              </div>
 
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                Submit Report
-              </button>
+              <div className="space-y-8">
+                {getChecklist().map((section, sectionIndex) => (
+                  <div key={sectionIndex}>
+                    <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3 bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                      {section.title}
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
+                          <tr>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/2"
+                            >
+                              Task
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/6"
+                            >
+                              Status
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3"
+                            >
+                              Remarks
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                          {section.items.map((item, itemIndex) => (
+                            <tr key={itemIndex}>
+                              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                                {item.task}
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                />
+                              </td>
+                              <td className="px-6 py-4">
+                                <input
+                                  type="text"
+                                  className="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-transparent dark:text-white"
+                                  placeholder="Add remarks..."
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  List any additional concerns or issues found
+                </label>
+                <textarea
+                  rows={4}
+                  className="shadow-sm focus:ring-orange-500 focus:border-orange-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter additional concerns here..."
+                />
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                >
+                  Submit Report
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
