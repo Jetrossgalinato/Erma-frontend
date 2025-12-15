@@ -1,7 +1,7 @@
 "use client";
 
 import { SupplyLog } from "../utils/helpers";
-import LoadingState from "./LoadingState";
+import Loader from "@/components/Loader";
 import LogsTable from "./LogsTable";
 import PaginationControls from "./PaginationControls";
 
@@ -30,7 +30,11 @@ export default function LogsCard({
         </h2>
       </div>
       <div className="overflow-x-auto">
-        {loading ? <LoadingState /> : <LogsTable logs={logs} />}
+        {loading ? (
+          <Loader fullScreen={false} className="h-64" />
+        ) : (
+          <LogsTable logs={logs} />
+        )}
       </div>
       {!loading && logs.length > 0 && (
         <PaginationControls

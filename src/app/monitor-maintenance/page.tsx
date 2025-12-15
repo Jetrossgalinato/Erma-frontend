@@ -327,16 +327,7 @@ export default function MonitorMaintenancePage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {loading ? (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center">
-                            <div className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
-                              <span>Loading maintenance logs...</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : filteredLogs.length === 0 ? (
+                      {filteredLogs.length === 0 && !loading ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -658,6 +649,7 @@ export default function MonitorMaintenancePage() {
         itemType="maintenance log"
         message="Are you sure you want to delete this maintenance log? This action cannot be undone."
       />
+      {loading && <Loader />}
     </div>
   );
 }

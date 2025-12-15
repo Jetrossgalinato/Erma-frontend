@@ -18,7 +18,6 @@ import {
 } from "./utils/helpers";
 import { User } from "./utils/helpers";
 import PageHeader from "./components/PageHeader";
-import LoadingState from "./components/LoadingState";
 import ErrorMessage from "./components/ErrorMessage";
 import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
@@ -410,16 +409,12 @@ const UsersPage: React.FC = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  {isLoadingUsers ? (
-                    <LoadingState />
-                  ) : (
-                    <UsersTable
-                      users={users}
-                      selectedRows={selectedRows}
-                      onSelectRow={handleCheckboxChange}
-                      onSelectAll={handleSelectAll}
-                    />
-                  )}
+                  <UsersTable
+                    users={users}
+                    selectedRows={selectedRows}
+                    onSelectRow={handleCheckboxChange}
+                    onSelectAll={handleSelectAll}
+                  />
                 </div>
 
                 <PaginationControls
@@ -454,6 +449,7 @@ const UsersPage: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
+      {isLoadingUsers && <Loader />}
     </div>
   );
 };

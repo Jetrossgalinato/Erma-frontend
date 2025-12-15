@@ -1,15 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  ChevronDown,
-  Check,
-  X,
-  Trash2,
-  Loader2,
-  RefreshCw,
-  Bell,
-} from "lucide-react";
+import { ChevronDown, Check, X, Trash2, RefreshCw, Bell } from "lucide-react";
+import Loader from "@/components/Loader";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
 // Define the BookingRequest type
@@ -507,16 +500,7 @@ export default function BookingRequests() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
-          <span className="ml-3 text-gray-600 dark:text-gray-400">
-            Loading booking requests...
-          </span>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {

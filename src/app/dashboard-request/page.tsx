@@ -16,7 +16,6 @@ import AcquiringRequestsTable from "./components/AcquiringRequestsTable";
 import ActionButtons from "./components/ActionButtons";
 import ReturnNotificationsModal from "./components/ReturnNotificationsModal";
 import DoneNotificationsModal from "./components/DoneNotificationsModal";
-import LoadingState from "./components/LoadingState";
 import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
@@ -442,7 +441,7 @@ export default function DashboardRequestsPage() {
               )}
 
               {/* Loading State */}
-              {isLoading && <LoadingState />}
+              {isLoading && <Loader fullScreen={false} className="h-64" />}
 
               {/* Content */}
               {!isLoading && (
