@@ -474,33 +474,113 @@ export default function MonitorMaintenancePage() {
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                     {(() => {
                       try {
-                        const checklist = JSON.parse(
+                        const parsedData = JSON.parse(
                           selectedLog.checklist_data
-                        ) as Record<string, ChecklistItem>;
-                        return (
-                          <ul className="space-y-2">
-                            {Object.entries(checklist).map(([item, data]) => (
-                              <li key={item} className="text-sm">
-                                <span className="font-medium">{item}:</span>{" "}
-                                <span
-                                  className={
-                                    data.status === "Check"
-                                      ? "text-green-600"
-                                      : data.status === "Issue"
-                                      ? "text-red-600"
-                                      : "text-gray-600"
-                                  }
+                        );
+
+                        // Check if it's the technician format (has sections)
+                        if (
+                          parsedData.sections &&
+                          Array.isArray(parsedData.sections)
+                        ) {
+                          interface TechChecklistItem {
+                            task: string;
+                            status: boolean;
+                            remarks: string;
+                          }
+
+                          interface TechChecklistSection {
+                            title: string;
+                            items: TechChecklistItem[];
+                          }
+
+                          interface TechChecklistData {
+                            type: string;
+                            sections: TechChecklistSection[];
+                          }
+
+                          const techData = parsedData as TechChecklistData;
+                          return (
+                            <div className="space-y-6">
+                              {techData.sections.map((section, sIdx) => (
+                                <div
+                                  key={sIdx}
+                                  className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 shadow-sm"
                                 >
-                                  {data.status}
-                                </span>
-                                {data.remarks && (
-                                  <span className="text-gray-500 ml-2">
-                                    ({data.remarks})
+                                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                    {section.title}
+                                  </h4>
+                                  <ul className="space-y-3">
+                                    {section.items.map((item, iIdx) => (
+                                      <li
+                                        key={iIdx}
+                                        className="text-sm flex justify-between items-start gap-4"
+                                      >
+                                        <div className="flex-1">
+                                          <span className="text-gray-600 dark:text-gray-300 block">
+                                            {item.task}
+                                          </span>
+                                          {item.remarks && (
+                                            <p className="text-xs text-gray-500 mt-1 italic bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                              Note: {item.remarks}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <span
+                                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                            item.status
+                                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                              : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                          }`}
+                                        >
+                                          {item.status ? "Check" : "Issue"}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
+                        const checklist = parsedData as Record<
+                          string,
+                          ChecklistItem
+                        >;
+                        return (
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <ul className="space-y-3">
+                              {Object.entries(checklist).map(([item, data]) => (
+                                <li
+                                  key={item}
+                                  className="text-sm flex justify-between items-start gap-4"
+                                >
+                                  <div className="flex-1">
+                                    <span className="text-gray-600 dark:text-gray-300 block">
+                                      {item}
+                                    </span>
+                                    {data.remarks && (
+                                      <p className="text-xs text-gray-500 mt-1 italic bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                        Note: {data.remarks}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                      data.status === "Check"
+                                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                        : data.status === "Issue"
+                                        ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                        : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                    }`}
+                                  >
+                                    {data.status}
                                   </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         );
                       } catch {
                         return <p>Error parsing checklist data</p>;
