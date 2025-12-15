@@ -7,6 +7,9 @@ import { useAlert } from "@/contexts/AlertContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { fetchFacilitiesList, Facility } from "../facilities/utils/helpers";
+import { checklistItems } from "./utils/checklistData";
+import DailyChecklistTable from "./components/DailyChecklistTable";
+import DailyLaboratorySelect from "./components/DailyLaboratorySelect";
 
 const DailyMaintenancePage = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -22,28 +25,6 @@ const DailyMaintenancePage = () => {
     Record<string, { status: string; remarks: string }>
   >({});
   const [additionalConcerns, setAdditionalConcerns] = useState("");
-
-  // Checklist Items
-  const checklistItems = {
-    "General maintenance": [
-      "Ensure lab is clean and organized",
-      "Arrange chairs and tables properly",
-      "Clean keyboards, mice, and monitors (light surface cleaning only)",
-      "Inspect whiteboard and markers",
-      "Ensure emergency exits and pathways are clear",
-    ],
-    "Laboratory Condition": [
-      "Check air-conditioning (is it cooling? any unusual noise?)",
-      "Turn off lights/AC/PCs after class schedules (if assigned)",
-      "Inspect waste bins and empty if full",
-      "Check windows and doors for proper locking",
-    ],
-    "Safety and Reporting": [
-      "Look for any loose cables or trip hazards",
-      "Report damage to outlets, chairs, tables",
-      "Notify technician immediately for any malfunctioning unit",
-    ],
-  };
 
   // Fetch facilities
   useEffect(() => {
@@ -163,29 +144,11 @@ const DailyMaintenancePage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Assigned Laboratory
-                </label>
-                <select
-                  required
-                  value={laboratory}
-                  onChange={(e) => setLaboratory(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm bg-white"
-                >
-                  <option value="" disabled>
-                    Select Laboratory
-                  </option>
-                  {facilities.map((facility) => (
-                    <option
-                      key={facility.facility_id}
-                      value={facility.facility_name}
-                    >
-                      {facility.facility_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <DailyLaboratorySelect
+                laboratory={laboratory}
+                setLaboratory={setLaboratory}
+                facilities={facilities}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Date
@@ -208,107 +171,11 @@ const DailyMaintenancePage = () => {
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300 w-1/2"
-                    >
-                      Task
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-300 w-1/4"
-                    >
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
-                    >
-                      Remarks
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {Object.entries(checklistItems).map(([category, items]) => (
-                    <React.Fragment key={category}>
-                      <tr className="bg-gray-50">
-                        <td
-                          colSpan={3}
-                          className="px-6 py-2 text-sm font-bold text-gray-900 border-b border-gray-300"
-                        >
-                          {category}
-                        </td>
-                      </tr>
-                      {items.map((item) => (
-                        <tr key={item}>
-                          <td className="px-6 py-4 text-sm text-gray-700 border-r border-gray-300">
-                            {item}
-                          </td>
-                          <td className="px-6 py-4 text-center border-r border-gray-300">
-                            <div className="flex justify-center space-x-4">
-                              <label className="inline-flex items-center cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`status-${item}`}
-                                  value="Check"
-                                  checked={checklist[item]?.status === "Check"}
-                                  onChange={() =>
-                                    handleStatusChange(item, "Check")
-                                  }
-                                  className="form-radio h-4 w-4 text-green-600"
-                                />
-                                <span className="ml-1 text-xs">✓</span>
-                              </label>
-                              <label className="inline-flex items-center cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`status-${item}`}
-                                  value="Issue"
-                                  checked={checklist[item]?.status === "Issue"}
-                                  onChange={() =>
-                                    handleStatusChange(item, "Issue")
-                                  }
-                                  className="form-radio h-4 w-4 text-red-600"
-                                />
-                                <span className="ml-1 text-xs">✕</span>
-                              </label>
-                              <label className="inline-flex items-center cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`status-${item}`}
-                                  value="N/A"
-                                  checked={checklist[item]?.status === "N/A"}
-                                  onChange={() =>
-                                    handleStatusChange(item, "N/A")
-                                  }
-                                  className="form-radio h-4 w-4 text-gray-600"
-                                />
-                                <span className="ml-1 text-xs">N/A</span>
-                              </label>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              value={checklist[item]?.remarks || ""}
-                              onChange={(e) =>
-                                handleRemarksChange(item, e.target.value)
-                              }
-                              className="w-full border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm p-1"
-                              placeholder="Optional"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DailyChecklistTable
+              checklist={checklist}
+              onStatusChange={handleStatusChange}
+              onRemarksChange={handleRemarksChange}
+            />
 
             <div>
               <label className="block text-sm font-medium text-gray-700">

@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
-  Loader2,
   AlertCircle,
   ChevronDown,
   Check,
@@ -13,6 +12,7 @@ import {
   AlertTriangle,
   Bell,
 } from "lucide-react";
+import Loader from "@/components/Loader";
 
 // Define the Request type
 interface BorrowingRequest {
@@ -862,16 +862,7 @@ export default function BorrowingRequests() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-orange-600 dark:text-orange-400 animate-spin" />
-          <span className="ml-3 text-gray-600 dark:text-gray-400">
-            Loading requests...
-          </span>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {

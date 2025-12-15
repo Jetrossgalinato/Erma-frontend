@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/contexts/AlertContext";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import {
   Eye,
   CheckCircle,
@@ -16,6 +17,10 @@ import {
   ClipboardList,
   AlertCircle,
   RefreshCw,
+  User,
+  Trash2,
+  Filter,
+  Clock,
 } from "lucide-react";
 
 interface ChecklistItem {
@@ -32,6 +37,11 @@ interface MaintenanceLog {
   additional_concerns: string | null;
   status: string;
   created_at: string;
+  user_first_name: string;
+  user_last_name: string;
+  user_role: string;
+  checklist_type: string;
+  log_type: string;
 }
 
 export default function MonitorMaintenancePage() {
@@ -40,16 +50,30 @@ export default function MonitorMaintenancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string>("All");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<{
+    id: number;
+    logType: string;
+  } | null>(null);
 
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const router = useRouter();
   const { showAlert } = useAlert();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role === "Lab Technician") {
+        router.push("/dashboard");
+        showAlert({
+          type: "error",
+          message: "Access denied. Lab Technicians cannot access this page.",
+        });
+      }
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router, user, showAlert]);
 
   const fetchLogs = useCallback(async () => {
     try {
@@ -89,10 +113,10 @@ export default function MonitorMaintenancePage() {
     }
   }, [isAuthenticated, fetchLogs]);
 
-  const handleConfirm = async (id: number) => {
+  const handleConfirm = async (id: number, logType: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}/status`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}/status?log_type=${logType}`,
         {
           method: "PUT",
           headers: {
@@ -104,15 +128,21 @@ export default function MonitorMaintenancePage() {
       );
 
       if (response.ok) {
+        setLogs((prevLogs) =>
+          prevLogs.map((log) =>
+            log.id === id && log.log_type === logType
+              ? { ...log, status: "Confirmed" }
+              : log
+          )
+        );
         showAlert({
           type: "success",
           message: "Maintenance log confirmed successfully",
         });
-        fetchLogs(); // Refresh list
       } else {
         showAlert({
           type: "error",
-          message: "Failed to confirm log",
+          message: "Failed to confirm maintenance log",
         });
       }
     } catch (error) {
@@ -124,10 +154,66 @@ export default function MonitorMaintenancePage() {
     }
   };
 
+  const handleDelete = (id: number, logType: string) => {
+    setLogToDelete({ id, logType });
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!logToDelete) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${logToDelete.id}?log_type=${logToDelete.logType}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setLogs((prevLogs) =>
+          prevLogs.filter(
+            (log) =>
+              !(
+                log.id === logToDelete.id &&
+                log.log_type === logToDelete.logType
+              )
+          )
+        );
+        showAlert({
+          type: "success",
+          message: "Maintenance log deleted successfully",
+        });
+      } else {
+        showAlert({
+          type: "error",
+          message: "Failed to delete maintenance log",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting log:", error);
+      showAlert({
+        type: "error",
+        message: "An error occurred",
+      });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setLogToDelete(null);
+    }
+  };
+
   const openDetails = (log: MaintenanceLog) => {
     setSelectedLog(log);
     setIsModalOpen(true);
   };
+
+  const filteredLogs = logs.filter((log) => {
+    if (filterType === "All") return true;
+    return log.checklist_type === filterType;
+  });
 
   const closeDetails = () => {
     setSelectedLog(null);
@@ -138,7 +224,9 @@ export default function MonitorMaintenancePage() {
     setSidebarOpen(false);
   };
 
-  if (authLoading) return <Loader />;
+  if (authLoading || (isAuthenticated && user?.role === "Lab Technician")) {
+    return <Loader />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
@@ -171,21 +259,37 @@ export default function MonitorMaintenancePage() {
               <div className="mb-8 pt-8 flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
-                    Daily Maintenance Logs
+                    Maintenance Logs
                   </h1>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     Review and confirm maintenance reports submitted by student
-                    assistants. Track laboratory maintenance activities and
-                    ensure all tasks are completed properly.
+                    assistants and lab technicians.
                   </p>
                 </div>
-                <button
-                  onClick={fetchLogs}
-                  className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
-                </button>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Filter className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-orange-500 focus:border-orange-500"
+                    >
+                      <option value="All">All Types</option>
+                      <option value="Daily">Daily</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={fetchLogs}
+                    className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                </div>
               </div>
 
               <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -196,13 +300,19 @@ export default function MonitorMaintenancePage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            Date
+                            Date & Time
                           </div>
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
                             Laboratory
+                          </div>
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Submitted By
                           </div>
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
@@ -217,34 +327,24 @@ export default function MonitorMaintenancePage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {loading ? (
+                      {filteredLogs.length === 0 && !loading ? (
                         <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
-                            <div className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
-                              <span>Loading maintenance logs...</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : logs.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="px-6 py-12 text-center">
+                          <td colSpan={5} className="px-6 py-12 text-center">
                             <div className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
                               <ClipboardList className="w-12 h-12 text-gray-300 dark:text-gray-600" />
                               <p className="text-lg font-medium">
                                 No maintenance logs found
                               </p>
                               <p className="text-sm">
-                                Student assistants {"haven't"} submitted any
-                                reports yet.
+                                No logs match the selected filter.
                               </p>
                             </div>
                           </td>
                         </tr>
                       ) : (
-                        logs.map((log, index) => (
+                        filteredLogs.map((log, index) => (
                           <tr
-                            key={log.id}
+                            key={`${log.log_type}-${log.id}`}
                             className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                               index % 2 === 0
                                 ? "bg-white dark:bg-gray-800"
@@ -252,45 +352,83 @@ export default function MonitorMaintenancePage() {
                             }`}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
-                              {log.date}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{log.date}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(log.created_at).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
                               {log.laboratory}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700">
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {log.user_first_name} {log.user_last_name}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {log.user_role}
+                                </span>
+                              </div>
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
-                              <span
-                                className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full ${
-                                  log.status === "Confirmed"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                }`}
-                              >
-                                {log.status === "Confirmed" ? (
-                                  <CheckCircle className="w-3.5 h-3.5" />
-                                ) : (
-                                  <AlertCircle className="w-3.5 h-3.5" />
-                                )}
-                                {log.status}
-                              </span>
+                              <div className="flex flex-col gap-1">
+                                <span
+                                  className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full w-fit ${
+                                    log.status === "Confirmed"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                  }`}
+                                >
+                                  {log.status === "Confirmed" ? (
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <AlertCircle className="w-3.5 h-3.5" />
+                                  )}
+                                  {log.status}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                  Type: {log.checklist_type}
+                                </span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => openDetails(log)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-indigo-600 hover:text-white hover:bg-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-500 rounded-lg transition-all duration-200 border border-indigo-600 dark:border-indigo-400"
+                                  className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-white hover:bg-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-500 rounded-lg transition-all duration-200 border border-indigo-600 dark:border-indigo-400"
+                                  title="View Details"
                                 >
                                   <Eye className="w-4 h-4" />
-                                  View Details
                                 </button>
                                 {log.status !== "Confirmed" && (
                                   <button
-                                    onClick={() => handleConfirm(log.id)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
+                                    onClick={() =>
+                                      handleConfirm(log.id, log.log_type)
+                                    }
+                                    className="inline-flex items-center justify-center p-2 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
+                                    title="Confirm"
                                   >
                                     <CheckCircle className="w-4 h-4" />
-                                    Confirm
                                   </button>
                                 )}
+                                <button
+                                  onClick={() =>
+                                    handleDelete(log.id, log.log_type)
+                                  }
+                                  className="inline-flex items-center justify-center p-2 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -351,33 +489,113 @@ export default function MonitorMaintenancePage() {
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
                     {(() => {
                       try {
-                        const checklist = JSON.parse(
+                        const parsedData = JSON.parse(
                           selectedLog.checklist_data
-                        ) as Record<string, ChecklistItem>;
-                        return (
-                          <ul className="space-y-2">
-                            {Object.entries(checklist).map(([item, data]) => (
-                              <li key={item} className="text-sm">
-                                <span className="font-medium">{item}:</span>{" "}
-                                <span
-                                  className={
-                                    data.status === "Check"
-                                      ? "text-green-600"
-                                      : data.status === "Issue"
-                                      ? "text-red-600"
-                                      : "text-gray-600"
-                                  }
+                        );
+
+                        // Check if it's the technician format (has sections)
+                        if (
+                          parsedData.sections &&
+                          Array.isArray(parsedData.sections)
+                        ) {
+                          interface TechChecklistItem {
+                            task: string;
+                            status: boolean;
+                            remarks: string;
+                          }
+
+                          interface TechChecklistSection {
+                            title: string;
+                            items: TechChecklistItem[];
+                          }
+
+                          interface TechChecklistData {
+                            type: string;
+                            sections: TechChecklistSection[];
+                          }
+
+                          const techData = parsedData as TechChecklistData;
+                          return (
+                            <div className="space-y-6">
+                              {techData.sections.map((section, sIdx) => (
+                                <div
+                                  key={sIdx}
+                                  className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 shadow-sm"
                                 >
-                                  {data.status}
-                                </span>
-                                {data.remarks && (
-                                  <span className="text-gray-500 ml-2">
-                                    ({data.remarks})
+                                  <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                    {section.title}
+                                  </h4>
+                                  <ul className="space-y-3">
+                                    {section.items.map((item, iIdx) => (
+                                      <li
+                                        key={iIdx}
+                                        className="text-sm flex justify-between items-start gap-4"
+                                      >
+                                        <div className="flex-1">
+                                          <span className="text-gray-600 dark:text-gray-300 block">
+                                            {item.task}
+                                          </span>
+                                          {item.remarks && (
+                                            <p className="text-xs text-gray-500 mt-1 italic bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                              Note: {item.remarks}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <span
+                                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                            item.status
+                                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                              : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                          }`}
+                                        >
+                                          {item.status ? "Check" : "Issue"}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+
+                        const checklist = parsedData as Record<
+                          string,
+                          ChecklistItem
+                        >;
+                        return (
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <ul className="space-y-3">
+                              {Object.entries(checklist).map(([item, data]) => (
+                                <li
+                                  key={item}
+                                  className="text-sm flex justify-between items-start gap-4"
+                                >
+                                  <div className="flex-1">
+                                    <span className="text-gray-600 dark:text-gray-300 block">
+                                      {item}
+                                    </span>
+                                    {data.remarks && (
+                                      <p className="text-xs text-gray-500 mt-1 italic bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
+                                        Note: {data.remarks}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                      data.status === "Check"
+                                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                        : data.status === "Issue"
+                                        ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                        : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                    }`}
+                                  >
+                                    {data.status}
                                   </span>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         );
                       } catch {
                         return <p>Error parsing checklist data</p>;
@@ -402,7 +620,7 @@ export default function MonitorMaintenancePage() {
                 {selectedLog.status !== "Confirmed" && (
                   <button
                     onClick={() => {
-                      handleConfirm(selectedLog.id);
+                      handleConfirm(selectedLog.id, selectedLog.log_type);
                       closeDetails();
                     }}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
@@ -423,6 +641,15 @@ export default function MonitorMaintenancePage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        itemType="maintenance log"
+        message="Are you sure you want to delete this maintenance log? This action cannot be undone."
+      />
+      {loading && <Loader />}
     </div>
   );
 }

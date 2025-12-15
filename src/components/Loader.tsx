@@ -1,8 +1,22 @@
 import React from "react";
 
-const Loader: React.FC = () => {
+interface LoaderProps {
+  fullScreen?: boolean;
+  className?: string;
+}
+
+const Loader: React.FC<LoaderProps> = ({
+  fullScreen = true,
+  className = "",
+}) => {
+  const baseClasses =
+    "flex items-center justify-center bg-white dark:bg-gray-900";
+  const positionClasses = fullScreen
+    ? "fixed inset-0 z-50"
+    : "w-full h-full min-h-[200px]";
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
+    <div className={`${baseClasses} ${positionClasses} ${className}`}>
       <div className="relative">
         {/* Outer spinning ring */}
         <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>

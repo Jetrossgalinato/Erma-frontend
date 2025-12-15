@@ -1,14 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  ChevronDown,
-  Check,
-  X,
-  Trash2,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
+import { ChevronDown, Check, X, Trash2, RefreshCw } from "lucide-react";
+import Loader from "@/components/Loader";
 
 // Define the AcquiringRequest type
 interface AcquiringRequest {
@@ -429,16 +423,7 @@ export default function AcquiringRequests() {
     selectedRequests.length > 0 && selectedRequests.length < requests.length;
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-orange-500 dark:text-orange-400 animate-spin" />
-          <span className="ml-3 text-gray-600 dark:text-gray-400">
-            Loading acquiring requests...
-          </span>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error) {
