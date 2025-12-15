@@ -113,10 +113,10 @@ export default function MonitorMaintenancePage() {
     }
   }, [isAuthenticated, fetchLogs]);
 
-  const handleConfirm = async (id: number) => {
+  const handleConfirm = async (id: number, logType: string) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}/status`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}/status?log_type=${logType}`,
         {
           method: "PUT",
           headers: {
@@ -130,7 +130,9 @@ export default function MonitorMaintenancePage() {
       if (response.ok) {
         setLogs((prevLogs) =>
           prevLogs.map((log) =>
-            log.id === id ? { ...log, status: "Confirmed" } : log
+            log.id === id && log.log_type === logType
+              ? { ...log, status: "Confirmed" }
+              : log
           )
         );
         showAlert({
@@ -418,7 +420,9 @@ export default function MonitorMaintenancePage() {
                                 </button>
                                 {log.status !== "Confirmed" && (
                                   <button
-                                    onClick={() => handleConfirm(log.id)}
+                                    onClick={() =>
+                                      handleConfirm(log.id, log.log_type)
+                                    }
                                     className="inline-flex items-center justify-center p-2 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
                                     title="Confirm"
                                   >
@@ -625,7 +629,7 @@ export default function MonitorMaintenancePage() {
                 {selectedLog.status !== "Confirmed" && (
                   <button
                     onClick={() => {
-                      handleConfirm(selectedLog.id);
+                      handleConfirm(selectedLog.id, selectedLog.log_type);
                       closeDetails();
                     }}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
