@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useAlert } from "@/contexts/AlertContext";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import {
   Eye,
   CheckCircle,
@@ -50,6 +51,11 @@ export default function MonitorMaintenancePage() {
   const [selectedLog, setSelectedLog] = useState<MaintenanceLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>("All");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<{
+    id: number;
+    logType: string;
+  } | null>(null);
 
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const router = useRouter();
@@ -146,12 +152,17 @@ export default function MonitorMaintenancePage() {
     }
   };
 
-  const handleDelete = async (id: number, logType: string) => {
-    if (!confirm("Are you sure you want to delete this log?")) return;
+  const handleDelete = (id: number, logType: string) => {
+    setLogToDelete({ id, logType });
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!logToDelete) return;
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${id}?log_type=${logType}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance/${logToDelete.id}?log_type=${logToDelete.logType}`,
         {
           method: "DELETE",
           headers: {
@@ -162,7 +173,13 @@ export default function MonitorMaintenancePage() {
 
       if (response.ok) {
         setLogs((prevLogs) =>
-          prevLogs.filter((log) => !(log.id === id && log.log_type === logType))
+          prevLogs.filter(
+            (log) =>
+              !(
+                log.id === logToDelete.id &&
+                log.log_type === logToDelete.logType
+              )
+          )
         );
         showAlert({
           type: "success",
@@ -180,6 +197,9 @@ export default function MonitorMaintenancePage() {
         type: "error",
         message: "An error occurred",
       });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setLogToDelete(null);
     }
   };
 
@@ -626,6 +646,14 @@ export default function MonitorMaintenancePage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        itemType="maintenance log"
+        message="Are you sure you want to delete this maintenance log? This action cannot be undone."
+      />
     </div>
   );
 }
