@@ -1,5 +1,4 @@
 import { User, Mail, ArrowRight, UserCheck, UserX, Trash2 } from "lucide-react";
-import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import type { AccountRequest } from "../utils/helpers";
 import { getStatusColor } from "../utils/helpers";
 
