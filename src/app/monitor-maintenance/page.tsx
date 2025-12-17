@@ -78,7 +78,7 @@ export default function MonitorMaintenancePage() {
   const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Current User Role:", user?.role);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/maintenance`,
         {
