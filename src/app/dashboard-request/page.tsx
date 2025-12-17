@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
@@ -41,7 +41,7 @@ import {
 
 const PAGE_SIZE = 10;
 
-export default function DashboardRequestsPage() {
+function DashboardRequestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
@@ -528,5 +528,13 @@ export default function DashboardRequestsPage() {
         onCancel={() => setShowDeleteModal(false)}
       />
     </div>
+  );
+}
+
+export default function DashboardRequestsPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <DashboardRequestsContent />
+    </Suspense>
   );
 }
