@@ -21,11 +21,11 @@ const nextConfig: NextConfig = {
   },
 
   // Modularize imports for better tree-shaking
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{member}}",
-    },
-  },
+  // modularizeImports: {
+  //   "lucide-react": {
+  //     transform: "lucide-react/dist/esm/icons/{{member}}",
+  //   },
+  // },
 
   // Enable experimental optimizations
   experimental: {
