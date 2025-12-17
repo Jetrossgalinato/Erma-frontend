@@ -364,14 +364,6 @@ const Navbar: React.FC = () => {
   const isStudentAssistant = rawRole?.toLowerCase() === "student assistant";
   const isLabTechnician = rawRole === "Lab Technician";
 
-  console.log("Navbar Role Debug:", {
-    rawRole,
-    currentRole,
-    isStudentAssistant,
-    isLabTechnician,
-    userRole: user?.role,
-  });
-
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
       {/* Logo: Left-aligned with padding on all screens */}
