@@ -1,5 +1,3 @@
-import { X } from "lucide-react";
-
 interface SuccessMessageProps {
   message: string;
   onDismiss?: () => void;

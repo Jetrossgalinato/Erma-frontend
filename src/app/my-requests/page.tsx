@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { RefreshCw } from "lucide-react";
@@ -38,7 +38,7 @@ const DeleteModal = dynamic(() => import("./components/DeleteModal"), {
   ssr: false,
 });
 
-export default function MyRequestsPage() {
+function MyRequestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showAlert } = useAlert();
@@ -558,5 +558,13 @@ export default function MyRequestsPage() {
         onCancel={() => setShowDeleteModal(false)}
       />
     </div>
+  );
+}
+
+export default function MyRequestsPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <MyRequestsContent />
+    </Suspense>
   );
 }
