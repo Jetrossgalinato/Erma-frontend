@@ -17,6 +17,7 @@ import {
   calculateTotalPages,
   fetchSuppliesList,
   createAcquireRequest,
+  formatImageUrl,
 } from "./utils/helpers";
 import SupplyDetailsModal from "./components/SupplyDetailsModal";
 import AcquireSupplyModal from "./components/AcquireSupplyModal";
@@ -226,7 +227,7 @@ export default function SuppliesPage() {
                   {supply.image_url && (
                     <div className="h-32 sm:h-40 md:h-48 bg-gray-100 rounded-t-lg overflow-hidden">
                       <Image
-                        src={supply.image_url}
+                        src={formatImageUrl(supply.image_url)!}
                         alt={supply.supply_name}
                         className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
                         width={500}
@@ -235,7 +236,7 @@ export default function SuppliesPage() {
                         priority
                         onClick={() =>
                           handleImageClick(
-                            supply.image_url!,
+                            formatImageUrl(supply.image_url)!,
                             supply.supply_name
                           )
                         }

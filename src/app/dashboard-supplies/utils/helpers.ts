@@ -47,6 +47,12 @@ export interface Facility {
   name?: string; // Fallback for compatibility
 }
 
+// Helper Functions
+export function formatImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url;
+}
+
 /**
  * Fetch all supplies
  */

@@ -168,6 +168,11 @@ export function handleError(
   }
 }
 
+export function formatImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url;
+}
+
 // FastAPI Functions
 export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
   try {

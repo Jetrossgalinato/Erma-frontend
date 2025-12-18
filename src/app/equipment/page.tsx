@@ -24,6 +24,7 @@ import {
   calculateTotalPages,
   fetchEquipmentList,
   createBorrowingRequest,
+  formatImageUrl,
 } from "./utils/helpers";
 
 export default function EquipmentPage() {
@@ -232,7 +233,7 @@ export default function EquipmentPage() {
                       <div className="h-32 sm:h-48 bg-gray-200 relative">
                         {equipment.image ? (
                           <Image
-                            src={equipment.image}
+                            src={formatImageUrl(equipment.image)!}
                             alt={equipment.name}
                             className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                             width={500}
@@ -240,7 +241,9 @@ export default function EquipmentPage() {
                             sizes="100vw"
                             priority
                             onClick={() => {
-                              setSelectedImage(equipment.image!);
+                              setSelectedImage(
+                                formatImageUrl(equipment.image)!
+                              );
                               setSelectedEquipment(equipment);
                               setShowImageModal(true);
                             }}

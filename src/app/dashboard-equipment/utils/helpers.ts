@@ -43,6 +43,13 @@ export type Facility = {
   capacity?: number;
 };
 
+// ==================== Helper Functions ====================
+
+export function formatImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url;
+}
+
 // ==================== API Functions ====================
 
 /**
