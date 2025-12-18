@@ -102,7 +102,10 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                         height={48} // Adjust height as needed
                         onClick={() =>
                           onImageClick &&
-                          onImageClick(formatImageUrl(supply.image)!, supply.name)
+                          onImageClick(
+                            formatImageUrl(supply.image)!,
+                            supply.name
+                          )
                         }
                       />
                     </>

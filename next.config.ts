@@ -3,10 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Optimize images for better performance
   images: {
+    // Disable image optimization in development to avoid "resolved to private ip" errors
+    unoptimized: process.env.NODE_ENV !== "production",
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    domains: ["localhost", "127.0.0.1", "ermav2-backend.onrender.com"],
     remotePatterns: [
       {
         protocol: "http",

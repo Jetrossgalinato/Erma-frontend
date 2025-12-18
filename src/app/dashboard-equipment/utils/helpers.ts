@@ -47,8 +47,7 @@ export type Facility = {
 
 export function formatImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
-  // Replace localhost with 127.0.0.1 to avoid Next.js private IP resolution errors
-  return url.replace("http://localhost:8000", "http://127.0.0.1:8000");
+  return url;
 }
 
 // ==================== API Functions ====================
