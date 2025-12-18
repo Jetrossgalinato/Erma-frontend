@@ -5,6 +5,7 @@ import {
   type Equipment,
   type Facility,
   filterEquipments,
+  formatImageUrl,
 } from "../utils/helpers";
 
 type EditingCell = {
@@ -348,12 +349,14 @@ export default function EquipmentsTable({
                     {eq.image ? (
                       <div className="flex items-center justify-center">
                         <Image
-                          src={eq.image}
+                          src={formatImageUrl(eq.image)!}
                           alt={`${eq.name} equipment`}
                           className="w-12 h-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-105"
                           width={48}
                           height={48}
-                          onClick={() => onImageClick(eq.image!, eq.name)}
+                          onClick={() =>
+                            onImageClick(formatImageUrl(eq.image)!, eq.name)
+                          }
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = "none";

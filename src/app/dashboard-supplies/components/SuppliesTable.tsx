@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Supply, getStockStatus } from "../utils/helpers";
+import { Supply, getStockStatus, formatImageUrl } from "../utils/helpers";
 import { Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -95,14 +95,14 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                   {supply.image ? (
                     <>
                       <Image
-                        src={supply.image}
+                        src={formatImageUrl(supply.image)!}
                         alt={supply.name}
                         className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
                         width={48} // Adjust width as needed
                         height={48} // Adjust height as needed
                         onClick={() =>
                           onImageClick &&
-                          onImageClick(supply.image!, supply.name)
+                          onImageClick(formatImageUrl(supply.image)!, supply.name)
                         }
                       />
                     </>
