@@ -1,3 +1,5 @@
+import { fetchWithRetry, API_BASE_URL } from "@/utils/api";
+
 // Types
 export type FacilityStatus = "Available" | "Occupied" | "Under Maintenance";
 
@@ -43,8 +45,6 @@ export const FLOOR_LEVELS = [
 ];
 
 export const ITEMS_PER_PAGE = 9;
-
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper Functions
 export function getAuthToken(): string | null {
@@ -143,7 +143,7 @@ export async function verifyAuth(): Promise<AuthVerifyResponse | null> {
       return null;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/auth/verify`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -176,7 +176,7 @@ export async function fetchFacilitiesList(): Promise<Facility[]> {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/facilities`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/facilities`, {
       method: "GET",
       headers,
     });
@@ -240,7 +240,7 @@ export async function createBookingRequest(
     }
 
     // Get user's account ID
-    const accountResponse = await fetch(
+    const accountResponse = await fetchWithRetry(
       `${API_BASE_URL}/api/users/${authData.user_id}/account`,
       {
         method: "GET",
@@ -274,7 +274,7 @@ export async function createBookingRequest(
     };
 
     // Create booking request
-    const response = await fetch(`${API_BASE_URL}/api/booking`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

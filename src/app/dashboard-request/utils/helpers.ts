@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { fetchWithRetry, API_BASE_URL } from "@/utils/api";
 
 // Types
 
@@ -161,7 +161,7 @@ export async function fetchBorrowingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/borrowing/requests?page=${page}&page_size=${pageSize}`,
       {
         headers: {
@@ -191,7 +191,7 @@ export async function fetchReturnNotifications(): Promise<
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/borrowing/return-notifications`,
       {
         headers: {
@@ -222,7 +222,7 @@ export async function bulkUpdateBorrowingStatus(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/borrowing/bulk-update-status`,
       {
         method: "PUT",
@@ -254,7 +254,7 @@ export async function bulkDeleteBorrowingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(`${API_BASE_URL}/api/borrowing/bulk-delete`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/borrowing/bulk-delete`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -284,7 +284,7 @@ export async function confirmReturn(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/borrowing/confirm-return`,
       {
         method: "POST",
@@ -315,7 +315,7 @@ export async function rejectReturn(notificationId: number): Promise<boolean> {
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/borrowing/reject-return`,
       {
         method: "POST",
@@ -347,7 +347,7 @@ export async function fetchBookingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/booking/requests?page=${page}&page_size=${pageSize}`,
       {
         headers: {
@@ -375,7 +375,7 @@ export async function fetchDoneNotifications(): Promise<DoneNotification[]> {
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/booking/done-notifications`,
       {
         headers: {
@@ -405,7 +405,7 @@ export async function fetchRequestNotifications(): Promise<
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/requests/pending-notifications`,
       {
         headers: {
@@ -436,7 +436,7 @@ export async function bulkUpdateBookingStatus(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/booking/bulk-update-status`,
       {
         method: "PUT",
@@ -468,7 +468,7 @@ export async function bulkDeleteBookingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(`${API_BASE_URL}/api/booking/bulk-delete`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/bulk-delete`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -498,7 +498,7 @@ export async function confirmDone(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(`${API_BASE_URL}/api/booking/confirm-done`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/confirm-done`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -526,7 +526,7 @@ export async function dismissDone(notificationId: number): Promise<boolean> {
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(`${API_BASE_URL}/api/booking/dismiss-done`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/dismiss-done`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -555,7 +555,7 @@ export async function fetchAcquiringRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/acquiring/requests?page=${page}&page_size=${pageSize}`,
       {
         headers: {
@@ -586,7 +586,7 @@ export async function bulkUpdateAcquiringStatus(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(
+    const response = await fetchWithRetry(
       `${API_BASE_URL}/api/acquiring/bulk-update-status`,
       {
         method: "PUT",
@@ -618,7 +618,7 @@ export async function bulkDeleteAcquiringRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetch(`${API_BASE_URL}/api/acquiring/bulk-delete`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/acquiring/bulk-delete`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

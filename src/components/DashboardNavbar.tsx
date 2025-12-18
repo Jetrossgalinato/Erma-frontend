@@ -32,9 +32,7 @@ import {
   confirmDone,
   dismissDone,
 } from "@/app/dashboard-request/utils/helpers";
-
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import { fetchWithRetry, API_BASE_URL } from "@/utils/api";
 
 type Notification = {
   id: string;
@@ -202,12 +200,15 @@ const DashboardNavbar: React.FC = () => {
       const token = localStorage.getItem("authToken");
       if (!token) return;
 
-      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetchWithRetry(
+        `${API_BASE_URL}/api/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -265,13 +266,13 @@ const DashboardNavbar: React.FC = () => {
       fetchDoneNotificationsData();
       fetchRequestNotificationsData();
 
-      // Set up polling for all notifications every 2 seconds
+      // Set up polling for all notifications every 30 seconds
       const interval = setInterval(() => {
         fetchNotifications();
         fetchReturnNotificationsData();
         fetchDoneNotificationsData();
         fetchRequestNotificationsData();
-      }, 2000);
+      }, 30000);
 
       return () => {
         clearInterval(interval);
