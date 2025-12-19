@@ -65,6 +65,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={formData.start_date}
               onChange={(e) =>
                 onFormChange({
@@ -100,6 +101,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={formData.return_date}
               onChange={(e) =>
                 onFormChange({
