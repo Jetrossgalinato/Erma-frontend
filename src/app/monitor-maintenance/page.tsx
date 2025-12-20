@@ -382,10 +382,10 @@ export default function MonitorMaintenancePage() {
                             <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
                               <div className="flex flex-col gap-1">
                                 <span
-                                  className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full w-fit ${
+                                  className={`px-2 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border w-fit ${
                                     log.status === "Confirmed"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                      ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700"
+                                      : "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700"
                                   }`}
                                 >
                                   {log.status === "Confirmed" ? (
@@ -542,10 +542,10 @@ export default function MonitorMaintenancePage() {
                                           )}
                                         </div>
                                         <span
-                                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                          className={`px-2 py-1 rounded-full text-xs font-semibold border ${
                                             item.status
-                                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                              : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                              ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700"
+                                              : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700"
                                           }`}
                                         >
                                           {item.status ? "Check" : "Issue"}
@@ -582,12 +582,12 @@ export default function MonitorMaintenancePage() {
                                     )}
                                   </div>
                                   <span
-                                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                    className={`px-2 py-1 rounded-full text-xs font-semibold border ${
                                       data.status === "Check"
-                                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                        ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700"
                                         : data.status === "Issue"
-                                        ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                        : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+                                        ? "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700"
+                                        : "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700"
                                     }`}
                                   >
                                     {data.status}
