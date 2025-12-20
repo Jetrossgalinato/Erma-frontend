@@ -66,33 +66,26 @@ export default function EquipmentsTable({
     if (!status)
       return <span className="text-gray-400 dark:text-gray-500">-</span>;
 
-    const statusColors = {
-      Working:
-        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-      "For Repair":
-        "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
-      "In Use":
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-    };
+    const baseClasses = "border";
+    const statusLower = status.toLowerCase();
 
-    type StatusKey = keyof typeof statusColors;
+    let colorClass = `${baseClasses} bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-700`;
 
-    function normalizeStatus(input: string): StatusKey | undefined {
-      const normalized = input.toLowerCase().replace(/ /g, "_");
-      if (normalized in statusColors) {
-        return normalized as StatusKey;
-      }
-      return undefined;
+    if (statusLower === "working" || statusLower === "available") {
+      colorClass = `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
+    } else if (
+      statusLower === "for repair" ||
+      statusLower === "damaged" ||
+      statusLower === "maintenance"
+    ) {
+      colorClass = `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
+    } else if (statusLower === "in use" || statusLower === "borrowed") {
+      colorClass = `${baseClasses} bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700`;
     }
-
-    const key = normalizeStatus(status);
-    const colorClass = key
-      ? statusColors[key]
-      : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
 
     return (
       <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}
       >
         {status}
       </span>

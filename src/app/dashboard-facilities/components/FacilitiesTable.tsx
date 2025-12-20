@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Facility } from "../utils/helpers";
+import { Facility, getStatusColor } from "../utils/helpers";
 
 interface FacilitiesTableProps {
   facilities: Facility[];
@@ -114,13 +114,9 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
-                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    facility.status === "Available"
-                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                      : facility.status === "In Use"
-                      ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
+                  className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                    facility.status || ""
+                  )}`}
                 >
                   {facility.status || "N/A"}
                 </span>

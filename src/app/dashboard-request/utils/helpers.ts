@@ -114,24 +114,25 @@ export function handleError(
 
 export function getStatusColor(status: string): string {
   const lowerStatus = status.toLowerCase();
+  const baseClasses = "border";
   switch (lowerStatus) {
     case "pending":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      return `${baseClasses} bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700`;
     case "approved":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "rejected":
     case "not returned":
-      return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      return `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
     case "available":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "borrowed":
-      return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      return `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
     case "returned":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "completed":
-      return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+      return `${baseClasses} bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700`;
   }
 }
 
@@ -254,14 +255,17 @@ export async function bulkDeleteBorrowingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/borrowing/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/borrowing/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -468,14 +472,17 @@ export async function bulkDeleteBookingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -498,17 +505,20 @@ export async function confirmDone(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/confirm-done`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        notification_id: notificationId,
-        booking_id: bookingId,
-      }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/confirm-done`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notification_id: notificationId,
+          booking_id: bookingId,
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to confirm completion: ${response.statusText}`);
@@ -526,14 +536,17 @@ export async function dismissDone(notificationId: number): Promise<boolean> {
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/dismiss-done`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ notification_id: notificationId }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/dismiss-done`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notification_id: notificationId }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to dismiss notification: ${response.statusText}`);
@@ -618,14 +631,17 @@ export async function bulkDeleteAcquiringRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/acquiring/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/acquiring/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(

@@ -397,3 +397,24 @@ export function filterFacilities(
     return matchesFacilityType && matchesFloorLevel;
   });
 }
+
+/**
+ * Get status color for facility status
+ */
+export function getStatusColor(status: string): string {
+  const lowerStatus = (status || "").toLowerCase();
+  const baseClasses = "border";
+
+  switch (lowerStatus) {
+    case "available":
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
+    case "in use":
+    case "occupied":
+      return `${baseClasses} bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-700`;
+    case "maintenance":
+    case "under maintenance":
+      return `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
+    default:
+      return `${baseClasses} bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700`;
+  }
+}
