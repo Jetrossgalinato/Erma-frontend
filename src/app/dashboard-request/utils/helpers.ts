@@ -114,24 +114,25 @@ export function handleError(
 
 export function getStatusColor(status: string): string {
   const lowerStatus = status.toLowerCase();
+  const baseClasses = "border";
   switch (lowerStatus) {
     case "pending":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      return `${baseClasses} bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700`;
     case "approved":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "rejected":
     case "not returned":
-      return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      return `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
     case "available":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "borrowed":
-      return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      return `${baseClasses} bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700`;
     case "returned":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     case "completed":
-      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      return `${baseClasses} bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700`;
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
+      return `${baseClasses} bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-700`;
   }
 }
 
