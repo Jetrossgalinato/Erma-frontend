@@ -129,7 +129,7 @@ export function getStatusColor(status: string): string {
     case "returned":
       return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
     case "completed":
-      return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
   }
@@ -254,14 +254,17 @@ export async function bulkDeleteBorrowingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/borrowing/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/borrowing/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -468,14 +471,17 @@ export async function bulkDeleteBookingRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -498,17 +504,20 @@ export async function confirmDone(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/confirm-done`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        notification_id: notificationId,
-        booking_id: bookingId,
-      }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/confirm-done`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notification_id: notificationId,
+          booking_id: bookingId,
+        }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to confirm completion: ${response.statusText}`);
@@ -526,14 +535,17 @@ export async function dismissDone(notificationId: number): Promise<boolean> {
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/booking/dismiss-done`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ notification_id: notificationId }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/booking/dismiss-done`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notification_id: notificationId }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to dismiss notification: ${response.statusText}`);
@@ -618,14 +630,17 @@ export async function bulkDeleteAcquiringRequests(
     const token = getAuthToken();
     if (!token) throw new Error("No authentication token found");
 
-    const response = await fetchWithRetry(`${API_BASE_URL}/api/acquiring/bulk-delete`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ids }),
-    });
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/api/acquiring/bulk-delete`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
