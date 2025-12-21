@@ -15,6 +15,7 @@ import {
   MaintenanceLog,
   fetchMaintenanceLogs,
   confirmMaintenanceLog,
+  rejectMaintenanceLog,
   deleteMaintenanceLog,
 } from "./utils/helpers";
 
@@ -86,6 +87,29 @@ export default function MonitorMaintenancePage() {
       showAlert({
         type: "error",
         message: "Failed to confirm maintenance log",
+      });
+    }
+  };
+
+  const handleReject = async (id: number, logType: string) => {
+    try {
+      await rejectMaintenanceLog(id, logType);
+      setLogs((prevLogs) =>
+        prevLogs.map((log) =>
+          log.id === id && log.log_type === logType
+            ? { ...log, status: "Rejected" }
+            : log
+        )
+      );
+      showAlert({
+        type: "success",
+        message: "Maintenance log rejected successfully",
+      });
+    } catch (error) {
+      console.error("Error rejecting log:", error);
+      showAlert({
+        type: "error",
+        message: "Failed to reject maintenance log",
       });
     }
   };
@@ -183,6 +207,7 @@ export default function MonitorMaintenancePage() {
                 logs={filteredLogs}
                 loading={loading}
                 onConfirm={handleConfirm}
+                onReject={handleReject}
                 onDelete={handleDelete}
                 onViewDetails={openDetails}
               />
@@ -196,6 +221,7 @@ export default function MonitorMaintenancePage() {
         onClose={closeDetails}
         log={selectedLog}
         onConfirm={handleConfirm}
+        onReject={handleReject}
       />
 
       <DeleteConfirmationModal

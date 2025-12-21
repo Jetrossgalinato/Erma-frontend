@@ -6,6 +6,7 @@ import {
   Calendar,
   AlertCircle,
   CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { MaintenanceLog, ChecklistItem } from "../utils/helpers";
 
@@ -14,6 +15,7 @@ interface MaintenanceLogDetailsModalProps {
   onClose: () => void;
   log: MaintenanceLog | null;
   onConfirm: (id: number, logType: string) => void;
+  onReject: (id: number, logType: string) => void;
 }
 
 interface TechChecklistItem {
@@ -37,6 +39,7 @@ export default function MaintenanceLogDetailsModal({
   onClose,
   log,
   onConfirm,
+  onReject,
 }: MaintenanceLogDetailsModalProps) {
   if (!isOpen || !log) return null;
 
@@ -195,17 +198,29 @@ export default function MaintenanceLogDetailsModal({
           </div>
 
           <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            {log.status !== "Confirmed" && (
-              <button
-                onClick={() => {
-                  onConfirm(log.id, log.log_type);
-                  onClose();
-                }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Confirm Report
-              </button>
+            {log.status !== "Confirmed" && log.status !== "Rejected" && (
+              <>
+                <button
+                  onClick={() => {
+                    onConfirm(log.id, log.log_type);
+                    onClose();
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Confirm Report
+                </button>
+                <button
+                  onClick={() => {
+                    onReject(log.id, log.log_type);
+                    onClose();
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reject Report
+                </button>
+              </>
             )}
             <button
               onClick={onClose}

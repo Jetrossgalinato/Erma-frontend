@@ -80,6 +80,32 @@ export async function confirmMaintenanceLog(
 }
 
 /**
+ * Reject a maintenance log
+ */
+export async function rejectMaintenanceLog(
+  id: number,
+  logType: string
+): Promise<void> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/maintenance/${id}/status?log_type=${logType}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status: "Rejected" }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to reject maintenance log");
+  }
+}
+
+/**
  * Delete a maintenance log
  */
 export async function deleteMaintenanceLog(

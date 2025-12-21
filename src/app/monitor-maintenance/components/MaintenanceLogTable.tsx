@@ -2,6 +2,7 @@ import React from "react";
 import {
   Eye,
   CheckCircle,
+  XCircle,
   Calendar,
   MapPin,
   ClipboardList,
@@ -16,6 +17,7 @@ interface MaintenanceLogTableProps {
   logs: MaintenanceLog[];
   loading: boolean;
   onConfirm: (id: number, logType: string) => void;
+  onReject: (id: number, logType: string) => void;
   onDelete: (id: number, logType: string) => void;
   onViewDetails: (log: MaintenanceLog) => void;
 }
@@ -24,6 +26,7 @@ export default function MaintenanceLogTable({
   logs,
   loading,
   onConfirm,
+  onReject,
   onDelete,
   onViewDetails,
 }: MaintenanceLogTableProps) {
@@ -118,11 +121,15 @@ export default function MaintenanceLogTable({
                         className={`px-2 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full border w-fit ${
                           log.status === "Confirmed"
                             ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700"
+                            : log.status === "Rejected"
+                            ? "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700"
                             : "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-700"
                         }`}
                       >
                         {log.status === "Confirmed" ? (
                           <CheckCircle className="w-3.5 h-3.5" />
+                        ) : log.status === "Rejected" ? (
+                          <XCircle className="w-3.5 h-3.5" />
                         ) : (
                           <AlertCircle className="w-3.5 h-3.5" />
                         )}
@@ -142,15 +149,25 @@ export default function MaintenanceLogTable({
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      {log.status !== "Confirmed" && (
-                        <button
-                          onClick={() => onConfirm(log.id, log.log_type)}
-                          className="inline-flex items-center justify-center p-2 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
-                          title="Confirm"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
+                      {log.status !== "Confirmed" &&
+                        log.status !== "Rejected" && (
+                          <>
+                            <button
+                              onClick={() => onConfirm(log.id, log.log_type)}
+                              className="inline-flex items-center justify-center p-2 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-500 rounded-lg transition-all duration-200 border border-green-600 dark:border-green-400"
+                              title="Confirm"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onReject(log.id, log.log_type)}
+                              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
+                              title="Reject"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       <button
                         onClick={() => onDelete(log.id, log.log_type)}
                         className="inline-flex items-center justify-center p-2 text-red-600 hover:text-white hover:bg-red-600 dark:text-red-400 dark:hover:bg-red-500 rounded-lg transition-all duration-200 border border-red-600 dark:border-red-400"
