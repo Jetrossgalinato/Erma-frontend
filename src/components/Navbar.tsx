@@ -188,9 +188,10 @@ const Navbar: React.FC = () => {
         let filteredData = data || [];
         if (approvedAccRole === "Lab Technician") {
           filteredData = filteredData.filter((notif: Notification) => {
-            // If it's a maintenance notification, only show if it's a confirmation (type="success")
+            // If it's a maintenance notification, show if it's a confirmation (type="success") or rejection (type="info" or "error")
+            // The backend sends "info" for rejection in maintenance.py, but let's be permissive
             if (notif.title.includes("Maintenance")) {
-              return notif.type === "success";
+              return true;
             }
             return true;
           });
