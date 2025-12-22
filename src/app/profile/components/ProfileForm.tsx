@@ -24,12 +24,12 @@ export default function ProfileForm({
   return (
     <div className="bg-white/70 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/50 mb-4 sm:mb-6 md:mb-8">
       {/* Header */}
-      <div className="p-4 sm:p-6 md:p-8 border-b border-slate-200/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+      <div className="p-3 sm:p-6 md:p-8 border-b border-slate-200/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">
+          <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1 sm:mb-2">
             Profile Information
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base">
+          <p className="text-slate-600 text-xs sm:text-base">
             Manage your personal account details
           </p>
         </div>
@@ -37,10 +37,10 @@ export default function ProfileForm({
         {!isEditing ? (
           <button
             onClick={onEdit}
-            className="group inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 border-slate-300 rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 w-full sm:w-auto justify-center"
+            className="group inline-flex items-center px-3 sm:px-6 py-1.5 sm:py-3 border-2 border-slate-300 rounded-lg sm:rounded-xl shadow-sm text-[10px] sm:text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-4 focus:ring-orange-500/20 transition-all duration-200 w-full sm:w-auto justify-center"
           >
             <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:rotate-12 transition-transform"
+              className="w-3 h-3 sm:w-5 sm:h-5 mr-2 group-hover:rotate-12 transition-transform"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -59,14 +59,14 @@ export default function ProfileForm({
             <button
               onClick={onCancel}
               disabled={saving}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-slate-300 rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-1.5 sm:py-3 border-2 border-slate-300 rounded-lg sm:rounded-xl shadow-sm text-[10px] sm:text-sm font-semibold text-slate-700 bg-white/80 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Cancel
             </button>
             <button
               onClick={onSave}
               disabled={saving}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-2 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-xs sm:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-6 py-1.5 sm:py-3 border-2 border-transparent rounded-lg sm:rounded-xl shadow-sm text-[10px] sm:text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {saving ? (
                 <>
@@ -95,7 +95,7 @@ export default function ProfileForm({
               ) : (
                 <>
                   <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
+                    className="w-3 h-3 sm:w-5 sm:h-5 mr-1 sm:mr-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -117,11 +117,11 @@ export default function ProfileForm({
       </div>
 
       {/* Form Fields */}
-      <div className="p-4 sm:p-6 md:p-8">
+      <div className="p-3 sm:p-6 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* First Name */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               First Name
             </label>
             {isEditing ? (
@@ -129,12 +129,12 @@ export default function ProfileForm({
                 type="text"
                 value={editForm.first_name || ""}
                 onChange={(e) => onInputChange("first_name", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
+                className="w-full px-2 py-1.5 sm:px-4 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-xs sm:text-base"
                 placeholder="Enter your first name"
               />
             ) : (
-              <div className="bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
-                <p className="text-slate-800 font-medium text-sm sm:text-base">
+              <div className="bg-slate-50/80 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
+                <p className="text-slate-800 font-medium text-xs sm:text-base">
                   {profile?.first_name || "Not provided"}
                 </p>
               </div>
@@ -143,7 +143,7 @@ export default function ProfileForm({
 
           {/* Last Name */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Last Name
             </label>
             {isEditing ? (
@@ -151,12 +151,12 @@ export default function ProfileForm({
                 type="text"
                 value={editForm.last_name || ""}
                 onChange={(e) => onInputChange("last_name", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
+                className="w-full px-2 py-1.5 sm:px-4 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-xs sm:text-base"
                 placeholder="Enter your last name"
               />
             ) : (
-              <div className="bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
-                <p className="text-slate-800 font-medium text-sm sm:text-base">
+              <div className="bg-slate-50/80 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
+                <p className="text-slate-800 font-medium text-xs sm:text-base">
                   {profile?.last_name || "Not provided"}
                 </p>
               </div>
@@ -165,13 +165,13 @@ export default function ProfileForm({
 
           {/* Email (Read-only) */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Email Address
             </label>
             <div className="relative">
-              <div className="bg-gradient-to-r from-slate-100 to-slate-50 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-200 flex items-center">
+              <div className="bg-gradient-to-r from-slate-100 to-slate-50 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-200 flex items-center">
                 <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 mr-2 sm:mr-3 flex-shrink-0"
+                  className="w-3 h-3 sm:w-5 sm:h-5 text-slate-400 mr-2 sm:mr-3 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -183,11 +183,11 @@ export default function ProfileForm({
                     d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
                   />
                 </svg>
-                <p className="text-slate-700 font-medium text-sm sm:text-base truncate">
+                <p className="text-slate-700 font-medium text-xs sm:text-base truncate">
                   {profile?.email || "Not provided"}
                 </p>
               </div>
-              <p className="text-xs text-slate-500 mt-2 flex items-center">
+              <p className="text-[10px] text-slate-500 mt-1 flex items-center">
                 <svg
                   className="w-3 h-3 mr-1 flex-shrink-0"
                   fill="none"
@@ -208,7 +208,7 @@ export default function ProfileForm({
 
           {/* Department */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Department
             </label>
             {isEditing ? (
@@ -216,12 +216,12 @@ export default function ProfileForm({
                 type="text"
                 value={editForm.department || ""}
                 onChange={(e) => onInputChange("department", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
+                className="w-full px-2 py-1.5 sm:px-4 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-xs sm:text-base"
                 placeholder="Enter your department"
               />
             ) : (
-              <div className="bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
-                <p className="text-slate-800 font-medium text-sm sm:text-base">
+              <div className="bg-slate-50/80 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
+                <p className="text-slate-800 font-medium text-xs sm:text-base">
                   {profile?.department || "Not provided"}
                 </p>
               </div>
@@ -230,7 +230,7 @@ export default function ProfileForm({
 
           {/* Phone Number */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Phone Number
             </label>
             {isEditing ? (
@@ -238,12 +238,12 @@ export default function ProfileForm({
                 type="tel"
                 value={editForm.phone_number || ""}
                 onChange={(e) => onInputChange("phone_number", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
+                className="w-full px-2 py-1.5 sm:px-4 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-xs sm:text-base"
                 placeholder="Enter your phone number"
               />
             ) : (
-              <div className="bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
-                <p className="text-slate-800 font-medium text-sm sm:text-base">
+              <div className="bg-slate-50/80 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
+                <p className="text-slate-800 font-medium text-xs sm:text-base">
                   {profile?.phone_number || "Not provided"}
                 </p>
               </div>
@@ -252,7 +252,7 @@ export default function ProfileForm({
 
           {/* Account Role */}
           <div className="space-y-2 sm:space-y-3">
-            <label className="block text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
+            <label className="block text-[10px] sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Account Role
             </label>
             {isEditing ? (
@@ -260,12 +260,12 @@ export default function ProfileForm({
                 type="text"
                 value={editForm.acc_role || ""}
                 onChange={(e) => onInputChange("acc_role", e.target.value)}
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
+                className="w-full px-2 py-1.5 sm:px-4 sm:py-3 border-2 border-slate-200 text-gray-800 rounded-lg sm:rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-xs sm:text-base"
                 placeholder="Enter your account role"
               />
             ) : (
-              <div className="bg-slate-50/80 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
-                <p className="text-slate-800 font-medium text-sm sm:text-base">
+              <div className="bg-slate-50/80 px-2 py-1.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border-2 border-slate-100">
+                <p className="text-slate-800 font-medium text-xs sm:text-base">
                   {profile?.acc_role || "Not provided"}
                 </p>
               </div>
