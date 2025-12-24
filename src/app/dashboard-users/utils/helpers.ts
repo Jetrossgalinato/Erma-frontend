@@ -168,37 +168,44 @@ export function filterUsers(
   });
 }
 
+/**
+ * Calculate pagination range for display
+ */
+export function calculatePaginationRange(
+  currentPage: number,
+  itemsPerPage: number,
+  totalCount: number
+): { start: number; end: number } {
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalCount);
+  return { start, end };
+}
+
+/**
+ * Generate page numbers for pagination
+ */
 export function generatePageNumbers(
   currentPage: number,
   totalPages: number
-): (number | string)[] {
-  const delta = 2;
-  const range = [];
-  const rangeWithDots: (number | string)[] = [];
+): number[] {
+  return Array.from({ length: totalPages }, (_, i) => i + 1).filter((page) => {
+    if (totalPages <= 7) return true;
+    if (page <= 3) return true;
+    if (page >= totalPages - 2) return true;
+    if (Math.abs(page - currentPage) <= 1) return true;
+    return false;
+  });
+}
 
-  for (
-    let i = Math.max(2, currentPage - delta);
-    i <= Math.min(totalPages - 1, currentPage + delta);
-    i++
-  ) {
-    range.push(i);
-  }
-
-  if (currentPage - delta > 2) {
-    rangeWithDots.push(1, "...");
-  } else {
-    rangeWithDots.push(1);
-  }
-
-  rangeWithDots.push(...range);
-
-  if (currentPage + delta < totalPages - 1) {
-    rangeWithDots.push("...", totalPages);
-  } else if (totalPages > 1) {
-    rangeWithDots.push(totalPages);
-  }
-
-  return rangeWithDots.filter(
-    (item, index, array) => array.indexOf(item) === index
-  );
+/**
+ * Check if ellipsis should be shown between page numbers
+ */
+export function shouldShowEllipsis(
+  currentIndex: number,
+  pages: number[]
+): boolean {
+  if (currentIndex === 0) return false;
+  const prevPage = pages[currentIndex - 1];
+  const currentPageNum = pages[currentIndex];
+  return currentPageNum - prevPage > 1;
 }

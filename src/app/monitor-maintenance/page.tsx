@@ -11,6 +11,7 @@ import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import MaintenanceLogHeader from "./components/MaintenanceLogHeader";
 import MaintenanceLogTable from "./components/MaintenanceLogTable";
 import MaintenanceLogDetailsModal from "./components/MaintenanceLogDetailsModal";
+import PaginationControls from "./components/PaginationControls";
 import {
   MaintenanceLog,
   fetchMaintenanceLogs,
@@ -31,6 +32,11 @@ export default function MonitorMaintenancePage() {
     id: number;
     logType: string;
   } | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const router = useRouter();
@@ -53,20 +59,34 @@ export default function MonitorMaintenancePage() {
   const loadLogs = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchMaintenanceLogs();
-      setLogs(data);
+      const data = await fetchMaintenanceLogs(
+        currentPage,
+        itemsPerPage,
+        filterType
+      );
+      setLogs(data.logs);
+      setTotalCount(data.total_count);
     } catch (error) {
       console.error("Error fetching logs:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, itemsPerPage, filterType]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadLogs();
     }
   }, [isAuthenticated, loadLogs]);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleConfirm = async (id: number, logType: string) => {
     try {
@@ -151,11 +171,6 @@ export default function MonitorMaintenancePage() {
     setIsModalOpen(true);
   };
 
-  const filteredLogs = logs.filter((log) => {
-    if (filterType === "All") return true;
-    return log.checklist_type === filterType;
-  });
-
   const closeDetails = () => {
     setSelectedLog(null);
     setIsModalOpen(false);
@@ -203,14 +218,24 @@ export default function MonitorMaintenancePage() {
                 onRefresh={loadLogs}
               />
 
-              <MaintenanceLogTable
-                logs={filteredLogs}
-                loading={loading}
-                onConfirm={handleConfirm}
-                onReject={handleReject}
-                onDelete={handleDelete}
-                onViewDetails={openDetails}
-              />
+              <div className="mt-6">
+                <MaintenanceLogTable
+                  logs={logs}
+                  loading={loading}
+                  onConfirm={handleConfirm}
+                  onReject={handleReject}
+                  onDelete={handleDelete}
+                  onViewDetails={openDetails}
+                />
+                {!loading && logs.length > 0 && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalCount={totalCount}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={handlePageChange}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </main>
