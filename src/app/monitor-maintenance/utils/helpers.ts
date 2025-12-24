@@ -30,19 +30,33 @@ export interface MaintenanceLog {
   log_type: string;
 }
 
+export interface PaginatedMaintenanceLogs {
+  logs: MaintenanceLog[];
+  total_count: number;
+  total_pages: number;
+  page: number;
+}
+
 // ==================== API Functions ====================
 
 /**
  * Fetch maintenance logs from the API
  */
-export async function fetchMaintenanceLogs(): Promise<MaintenanceLog[]> {
+export async function fetchMaintenanceLogs(
+  page: number = 1,
+  limit: number = 10,
+  checklist_type: string = "All"
+): Promise<PaginatedMaintenanceLogs> {
   const token = localStorage.getItem("authToken");
 
-  const response = await fetch(`${API_BASE_URL}/api/maintenance`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/maintenance?page=${page}&limit=${limit}&checklist_type=${checklist_type}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -51,6 +65,50 @@ export async function fetchMaintenanceLogs(): Promise<MaintenanceLog[]> {
   }
 
   return response.json();
+}
+
+// ==================== Utility Functions ====================
+
+/**
+ * Calculate pagination range for display
+ */
+export function calculatePaginationRange(
+  currentPage: number,
+  itemsPerPage: number,
+  totalCount: number
+): { start: number; end: number } {
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalCount);
+  return { start, end };
+}
+
+/**
+ * Generate page numbers for pagination
+ */
+export function generatePageNumbers(
+  currentPage: number,
+  totalPages: number
+): number[] {
+  return Array.from({ length: totalPages }, (_, i) => i + 1).filter((page) => {
+    if (totalPages <= 7) return true;
+    if (page <= 3) return true;
+    if (page >= totalPages - 2) return true;
+    if (Math.abs(page - currentPage) <= 1) return true;
+    return false;
+  });
+}
+
+/**
+ * Check if ellipsis should be shown between page numbers
+ */
+export function shouldShowEllipsis(
+  currentIndex: number,
+  pages: number[]
+): boolean {
+  if (currentIndex === 0) return false;
+  const prevPage = pages[currentIndex - 1];
+  const currentPageNum = pages[currentIndex];
+  return currentPageNum - prevPage > 1;
 }
 
 /**
