@@ -306,14 +306,6 @@ const UsersPage: React.FC = () => {
     setShowDeleteModal(false);
   };
 
-  // Pagination info
-  const startItem =
-    (usersPagination.currentPage - 1) * usersPagination.itemsPerPage + 1;
-  const endItem = Math.min(
-    usersPagination.currentPage * usersPagination.itemsPerPage,
-    usersPagination.totalCount
-  );
-
   // Loading state
   if (authLoading) {
     return <Loader />;
@@ -400,12 +392,6 @@ const UsersPage: React.FC = () => {
                     {usersPagination.totalCount} total users
                     {departmentFilter || roleFilter ? " (filtered)" : ""}
                   </p>
-                  {usersPagination.totalCount > 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Showing {startItem} to {endItem} of{" "}
-                      {usersPagination.totalCount} results
-                    </p>
-                  )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -419,10 +405,8 @@ const UsersPage: React.FC = () => {
 
                 <PaginationControls
                   currentPage={usersPagination.currentPage}
-                  totalPages={usersPagination.totalPages}
-                  startItem={startItem}
-                  endItem={endItem}
                   totalCount={usersPagination.totalCount}
+                  itemsPerPage={usersPagination.itemsPerPage}
                   onPageChange={handlePageChange}
                 />
               </div>
