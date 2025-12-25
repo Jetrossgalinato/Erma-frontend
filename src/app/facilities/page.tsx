@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -183,47 +183,56 @@ export default function FacilitiesPage() {
               </div>
 
               {/* Facility Type Filter */}
-              <select
-                value={selectedFacilityType}
-                onChange={(e) => setSelectedFacilityType(e.target.value)}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
-              >
-                {FACILITY_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedFacilityType}
+                  onChange={(e) => setSelectedFacilityType(e.target.value)}
+                  className="w-full pl-2 pr-8 sm:pl-3 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015] appearance-none"
+                >
+                  {FACILITY_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
+              </div>
 
               {/* Floor Level Filter */}
-              <select
-                value={selectedFloorLevel}
-                onChange={(e) => setSelectedFloorLevel(e.target.value)}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
-              >
-                {FLOOR_LEVELS.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedFloorLevel}
+                  onChange={(e) => setSelectedFloorLevel(e.target.value)}
+                  className="w-full pl-2 pr-8 sm:pl-3 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015] appearance-none"
+                >
+                  {FLOOR_LEVELS.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
+              </div>
 
               {/* Status Filter */}
-              <select
-                value={selectedStatus}
-                onChange={(e) =>
-                  setSelectedStatus(
-                    e.target.value as FacilityStatus | "All Statuses"
-                  )
-                }
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
-              >
-                <option value="All Statuses">All Statuses</option>
-                <option value="Available">Available</option>
-                <option value="Occupied">Occupied</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Reserved">Reserved</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={selectedStatus}
+                  onChange={(e) =>
+                    setSelectedStatus(
+                      e.target.value as FacilityStatus | "All Statuses"
+                    )
+                  }
+                  className="w-full pl-2 pr-8 sm:pl-3 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015] appearance-none"
+                >
+                  <option value="All Statuses">All Statuses</option>
+                  <option value="Available">Available</option>
+                  <option value="Occupied">Occupied</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Reserved">Reserved</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
+              </div>
             </div>
           </div>
 
