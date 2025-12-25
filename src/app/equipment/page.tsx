@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -189,11 +189,11 @@ export default function EquipmentPage() {
                   />
                 </div>
 
-                <div className="md:col-span-3">
+                <div className="md:col-span-3 relative">
                   <select
                     value={selectedCategory ?? ""}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
+                    className="w-full pl-2 pr-8 sm:pl-3 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015] appearance-none"
                   >
                     {categories.map((category) => (
                       <option key={category} value={category}>
@@ -201,13 +201,14 @@ export default function EquipmentPage() {
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
                 </div>
 
-                <div className="md:col-span-3">
+                <div className="md:col-span-3 relative">
                   <select
                     value={selectedFacility ?? ""}
                     onChange={(e) => setSelectedFacility(e.target.value)}
-                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
+                    className="w-full pl-2 pr-8 sm:pl-3 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015] appearance-none"
                   >
                     {FACILITIES.map((facilityName) => (
                       <option key={facilityName} value={facilityName}>
@@ -215,6 +216,7 @@ export default function EquipmentPage() {
                       </option>
                     ))}
                   </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 pointer-events-none" />
                 </div>
               </div>
             </div>
