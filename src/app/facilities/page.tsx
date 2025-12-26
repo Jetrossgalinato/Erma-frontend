@@ -297,7 +297,7 @@ export default function FacilitiesPage() {
                               setShowModal(true);
                             }}
                           >
-                            View
+                            View Details
                           </button>
                           {userLoading ? (
                             <div className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
