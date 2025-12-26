@@ -320,7 +320,7 @@ export default function EquipmentPage() {
                               setShowModal(true);
                             }}
                           >
-                            View
+                            View Details
                           </button>
 
                           {userLoading ? (
