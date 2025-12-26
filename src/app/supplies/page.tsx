@@ -277,7 +277,7 @@ export default function SuppliesPage() {
                         onClick={() => handleView(supply)}
                         className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
                       >
-                        View
+                        View Details
                       </button>
                       {userLoading ? (
                         <div className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
