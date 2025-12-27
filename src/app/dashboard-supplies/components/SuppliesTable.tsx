@@ -39,9 +39,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-900/50">
+        <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
-            <th className="px-6 py-3 text-left">
+            <th className="sticky left-0 z-10 w-12 px-6 py-3 text-left border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -49,22 +49,22 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 className="rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
               />
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="sticky left-12 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
               Image
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Category
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Quantity
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Facility
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -73,7 +73,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-          {currentSupplies.map((supply) => {
+          {currentSupplies.map((supply, index) => {
             const stockStatus = getStockStatus(
               supply.quantity,
               supply.stocking_point
@@ -81,9 +81,13 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
             return (
               <tr
                 key={supply.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                  index % 2 === 0
+                    ? "bg-white dark:bg-gray-800"
+                    : "bg-gray-50/50 dark:bg-gray-700/20"
+                }`}
               >
-                <td className="px-6 py-4">
+                <td className="sticky left-0 z-10 w-12 px-6 py-4 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   <input
                     type="checkbox"
                     checked={selectedRows.includes(supply.id)}
@@ -91,7 +95,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                     className="rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
                   />
                 </td>
-                <td className="px-6 py-4">
+                <td className="sticky left-12 z-10 px-6 py-4 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   {supply.image ? (
                     <>
                       <Image
@@ -115,23 +119,23 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
                   {supply.name}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                   {supply.category}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
                   {supply.quantity} {supply.stock_unit}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 border-r border-gray-100 dark:border-gray-700">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${stockStatus.color}`}
                   >
                     {stockStatus.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                   {supply.facilities?.facility_name ||
                     supply.facilities?.name ||
                     "—"}

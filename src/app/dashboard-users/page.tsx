@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { RefreshCw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Loader from "@/components/Loader";
@@ -343,40 +344,53 @@ const UsersPage: React.FC = () => {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <PageHeader
-                onRefresh={handleRefreshClick}
-                isRefreshing={isRefreshing}
-              />
+              <div className="mb-8 pt-8 flex items-center justify-between">
+                <PageHeader />
 
-              {/* Controls Row */}
-              <div className="mb-4 flex items-center justify-end gap-3">
-                <FilterControls
-                  departmentFilter={departmentFilter}
-                  roleFilter={roleFilter}
-                  activeFilter={activeFilter}
-                  showFilterDropdown={showFilterDropdown}
-                  uniqueDepartments={getUniqueDepartments(users)}
-                  uniqueRoles={getUniqueRoles(users)}
-                  onDepartmentFilterChange={handleDepartmentFilterChange}
-                  onRoleFilterChange={handleRoleFilterChange}
-                  onFilterSelect={handleFilterSelect}
-                  onToggleFilterDropdown={() =>
-                    setShowFilterDropdown(!showFilterDropdown)
-                  }
-                  onClearFilters={handleClearFilters}
-                  setShowFilterDropdown={setShowFilterDropdown}
-                />
+                <div className="flex gap-3">
+                  <FilterControls
+                    departmentFilter={departmentFilter}
+                    roleFilter={roleFilter}
+                    activeFilter={activeFilter}
+                    showFilterDropdown={showFilterDropdown}
+                    uniqueDepartments={getUniqueDepartments(users)}
+                    uniqueRoles={getUniqueRoles(users)}
+                    onDepartmentFilterChange={handleDepartmentFilterChange}
+                    onRoleFilterChange={handleRoleFilterChange}
+                    onFilterSelect={handleFilterSelect}
+                    onToggleFilterDropdown={() =>
+                      setShowFilterDropdown(!showFilterDropdown)
+                    }
+                    onClearFilters={handleClearFilters}
+                    setShowFilterDropdown={setShowFilterDropdown}
+                  />
 
-                <ActionsDropdown
-                  selectedCount={selectedRows.length}
-                  showDropdown={showActionsDropdown}
-                  onToggleDropdown={() =>
-                    setShowActionsDropdown(!showActionsDropdown)
-                  }
-                  onEdit={handleEditClick}
-                  onDelete={handleDeleteClick}
-                  setShowDropdown={setShowActionsDropdown}
-                />
+                  <ActionsDropdown
+                    selectedCount={selectedRows.length}
+                    showDropdown={showActionsDropdown}
+                    onToggleDropdown={() =>
+                      setShowActionsDropdown(!showActionsDropdown)
+                    }
+                    onEdit={handleEditClick}
+                    onDelete={handleDeleteClick}
+                    setShowDropdown={setShowActionsDropdown}
+                  />
+
+                  <button
+                    onClick={handleRefreshClick}
+                    disabled={isRefreshing}
+                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                      isRefreshing ? "cursor-not-allowed opacity-75" : ""
+                    }`}
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </button>
+                </div>
               </div>
 
               {error && (
