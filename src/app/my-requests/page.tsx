@@ -123,7 +123,11 @@ function MyRequestsContent() {
     if (currentRequestType === "booking") {
       return selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Completed" || request?.status === "Pending";
+        return (
+          request?.status === "Completed" ||
+          request?.status === "Pending" ||
+          request?.status === "Rejected"
+        );
       });
     }
     return false;
