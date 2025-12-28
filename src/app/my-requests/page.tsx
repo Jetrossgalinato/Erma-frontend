@@ -114,14 +114,20 @@ function MyRequestsContent() {
       return selectedIds.some((id) => {
         const request = borrowingRequests.find((r) => r.id === id);
         return (
-          request?.return_status === "Returned" || request?.status === "Pending"
+          request?.return_status === "Returned" ||
+          request?.status === "Pending" ||
+          request?.status === "Rejected"
         );
       });
     }
     if (currentRequestType === "booking") {
       return selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Completed" || request?.status === "Pending";
+        return (
+          request?.status === "Completed" ||
+          request?.status === "Pending" ||
+          request?.status === "Rejected"
+        );
       });
     }
     return false;

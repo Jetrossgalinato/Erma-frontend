@@ -62,6 +62,9 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 <Building className="w-4 h-4 mr-3" />
                 Filter by Facility Type
               </button>
+
+              <hr className="my-1 border-gray-100 dark:border-gray-600" />
+
               <button
                 onClick={() => onFilterSelect("floor level")}
                 className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
