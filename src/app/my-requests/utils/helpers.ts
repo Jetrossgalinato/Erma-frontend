@@ -374,7 +374,7 @@ export async function deleteRequests(
     const requestPayload = { ids: requestIds };
 
     const response = await fetch(
-      `${API_BASE_URL}/api/${endpoint}/bulk-delete`,
+      `${API_BASE_URL}/api/my-requests/${endpoint}/bulk-delete`,
       {
         method: "DELETE",
         headers: {
