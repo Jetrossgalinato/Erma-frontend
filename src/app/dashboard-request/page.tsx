@@ -281,7 +281,11 @@ function DashboardRequestsContent() {
     (currentRequestType === "booking" &&
       selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Approved" || request?.status === "Rejected";
+        return (
+          request?.status === "Approved" ||
+          request?.status === "Rejected" ||
+          request?.status === "Completed"
+        );
       })) ||
     (currentRequestType === "acquiring" &&
       selectedIds.some((id) => {
@@ -302,7 +306,11 @@ function DashboardRequestsContent() {
     (currentRequestType === "booking" &&
       selectedIds.some((id) => {
         const request = bookingRequests.find((r) => r.id === id);
-        return request?.status === "Approved" || request?.status === "Rejected";
+        return (
+          request?.status === "Approved" ||
+          request?.status === "Rejected" ||
+          request?.status === "Completed"
+        );
       })) ||
     (currentRequestType === "acquiring" &&
       selectedIds.some((id) => {
