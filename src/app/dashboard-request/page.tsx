@@ -79,6 +79,7 @@ function DashboardRequestsContent() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Role-based access control - Faculty users should not access dashboard requests
@@ -423,13 +424,19 @@ function DashboardRequestsContent() {
                     <RequestTypeSelector
                       currentType={currentRequestType}
                       onChange={setCurrentRequestType}
+                      isOpen={showTypeDropdown}
+                      onToggle={() => {
+                        setShowTypeDropdown(!showTypeDropdown);
+                        setShowActionDropdown(false);
+                      }}
                     />
                     <ActionButtons
                       selectedCount={selectedIds.length}
                       showActionDropdown={showActionDropdown}
-                      onToggleDropdown={() =>
-                        setShowActionDropdown(!showActionDropdown)
-                      }
+                      onToggleDropdown={() => {
+                        setShowActionDropdown(!showActionDropdown);
+                        setShowTypeDropdown(false);
+                      }}
                       onApprove={handleBulkApprove}
                       onReject={handleBulkReject}
                       onDelete={handleBulkDelete}
