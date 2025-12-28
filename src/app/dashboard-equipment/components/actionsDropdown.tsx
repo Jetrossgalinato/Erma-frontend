@@ -54,6 +54,8 @@ export default function ActionsDropdown({
               Insert Row
             </button>
 
+            <hr className="my-1 border-gray-100 dark:border-gray-600" />
+
             <button
               onClick={onImportClick}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
@@ -61,6 +63,8 @@ export default function ActionsDropdown({
               <Download className="w-4 h-4 mr-3 text-green-600 dark:text-green-400" />
               Import Data from CSV File
             </button>
+
+            <hr className="my-1 border-gray-100 dark:border-gray-600" />
 
             <button
               onClick={onExportClick}
@@ -91,6 +95,8 @@ export default function ActionsDropdown({
               Edit Selected (
               {selectedRows.length === 1 ? "1" : selectedRows.length})
             </button>
+
+            <hr className="my-1 border-gray-100 dark:border-gray-600" />
 
             <button
               onClick={onDeleteClick}
