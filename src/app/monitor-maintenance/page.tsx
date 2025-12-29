@@ -218,7 +218,7 @@ export default function MonitorMaintenancePage() {
                 onRefresh={loadLogs}
               />
 
-              <div className="mt-6">
+              <div className="mt-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
                 <MaintenanceLogTable
                   logs={logs}
                   loading={loading}
