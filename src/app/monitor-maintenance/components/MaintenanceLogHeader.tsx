@@ -53,7 +53,7 @@ export default function MaintenanceLogHeader({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:ring-orange-500 focus:border-orange-500 flex items-center justify-between min-w-[160px] transition-colors"
+            className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm focus:ring-orange-500 focus:border-orange-500 flex items-center justify-between min-w-[160px] transition-colors"
           >
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Filter className="h-4 w-4 text-gray-400" />
@@ -65,7 +65,7 @@ export default function MaintenanceLogHeader({
           </button>
 
           {isOpen && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden">
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700  border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden">
               {options.map((option, index) => (
                 <div
                   key={option.value}
@@ -75,7 +75,7 @@ export default function MaintenanceLogHeader({
                   }}
                   className={`
                     px-4 py-2.5 text-sm cursor-pointer transition-colors
-                    hover:bg-gray-100 dark:hover:bg-gray-700
+                    hover:bg-gray-100 dark:hover:bg-gray-600
                     ${
                       filterType === option.value
                         ? "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 font-medium"
@@ -83,7 +83,7 @@ export default function MaintenanceLogHeader({
                     }
                     ${
                       index !== options.length - 1
-                        ? "border-b border-gray-200 dark:border-gray-700"
+                        ? "border-b border-gray-200 dark:border-gray-600"
                         : ""
                     }
                   `}
