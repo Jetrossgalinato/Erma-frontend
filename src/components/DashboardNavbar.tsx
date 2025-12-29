@@ -54,6 +54,11 @@ const DashboardNavbar: React.FC = () => {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userData, setUserData] = useState<{
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  } | null>(null);
 
   // Return Notifications State
   const [returnNotifications, setReturnNotifications] = useState<
@@ -107,6 +112,30 @@ const DashboardNavbar: React.FC = () => {
       });
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      const storedUserData = localStorage.getItem("userData");
+      if (storedUserData) {
+        try {
+          const parsedUserData = JSON.parse(storedUserData);
+          setUserData(parsedUserData);
+        } catch {
+          setUserData({
+            email: user.email,
+            first_name: undefined,
+          });
+        }
+      } else {
+        setUserData({
+          email: user.email,
+          first_name: undefined,
+        });
+      }
+    } else {
+      setUserData(null);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Prefetch common pages for faster navigation
@@ -188,9 +217,19 @@ const DashboardNavbar: React.FC = () => {
   }, []);
 
   const getInitial = () => {
-    if (!user) return "?";
-    const name = user.email;
-    return name ? name.charAt(0).toUpperCase() : "?";
+    if (!userData) return "?";
+
+    const firstName = userData.first_name;
+    const lastName = userData.last_name;
+
+    if (firstName && lastName) {
+      return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+    } else if (firstName) {
+      return firstName.substring(0, 2).toUpperCase();
+    } else if (userData.email) {
+      return userData.email.substring(0, 2).toUpperCase();
+    }
+    return "?";
   };
 
   const fetchNotifications = useCallback(async () => {
