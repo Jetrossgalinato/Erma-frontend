@@ -52,11 +52,25 @@ const Navbar: React.FC = () => {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingAccountRequestsCount, setPendingAccountRequestsCount] =
+    useState(0);
 
   // Track user's approved_acc_role - Initialize immediately from store
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(
     user?.role || null
   );
+
+  // Utility for checking if user is Staff/Faculty/Admin
+  // Use user.role directly from store for immediate access, fallback to state, then localStorage
+  const rawRole =
+    user?.role ||
+    approvedAccRole ||
+    (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
+  const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
+  const isSuperAdmin = currentRole === "Super Admin";
+  const isFaculty = currentRole === "Faculty";
+  const isStudentAssistant = rawRole?.toLowerCase() === "student assistant";
+  const isLabTechnician = rawRole === "Lab Technician";
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -225,6 +239,40 @@ const Navbar: React.FC = () => {
     }
   }, [isAuthenticated, fetchNotifications]);
 
+  const fetchAccountRequests = useCallback(async () => {
+    if (!isAuthenticated || !isSuperAdmin) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/api/account-requests`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const pendingCount = data.filter(
+          (req: any) => req.status === "Pending"
+        ).length;
+        setPendingAccountRequestsCount(pendingCount);
+      }
+    } catch (error) {
+      console.error("Error fetching account requests:", error);
+    }
+  }, [isAuthenticated, isSuperAdmin]);
+
+  useEffect(() => {
+    if (isAuthenticated && isSuperAdmin) {
+      fetchAccountRequests();
+      const interval = setInterval(fetchAccountRequests, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, isSuperAdmin, fetchAccountRequests]);
+
   const handleNotificationClick = async (
     notificationId: string,
     notificationTitle: string
@@ -353,18 +401,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Utility for checking if user is Staff/Faculty/Admin
-  // Use user.role directly from store for immediate access, fallback to state, then localStorage
-  const rawRole =
-    user?.role ||
-    approvedAccRole ||
-    (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
-  const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
-  const isSuperAdmin = currentRole === "Super Admin";
-  const isFaculty = currentRole === "Faculty";
-  const isStudentAssistant = rawRole?.toLowerCase() === "student assistant";
-  const isLabTechnician = rawRole === "Lab Technician";
-
   return (
     <nav className="w-full bg-white shadow-sm px-6 md:py-1 flex justify-between items-center relative">
       {/* Logo: Left-aligned with padding on all screens */}
@@ -437,11 +473,18 @@ const Navbar: React.FC = () => {
         {isAuthenticated && isSuperAdmin && (
           <a
             href="/requests"
-            className={`hover:text-black transition-colors duration-300 ${
+            className={`relative hover:text-black transition-colors duration-300 ${
               pathname === "/requests" ? "text-orange-500" : ""
             }`}
           >
             Account Requests
+            {pendingAccountRequestsCount > 0 && (
+              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex items-center justify-center">
+                {pendingAccountRequestsCount > 99
+                  ? "99+"
+                  : pendingAccountRequestsCount}
+              </span>
+            )}
           </a>
         )}
 
