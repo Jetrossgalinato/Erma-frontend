@@ -133,7 +133,6 @@ const Sidebar: React.FC = () => {
     equipment_logs: 0,
     facility_logs: 0,
     supply_logs: 0,
-    maintenance_logs: 0,
     users: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -264,15 +263,6 @@ const Sidebar: React.FC = () => {
 
   // Only show Maintenance Logs for Super Admin roles
   const superAdminRoles = ["CCIS Dean", "Comlab Adviser", "Super Admin"];
-
-  if (approvedAccRole && superAdminRoles.includes(approvedAccRole)) {
-    monitoringItems.push({
-      icon: FileText,
-      label: "Maintenance Logs",
-      count: loading ? null : counts.maintenance_logs,
-      path: "/monitor-maintenance",
-    });
-  }
 
   const userManagementItems: MenuItemData[] = [
     {
