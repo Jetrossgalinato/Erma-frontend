@@ -1,0 +1,44 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuthStore } from "@/store";
+import Loader from "./Loader";
+
+const PUBLIC_ROUTES = ["/login", "/register", "/", "/home"];
+
+export default function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, initializeAuth } = useAuthStore();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+
+      if (!isAuthenticated && !isPublicRoute) {
+        router.push("/login");
+      } else if (
+        isAuthenticated &&
+        (pathname === "/login" || pathname === "/register")
+      ) {
+        router.push("/dashboard");
+      }
+    }
+  }, [isAuthenticated, isLoading, router, pathname]);
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  // If not authenticated and trying to access protected route, don't render children
+  if (!isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
+    return null;
+  }
+
+  return <>{children}</>;
+}

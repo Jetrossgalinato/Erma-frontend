@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { StoreInitializer } from "@/components/StoreInitializer";
+import AuthGuard from "@/components/AuthGuard";
 import { AlertProvider } from "@/contexts/AlertContext";
 
 // Load only essential font weights for optimal performance
@@ -48,7 +48,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} font-sans antialiased`}>
         <AlertProvider>
-          <StoreInitializer>{children}</StoreInitializer>
+          <AuthGuard>{children}</AuthGuard>
         </AlertProvider>
       </body>
     </html>
