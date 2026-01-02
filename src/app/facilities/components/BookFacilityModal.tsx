@@ -21,6 +21,16 @@ export default function BookFacilityModal({
 }: BookFacilityModalProps) {
   if (!isOpen || !facility) return null;
 
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
@@ -71,7 +81,7 @@ export default function BookFacilityModal({
                 })
               }
               required
-              min={new Date().toISOString().slice(0, 16)}
+              min={getCurrentDateTime()}
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
             />
           </div>
@@ -90,9 +100,7 @@ export default function BookFacilityModal({
                 })
               }
               required
-              min={
-                bookingData.start_date || new Date().toISOString().slice(0, 16)
-              }
+              min={bookingData.start_date || getCurrentDateTime()}
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
             />
           </div>
