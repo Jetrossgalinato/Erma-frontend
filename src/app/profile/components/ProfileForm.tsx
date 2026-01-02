@@ -261,13 +261,26 @@ export default function ProfileForm({
               Account Role
             </label>
             {isEditing ? (
-              <input
-                type="text"
+              <select
                 value={editForm.acc_role || ""}
                 onChange={(e) => onInputChange("acc_role", e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 text-gray-800 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm"
-                placeholder="Enter your account role"
-              />
+              >
+                <option value="" disabled>
+                  Select a role
+                </option>
+                <option value="CCIS Dean">CCIS Dean</option>
+                <option value="Lab Technician">Lab Technician</option>
+                <option value="Comlab Adviser">Comlab Adviser</option>
+                <option value="Department Chairperson">
+                  Department Chairperson
+                </option>
+                <option value="Associate Dean">Associate Dean</option>
+                <option value="College Clerk">College Clerk</option>
+                <option value="Student Assistant">Student Assistant</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Instructor">Instructor</option>
+              </select>
             ) : (
               <div className="bg-slate-50/80 px-3 py-2 rounded-lg border border-slate-100">
                 <p className="text-slate-800 font-medium text-sm">
