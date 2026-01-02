@@ -22,6 +22,14 @@ export default function BorrowEquipmentModal({
 }: BorrowEquipmentModalProps) {
   if (!isOpen || !equipment) return null;
 
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
@@ -65,7 +73,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
-              min={new Date().toISOString().split("T")[0]}
+              min={getCurrentDate()}
               value={formData.start_date}
               onChange={(e) =>
                 onFormChange({
@@ -83,7 +91,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
-              min={new Date().toISOString().split("T")[0]}
+              min={formData.start_date || getCurrentDate()}
               value={formData.end_date}
               onChange={(e) =>
                 onFormChange({
@@ -101,7 +109,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
-              min={new Date().toISOString().split("T")[0]}
+              min={formData.end_date || formData.start_date || getCurrentDate()}
               value={formData.return_date}
               onChange={(e) =>
                 onFormChange({
