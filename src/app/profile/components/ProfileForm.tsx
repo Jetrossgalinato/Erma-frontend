@@ -212,13 +212,18 @@ export default function ProfileForm({
               Department
             </label>
             {isEditing ? (
-              <input
-                type="text"
+              <select
                 value={editForm.department || ""}
                 onChange={(e) => onInputChange("department", e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 text-gray-800 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm"
-                placeholder="Enter your department"
-              />
+              >
+                <option value="" disabled>
+                  Select department
+                </option>
+                <option value="BSIT">BSIT</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSIS">BSIS</option>
+              </select>
             ) : (
               <div className="bg-slate-50/80 px-3 py-2 rounded-lg border border-slate-100">
                 <p className="text-slate-800 font-medium text-sm">
