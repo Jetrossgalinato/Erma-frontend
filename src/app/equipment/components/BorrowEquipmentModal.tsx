@@ -109,7 +109,8 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
-              min={formData.end_date || formData.start_date || getCurrentDate()}
+              min={formData.start_date || getCurrentDate()}
+              max={formData.end_date}
               value={formData.return_date}
               onChange={(e) =>
                 onFormChange({
