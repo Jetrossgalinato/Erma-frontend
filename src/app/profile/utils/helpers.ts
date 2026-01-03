@@ -14,6 +14,7 @@ export interface UpdateProfileData {
   department: string;
   phone_number: string;
   acc_role: string;
+  email: string;
 }
 
 export interface UpdatePasswordData {
