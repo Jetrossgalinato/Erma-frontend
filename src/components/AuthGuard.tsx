@@ -34,7 +34,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         isAuthenticated &&
         (pathname === "/login" || pathname === "/register")
       ) {
-        router.push("/dashboard");
+        router.push("/");
       }
     }
   }, [isAuthenticated, isLoading, router, pathname]);
