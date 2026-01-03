@@ -242,6 +242,7 @@ const UsersPage: React.FC = () => {
         phone_number: editingUser.phone_number,
         acc_role: editingUser.acc_role,
         approved_acc_role: editingUser.approved_acc_role,
+        email: editingUser.email,
       });
 
       setUsers(

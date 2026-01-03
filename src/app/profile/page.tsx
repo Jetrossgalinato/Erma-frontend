@@ -143,6 +143,7 @@ export default function MyProfilePage() {
         department: editForm.department,
         phone_number: editForm.phone_number,
         acc_role: editForm.acc_role,
+        email: editForm.email,
       });
 
       if (!updatedProfile) {

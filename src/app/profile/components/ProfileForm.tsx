@@ -163,47 +163,41 @@ export default function ProfileForm({
             )}
           </div>
 
-          {/* Email (Read-only) */}
+          {/* Email Address */}
           <div className="space-y-1.5 sm:space-y-2">
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
               Email Address
             </label>
-            <div className="relative">
-              <div className="bg-gradient-to-r from-slate-100 to-slate-50 px-3 py-2 rounded-lg border border-slate-200 flex items-center">
-                <svg
-                  className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                  />
-                </svg>
-                <p className="text-slate-700 font-medium text-sm truncate">
-                  {profile?.email || "Not provided"}
-                </p>
+            {isEditing ? (
+              <input
+                type="email"
+                value={editForm.email || ""}
+                onChange={(e) => onInputChange("email", e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 text-gray-800 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white/80 text-sm"
+                placeholder="Enter your email address"
+              />
+            ) : (
+              <div className="relative">
+                <div className="bg-gradient-to-r from-slate-100 to-slate-50 px-3 py-2 rounded-lg border border-slate-200 flex items-center">
+                  <svg
+                    className="w-4 h-4 text-slate-400 mr-2 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                    />
+                  </svg>
+                  <p className="text-slate-700 font-medium text-sm truncate">
+                    {profile?.email || "Not provided"}
+                  </p>
+                </div>
               </div>
-              <p className="text-[10px] text-slate-500 mt-1 flex items-center">
-                <svg
-                  className="w-3 h-3 mr-1 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-                Email address cannot be modified
-              </p>
-            </div>
+            )}
           </div>
 
           {/* Department */}

@@ -5,7 +5,15 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
 import Loader from "./Loader";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/", "/home"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/register",
+  "/",
+  "/home",
+  "/equipment",
+  "/facilities",
+  "/supplies",
+];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, initializeAuth } = useAuthStore();
@@ -26,7 +34,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         isAuthenticated &&
         (pathname === "/login" || pathname === "/register")
       ) {
-        router.push("/dashboard");
+        router.push("/");
       }
     }
   }, [isAuthenticated, isLoading, router, pathname]);
