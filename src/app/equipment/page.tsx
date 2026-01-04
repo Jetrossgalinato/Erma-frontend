@@ -162,11 +162,11 @@ export default function EquipmentPage() {
                   and search for specific items.
                 </p>
               </div>
-              <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-6">
+              <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
                 <button
                   onClick={fetchEquipment}
                   disabled={loading}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1 sm:gap-2 disabled:opacity-50"
+                  className="px-2 py-1 sm:px-3 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1 sm:gap-2 disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
