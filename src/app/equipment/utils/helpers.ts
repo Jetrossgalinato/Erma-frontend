@@ -129,7 +129,7 @@ export function filterEquipment(
       item.category === selectedCategory;
     const matchesFacility =
       selectedFacility === "All Facilities" ||
-      item.facility === selectedFacility;
+      item.facility_name === selectedFacility;
 
     return matchesSearch && matchesCategory && matchesFacility;
   });
