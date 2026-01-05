@@ -25,7 +25,7 @@ export default function UsersTable({
     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
       <thead className="bg-gray-50 dark:bg-gray-700">
         <tr>
-          <th className="w-12 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="w-12 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             <input
               type="checkbox"
               className="form-checkbox h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 transition duration-150 ease-in-out"
@@ -33,26 +33,23 @@ export default function UsersTable({
               onChange={onSelectAll}
             />
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             First Name
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             Last Name
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             Email
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             Department
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
             Phone Number
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Account Role
-          </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            Approved Role
           </th>
         </tr>
       </thead>
@@ -62,7 +59,7 @@ export default function UsersTable({
             key={user.id}
             className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
-            <td className="w-12 px-6 py-4 whitespace-nowrap">
+            <td className="w-12 px-6 py-4 whitespace-nowrap border-r border-gray-100 dark:border-gray-700">
               <input
                 type="checkbox"
                 className="form-checkbox h-4 w-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 transition duration-150 ease-in-out"
@@ -70,36 +67,25 @@ export default function UsersTable({
                 onChange={() => onSelectRow(user.id)}
               />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
               {user.first_name}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
               {user.last_name}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
               {user.email}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
               {user.department}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
               {user.phone_number}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-blue-200 dark:border-blue-700 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
                 {user.acc_role}
               </span>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              {user.approved_acc_role ? (
-                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-green-200 dark:border-green-700 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
-                  {user.approved_acc_role}
-                </span>
-              ) : (
-                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-400">
-                  Pending
-                </span>
-              )}
             </td>
           </tr>
         ))}
