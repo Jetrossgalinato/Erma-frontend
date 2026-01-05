@@ -51,9 +51,6 @@ export default function UsersTable({
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             Account Role
           </th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-            Approved Role
-          </th>
         </tr>
       </thead>
       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -89,17 +86,6 @@ export default function UsersTable({
               <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-blue-200 dark:border-blue-700 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
                 {user.acc_role}
               </span>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              {user.approved_acc_role ? (
-                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-green-200 dark:border-green-700 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
-                  {user.approved_acc_role}
-                </span>
-              ) : (
-                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-400">
-                  Pending
-                </span>
-              )}
             </td>
           </tr>
         ))}
