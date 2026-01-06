@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Search, RefreshCw, ChevronDown } from "lucide-react";
+import { Search, RefreshCw, ChevronDown, LayoutGrid, List } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -53,6 +53,9 @@ export default function EquipmentPage() {
 
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedFacility, setSelectedFacility] = useState("All Facilities");
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [borrowFormData, setBorrowFormData] = useState<BorrowingFormData>({
@@ -168,6 +171,31 @@ export default function EquipmentPage() {
                 </p>
               </div>
               <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
+                <div className="flex bg-gray-200 rounded-lg p-1 gap-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-md transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`p-1.5 rounded-md transition-colors ${
+                      viewMode === "table"
+                        ? "bg-white text-gray-900 shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                    title="Table View"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <button
                   onClick={fetchEquipment}
                   disabled={loading}
@@ -230,163 +258,435 @@ export default function EquipmentPage() {
               <Loader />
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
-                  {paginatedEquipment.map((equipment) => (
-                    <div
-                      key={equipment.id}
-                      className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
-                    >
-                      {/* Image section */}
-                      <div className="h-32 sm:h-48 bg-gray-200 relative">
-                        {equipment.image ? (
-                          <Image
-                            src={formatImageUrl(equipment.image)!}
-                            alt={equipment.name}
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            width={500}
-                            height={500}
-                            sizes="100vw"
-                            priority
-                            onClick={() => {
-                              setSelectedImage(
-                                formatImageUrl(equipment.image)!
-                              );
-                              setSelectedEquipment(equipment);
-                              setShowImageModal(true);
-                            }}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                              target.nextElementSibling?.classList.remove(
-                                "hidden"
-                              );
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${
-                            equipment.image ? "hidden" : ""
-                          }`}
-                        >
-                          <div className="text-center text-gray-400">
-                            <svg
-                              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-1 sm:mb-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                {viewMode === "grid" ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
+                    {paginatedEquipment.map((equipment) => (
+                      <div
+                        key={equipment.id}
+                        className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
+                      >
+                        {/* Image section */}
+                        <div className="h-32 sm:h-48 bg-gray-200 relative">
+                          {equipment.image ? (
+                            <Image
+                              src={formatImageUrl(equipment.image)!}
+                              alt={equipment.name}
+                              className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              width={500}
+                              height={500}
+                              sizes="100vw"
+                              priority
+                              onClick={() => {
+                                setSelectedImage(
+                                  formatImageUrl(equipment.image)!
+                                );
+                                setSelectedEquipment(equipment);
+                                setShowImageModal(true);
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                target.nextElementSibling?.classList.remove(
+                                  "hidden"
+                                );
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${
+                              equipment.image ? "hidden" : ""
+                            }`}
+                          >
+                            <div className="text-center text-gray-400">
+                              <svg
+                                className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-1 sm:mb-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                              <p className="text-xs sm:text-sm">No Image</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-3 sm:p-6">
+                          <div className="flex justify-between items-start mb-2 sm:mb-4">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-2">
+                              {equipment.name}
+                            </h3>
+                            <span
+                              className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                equipment.status,
+                                equipment.availability
+                              )}`}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                            <p className="text-xs sm:text-sm">No Image</p>
+                              {equipment.status === "Working"
+                                ? equipment.availability || "Available"
+                                : equipment.status}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
+                            <p className="text-xs sm:text-sm text-gray-600">
+                              <span className="font-medium">Category:</span>{" "}
+                              {equipment.category}
+                            </p>
+                            <p className="text-xs sm:text-sm text-gray-600">
+                              <span className="font-medium">Facility:</span>{" "}
+                              {equipment.facility_name ||
+                                equipment.facility ||
+                                "N/A"}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-1 sm:gap-2">
+                            <button
+                              className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                              onClick={() => {
+                                setSelectedEquipment(equipment);
+                                setShowModal(true);
+                              }}
+                            >
+                              View Details
+                            </button>
+
+                            {userLoading ? (
+                              <div className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
+                                <div className="h-3 sm:h-4 bg-gray-300 rounded"></div>
+                              </div>
+                            ) : (
+                              <button
+                                className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                                  isAuthenticated &&
+                                  equipment.availability !== "Borrowed"
+                                    ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                }`}
+                                onClick={
+                                  isAuthenticated &&
+                                  equipment.availability !== "Borrowed"
+                                    ? () => {
+                                        const now = new Date();
+                                        const year = now.getFullYear();
+                                        const month = String(
+                                          now.getMonth() + 1
+                                        ).padStart(2, "0");
+                                        const day = String(
+                                          now.getDate()
+                                        ).padStart(2, "0");
+                                        const today = `${year}-${month}-${day}`;
+
+                                        setSelectedEquipment(equipment);
+                                        setBorrowFormData({
+                                          purpose: "",
+                                          start_date: today,
+                                          end_date: "",
+                                          return_date: "",
+                                        });
+                                        setShowBorrowModal(true);
+                                      }
+                                    : undefined
+                                }
+                                disabled={
+                                  !isAuthenticated ||
+                                  equipment.availability === "Borrowed"
+                                }
+                                title={
+                                  equipment.availability === "Borrowed"
+                                    ? "This equipment is currently borrowed"
+                                    : !isAuthenticated
+                                    ? "Please log in to borrow equipment"
+                                    : "Borrow this equipment"
+                                }
+                              >
+                                {equipment.availability === "Borrowed"
+                                  ? "Borrowed"
+                                  : "Borrow"}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
-
-                      <div className="p-3 sm:p-6">
-                        <div className="flex justify-between items-start mb-2 sm:mb-4">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-2">
-                            {equipment.name}
-                          </h3>
-                          <span
-                            className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              equipment.status,
-                              equipment.availability
-                            )}`}
-                          >
-                            {equipment.status === "Working"
-                              ? equipment.availability || "Available"
-                              : equipment.status}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-4">
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            <span className="font-medium">Category:</span>{" "}
-                            {equipment.category}
-                          </p>
-                          <p className="text-xs sm:text-sm text-gray-600">
-                            <span className="font-medium">Facility:</span>{" "}
-                            {equipment.facility_name ||
-                              equipment.facility ||
-                              "N/A"}
-                          </p>
-                        </div>
-
-                        <div className="flex gap-1 sm:gap-2">
-                          <button
-                            className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
-                            onClick={() => {
-                              setSelectedEquipment(equipment);
-                              setShowModal(true);
-                            }}
-                          >
-                            View Details
-                          </button>
-
-                          {userLoading ? (
-                            <div className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm bg-gray-200 rounded-lg animate-pulse">
-                              <div className="h-3 sm:h-4 bg-gray-300 rounded"></div>
-                            </div>
-                          ) : (
-                            <button
-                              className={`flex-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                                isAuthenticated &&
-                                equipment.availability !== "Borrowed"
-                                  ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              }`}
-                              onClick={
-                                isAuthenticated &&
-                                equipment.availability !== "Borrowed"
-                                  ? () => {
-                                      const now = new Date();
-                                      const year = now.getFullYear();
-                                      const month = String(
-                                        now.getMonth() + 1
-                                      ).padStart(2, "0");
-                                      const day = String(
-                                        now.getDate()
-                                      ).padStart(2, "0");
-                                      const today = `${year}-${month}-${day}`;
-
-                                      setSelectedEquipment(equipment);
-                                      setBorrowFormData({
-                                        purpose: "",
-                                        start_date: today,
-                                        end_date: "",
-                                        return_date: "",
-                                      });
-                                      setShowBorrowModal(true);
-                                    }
-                                  : undefined
-                              }
-                              disabled={
-                                !isAuthenticated ||
-                                equipment.availability === "Borrowed"
-                              }
-                              title={
-                                equipment.availability === "Borrowed"
-                                  ? "This equipment is currently borrowed"
-                                  : !isAuthenticated
-                                  ? "Please log in to borrow equipment"
-                                  : "Borrow this equipment"
-                              }
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-sm border overflow-hidden mb-8 sm:mb-12">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                             >
-                              {equipment.availability === "Borrowed"
-                                ? "Borrowed"
-                                : "Borrow"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                              Image
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Name
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Category
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Facility
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                              Status
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Brand
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Model/Unit
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]"
+                            >
+                              Description
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              PO No.
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Supplier
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Amount
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Est. Life
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Item No.
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Prop. No.
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Control No.
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              Person Liable
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]"
+                            >
+                              Remarks
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-l"
+                            >
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {paginatedEquipment.map((equipment) => (
+                            <tr key={equipment.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="h-10 w-10 relative rounded overflow-hidden bg-gray-100">
+                                  {equipment.image ? (
+                                    <Image
+                                      src={formatImageUrl(equipment.image)!}
+                                      alt=""
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-400">
+                                      <svg
+                                        className="w-6 h-6"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={1}
+                                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {equipment.name}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.category}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.facility_name ||
+                                  equipment.facility ||
+                                  "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                                    equipment.status,
+                                    equipment.availability
+                                  )}`}
+                                >
+                                  {equipment.status === "Working"
+                                    ? equipment.availability || "Available"
+                                    : equipment.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.brand_name || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.unit_number || "N/A"}
+                              </td>
+                              <td
+                                className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate"
+                                title={equipment.description || ""}
+                              >
+                                {equipment.description || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.po_number || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.supplier || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.amount || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.estimated_life || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.item_number || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.property_number || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.control_number || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {equipment.person_liable || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                {equipment.remarks || "N/A"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white shadow-l">
+                                <div className="flex justify-end gap-2">
+                                  {userLoading ? (
+                                    <div className="px-3 py-1 bg-gray-200 rounded-lg animate-pulse w-20 h-6"></div>
+                                  ) : (
+                                    <button
+                                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                                        isAuthenticated &&
+                                        equipment.availability !== "Borrowed"
+                                          ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
+                                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                      }`}
+                                      onClick={
+                                        isAuthenticated &&
+                                        equipment.availability !== "Borrowed"
+                                          ? () => {
+                                              const now = new Date();
+                                              const year = now.getFullYear();
+                                              const month = String(
+                                                now.getMonth() + 1
+                                              ).padStart(2, "0");
+                                              const day = String(
+                                                now.getDate()
+                                              ).padStart(2, "0");
+                                              const today = `${year}-${month}-${day}`;
+                                              setSelectedEquipment(equipment);
+                                              setBorrowFormData({
+                                                purpose: "",
+                                                start_date: today,
+                                                end_date: "",
+                                                return_date: "",
+                                              });
+                                              setShowBorrowModal(true);
+                                            }
+                                          : undefined
+                                      }
+                                      disabled={
+                                        !isAuthenticated ||
+                                        equipment.availability === "Borrowed"
+                                      }
+                                      title={
+                                        equipment.availability === "Borrowed"
+                                          ? "This equipment is currently borrowed"
+                                          : !isAuthenticated
+                                          ? "Please log in to borrow equipment"
+                                          : "Borrow this equipment"
+                                      }
+                                    >
+                                      {equipment.availability === "Borrowed"
+                                        ? "Borrowed"
+                                        : "Borrow"}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
 
                 <Pagination
                   currentPage={currentPage}
