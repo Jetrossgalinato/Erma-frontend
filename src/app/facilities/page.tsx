@@ -101,6 +101,14 @@ export default function FacilitiesPage() {
     e.preventDefault();
     if (!selectedFacility) return;
 
+    if (bookingData.start_date === bookingData.end_date) {
+      showAlert({
+        type: "error",
+        message: "Start date and End date cannot be the same",
+      });
+      return;
+    }
+
     setBookingLoading(true);
 
     const success = await createBookingRequest(

@@ -31,6 +31,25 @@ export default function BookFacilityModal({
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
+  const getMinEndDate = (startDate: string) => {
+    if (!startDate) return getCurrentDateTime();
+
+    // Create a new Date object from the startDate string
+    const date = new Date(startDate);
+
+    // Add 1 minute to ensure end date is after start date
+    date.setMinutes(date.getMinutes() + 1);
+
+    // Format the date back to YYYY-MM-DDTHH:mm string manually
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
@@ -100,7 +119,7 @@ export default function BookFacilityModal({
                 })
               }
               required
-              min={bookingData.start_date || getCurrentDateTime()}
+              min={getMinEndDate(bookingData.start_date)}
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
             />
           </div>
