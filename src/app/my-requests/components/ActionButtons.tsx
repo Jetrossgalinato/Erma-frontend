@@ -1,4 +1,5 @@
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, Repeat } from "lucide-react";
+import Link from "next/link";
 
 interface ActionButtonsProps {
   requestType: "borrowing" | "booking" | "acquiring";
@@ -47,6 +48,16 @@ export default function ActionButtons({
         <Trash2 className="w-4 h-4" />
         Delete ({selectedCount})
       </button>
+
+      {requestType === "borrowing" && (
+        <Link
+          href="/equipment"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        >
+          <Repeat className="w-4 h-4" />
+          Borrow again
+        </Link>
+      )}
     </div>
   );
 }
