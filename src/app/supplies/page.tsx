@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Loader from "@/components/Loader";
 import Pagination from "@/components/Pagination";
 import { useAlert } from "@/contexts/AlertContext";
-import { RefreshCw, Search, ChevronDown } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, LayoutGrid, List } from "lucide-react";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useAuthStore, useUIStore } from "@/store";
 import {
@@ -22,6 +22,7 @@ import {
 import SupplyDetailsModal from "./components/SupplyDetailsModal";
 import AcquireSupplyModal from "./components/AcquireSupplyModal";
 import ImageModal from "./components/ImageModal";
+import SuppliesTable from "./components/SuppliesTable";
 import Image from "next/image";
 
 export default function SuppliesPage() {
@@ -55,6 +56,9 @@ export default function SuppliesPage() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedImageName, setSelectedImageName] = useState<string>("");
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // Fetch supplies from FastAPI
   const fetchSupplies = useCallback(async () => {
@@ -150,6 +154,30 @@ export default function SuppliesPage() {
               </p>
             </div>
             <div className="flex gap-2 sm:gap-3">
+              <div className="flex bg-gray-200 rounded-lg p-1 gap-1">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "table"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Table View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
               <button
                 onClick={fetchSupplies}
                 disabled={loading}
@@ -206,22 +234,30 @@ export default function SuppliesPage() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-            {loading ? (
-              <div className="col-span-full">
-                <Loader />
+          {loading ? (
+            <div className="w-full flex justify-center py-8">
+              <Loader />
+            </div>
+          ) : filteredSupplies.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <div className="text-gray-500 text-base sm:text-lg mb-2">
+                No supplies found
               </div>
-            ) : filteredSupplies.length === 0 ? (
-              <div className="col-span-full text-center py-8 sm:py-12">
-                <div className="text-gray-500 text-base sm:text-lg mb-2">
-                  No supplies found
-                </div>
-                <p className="text-gray-400 text-xs sm:text-sm">
-                  Try adjusting your search or filter criteria
-                </p>
-              </div>
-            ) : (
-              paginatedSupply.map((supply) => (
+              <p className="text-gray-400 text-xs sm:text-sm">
+                Try adjusting your search or filter criteria
+              </p>
+            </div>
+          ) : viewMode === "table" ? (
+            <SuppliesTable
+              data={paginatedSupply}
+              isAuthenticated={isAuthenticated}
+              isLoading={userLoading}
+              onAcquire={handleAcquire}
+              onImageClick={handleImageClick}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+              {paginatedSupply.map((supply) => (
                 <div
                   key={supply.supply_id}
                   className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow"
@@ -304,17 +340,19 @@ export default function SuppliesPage() {
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={calculateTotalPages(
-              filteredSupplies.length,
-              ITEMS_PER_PAGE
-            )}
-            onPageChange={(page) => setCurrentPage("supplies", page)}
-          />
+              ))}
+            </div>
+          )}
+          {filteredSupplies.length > ITEMS_PER_PAGE && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={calculateTotalPages(
+                filteredSupplies.length,
+                ITEMS_PER_PAGE
+              )}
+              onPageChange={(page) => setCurrentPage("supplies", page)}
+            />
+          )}
         </div>
       </div>
       <Footer />

@@ -30,6 +30,13 @@ export default function BorrowEquipmentModal({
     return `${year}-${month}-${day}`;
   };
 
+  const getMinEndDate = (startDate: string) => {
+    if (!startDate) return getCurrentDate();
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split("T")[0];
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 backdrop-blur-sm bg-opacity-40 flex items-center justify-center"
@@ -91,7 +98,7 @@ export default function BorrowEquipmentModal({
             </label>
             <input
               type="date"
-              min={formData.start_date || getCurrentDate()}
+              min={getMinEndDate(formData.start_date)}
               value={formData.end_date}
               onChange={(e) =>
                 onFormChange({

@@ -1,4 +1,4 @@
-import { formatDate, getStatusColor } from "../utils/helpers";
+import { formatDateTime, getStatusColor } from "../utils/helpers";
 import type { Booking } from "../utils/helpers";
 
 interface BookingTableProps {
@@ -7,6 +7,25 @@ interface BookingTableProps {
   onSelectAll: (checked: boolean) => void;
   onSelectOne: (id: number, checked: boolean) => void;
 }
+
+const getEndDateColorClass = (dateString: string) => {
+  const endDate = new Date(dateString);
+  const now = new Date();
+
+  if (endDate < now) {
+    return "text-red-600 font-medium";
+  }
+
+  // Calculate difference in hours
+  const diffMs = endDate.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffHours <= 24) {
+    return "text-yellow-600 font-medium";
+  }
+
+  return "text-green-600 font-medium";
+};
 
 export default function BookingTable({
   requests,
@@ -45,13 +64,13 @@ export default function BookingTable({
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Booking Date
+              Date Booked
             </th>
             <th
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Time Slot
+              End Date
             </th>
             <th
               scope="col"
@@ -82,10 +101,14 @@ export default function BookingTable({
                 {request.facility_name}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                {formatDate(request.booking_date)}
+                {formatDateTime(request.start_date)}
               </td>
-              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                {request.start_time} - {request.end_time}
+              <td
+                className={`px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm ${getEndDateColorClass(
+                  request.end_date
+                )}`}
+              >
+                {formatDateTime(request.end_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                 <span

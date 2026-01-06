@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Search, RefreshCw, ChevronDown } from "lucide-react";
+import { Search, RefreshCw, ChevronDown, LayoutGrid, List } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -10,6 +10,7 @@ import { useAlert } from "@/contexts/AlertContext";
 import { useAuthStore, useUIStore } from "@/store";
 import FacilityDetailsModal from "./components/FacilityDetailsModal";
 import BookFacilityModal from "./components/BookFacilityModal";
+import FacilitiesTable from "./components/FacilitiesTable";
 import {
   Facility,
   FacilityStatus,
@@ -63,6 +64,9 @@ export default function FacilitiesPage() {
     FacilityStatus | "All Statuses"
   >("All Statuses");
 
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
   // Fetch data from FastAPI
   const fetchFacilities = useCallback(async () => {
     setLoading(true);
@@ -97,6 +101,14 @@ export default function FacilitiesPage() {
     e.preventDefault();
     if (!selectedFacility) return;
 
+    if (bookingData.start_date === bookingData.end_date) {
+      showAlert({
+        type: "error",
+        message: "Start date and End date cannot be the same",
+      });
+      return;
+    }
+
     setBookingLoading(true);
 
     const success = await createBookingRequest(
@@ -121,6 +133,26 @@ export default function FacilitiesPage() {
   const resetBookingModal = () => {
     setShowBookingModal(false);
     setBookingData({ purpose: "", start_date: "", end_date: "" });
+  };
+
+  const handleBookClick = (facility: Facility) => {
+    // Set default start date to now
+    const now = new Date();
+    // Format to YYYY-MM-DDTHH:mm
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const today = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+    setSelectedFacility(facility);
+    setBookingData({
+      purpose: "",
+      start_date: today,
+      end_date: "",
+    });
+    setShowBookingModal(true);
   };
 
   // Pagination logic
@@ -154,6 +186,30 @@ export default function FacilitiesPage() {
               </p>
             </div>
             <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-0">
+              <div className="flex bg-gray-200 rounded-lg p-1 gap-1">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "table"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Table View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
               <button
                 onClick={fetchFacilities}
                 disabled={loading}
@@ -253,6 +309,17 @@ export default function FacilitiesPage() {
                     Try adjusting your search or filters
                   </p>
                 </div>
+              ) : viewMode === "table" ? (
+                <FacilitiesTable
+                  data={paginatedFacilities}
+                  isAuthenticated={isAuthenticated}
+                  isLoading={userLoading}
+                  onBook={handleBookClick}
+                  onViewDetails={(facility) => {
+                    setSelectedFacility(facility);
+                    setShowModal(true);
+                  }}
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
                   {paginatedFacilities.map((facility) => (
