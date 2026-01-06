@@ -8,6 +8,25 @@ interface BorrowingTableProps {
   onSelectOne: (id: number, checked: boolean) => void;
 }
 
+const getEndDateColorClass = (dateString: string) => {
+  const endDate = new Date(dateString);
+  const now = new Date();
+
+  if (endDate < now) {
+    return "text-red-600 font-medium";
+  }
+
+  // Calculate difference in hours
+  const diffMs = endDate.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffHours <= 24) {
+    return "text-yellow-600 font-medium";
+  }
+
+  return "text-green-600 font-medium";
+};
+
 export default function BorrowingTable({
   requests,
   selectedIds,
@@ -99,7 +118,11 @@ export default function BorrowingTable({
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                 {formatDate(request.borrow_date)}
               </td>
-              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+              <td
+                className={`px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm ${getEndDateColorClass(
+                  request.end_date
+                )}`}
+              >
                 {formatDate(request.end_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
