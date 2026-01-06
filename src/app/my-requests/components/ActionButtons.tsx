@@ -34,7 +34,7 @@ export default function ActionButtons({
         <button
           onClick={onMarkDone}
           disabled={selectedCount === 0 || disableMarkAction}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
         >
           <RotateCcw className="w-4 h-4" />
           Mark as Done ({selectedCount})
@@ -55,7 +55,17 @@ export default function ActionButtons({
           className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
         >
           <Repeat className="w-4 h-4" />
-          Borrow again
+          Borrow an Equipment
+        </Link>
+      )}
+
+      {requestType === "booking" && (
+        <Link
+          href="/facilities"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        >
+          <Repeat className="w-4 h-4" />
+          Book a Facility
         </Link>
       )}
     </div>
