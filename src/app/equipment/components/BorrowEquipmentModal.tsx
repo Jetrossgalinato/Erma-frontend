@@ -102,25 +102,6 @@ export default function BorrowEquipmentModal({
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
             />
           </div>
-
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-              Expected Return Date *
-            </label>
-            <input
-              type="date"
-              min={formData.start_date || getCurrentDate()}
-              max={formData.end_date}
-              value={formData.return_date}
-              onChange={(e) =>
-                onFormChange({
-                  ...formData,
-                  return_date: e.target.value,
-                })
-              }
-              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-base text-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-            />
-          </div>
         </div>
 
         <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">

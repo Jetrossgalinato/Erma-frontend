@@ -108,8 +108,7 @@ export default function EquipmentPage() {
       !selectedEquipment ||
       !borrowFormData.purpose ||
       !borrowFormData.start_date ||
-      !borrowFormData.end_date ||
-      !borrowFormData.return_date
+      !borrowFormData.end_date
     ) {
       showAlert({
         type: "error",
@@ -119,9 +118,15 @@ export default function EquipmentPage() {
     }
 
     setBorrowing(true);
+    // Use end_date as return_date since we removed the explicit field
+    const finalFormData = {
+      ...borrowFormData,
+      return_date: borrowFormData.end_date,
+    };
+
     const success = await createBorrowingRequest(
       selectedEquipment.id,
-      borrowFormData
+      finalFormData
     );
 
     if (success) {
