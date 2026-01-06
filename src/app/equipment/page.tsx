@@ -108,8 +108,7 @@ export default function EquipmentPage() {
       !selectedEquipment ||
       !borrowFormData.purpose ||
       !borrowFormData.start_date ||
-      !borrowFormData.end_date ||
-      !borrowFormData.return_date
+      !borrowFormData.end_date
     ) {
       showAlert({
         type: "error",
@@ -119,9 +118,15 @@ export default function EquipmentPage() {
     }
 
     setBorrowing(true);
+    // Use end_date as return_date since we removed the explicit field
+    const finalFormData = {
+      ...borrowFormData,
+      return_date: borrowFormData.end_date,
+    };
+
     const success = await createBorrowingRequest(
       selectedEquipment.id,
-      borrowFormData
+      finalFormData
     );
 
     if (success) {
@@ -339,7 +344,23 @@ export default function EquipmentPage() {
                                 isAuthenticated &&
                                 equipment.availability !== "Borrowed"
                                   ? () => {
+                                      const now = new Date();
+                                      const year = now.getFullYear();
+                                      const month = String(
+                                        now.getMonth() + 1
+                                      ).padStart(2, "0");
+                                      const day = String(
+                                        now.getDate()
+                                      ).padStart(2, "0");
+                                      const today = `${year}-${month}-${day}`;
+
                                       setSelectedEquipment(equipment);
+                                      setBorrowFormData({
+                                        purpose: "",
+                                        start_date: today,
+                                        end_date: "",
+                                        return_date: "",
+                                      });
                                       setShowBorrowModal(true);
                                     }
                                   : undefined
