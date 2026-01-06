@@ -18,9 +18,8 @@ export interface Booking {
   id: number;
   status: string;
   facility_name: string;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
+  start_date: string;
+  end_date: string;
   purpose: string | null;
 }
 
@@ -83,6 +82,18 @@ export function formatDate(dateString: string | null): string {
     year: "numeric",
     month: "short",
     day: "numeric",
+  });
+}
+
+export function formatDateTime(dateString: string | null): string {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
   });
 }
 

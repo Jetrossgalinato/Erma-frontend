@@ -1,4 +1,4 @@
-import { formatDate, getStatusColor } from "../utils/helpers";
+import { formatDateTime, getStatusColor } from "../utils/helpers";
 import type { Booking } from "../utils/helpers";
 
 interface BookingTableProps {
@@ -45,13 +45,13 @@ export default function BookingTable({
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Booking Date
+              Date Booked
             </th>
             <th
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Time Slot
+              End Date
             </th>
             <th
               scope="col"
@@ -82,10 +82,10 @@ export default function BookingTable({
                 {request.facility_name}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                {formatDate(request.booking_date)}
+                {formatDateTime(request.start_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                {request.start_time} - {request.end_time}
+                {formatDateTime(request.end_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                 <span
