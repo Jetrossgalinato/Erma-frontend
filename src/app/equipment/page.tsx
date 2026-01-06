@@ -121,6 +121,14 @@ export default function EquipmentPage() {
       return;
     }
 
+    if (borrowFormData.start_date === borrowFormData.end_date) {
+      showAlert({
+        type: "error",
+        message: "Start date and End date cannot be the same",
+      });
+      return;
+    }
+
     setBorrowing(true);
     // Use end_date as return_date since we removed the explicit field
     const finalFormData = {
