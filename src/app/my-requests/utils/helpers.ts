@@ -7,6 +7,7 @@ export interface Borrowing {
   equipment_name: string;
   quantity: number;
   borrow_date: string;
+  end_date: string;
   expected_return_date: string;
   purpose: string | null;
   receiver_name?: string;

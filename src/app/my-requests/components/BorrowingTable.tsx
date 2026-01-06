@@ -51,13 +51,13 @@ export default function BorrowingTable({
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Borrow Date
+              Date Borrowed
             </th>
             <th
               scope="col"
               className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              Expected Return
+              End Date
             </th>
             <th
               scope="col"
@@ -100,7 +100,7 @@ export default function BorrowingTable({
                 {formatDate(request.borrow_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                {formatDate(request.expected_return_date)}
+                {formatDate(request.end_date)}
               </td>
               <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                 <span
