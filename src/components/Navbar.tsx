@@ -500,18 +500,6 @@ const Navbar: React.FC = () => {
           </a>
         )}
 
-        {/* Maintenance Check - Only for Lab Technician */}
-        {isAuthenticated && isLabTechnician && (
-          <a
-            href="/maintenance-check"
-            className={`hover:text-black transition-colors duration-300 ${
-              pathname === "/maintenance-check" ? "text-orange-500" : ""
-            }`}
-          >
-            Maintenance Check
-          </a>
-        )}
-
         {isAuthenticated ? (
           <div className="relative dropdown-container flex items-center gap-3">
             <button
@@ -736,19 +724,6 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Daily Maintenance
-            </Link>
-          )}
-
-          {/* Maintenance Check - Only for Lab Technician */}
-          {isAuthenticated && isLabTechnician && (
-            <Link
-              href="/maintenance-check"
-              className={`py-2 text-gray-700 ${
-                pathname === "/maintenance-check" ? "text-orange-500" : ""
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              Maintenance Check
             </Link>
           )}
 
