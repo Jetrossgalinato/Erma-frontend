@@ -267,8 +267,11 @@ const DashboardNavbar: React.FC = () => {
 
     try {
       const data = await fetchReturnNotifications();
-      setReturnNotifications(data || []);
-      setReturnNotificationsCount(data?.length || 0);
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setReturnNotifications(uniqueData);
+      setReturnNotificationsCount(uniqueData.length);
     } catch (error) {
       console.error("Error fetching return notifications:", error);
     }
@@ -279,8 +282,11 @@ const DashboardNavbar: React.FC = () => {
 
     try {
       const data = await fetchDoneNotifications();
-      setDoneNotifications(data || []);
-      setDoneNotificationsCount(data?.length || 0);
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setDoneNotifications(uniqueData);
+      setDoneNotificationsCount(uniqueData.length);
     } catch (error) {
       console.error("Error fetching done notifications:", error);
     }
@@ -291,8 +297,12 @@ const DashboardNavbar: React.FC = () => {
 
     try {
       const data = await fetchRequestNotifications();
-      setRequestNotifications(data || []);
-      setRequestNotificationsCount(data?.length || 0);
+      // Deduplicate request notifications by ID to prevent key errors
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setRequestNotifications(uniqueData);
+      setRequestNotificationsCount(uniqueData.length);
     } catch (error) {
       console.error("Error fetching request notifications:", error);
     }

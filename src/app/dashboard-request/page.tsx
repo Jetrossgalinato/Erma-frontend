@@ -114,15 +114,27 @@ function DashboardRequestsContent() {
     try {
       if (currentRequestType === "borrowing") {
         const data = await fetchBorrowingRequests(currentPage, PAGE_SIZE);
-        setBorrowingRequests(data.data);
+        // Deduplicate data by ID to prevent key errors
+        const uniqueData = Array.from(
+          new Map(data.data.map((item) => [item.id, item])).values()
+        );
+        setBorrowingRequests(uniqueData);
         setTotalPages(data.total_pages);
       } else if (currentRequestType === "booking") {
         const data = await fetchBookingRequests(currentPage, PAGE_SIZE);
-        setBookingRequests(data.data);
+        // Deduplicate data by ID
+        const uniqueData = Array.from(
+          new Map(data.data.map((item) => [item.id, item])).values()
+        );
+        setBookingRequests(uniqueData);
         setTotalPages(data.total_pages);
       } else if (currentRequestType === "acquiring") {
         const data = await fetchAcquiringRequests(currentPage, PAGE_SIZE);
-        setAcquiringRequests(data.data);
+        // Deduplicate data by ID
+        const uniqueData = Array.from(
+          new Map(data.data.map((item) => [item.id, item])).values()
+        );
+        setAcquiringRequests(uniqueData);
         setTotalPages(data.total_pages);
       }
     } catch (err) {
