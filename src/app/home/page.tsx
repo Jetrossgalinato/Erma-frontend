@@ -65,12 +65,12 @@ export default function Home() {
 
                 {!isLoading && isAuthenticated && (
                   <div>
-                    <Link href="/my-requests">
+                    <Link href="/equipment">
                       <button
                         className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
                         aria-label="Go to My requests"
                       >
-                        My Requests
+                        Make a Request
                         <svg
                           className="w-3 h-3 md:w-5 md:h-5"
                           fill="none"
