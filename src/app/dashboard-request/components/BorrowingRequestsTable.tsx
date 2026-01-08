@@ -68,8 +68,11 @@ export default function BorrowingRequestsTable({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Return Status
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Receiver
             </th>
           </tr>
         </thead>
@@ -121,7 +124,7 @@ export default function BorrowingRequestsTable({
                   {request.request_status}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
                 {request.return_status ? (
                   <span
                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
@@ -135,6 +138,9 @@ export default function BorrowingRequestsTable({
                     Not returned
                   </span>
                 )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                {request.return_notification?.receiver_name || "-"}
               </td>
             </tr>
           ))}
