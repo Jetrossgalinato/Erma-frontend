@@ -19,7 +19,7 @@ import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
 import EmptyState from "./components/emptyState";
 import Pagination from "./components/pagination";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
 const ImageModal = lazy(() => import("./components/imageModal"));
@@ -86,6 +86,7 @@ export default function DashboardEquipmentPage() {
   const [activeFilter, setActiveFilter] = useState<
     "category" | "facility" | null
   >(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showActionsDropdown, setShowActionsDropdown] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -162,7 +163,7 @@ export default function DashboardEquipmentPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [categoryFilter, facilityFilter]);
+  }, [categoryFilter, facilityFilter, searchQuery]);
 
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
@@ -405,7 +406,12 @@ export default function DashboardEquipmentPage() {
   };
 
   const getFilteredEquipments = () => {
-    return filterEquipments(equipments, categoryFilter, facilityFilter);
+    return filterEquipments(
+      equipments,
+      categoryFilter,
+      facilityFilter,
+      searchQuery
+    );
   };
 
   const getTotalPages = () => {
@@ -723,7 +729,20 @@ export default function DashboardEquipmentPage() {
                   title="Equipments"
                   description="Welcome to the Equipments page, where you can manage all the equipments efficiently."
                 />
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                  <div className="relative hidden md:block">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search equipment..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 transition-all"
+                    />
+                  </div>
+
                   <FilterControls
                     equipments={equipments}
                     facilities={facilities}
@@ -841,6 +860,9 @@ export default function DashboardEquipmentPage() {
                     editingCell={editingCell}
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
+                    categoryFilter={categoryFilter}
+                    facilityFilter={facilityFilter}
+                    searchQuery={searchQuery}
                     onCheckboxChange={handleCheckboxChange}
                     onSelectAll={() => {
                       if (selectedRows.length === equipments.length) {
@@ -853,8 +875,6 @@ export default function DashboardEquipmentPage() {
                     onCellEdit={handleCellEdit}
                     onKeyDown={handleKeyDown}
                     onCancelEdit={handleCancelEdit}
-                    categoryFilter={categoryFilter}
-                    facilityFilter={facilityFilter}
                   />
 
                   {/* Pagination */}
