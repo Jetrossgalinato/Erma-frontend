@@ -30,6 +30,7 @@ interface EquipmentsTableProps {
   onCancelEdit: () => void;
   categoryFilter: string;
   facilityFilter: string;
+  searchQuery: string;
 }
 
 export default function EquipmentsTable({
@@ -47,6 +48,7 @@ export default function EquipmentsTable({
   onCancelEdit,
   categoryFilter,
   facilityFilter,
+  searchQuery = "",
 }: EquipmentsTableProps) {
   const getFacilityName = (facilityId?: number) => {
     if (!facilityId) return "-";
@@ -221,7 +223,12 @@ export default function EquipmentsTable({
   };
 
   const getFilteredEquipments = () => {
-    return filterEquipments(equipments, categoryFilter, facilityFilter);
+    return filterEquipments(
+      equipments,
+      categoryFilter,
+      facilityFilter,
+      searchQuery
+    );
   };
 
   const getCurrentPageData = () => {

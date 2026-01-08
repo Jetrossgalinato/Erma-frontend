@@ -19,7 +19,7 @@ import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
 import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
 const EditModal = lazy(() => import("./components/EditModal"));
@@ -75,6 +75,7 @@ export default function DashboardFacilitiesPage() {
   const [activeFilter, setActiveFilter] = useState<
     "facility type" | "floor level" | null
   >(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Loading State
   const [loading, setLoading] = useState(true);
@@ -149,6 +150,10 @@ export default function DashboardFacilitiesPage() {
       loadFacilities();
     }
   }, [isAuthenticated, loadFacilities]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [facilityTypeFilter, floorLevelFilter, searchQuery]);
 
   // Handlers
   const handleRefreshClick = useCallback(() => {
@@ -541,7 +546,8 @@ export default function DashboardFacilitiesPage() {
   const filteredFacilitiesComputed = filterFacilities(
     facilities,
     facilityTypeFilter,
-    floorLevelFilter
+    floorLevelFilter,
+    searchQuery
   );
   const totalPages = Math.ceil(
     filteredFacilitiesComputed.length / itemsPerPage
@@ -579,7 +585,7 @@ export default function DashboardFacilitiesPage() {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <div className="mb-8 pt-8 flex items-center justify-between">
+              <div className="mb-8 pt-8 flex flex-col gap-6">
                 <div>
                   <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight">
                     Facilities
@@ -589,66 +595,82 @@ export default function DashboardFacilitiesPage() {
                     view all facilities.
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <FilterControls
-                    facilityTypeFilter={facilityTypeFilter}
-                    floorLevelFilter={floorLevelFilter}
-                    activeFilter={activeFilter}
-                    showFilterDropdown={showFilterDropdown}
-                    uniqueFacilityTypes={uniqueFacilityTypes}
-                    uniqueFloorLevels={uniqueFloorLevels}
-                    onFilterSelect={handleFilterSelect}
-                    onFacilityTypeChange={setFacilityTypeFilter}
-                    onFloorLevelChange={setFloorLevelFilter}
-                    onClearFilters={clearFilters}
-                    onToggleDropdown={() =>
-                      setShowFilterDropdown(!showFilterDropdown)
-                    }
-                    dropdownRef={filterDropdownRef}
-                  />
 
-                  <ActionsDropdown
-                    selectedRows={selectedRows}
-                    isRefreshing={isRefreshing}
-                    showActionsDropdown={showActionsDropdown}
-                    onRefresh={handleRefreshClick}
-                    onToggleDropdown={() =>
-                      setShowActionsDropdown(!showActionsDropdown)
-                    }
-                    onAddNew={() => {
-                      setShowInsertForm(true);
-                      setShowActionsDropdown(false);
-                    }}
-                    onEdit={() => {
-                      handleEditClick();
-                      setShowActionsDropdown(false);
-                    }}
-                    onDelete={() => {
-                      setShowDeleteModal(true);
-                      setShowActionsDropdown(false);
-                    }}
-                    onImport={() => {
-                      setShowImportModal(true);
-                      setShowActionsDropdown(false);
-                    }}
-                    onExport={handleExportClick}
-                    dropdownRef={actionsDropdownRef}
-                  />
-
-                  <button
-                    onClick={handleRefreshClick}
-                    disabled={isRefreshing}
-                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                      isRefreshing ? "cursor-not-allowed opacity-75" : ""
-                    }`}
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 transition-transform duration-300 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                  <div className="relative w-full sm:w-auto">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search facility..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64 transition-all"
                     />
-                    {isRefreshing ? "Refreshing..." : "Refresh"}
-                  </button>
+                  </div>
+
+                  <div className="flex gap-3 items-center w-full sm:w-auto justify-end">
+                    <FilterControls
+                      facilityTypeFilter={facilityTypeFilter}
+                      floorLevelFilter={floorLevelFilter}
+                      activeFilter={activeFilter}
+                      showFilterDropdown={showFilterDropdown}
+                      uniqueFacilityTypes={uniqueFacilityTypes}
+                      uniqueFloorLevels={uniqueFloorLevels}
+                      onFilterSelect={handleFilterSelect}
+                      onFacilityTypeChange={setFacilityTypeFilter}
+                      onFloorLevelChange={setFloorLevelFilter}
+                      onClearFilters={clearFilters}
+                      onToggleDropdown={() =>
+                        setShowFilterDropdown(!showFilterDropdown)
+                      }
+                      dropdownRef={filterDropdownRef}
+                    />
+
+                    <ActionsDropdown
+                      selectedRows={selectedRows}
+                      isRefreshing={isRefreshing}
+                      showActionsDropdown={showActionsDropdown}
+                      onRefresh={handleRefreshClick}
+                      onToggleDropdown={() =>
+                        setShowActionsDropdown(!showActionsDropdown)
+                      }
+                      onAddNew={() => {
+                        setShowInsertForm(true);
+                        setShowActionsDropdown(false);
+                      }}
+                      onEdit={() => {
+                        handleEditClick();
+                        setShowActionsDropdown(false);
+                      }}
+                      onDelete={() => {
+                        setShowDeleteModal(true);
+                        setShowActionsDropdown(false);
+                      }}
+                      onImport={() => {
+                        setShowImportModal(true);
+                        setShowActionsDropdown(false);
+                      }}
+                      onExport={handleExportClick}
+                      dropdownRef={actionsDropdownRef}
+                    />
+
+                    <button
+                      onClick={handleRefreshClick}
+                      disabled={isRefreshing}
+                      className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                        isRefreshing ? "cursor-not-allowed opacity-75" : ""
+                      }`}
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isRefreshing ? "animate-spin" : ""
+                        }`}
+                      />
+                      {isRefreshing ? "Refreshing..." : "Refresh"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -676,6 +698,7 @@ export default function DashboardFacilitiesPage() {
                     onSelectAll={handleSelectAll}
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
+                    searchQuery={searchQuery}
                   />
 
                   <Pagination

@@ -384,7 +384,8 @@ export function getUniqueFacilities(supplies: Supply[]): string[] {
 export function filterSupplies(
   supplies: Supply[],
   categoryFilter: string,
-  facilityFilter: string
+  facilityFilter: string,
+  searchQuery: string = ""
 ): Supply[] {
   if (!Array.isArray(supplies)) {
     return [];
@@ -400,7 +401,11 @@ export function filterSupplies(
         ?.toLowerCase()
         .includes(facilityFilter.toLowerCase());
 
-    return matchesCategory && matchesFacility;
+    const matchesSearch =
+      !searchQuery ||
+      supply.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesFacility && matchesSearch;
   });
 }
 

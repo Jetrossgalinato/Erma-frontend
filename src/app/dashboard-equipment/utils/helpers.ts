@@ -291,7 +291,8 @@ export const readFileAsDataURL = (file: File): Promise<string> => {
 export const filterEquipments = (
   equipments: Equipment[],
   categoryFilter: string,
-  facilityFilter: string
+  facilityFilter: string,
+  searchQuery: string = ""
 ): Equipment[] => {
   return equipments.filter((eq) => {
     const matchesCategory =
@@ -299,7 +300,9 @@ export const filterEquipments = (
       eq.category?.toLowerCase().includes(categoryFilter.toLowerCase());
     const matchesFacility =
       !facilityFilter || eq.facility_id === parseInt(facilityFilter);
-    return matchesCategory && matchesFacility;
+    const matchesSearch =
+      !searchQuery || eq.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesFacility && matchesSearch;
   });
 };
 

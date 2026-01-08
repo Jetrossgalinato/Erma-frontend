@@ -18,6 +18,11 @@ export interface BorrowingRequest {
   end_date: string;
   date_returned: string | null;
   created_at: string;
+  return_notification?: {
+    id: number;
+    receiver_name: string;
+    status: string;
+  } | null;
 }
 
 export interface BookingRequest {

@@ -375,7 +375,8 @@ export function getUniqueFloorLevels(facilities: Facility[]): string[] {
 export function filterFacilities(
   facilities: Facility[],
   facilityTypeFilter: string,
-  floorLevelFilter: string
+  floorLevelFilter: string,
+  searchQuery: string = ""
 ): Facility[] {
   if (!Array.isArray(facilities)) {
     return [];
@@ -394,7 +395,11 @@ export function filterFacilities(
         .toLowerCase()
         .includes(floorLevelFilter.toLowerCase());
 
-    return matchesFacilityType && matchesFloorLevel;
+    const matchesSearch =
+      !searchQuery ||
+      facility.facility_name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesFacilityType && matchesFloorLevel && matchesSearch;
   });
 }
 
