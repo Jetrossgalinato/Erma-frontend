@@ -14,6 +14,7 @@ interface FacilitiesTableProps {
   onSelectAll: (checked: boolean) => void;
   currentPage: number;
   itemsPerPage: number;
+  searchQuery?: string;
 }
 
 const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
@@ -23,6 +24,7 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
   onSelectAll,
   currentPage,
   itemsPerPage,
+  searchQuery = "",
 }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
