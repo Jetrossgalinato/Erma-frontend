@@ -15,6 +15,7 @@ import ErrorMessage from "./components/ErrorMessage";
 export default function MonitorEquipmentPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -39,6 +40,11 @@ export default function MonitorEquipmentPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setEquipmentLogsPagination({ currentPage: 1 });
+  };
+
   // Fetch equipment logs
   const loadEquipmentLogs = useCallback(
     async (page = 1) => {
@@ -48,6 +54,7 @@ export default function MonitorEquipmentPage() {
         const response = await fetchEquipmentLogs({
           page,
           limit: equipmentLogsPagination.itemsPerPage,
+          search: searchQuery,
         });
 
         setEquipmentLogs(response.logs);
@@ -72,6 +79,7 @@ export default function MonitorEquipmentPage() {
       setEquipmentLogs,
       setIsLoadingEquipmentLogs,
       setEquipmentLogsPagination,
+      searchQuery,
     ]
   );
 
@@ -124,7 +132,11 @@ export default function MonitorEquipmentPage() {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <PageHeader onRefresh={handleRefresh} />
+              <PageHeader
+                onRefresh={handleRefresh}
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
             </div>
 
             {error && (
