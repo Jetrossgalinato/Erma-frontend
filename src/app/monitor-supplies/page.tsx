@@ -15,6 +15,7 @@ import ErrorMessage from "./components/ErrorMessage";
 export default function MonitorSuppliesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -39,6 +40,11 @@ export default function MonitorSuppliesPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setSupplyLogsPagination({ currentPage: 1 });
+  };
+
   // Fetch supply logs
   const loadSupplyLogs = useCallback(
     async (page = 1) => {
@@ -48,6 +54,7 @@ export default function MonitorSuppliesPage() {
         const response = await fetchSupplyLogs({
           page,
           limit: supplyLogsPagination.itemsPerPage,
+          search: searchQuery,
         });
 
         setSupplyLogs(response.logs);
@@ -70,6 +77,7 @@ export default function MonitorSuppliesPage() {
       setSupplyLogs,
       setIsLoadingSupplyLogs,
       setSupplyLogsPagination,
+      searchQuery,
     ]
   );
 
@@ -123,7 +131,11 @@ export default function MonitorSuppliesPage() {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <PageHeader onRefresh={handleRefresh} />
+              <PageHeader
+                onRefresh={handleRefresh}
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+              />
             </div>
 
             {error && (
