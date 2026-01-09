@@ -18,6 +18,7 @@ export interface FacilityLog {
 export interface PaginationParams {
   page: number;
   limit: number;
+  search?: string;
 }
 
 export interface FacilityLogsResponse {
@@ -42,6 +43,10 @@ export async function fetchFacilityLogs(
     page: params.page.toString(),
     limit: params.limit.toString(),
   });
+
+  if (params.search) {
+    queryParams.append("search", params.search);
+  }
 
   const response = await fetch(
     `${API_BASE_URL}/api/facilities/logs?${queryParams}`,
