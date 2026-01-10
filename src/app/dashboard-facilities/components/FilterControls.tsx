@@ -41,7 +41,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={onToggleDropdown}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
+          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium shadow-sm transition-all duration-200 ${
             activeFilter || facilityTypeFilter || floorLevelFilter
               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
               : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"

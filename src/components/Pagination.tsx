@@ -53,7 +53,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-1 sm:p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-1 sm:p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         aria-label="Previous page"
       >
         <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
@@ -68,7 +68,7 @@ export default function Pagination({
           ) : (
             <button
               onClick={() => onPageChange(page as number)}
-              className={`px-2 sm:px-3 py-1 rounded-lg border text-xs sm:text-base transition-colors ${
+              className={`px-2 sm:px-3 py-1 rounded-lg border text-xs sm:text-base transition-colors shadow-sm ${
                 currentPage === page
                   ? "bg-orange-600 text-white border-orange-600"
                   : "border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -83,7 +83,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-1 sm:p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-1 sm:p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         aria-label="Next page"
       >
         <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
