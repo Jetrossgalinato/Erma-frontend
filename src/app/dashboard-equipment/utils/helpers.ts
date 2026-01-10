@@ -321,7 +321,8 @@ export const calculateTotalPages = (
 
 // CSV parsing helper
 export const parseCSVToEquipment = async (
-  file: File
+  file: File,
+  facilities: Facility[] = []
 ): Promise<Partial<Equipment>[]> => {
   const text = await file.text();
   const lines = text.split("\n").filter((line) => line.trim());
@@ -376,6 +377,7 @@ export const parseCSVToEquipment = async (
         case "date acquire":
         case "date_acquire":
         case "dateacquired":
+        case "date acquired":
           equipment.date_acquire = value;
           break;
         case "supplier":
@@ -419,6 +421,16 @@ export const parseCSVToEquipment = async (
         case "facility_id":
         case "facilityid":
           equipment.facility_id = value ? parseInt(value, 10) : undefined;
+          break;
+        case "facility":
+          if (value && facilities.length > 0) {
+            const facility = facilities.find(
+              (f) => f.facility_name.toLowerCase() === value.toLowerCase()
+            );
+            if (facility) {
+              equipment.facility_id = facility.facility_id;
+            }
+          }
           break;
         case "remarks":
         case "notes":

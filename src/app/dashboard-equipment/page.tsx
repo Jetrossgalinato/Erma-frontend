@@ -443,7 +443,7 @@ export default function DashboardEquipmentPage() {
     setIsProcessing(true);
 
     try {
-      const equipmentData = await parseCSVToEquipment(file);
+      const equipmentData = await parseCSVToEquipment(file, facilities);
       setImportData(equipmentData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);
