@@ -143,19 +143,25 @@ export default function SuppliesTable({
                     ) : (
                       <button
                         className={`px-3 py-1 text-xs text-white rounded transition-colors ${
-                          isAuthenticated
+                          isAuthenticated && supply.quantity > 0
                             ? "bg-orange-600 hover:bg-orange-700"
                             : "bg-gray-300 cursor-not-allowed"
                         }`}
-                        onClick={() => isAuthenticated && onAcquire(supply)}
-                        disabled={!isAuthenticated}
+                        onClick={() =>
+                          isAuthenticated &&
+                          supply.quantity > 0 &&
+                          onAcquire(supply)
+                        }
+                        disabled={!isAuthenticated || supply.quantity <= 0}
                         title={
                           !isAuthenticated
                             ? "Please log in to acquire supplies"
+                            : supply.quantity <= 0
+                            ? "Out of stock"
                             : ""
                         }
                       >
-                        Acquire
+                        {supply.quantity <= 0 ? "Out of Stock" : "Acquire"}
                       </button>
                     )}
                   </div>
