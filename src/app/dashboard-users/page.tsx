@@ -380,7 +380,7 @@ const UsersPage: React.FC = () => {
                   <button
                     onClick={handleRefreshClick}
                     disabled={isRefreshing}
-                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                    className={`bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors flex items-center gap-2 ${
                       isRefreshing ? "cursor-not-allowed opacity-75" : ""
                     }`}
                   >
@@ -401,7 +401,7 @@ const UsersPage: React.FC = () => {
               )}
 
               {/* Table Section */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {usersPagination.totalCount} total users
