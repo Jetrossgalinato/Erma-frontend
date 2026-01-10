@@ -112,15 +112,18 @@ export default function FilterControls({
           >
             All Facilities
           </option>
-          {facilities.map((facility) => (
-            <option
-              key={facility.facility_id}
-              value={facility.facility_id}
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              {facility.facility_name}
-            </option>
-          ))}
+          {facilities
+            .slice()
+            .sort((a, b) => a.facility_name.localeCompare(b.facility_name))
+            .map((facility) => (
+              <option
+                key={facility.facility_id}
+                value={facility.facility_id}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                {facility.facility_name}
+              </option>
+            ))}
         </select>
       )}
 
