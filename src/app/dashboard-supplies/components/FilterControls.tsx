@@ -89,15 +89,17 @@ const FilterControls: React.FC<FilterControlsProps> = ({
           >
             All Categories
           </option>
-          {uniqueCategories.map((category) => (
-            <option
-              key={category}
-              value={category}
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              {category}
-            </option>
-          ))}
+          {[...uniqueCategories]
+            .sort((a, b) => a.localeCompare(b))
+            .map((category) => (
+              <option
+                key={category}
+                value={category}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                {category}
+              </option>
+            ))}
         </select>
       )}
 
@@ -113,15 +115,17 @@ const FilterControls: React.FC<FilterControlsProps> = ({
           >
             All Facilities
           </option>
-          {uniqueFacilities.map((facility) => (
-            <option
-              key={facility}
-              value={facility}
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              {facility}
-            </option>
-          ))}
+          {[...uniqueFacilities]
+            .sort((a, b) => a.localeCompare(b))
+            .map((facility) => (
+              <option
+                key={facility}
+                value={facility}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                {facility}
+              </option>
+            ))}
         </select>
       )}
 
