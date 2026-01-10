@@ -657,7 +657,7 @@ export default function DashboardSuppliesPage() {
 
     try {
       const csvText = await file.text();
-      const suppliesData = parseCSVToSupplies(csvText);
+      const suppliesData = parseCSVToSupplies(csvText, facilities);
       setImportData(suppliesData);
     } catch (error) {
       console.error("Error parsing CSV file:", error);

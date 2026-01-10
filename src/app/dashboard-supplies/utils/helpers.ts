@@ -289,7 +289,10 @@ export async function logSupplyAction(
 /**
  * Parse CSV file content to supplies array
  */
-export function parseCSVToSupplies(csvText: string): Partial<Supply>[] {
+export function parseCSVToSupplies(
+  csvText: string,
+  facilities: Facility[] = []
+): Partial<Supply>[] {
   const lines = csvText.split("\n").filter((line) => line.trim());
 
   if (lines.length < 2) {
@@ -334,6 +337,24 @@ export function parseCSVToSupplies(csvText: string): Partial<Supply>[] {
           break;
         case "facility_id":
           supply.facility_id = parseInt(value) || undefined;
+          break;
+        case "facility":
+        case "facility id":
+          if (value && facilities.length > 0) {
+            const facility = facilities.find(
+              (f) =>
+                f.facility_name?.toLowerCase() === value.toLowerCase() ||
+                f.name?.toLowerCase() === value.toLowerCase()
+            );
+            if (facility) {
+              supply.facility_id = facility.facility_id || facility.id;
+            } else {
+              // Try to parse as ID if name lookup fails
+              supply.facility_id = parseInt(value) || undefined;
+            }
+          } else {
+            supply.facility_id = parseInt(value) || undefined;
+          }
           break;
         case "image":
         case "image_url":
