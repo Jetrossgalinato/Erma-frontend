@@ -222,7 +222,7 @@ export async function bulkImportFacilities(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ facilities }),
+    body: JSON.stringify(facilities),
   });
 
   if (!response.ok) {
