@@ -479,7 +479,7 @@ function DashboardRequestsContent() {
                       description="There are no requests to display at this time."
                     />
                   ) : (
-                    <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                       {currentRequestType === "borrowing" && (
                         <BorrowingRequestsTable
                           requests={borrowingRequests}
