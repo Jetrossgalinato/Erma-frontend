@@ -40,7 +40,7 @@ export default function FilterControls({
       <div className="relative" ref={filterDropdownRef}>
         <button
           onClick={onToggleDropdown}
-          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium transition-all duration-200 ${
+          className={`inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium shadow-sm transition-all duration-200 ${
             activeFilter || categoryFilter || facilityFilter
               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-600"
               : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -112,15 +112,18 @@ export default function FilterControls({
           >
             All Facilities
           </option>
-          {facilities.map((facility) => (
-            <option
-              key={facility.facility_id}
-              value={facility.facility_id}
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              {facility.facility_name}
-            </option>
-          ))}
+          {facilities
+            .slice()
+            .sort((a, b) => a.facility_name.localeCompare(b.facility_name))
+            .map((facility) => (
+              <option
+                key={facility.facility_id}
+                value={facility.facility_id}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              >
+                {facility.facility_name}
+              </option>
+            ))}
         </select>
       )}
 

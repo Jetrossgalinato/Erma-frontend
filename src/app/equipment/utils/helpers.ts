@@ -50,25 +50,25 @@ export interface UserAccountResponse {
 // Constants
 export const FACILITIES = [
   "All Facilities",
+  "AIR LAB",
+  "CHCI",
   "CL1",
+  "CL10",
+  "CL11",
   "CL2",
   "CL3",
   "CL4",
   "CL5",
   "CL6",
-  "CL10",
-  "CL11",
-  "MULTIMEDIA LAB",
-  "MSIT LAB",
-  "NET LAB",
   "DEANS OFFICE",
   "FACULTY OFFICE",
-  "REPAIR ROOM",
-  "AIR LAB",
-  "CHCI",
-  "VLRC",
   "ICTC",
+  "MSIT LAB",
+  "MULTIMEDIA LAB",
   "NAVIGATU",
+  "NET LAB",
+  "REPAIR ROOM",
+  "VLRC",
 ];
 
 export const ITEMS_PER_PAGE = 9;
@@ -110,7 +110,7 @@ export function getUniqueCategories(equipment: Equipment[]): string[] {
         .map((e) => e.category)
         .filter((cat): cat is string => cat !== null)
     )
-  );
+  ).sort((a, b) => a.localeCompare(b));
   return ["All Categories", ...unique];
 }
 

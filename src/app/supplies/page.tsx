@@ -181,7 +181,7 @@ export default function SuppliesPage() {
               <button
                 onClick={fetchSupplies}
                 disabled={loading}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-1.5 sm:gap-2 disabled:opacity-50"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 cursor-pointer text-xs sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 shadow-sm transition-colors flex items-center gap-1.5 sm:gap-2 disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -199,7 +199,7 @@ export default function SuppliesPage() {
                   placeholder="Search supplies..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm("supplies", e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-[inset_0_1px_2px_#ffffff30,0_1px_2px_#00000030,0_2px_4px_#00000015]"
+                  className="w-full pl-8 sm:pl-10 pr-2 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 text-xs sm:text-sm text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none shadow-inner"
                 />
               </div>
 
@@ -311,7 +311,7 @@ export default function SuppliesPage() {
                     <div className="flex gap-1 sm:gap-2">
                       <button
                         onClick={() => handleView(supply)}
-                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 shadow-sm transition-colors"
                       >
                         View Details
                       </button>
@@ -322,19 +322,21 @@ export default function SuppliesPage() {
                       ) : (
                         <button
                           onClick={() => handleAcquire(supply)}
-                          className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                            isAuthenticated
+                          className={`flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg shadow-sm transition-colors ${
+                            isAuthenticated && supply.quantity > 0
                               ? "bg-orange-500 text-white hover:bg-orange-600"
                               : "bg-gray-200 text-gray-400 cursor-not-allowed"
                           }`}
-                          disabled={!isAuthenticated}
+                          disabled={!isAuthenticated || supply.quantity <= 0}
                           title={
                             !isAuthenticated
                               ? "You must be logged in to acquire supplies"
+                              : supply.quantity <= 0
+                              ? "Out of stock"
                               : ""
                           }
                         >
-                          Acquire
+                          {supply.quantity <= 0 ? "Out of Stock" : "Acquire"}
                         </button>
                       )}
                     </div>

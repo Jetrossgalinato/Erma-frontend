@@ -41,7 +41,7 @@ export default function ActionButtons({
         <button
           onClick={onToggleDropdown}
           disabled={selectedCount === 0}
-          className="bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Actions
           <ChevronDown className="w-4 h-4" />
@@ -83,7 +83,7 @@ export default function ActionButtons({
       {/* Refresh Button */}
       <button
         onClick={onRefresh}
-        className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+        className="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
       >
         <RefreshCw className="w-4 h-4" />
         Refresh

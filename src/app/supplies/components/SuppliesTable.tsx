@@ -18,7 +18,7 @@ export default function SuppliesTable({
   onImageClick,
 }: SuppliesTableProps) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border overflow-hidden mb-8 sm:mb-12">
+    <div className="bg-white rounded-lg shadow-md border overflow-hidden mb-8 sm:mb-12">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -143,19 +143,25 @@ export default function SuppliesTable({
                     ) : (
                       <button
                         className={`px-3 py-1 text-xs text-white rounded transition-colors ${
-                          isAuthenticated
+                          isAuthenticated && supply.quantity > 0
                             ? "bg-orange-600 hover:bg-orange-700"
                             : "bg-gray-300 cursor-not-allowed"
                         }`}
-                        onClick={() => isAuthenticated && onAcquire(supply)}
-                        disabled={!isAuthenticated}
+                        onClick={() =>
+                          isAuthenticated &&
+                          supply.quantity > 0 &&
+                          onAcquire(supply)
+                        }
+                        disabled={!isAuthenticated || supply.quantity <= 0}
                         title={
                           !isAuthenticated
                             ? "Please log in to acquire supplies"
+                            : supply.quantity <= 0
+                            ? "Out of stock"
                             : ""
                         }
                       >
-                        Acquire
+                        {supply.quantity <= 0 ? "Out of Stock" : "Acquire"}
                       </button>
                     )}
                   </div>
