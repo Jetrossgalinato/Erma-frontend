@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useMonitoringStore } from "@/store/monitoringStore";
+import { useAlert } from "@/contexts/AlertContext";
 import { fetchFacilityLogs } from "./utils/helpers";
 import PageHeader from "./components/PageHeader";
 import LogsCard from "./components/LogsCard";
@@ -16,6 +17,7 @@ export default function MonitorFacilitiesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { showAlert } = useAlert();
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
@@ -97,6 +99,68 @@ export default function MonitorFacilitiesPage() {
     setFacilityLogsPagination({ currentPage: page });
   };
 
+  const handleExportClick = async () => {
+    try {
+      if (facilityLogsPagination.totalCount === 0) {
+        showAlert({
+          type: "info",
+          message: "No logs to export.",
+        });
+        return;
+      }
+
+      // Fetch ALL logs for export
+      const limit = Math.max(facilityLogsPagination.totalCount, 1000);
+      const response = await fetchFacilityLogs({
+        page: 1,
+        limit: limit,
+        search: searchQuery,
+      });
+
+      const logsToExport = response.logs;
+
+      if (logsToExport.length === 0) {
+        showAlert({
+          type: "info",
+          message: "No data to export.",
+        });
+        return;
+      }
+
+      const headers = ["ID", "Log Message", "Date Created"];
+
+      const csvContent = [
+        headers.join(","),
+        ...logsToExport.map((log) => {
+          const id = log.id;
+          const message = `"${(log.log_message || "").replace(/"/g, '""')}"`;
+          const date = `"${new Date(log.created_at)
+            .toLocaleString()
+            .replace(/"/g, '""')}"`;
+          return [id, message, date].join(",");
+        }),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `facility_logs_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Export error:", error);
+      showAlert({
+        type: "error",
+        message: "Failed to export logs.",
+      });
+    }
+  };
+
   if (authLoading) {
     return <Loader />;
   }
@@ -137,6 +201,7 @@ export default function MonitorFacilitiesPage() {
                 onRefresh={handleRefresh}
                 searchQuery={searchQuery}
                 onSearchChange={handleSearchChange}
+                onExport={handleExportClick}
               />
             </div>
 

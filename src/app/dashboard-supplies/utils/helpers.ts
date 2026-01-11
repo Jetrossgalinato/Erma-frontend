@@ -12,8 +12,8 @@ export interface Supply {
   name: string;
   description?: string;
   category: string;
-  quantity: number;
-  stocking_point: number;
+  quantity: number | string;
+  stocking_point: number | string;
   stock_unit: string;
   facility_id?: number;
   image?: string;
@@ -434,17 +434,20 @@ export function filterSupplies(
  * Get stock status with color coding
  */
 export function getStockStatus(
-  quantity: number,
-  stockingPoint: number
+  quantity: number | string,
+  stockingPoint: number | string
 ): { status: string; color: string } {
-  if (quantity === 0) {
+  const qty = Number(quantity);
+  const point = Number(stockingPoint);
+
+  if (qty === 0) {
     return {
       status: "Out of Stock",
       color:
         "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700",
     };
   }
-  if (quantity <= stockingPoint) {
+  if (qty <= point) {
     return {
       status: "Low Stock",
       color:
