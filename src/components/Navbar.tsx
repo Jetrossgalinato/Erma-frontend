@@ -501,19 +501,21 @@ const Navbar: React.FC = () => {
         )}
 
         {isAuthenticated ? (
-          <div className="relative dropdown-container flex items-center gap-3">
+          <div className="relative dropdown-container">
             <button
               onClick={toggleAvatarDropdown}
-              className="w-10 h-10 flex items-center justify-center cursor-pointer bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full shadow hover:shadow-md transition duration-300"
+              className="flex items-center gap-3 cursor-pointer group focus:outline-none"
             >
-              {getInitial()}
-            </button>
+              <div className="w-10 h-10 flex items-center justify-center bg-orange-500 group-hover:bg-orange-600 text-white font-semibold rounded-full shadow group-hover:shadow-md transition duration-300">
+                {getInitial()}
+              </div>
 
-            {userData?.first_name && userData?.last_name && (
-              <span className="text-gray-700 font-medium hidden md:block">
-                {userData.first_name} {userData.last_name}
-              </span>
-            )}
+              {userData?.first_name && userData?.last_name && (
+                <span className="text-gray-700 font-medium hidden md:block group-hover:text-black transition-colors">
+                  {userData.first_name} {userData.last_name}
+                </span>
+              )}
+            </button>
 
             {isAvatarDropdownOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[180px] z-50">
