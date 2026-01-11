@@ -72,7 +72,7 @@ const AddSupplyForm: React.FC<AddSupplyFormProps> = ({
           <input
             type="number"
             name="quantity"
-            value={supply.quantity || 0}
+            value={supply.quantity ?? ""}
             onChange={onChange}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-orange-500 focus:border-orange-500"
           />
@@ -84,7 +84,7 @@ const AddSupplyForm: React.FC<AddSupplyFormProps> = ({
           <input
             type="number"
             name="stocking_point"
-            value={supply.stocking_point || 0}
+            value={supply.stocking_point ?? ""}
             onChange={onChange}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-orange-500 focus:border-orange-500"
           />

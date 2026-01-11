@@ -68,7 +68,7 @@ export default function DashboardSuppliesPage() {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
-  const [newSupply, setNewSupply] = useState<Partial<SupplyFormData>>({
+  const [newSupply, setNewSupply] = useState<Partial<Supply>>({
     name: "",
     category: "",
     quantity: 0,
@@ -227,6 +227,9 @@ export default function DashboardSuppliesPage() {
 
       // Handle numeric fields
       if (name === "quantity" || name === "stocking_point") {
+        if (value === "") {
+          return { ...prev, [name]: "" };
+        }
         return { ...prev, [name]: parseInt(value) || 0 };
       }
 
@@ -393,8 +396,8 @@ export default function DashboardSuppliesPage() {
         name: editingSupply.name,
         description: editingSupply.description,
         category: editingSupply.category,
-        quantity: editingSupply.quantity,
-        stocking_point: editingSupply.stocking_point,
+        quantity: Number(editingSupply.quantity) || 0,
+        stocking_point: Number(editingSupply.stocking_point) || 0,
         stock_unit: editingSupply.stock_unit,
         facility_id: editingSupply.facilities?.id,
         image: imageUrl,
@@ -498,8 +501,8 @@ export default function DashboardSuppliesPage() {
         name: newSupply.name!,
         description: newSupply.description,
         category: newSupply.category!,
-        quantity: newSupply.quantity!,
-        stocking_point: newSupply.stocking_point!,
+        quantity: Number(newSupply.quantity) || 0,
+        stocking_point: Number(newSupply.stocking_point) || 0,
         stock_unit: newSupply.stock_unit!,
         facility_id: newSupply.facility_id,
         image: imageUrl,
@@ -929,10 +932,14 @@ export default function DashboardSuppliesPage() {
                     onChange={(e) => {
                       const { name, value } = e.target;
                       if (name === "quantity" || name === "stocking_point") {
-                        setNewSupply({
-                          ...newSupply,
-                          [name]: parseInt(value) || 0,
-                        });
+                        if (value === "") {
+                          setNewSupply({ ...newSupply, [name]: "" });
+                        } else {
+                          setNewSupply({
+                            ...newSupply,
+                            [name]: parseInt(value) || 0,
+                          });
+                        }
                       } else if (name === "facility_id") {
                         setNewSupply({
                           ...newSupply,
