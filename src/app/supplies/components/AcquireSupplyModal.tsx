@@ -4,10 +4,10 @@ import { Supply } from "../utils/helpers";
 interface AcquireSupplyModalProps {
   isOpen: boolean;
   supply: Supply | null;
-  quantity: number;
+  quantity: number | string;
   reason: string;
   isSubmitting: boolean;
-  onQuantityChange: (quantity: number) => void;
+  onQuantityChange: (quantity: number | string) => void;
   onReasonChange: (reason: string) => void;
   onSubmit: () => void;
   onClose: () => void;
@@ -72,7 +72,17 @@ export default function AcquireSupplyModal({
               min="1"
               max={supply.quantity}
               value={quantity}
-              onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") {
+                  onQuantityChange("");
+                } else {
+                  const parsed = parseInt(val);
+                  if (!isNaN(parsed)) {
+                    onQuantityChange(parsed);
+                  }
+                }
+              }}
               className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 text-gray-800 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-xs sm:text-sm"
             />
           </div>

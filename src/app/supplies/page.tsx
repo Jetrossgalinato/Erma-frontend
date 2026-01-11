@@ -48,7 +48,7 @@ export default function SuppliesPage() {
   const [selectedSupply, setSelectedSupply] = useState<Supply | null>(null);
 
   const [showAcquireModal, setShowAcquireModal] = useState(false);
-  const [acquireQuantity, setAcquireQuantity] = useState(1);
+  const [acquireQuantity, setAcquireQuantity] = useState<number | string>(1);
   const [acquireReason, setAcquireReason] = useState("");
   const [isSubmittingAcquire, setIsSubmittingAcquire] = useState(false);
 
@@ -102,13 +102,15 @@ export default function SuppliesPage() {
   };
 
   const submitAcquireRequest = async () => {
-    if (!selectedSupply || acquireQuantity <= 0) return;
+    // Convert to number for validation
+    const quantityNum = Number(acquireQuantity);
+    if (!selectedSupply || quantityNum <= 0) return;
 
     setIsSubmittingAcquire(true);
 
     const success = await createAcquireRequest(
       selectedSupply.supply_id,
-      acquireQuantity,
+      quantityNum,
       acquireReason,
       showAlert
     );
