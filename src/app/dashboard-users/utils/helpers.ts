@@ -16,6 +16,7 @@ export interface PaginationParams {
   departmentFilter?: string;
   roleFilter?: string;
   excludeUserId?: string; // To exclude current user
+  search?: string;
 }
 
 export interface UsersResponse {
@@ -53,6 +54,10 @@ export async function fetchUsers(
 
   if (params.excludeUserId) {
     queryParams.append("exclude_user_id", params.excludeUserId);
+  }
+
+  if (params.search) {
+    queryParams.append("search", params.search);
   }
 
   const response = await fetch(`${API_BASE_URL}/api/users?${queryParams}`, {

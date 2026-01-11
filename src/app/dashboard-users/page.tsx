@@ -40,6 +40,7 @@ const UsersPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<
     "department" | "role" | null
   >(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
@@ -98,6 +99,7 @@ const UsersPage: React.FC = () => {
           departmentFilter,
           roleFilter,
           excludeUserId: user?.userId, // Exclude current user
+          search: searchQuery,
         });
 
         setUsers(response.users);
@@ -129,6 +131,7 @@ const UsersPage: React.FC = () => {
       setUsers,
       setIsLoadingUsers,
       setUsersPagination,
+      searchQuery,
     ]
   );
 
@@ -136,7 +139,13 @@ const UsersPage: React.FC = () => {
     if (isAuthenticated && !authLoading) {
       loadUsers(usersPagination.currentPage);
     }
-  }, [usersPagination.currentPage, isAuthenticated, authLoading, loadUsers]);
+  }, [
+    usersPagination.currentPage,
+    isAuthenticated,
+    authLoading,
+    loadUsers,
+    searchQuery,
+  ]);
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
@@ -146,6 +155,11 @@ const UsersPage: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setUsersPagination({ currentPage: page });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setUsersPagination({ currentPage: 1 });
   };
 
   // Selection handlers
@@ -345,8 +359,11 @@ const UsersPage: React.FC = () => {
         <main className="flex-1 relative overflow-y-auto focus:outline-none mt-16">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <div className="mb-8 pt-8 flex items-center justify-between">
-                <PageHeader />
+              <div className="mb-8 pt-8 flex flex-col md:flex-row items-end justify-between gap-4">
+                <PageHeader
+                  searchQuery={searchQuery}
+                  onSearchChange={handleSearchChange}
+                />
 
                 <div className="flex gap-3">
                   <FilterControls
