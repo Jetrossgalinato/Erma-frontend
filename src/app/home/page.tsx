@@ -43,7 +43,7 @@ export default function Home() {
                   <div>
                     <Link href="/login">
                       <button
-                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 cursor-pointer rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
                         aria-label="Get started with CRIMS"
                       >
                         Get Started
@@ -67,7 +67,7 @@ export default function Home() {
                   <div>
                     <Link href="/equipment">
                       <button
-                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
+                        className="inline-flex items-center gap-2 px-4 py-2 md:px-8 md:py-4 cursor-pointer rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-base md:text-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-4 focus:ring-orange-300"
                         aria-label="Go to My requests"
                       >
                         Make a Request

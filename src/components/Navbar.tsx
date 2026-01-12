@@ -428,7 +428,7 @@ const Navbar: React.FC = () => {
         <div className="relative dropdown-container">
           <button
             onClick={toggleResources}
-            className={`flex items-center gap-1 hover:text-black transition-colors duration-300 ${
+            className={`flex items-center gap-1 cursor-pointer hover:text-black transition-colors duration-300 ${
               pathname.startsWith("/equipment") ||
               pathname.startsWith("/facilities")
                 ? "text-orange-500"
@@ -485,18 +485,6 @@ const Navbar: React.FC = () => {
                   : pendingAccountRequestsCount}
               </span>
             )}
-          </a>
-        )}
-
-        {/* Daily Maintenance - Only for Student Assistant */}
-        {isAuthenticated && isStudentAssistant && (
-          <a
-            href="/daily-maintenance"
-            className={`hover:text-black transition-colors duration-300 ${
-              pathname === "/daily-maintenance" ? "text-orange-500" : ""
-            }`}
-          >
-            Daily Maintenance
           </a>
         )}
 
@@ -583,7 +571,7 @@ const Navbar: React.FC = () => {
                   {notifications.length > 0 && (
                     <button
                       onClick={clearAllNotifications}
-                      className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                      className="text-xs cursor-pointer text-red-600 hover:text-red-800 hover:underline"
                     >
                       Clear All
                     </button>
@@ -649,7 +637,7 @@ const Navbar: React.FC = () => {
           <div className="w-full">
             <button
               onClick={toggleResources}
-              className={`flex items-center justify-between w-full py-2 text-gray-700 ${
+              className={`flex items-center cursor-pointer justify-between w-full py-2 text-gray-700 ${
                 pathname.startsWith("/equipment") ||
                 pathname.startsWith("/facilities")
                   ? "text-orange-500"
@@ -713,19 +701,6 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
             >
               Account Requests
-            </Link>
-          )}
-
-          {/* Daily Maintenance - Only for Student Assistant */}
-          {isAuthenticated && isStudentAssistant && (
-            <Link
-              href="/daily-maintenance"
-              className={`py-2 text-gray-700 ${
-                pathname === "/daily-maintenance" ? "text-orange-500" : ""
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              Daily Maintenance
             </Link>
           )}
 
@@ -811,7 +786,7 @@ const Navbar: React.FC = () => {
                     {notifications.length > 0 && (
                       <button
                         onClick={clearAllNotifications}
-                        className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                        className="text-xs cursor-pointer text-red-600 hover:text-red-800 hover:underline"
                       >
                         Clear All
                       </button>
