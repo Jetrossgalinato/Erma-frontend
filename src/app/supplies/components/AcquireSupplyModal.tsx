@@ -115,7 +115,9 @@ export default function AcquireSupplyModal({
           <button
             onClick={onSubmit}
             disabled={
-              isSubmitting || quantity <= 0 || quantity > supply.quantity
+              isSubmitting ||
+              Number(quantity) <= 0 ||
+              Number(quantity) > supply.quantity
             }
             className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 sm:gap-2"
           >
