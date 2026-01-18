@@ -39,6 +39,25 @@ export interface FacilityFormData {
   remarks?: string;
 }
 
+export type BorrowingHistory = {
+  id: number;
+  borrower_name: string;
+  purpose: string;
+  start_date: string;
+  end_date: string;
+  return_date: string;
+  request_status: string;
+  return_status: string;
+  created_at: string;
+};
+
+export const calculateTotalPages = (
+  totalItems: number,
+  itemsPerPage: number,
+): number => {
+  return Math.ceil(totalItems / itemsPerPage);
+};
+
 // ==================== API Functions ====================
 
 /**
@@ -74,10 +93,38 @@ export async function fetchFacilities(): Promise<Facility[]> {
 }
 
 /**
+ * Fetch booking history for a specific facility
+ */
+export async function fetchFacilityHistory(
+  facilityId: number,
+): Promise<BorrowingHistory[]> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/facilities/${facilityId}/history`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to fetch facility history" }));
+    throw new Error(error.detail || "Failed to fetch facility history");
+  }
+
+  return response.json();
+}
+
+/**
  * Create a new facility
  */
 export async function createFacility(
-  facilityData: FacilityFormData
+  facilityData: FacilityFormData,
 ): Promise<Facility> {
   const token = localStorage.getItem("authToken");
 
@@ -100,7 +147,7 @@ export async function createFacility(
       const errorMessages = error.detail
         .map(
           (err: { loc?: string[]; msg: string }) =>
-            `${err.loc ? err.loc.join(".") : "Field"}: ${err.msg}`
+            `${err.loc ? err.loc.join(".") : "Field"}: ${err.msg}`,
         )
         .join("; ");
       throw new Error(errorMessages);
@@ -117,7 +164,7 @@ export async function createFacility(
  */
 export async function updateFacility(
   id: number,
-  facilityData: Partial<FacilityFormData>
+  facilityData: Partial<FacilityFormData>,
 ): Promise<Facility> {
   const token = localStorage.getItem("authToken");
 
@@ -212,7 +259,7 @@ export async function deleteFacilities(ids: number[]): Promise<void> {
  * Bulk import facilities from CSV
  */
 export async function bulkImportFacilities(
-  facilities: Partial<Facility>[]
+  facilities: Partial<Facility>[],
 ): Promise<{ imported: number; failed: number }> {
   const token = localStorage.getItem("authToken");
 
@@ -241,7 +288,7 @@ export async function bulkImportFacilities(
 export async function logFacilityAction(
   action: string,
   facilityName?: string,
-  additionalInfo?: string
+  additionalInfo?: string,
 ): Promise<void> {
   try {
     const token = localStorage.getItem("authToken");
@@ -279,7 +326,7 @@ export function parseCSVToFacilities(csvText: string): Partial<Facility>[] {
 
   if (lines.length < 2) {
     throw new Error(
-      "CSV file must have at least a header row and one data row"
+      "CSV file must have at least a header row and one data row",
     );
   }
 
@@ -350,7 +397,7 @@ export function getUniqueFacilityTypes(facilities: Facility[]): string[] {
   }
   return [
     ...new Set(
-      facilities.map((facility) => facility.facility_type).filter(Boolean)
+      facilities.map((facility) => facility.facility_type).filter(Boolean),
     ),
   ].sort() as string[];
 }
@@ -364,7 +411,7 @@ export function getUniqueFloorLevels(facilities: Facility[]): string[] {
   }
   return [
     ...new Set(
-      facilities.map((facility) => facility.floor_level).filter(Boolean)
+      facilities.map((facility) => facility.floor_level).filter(Boolean),
     ),
   ].sort() as string[];
 }
@@ -376,7 +423,7 @@ export function filterFacilities(
   facilities: Facility[],
   facilityTypeFilter: string,
   floorLevelFilter: string,
-  searchQuery: string = ""
+  searchQuery: string = "",
 ): Facility[] {
   if (!Array.isArray(facilities)) {
     return [];

@@ -13,6 +13,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   totalItems: number;
   itemsPerPage: number;
+  itemName?: string;
 }
 
 const Pagination: React.FC<PaginationProps> = ({
@@ -21,6 +22,7 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   totalItems,
   itemsPerPage,
+  itemName = "facilities",
 }) => {
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
@@ -29,7 +31,8 @@ const Pagination: React.FC<PaginationProps> = ({
     <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-700 dark:text-gray-300">
-          Showing {startIndex} to {endIndex} of {totalItems} facilities
+          Showing {startIndex} to {endIndex} of {totalItems} {itemName}
+          {totalItems !== 1 && itemName === "facilities" ? "" : ""}
         </div>
         <div className="flex gap-2">
           <button
