@@ -1,5 +1,6 @@
-import React from "react";
-import { type BorrowingHistory } from "../utils/helpers";
+import React, { useState, useEffect } from "react";
+import { type BorrowingHistory, calculateTotalPages } from "../utils/helpers";
+import Pagination from "./pagination";
 
 interface EquipmentHistoryProps {
   history: BorrowingHistory[];
@@ -14,6 +15,25 @@ export default function EquipmentHistory({
   isLoading,
   onClose,
 }: EquipmentHistoryProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [equipmentName]);
+
+  const totalPages = calculateTotalPages(history.length, itemsPerPage);
+
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return history.slice(startIndex, endIndex);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
@@ -77,7 +97,7 @@ export default function EquipmentHistory({
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {history.map((item) => (
+              {getCurrentPageData().map((item) => (
                 <tr key={item.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {item.borrower_name}
@@ -117,6 +137,16 @@ export default function EquipmentHistory({
           </table>
         )}
       </div>
+      {history.length > 0 && !isLoading && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={history.length}
+          itemsPerPage={itemsPerPage}
+          itemName="record"
+        />
+      )}
     </div>
   );
 }
