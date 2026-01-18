@@ -18,6 +18,7 @@ import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
 import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
+import SupplyHistory from "./components/SupplyHistory";
 import { RefreshCw, Search } from "lucide-react";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
@@ -25,7 +26,7 @@ const EditModal = lazy(() => import("./components/EditModal"));
 const AddSupplyForm = lazy(() => import("./components/AddSupplyForm"));
 const ImportModal = lazy(() => import("./components/ImportModal"));
 const DeleteConfirmationModal = lazy(
-  () => import("./components/DeleteConfirmationModal")
+  () => import("./components/DeleteConfirmationModal"),
 );
 const ImageModal = lazy(() => import("./components/ImageModal"));
 import {
@@ -45,6 +46,8 @@ import {
   getUniqueFacilities,
   filterSupplies,
   getStockStatus,
+  fetchSupplyHistory,
+  type SupplyHistoryItem,
 } from "./utils/helpers";
 
 export default function DashboardSuppliesPage() {
@@ -78,6 +81,12 @@ export default function DashboardSuppliesPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [importData, setImportData] = useState<Partial<Supply>[]>([]);
 
+  // History State
+  const [selectedSupplyForHistory, setSelectedSupplyForHistory] =
+    useState<Supply | null>(null);
+  const [supplyHistory, setSupplyHistory] = useState<SupplyHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   // Image-related states
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -105,6 +114,35 @@ export default function DashboardSuppliesPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // History handlers
+  const handleRowClick = async (supply: Supply) => {
+    if (selectedSupplyForHistory?.id === supply.id) {
+      return;
+    }
+
+    setSelectedSupplyForHistory(supply);
+    setIsLoadingHistory(true);
+    setSupplyHistory([]);
+
+    try {
+      const history = await fetchSupplyHistory(supply.id);
+      setSupplyHistory(history);
+    } catch (error) {
+      console.error("Failed to fetch history", error);
+      showAlert({
+        type: "error",
+        message: "Failed to fetch request history",
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleCloseHistory = () => {
+    setSelectedSupplyForHistory(null);
+    setSupplyHistory([]);
+  };
 
   // Auth check - redirect to login if not authenticated
   useEffect(() => {
@@ -156,7 +194,7 @@ export default function DashboardSuppliesPage() {
 
   const handleCheckboxChange = (id: number) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
     );
   };
 
@@ -196,6 +234,27 @@ export default function DashboardSuppliesPage() {
     }
   }, []);
 
+  // Select first supply by default when data loads
+  const selectedSupRef = useRef(false);
+  useEffect(() => {
+    if (
+      !loading &&
+      supplies.length > 0 &&
+      selectedSupplyForHistory === null &&
+      !selectedSupRef.current
+    ) {
+      selectedSupRef.current = true;
+      handleRowClick(supplies[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, supplies]);
+
+  useEffect(() => {
+    if (loading) {
+      selectedSupRef.current = false;
+    }
+  }, [loading]);
+
   // Refresh data handler
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
@@ -219,7 +278,7 @@ export default function DashboardSuppliesPage() {
   const handleEditChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setEditingSupply((prev) => {
@@ -236,7 +295,7 @@ export default function DashboardSuppliesPage() {
       // Handle facility selection
       if (name === "facility_id") {
         const selectedFacility = facilities.find(
-          (f) => f.id === parseInt(value)
+          (f) => f.id === parseInt(value),
         );
         return {
           ...prev,
@@ -258,7 +317,7 @@ export default function DashboardSuppliesPage() {
 
   // Add these functions after your existing handler functions
   const handleImageFileSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -289,7 +348,7 @@ export default function DashboardSuppliesPage() {
   };
 
   const handleEditImageFileSelect = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -417,7 +476,7 @@ export default function DashboardSuppliesPage() {
             updatedSupply.facilities?.facility_name ||
             updatedSupply.facilities?.name ||
             "None"
-          }`
+          }`,
         );
       } catch (logError) {
         console.warn("Failed to log action:", logError);
@@ -427,8 +486,8 @@ export default function DashboardSuppliesPage() {
       // Update local state
       setSupplies((prev) =>
         prev.map((supply) =>
-          supply.id === updatedSupply.id ? updatedSupply : supply
-        )
+          supply.id === updatedSupply.id ? updatedSupply : supply,
+        ),
       );
 
       showAlert({
@@ -516,7 +575,7 @@ export default function DashboardSuppliesPage() {
         await logSupplyAction(
           "create",
           createdSupply.name,
-          `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`
+          `Category: ${createdSupply.category}, Quantity: ${createdSupply.quantity} ${createdSupply.stock_unit}`,
         );
       } catch (logError) {
         console.warn("Failed to log action:", logError);
@@ -579,7 +638,7 @@ export default function DashboardSuppliesPage() {
           "-";
         const status = getStockStatus(
           supply.quantity,
-          supply.stocking_point
+          supply.stocking_point,
         ).status;
         return [
           supply.id,
@@ -601,7 +660,7 @@ export default function DashboardSuppliesPage() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `supplies_export_${new Date().toISOString().split("T")[0]}.csv`
+      `supplies_export_${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -618,7 +677,7 @@ export default function DashboardSuppliesPage() {
     supplies,
     categoryFilter,
     facilityFilter,
-    searchQuery
+    searchQuery,
   );
   const uniqueCategories = getUniqueCategories(supplies);
   const uniqueFacilities = getUniqueFacilities(supplies);
@@ -642,7 +701,7 @@ export default function DashboardSuppliesPage() {
   };
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -683,7 +742,7 @@ export default function DashboardSuppliesPage() {
     try {
       const validData = importData.filter(
         (item) =>
-          item.name && item.name.trim() && item.category && item.stock_unit
+          item.name && item.name.trim() && item.category && item.stock_unit,
       );
 
       if (validData.length === 0) {
@@ -703,7 +762,7 @@ export default function DashboardSuppliesPage() {
         await logSupplyAction(
           "import",
           undefined,
-          `${result.imported} supplies imported, ${result.failed} failed`
+          `${result.imported} supplies imported, ${result.failed} failed`,
         );
       } catch (logError) {
         console.warn("Failed to log action:", logError);
@@ -737,7 +796,7 @@ export default function DashboardSuppliesPage() {
 
     try {
       const suppliesToDelete = supplies.filter((supply) =>
-        selectedRows.includes(supply.id)
+        selectedRows.includes(supply.id),
       );
       const supplyNames = suppliesToDelete
         .map((supply) => supply.name)
@@ -750,7 +809,7 @@ export default function DashboardSuppliesPage() {
         await logSupplyAction(
           "delete",
           undefined,
-          `${selectedRows.length} supplies deleted: ${supplyNames}`
+          `${selectedRows.length} supplies deleted: ${supplyNames}`,
         );
       } catch (logError) {
         console.warn("Failed to log action:", logError);
@@ -758,7 +817,7 @@ export default function DashboardSuppliesPage() {
       }
 
       setSupplies((prev) =>
-        prev.filter((supply) => !selectedRows.includes(supply.id))
+        prev.filter((supply) => !selectedRows.includes(supply.id)),
       );
       setSelectedRows([]);
 
@@ -970,7 +1029,7 @@ export default function DashboardSuppliesPage() {
                     onSelectAll={(checked) => {
                       if (checked) {
                         setSelectedRows(
-                          filteredSupplies.map((supply) => supply.id)
+                          filteredSupplies.map((supply) => supply.id),
                         );
                       } else {
                         setSelectedRows([]);
@@ -979,6 +1038,7 @@ export default function DashboardSuppliesPage() {
                     onImageClick={handleImageClick}
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
+                    onRowClick={handleRowClick}
                   />
 
                   <Pagination
@@ -989,6 +1049,15 @@ export default function DashboardSuppliesPage() {
                     itemsPerPage={itemsPerPage}
                   />
                 </div>
+              )}
+
+              {selectedSupplyForHistory && (
+                <SupplyHistory
+                  history={supplyHistory}
+                  supplyName={selectedSupplyForHistory.name}
+                  isLoading={isLoadingHistory}
+                  onClose={handleCloseHistory}
+                />
               )}
             </div>
           </div>
