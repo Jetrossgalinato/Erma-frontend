@@ -69,7 +69,13 @@ export function getStatusColor(status: RequestStatus | string): string {
       return "bg-yellow-100 text-yellow-800";
     case "Approved":
       return "bg-green-100 text-green-800";
+    case "Completed":
+      return "bg-green-100 text-green-800";
     case "Rejected":
+      return "bg-red-100 text-red-800";
+    case "Returned":
+      return "bg-green-100 text-green-800";
+    case "Not returned":
       return "bg-red-100 text-red-800";
     default:
       return "bg-gray-100 text-gray-800";
@@ -100,7 +106,7 @@ export function formatDateTime(dateString: string | null): string {
 export function handleError(
   error: unknown,
   context: string,
-  showAlert?: (alert: { type: "error"; message: string }) => void
+  showAlert?: (alert: { type: "error"; message: string }) => void,
 ): void {
   console.error(`${context}:`, error);
   const message =
@@ -144,7 +150,7 @@ export async function verifyAuth(): Promise<{ user_id: string } | null> {
 // Fetch Borrowing Requests
 export async function fetchBorrowingRequests(
   page: number = 1,
-  skipAuthVerify = false
+  skipAuthVerify = false,
 ): Promise<PaginatedResponse<Borrowing>> {
   try {
     const token = getAuthToken();
@@ -168,12 +174,12 @@ export async function fetchBorrowingRequests(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch borrowing requests: ${response.statusText}`
+        `Failed to fetch borrowing requests: ${response.statusText}`,
       );
     }
 
@@ -194,7 +200,7 @@ export async function fetchBorrowingRequests(
 // Fetch Booking Requests
 export async function fetchBookingRequests(
   page: number = 1,
-  skipAuthVerify = false
+  skipAuthVerify = false,
 ): Promise<PaginatedResponse<Booking>> {
   try {
     const token = getAuthToken();
@@ -218,12 +224,12 @@ export async function fetchBookingRequests(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch booking requests: ${response.statusText}`
+        `Failed to fetch booking requests: ${response.statusText}`,
       );
     }
 
@@ -244,7 +250,7 @@ export async function fetchBookingRequests(
 // Fetch Acquiring Requests
 export async function fetchAcquiringRequests(
   page: number = 1,
-  skipAuthVerify = false
+  skipAuthVerify = false,
 ): Promise<PaginatedResponse<Acquiring>> {
   try {
     const token = getAuthToken();
@@ -268,12 +274,12 @@ export async function fetchAcquiringRequests(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch acquiring requests: ${response.statusText}`
+        `Failed to fetch acquiring requests: ${response.statusText}`,
       );
     }
 
@@ -295,7 +301,7 @@ export async function fetchAcquiringRequests(
 export async function markAsReturned(
   borrowingIds: number[],
   receiverName: string,
-  showAlert?: (alert: { type: "error"; message: string }) => void
+  showAlert?: (alert: { type: "error"; message: string }) => void,
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -315,7 +321,7 @@ export async function markAsReturned(
           borrowing_ids: borrowingIds,
           receiver_name: receiverName,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -333,7 +339,7 @@ export async function markAsReturned(
 export async function markBookingAsDone(
   bookingIds: number[],
   completionNotes?: string,
-  showAlert?: (alert: { type: "error"; message: string }) => void
+  showAlert?: (alert: { type: "error"; message: string }) => void,
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -368,7 +374,7 @@ export async function markBookingAsDone(
 export async function deleteRequests(
   requestType: "borrowing" | "booking" | "acquiring",
   requestIds: number[],
-  showAlert?: (alert: { type: "error"; message: string }) => void
+  showAlert?: (alert: { type: "error"; message: string }) => void,
 ): Promise<boolean> {
   try {
     const token = getAuthToken();
@@ -380,8 +386,8 @@ export async function deleteRequests(
       requestType === "borrowing"
         ? "borrowing"
         : requestType === "booking"
-        ? "booking"
-        : "acquiring";
+          ? "booking"
+          : "acquiring";
 
     const requestPayload = { ids: requestIds };
 
@@ -394,7 +400,7 @@ export async function deleteRequests(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(requestPayload),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -438,7 +444,7 @@ export async function deleteRequests(
 export async function loadAllRequestsParallel(
   borrowingPage: number,
   bookingPage: number,
-  acquiringPage: number
+  acquiringPage: number,
 ) {
   try {
     // Verify authentication ONCE for all requests
