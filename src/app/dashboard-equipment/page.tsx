@@ -73,6 +73,9 @@ export default function DashboardEquipmentPage() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  // Ref to track if we've already selected an initial equipment
+  const selectedEqRef = useRef(false);
+
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const editImageInputRef = useRef<HTMLInputElement>(
@@ -300,6 +303,26 @@ export default function DashboardEquipmentPage() {
       });
     }
   }, [isAuthenticated, showAlert]);
+
+  // Select first equipment by default when data loads
+  useEffect(() => {
+    if (
+      !loading &&
+      equipments.length > 0 &&
+      selectedEquipmentForHistory === null &&
+      !selectedEqRef.current
+    ) {
+      selectedEqRef.current = true;
+      handleRowClick(equipments[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, equipments]);
+
+  useEffect(() => {
+    if (loading) {
+      selectedEqRef.current = false;
+    }
+  }, [loading]);
 
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
