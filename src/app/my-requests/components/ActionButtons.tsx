@@ -27,7 +27,7 @@ export default function ActionButtons({
           className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
         >
           <RotateCcw className="w-4 h-4" />
-          Mark as Returned ({selectedCount})
+          Request Return ({selectedCount})
         </button>
       )}
       {requestType === "booking" && onMarkDone && (
@@ -37,7 +37,7 @@ export default function ActionButtons({
           className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
         >
           <RotateCcw className="w-4 h-4" />
-          Mark as Done ({selectedCount})
+          Complete Booking ({selectedCount})
         </button>
       )}
       <button
