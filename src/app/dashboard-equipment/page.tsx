@@ -14,6 +14,7 @@ import Sidebar from "@/components/Sidebar";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Loader from "@/components/Loader";
 import EquipmentsTable from "./components/equipmentsTable";
+import EquipmentHistory from "./components/equipmentHistory";
 import PageHeader from "./components/pageHeader";
 import FilterControls from "./components/filterControls";
 import ActionsDropdown from "./components/actionsDropdown";
@@ -26,15 +27,16 @@ const ImageModal = lazy(() => import("./components/imageModal"));
 const EditModal = lazy(() => import("./components/editModal"));
 const ImportDataModal = lazy(() => import("./components/importDataModal"));
 const DeleteConfirmationModal = lazy(
-  () => import("./components/deleteConfirmationModal")
+  () => import("./components/deleteConfirmationModal"),
 );
 const InsertEquipmentForm = lazy(
-  () => import("./components/insertEquipmentForm")
+  () => import("./components/insertEquipmentForm"),
 );
 
 import {
   type Equipment,
   type Facility,
+  type BorrowingHistory,
   validateImageFile,
   readFileAsDataURL,
   filterEquipments,
@@ -44,6 +46,7 @@ import {
   validateCSVFile,
   fetchEquipments,
   fetchFacilities,
+  fetchEquipmentHistory,
   createEquipment,
   updateEquipment,
   deleteEquipments,
@@ -65,7 +68,7 @@ export default function DashboardEquipmentPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(
-    null
+    null,
   );
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -73,7 +76,7 @@ export default function DashboardEquipmentPage() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const editImageInputRef = useRef<HTMLInputElement>(
-    null
+    null,
   ) as React.RefObject<HTMLInputElement>;
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
@@ -98,6 +101,44 @@ export default function DashboardEquipmentPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // History state
+  const [selectedEquipmentForHistory, setSelectedEquipmentForHistory] =
+    useState<Equipment | null>(null);
+  const [equipmentHistory, setEquipmentHistory] = useState<BorrowingHistory[]>(
+    [],
+  );
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  const handleRowClick = async (equipment: Equipment) => {
+    // If clicking the same equipment, do nothing (or could toggle close)
+    if (selectedEquipmentForHistory?.id === equipment.id) {
+      return;
+    }
+
+    setSelectedEquipmentForHistory(equipment);
+    setIsLoadingHistory(true);
+    setEquipmentHistory([]); // Clear previous history immediately
+
+    try {
+      const history = await fetchEquipmentHistory(equipment.id);
+      setEquipmentHistory(history);
+    } catch (error) {
+      console.error("Failed to fetch history", error);
+      showAlert({
+        type: "error",
+        message: "Failed to fetch borrowing history",
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleCloseHistory = () => {
+    setSelectedEquipmentForHistory(null);
+    setEquipmentHistory([]);
+  };
+
   const [importData, setImportData] = useState<Partial<Equipment>[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newEquipment, setNewEquipment] = useState<Partial<Equipment>>({
@@ -179,11 +220,11 @@ export default function DashboardEquipmentPage() {
       await logEquipmentAction(
         "deleted",
         undefined,
-        `Deleted ${selectedRows.length} equipment(s): ${deletedNames}`
+        `Deleted ${selectedRows.length} equipment(s): ${deletedNames}`,
       );
 
       setEquipments((prev) =>
-        prev.filter((eq) => !selectedRows.includes(eq.id))
+        prev.filter((eq) => !selectedRows.includes(eq.id)),
       );
       setSelectedRows([]);
 
@@ -209,7 +250,7 @@ export default function DashboardEquipmentPage() {
 
   const handleCheckboxChange = (id: number) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
     );
   };
 
@@ -230,7 +271,7 @@ export default function DashboardEquipmentPage() {
       } catch (err) {
         console.error("Error fetching equipments:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch equipments"
+          err instanceof Error ? err.message : "Failed to fetch equipments",
         );
       } finally {
         if (showAnimation) {
@@ -242,7 +283,7 @@ export default function DashboardEquipmentPage() {
         }
       }
     },
-    [isAuthenticated]
+    [isAuthenticated],
   );
 
   const loadFacilities = useCallback(async () => {
@@ -320,7 +361,7 @@ export default function DashboardEquipmentPage() {
   };
 
   const handleImageFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -357,7 +398,7 @@ export default function DashboardEquipmentPage() {
   };
 
   const handleEditImageFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -410,7 +451,7 @@ export default function DashboardEquipmentPage() {
       equipments,
       categoryFilter,
       facilityFilter,
-      searchQuery
+      searchQuery,
     );
   };
 
@@ -425,7 +466,7 @@ export default function DashboardEquipmentPage() {
   };
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -466,7 +507,7 @@ export default function DashboardEquipmentPage() {
 
     try {
       const validData = importData.filter(
-        (item) => item.name && item.name.trim()
+        (item) => item.name && item.name.trim(),
       );
 
       if (validData.length === 0) {
@@ -482,7 +523,7 @@ export default function DashboardEquipmentPage() {
       await logEquipmentAction(
         "imported",
         undefined,
-        `Imported ${result.imported} equipment(s) from CSV file: ${selectedFile?.name}`
+        `Imported ${result.imported} equipment(s) from CSV file: ${selectedFile?.name}`,
       );
 
       showAlert({
@@ -579,7 +620,7 @@ export default function DashboardEquipmentPage() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `equipments_export_${new Date().toISOString().split("T")[0]}.csv`
+      `equipments_export_${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -607,7 +648,7 @@ export default function DashboardEquipmentPage() {
   const handleEditChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     if (editingEquipment) {
@@ -643,7 +684,7 @@ export default function DashboardEquipmentPage() {
       await logEquipmentAction("updated", updatedEquipment.name);
 
       setEquipments((prev) =>
-        prev.map((eq) => (eq.id === id ? updatedEquipment : eq))
+        prev.map((eq) => (eq.id === id ? updatedEquipment : eq)),
       );
       setEditingEquipment(null);
       setShowEditModal(false);
@@ -877,6 +918,7 @@ export default function DashboardEquipmentPage() {
                     onCellEdit={handleCellEdit}
                     onKeyDown={handleKeyDown}
                     onCancelEdit={handleCancelEdit}
+                    onRowClick={handleRowClick}
                   />
 
                   {/* Pagination */}
@@ -888,6 +930,16 @@ export default function DashboardEquipmentPage() {
                     itemsPerPage={itemsPerPage}
                   />
                 </div>
+              )}
+
+              {/* Equipment History Section */}
+              {selectedEquipmentForHistory && (
+                <EquipmentHistory
+                  history={equipmentHistory}
+                  equipmentName={selectedEquipmentForHistory.name}
+                  isLoading={isLoadingHistory}
+                  onClose={handleCloseHistory}
+                />
               )}
             </div>
           </div>

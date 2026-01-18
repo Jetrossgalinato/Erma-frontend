@@ -28,6 +28,7 @@ interface EquipmentsTableProps {
   onCellEdit: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onCancelEdit: () => void;
+  onRowClick: (equipment: Equipment) => void;
   categoryFilter: string;
   facilityFilter: string;
   searchQuery: string;
@@ -46,6 +47,7 @@ export default function EquipmentsTable({
   onCellEdit,
   onKeyDown,
   onCancelEdit,
+  onRowClick,
   categoryFilter,
   facilityFilter,
   searchQuery = "",
@@ -135,7 +137,7 @@ export default function EquipmentsTable({
   const renderEditableCell = (
     eq: Equipment,
     column: keyof Equipment,
-    value: string | number | null | undefined
+    value: string | number | null | undefined,
   ) => {
     const isEditing =
       editingCell?.rowId === eq.id && editingCell?.column === column;
@@ -194,8 +196,8 @@ export default function EquipmentsTable({
               column === "facility_id"
                 ? "number"
                 : column === "date_acquire"
-                ? "date"
-                : "text"
+                  ? "date"
+                  : "text"
             }
             value={editingCell.value}
             onChange={(e) => onCellEdit(e.target.value)}
@@ -227,7 +229,7 @@ export default function EquipmentsTable({
       equipments,
       categoryFilter,
       facilityFilter,
-      searchQuery
+      searchQuery,
     );
   };
 
@@ -324,7 +326,8 @@ export default function EquipmentsTable({
           {getCurrentPageData().map((eq, index) => (
             <tr
               key={eq.id}
-              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+              onClick={() => onRowClick(eq)}
+              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${
                 index % 2 === 0
                   ? "bg-white dark:bg-gray-800"
                   : "bg-gray-50/50 dark:bg-gray-700/20"
@@ -335,7 +338,11 @@ export default function EquipmentsTable({
                   type="checkbox"
                   className="form-checkbox h-4 w-4 text-green-600 dark:text-green-400 transition duration-150 ease-in-out"
                   checked={selectedRows.includes(eq.id)}
-                  onChange={() => onCheckboxChange(eq.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onCheckboxChange(eq.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </td>
 
