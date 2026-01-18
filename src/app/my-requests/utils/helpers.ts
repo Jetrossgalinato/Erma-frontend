@@ -73,6 +73,10 @@ export function getStatusColor(status: RequestStatus | string): string {
       return "bg-green-100 text-green-800";
     case "Rejected":
       return "bg-red-100 text-red-800";
+    case "Returned":
+      return "bg-green-100 text-green-800";
+    case "Not returned":
+      return "bg-red-100 text-red-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
