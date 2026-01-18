@@ -114,7 +114,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                           e.stopPropagation();
                           if (onImageClick) {
                             onImageClick(
-                              formatImageUrl(supply.image!),
+                              formatImageUrl(supply.image!)!,
                               supply.name,
                             );
                           }
