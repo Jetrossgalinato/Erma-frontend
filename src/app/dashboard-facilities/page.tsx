@@ -601,6 +601,10 @@ export default function DashboardFacilitiesPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   // Computed values
   const uniqueFacilityTypes = getUniqueFacilityTypes(facilities);
   const uniqueFloorLevels = getUniqueFloorLevels(facilities);
@@ -758,12 +762,13 @@ export default function DashboardFacilitiesPage() {
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     searchQuery={searchQuery}
+                    onRowClick={handleRowClick}
                   />
 
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={handlePageChange}
                     totalItems={filteredFacilitiesComputed.length}
                     itemsPerPage={itemsPerPage}
                   />
