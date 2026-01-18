@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [registerAs] = useState<"employee" | "intern" | "supervisor">(
-    "employee"
+    "employee",
   );
   const { isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function RegisterPage() {
 
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         {/* Render the selected register form */}
-        <div className="w-full max-w-xs sm:max-w-md mt-4 mx-auto">
+        <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg mt-4 mx-auto">
           {registerAs === "employee" && <EmployeeRegisterForm />}
         </div>
       </div>
