@@ -43,6 +43,18 @@ export type Facility = {
   capacity?: number;
 };
 
+export type BorrowingHistory = {
+  id: number;
+  borrower_name: string;
+  purpose: string;
+  start_date: string;
+  end_date: string;
+  return_date: string;
+  request_status: string;
+  return_status: string;
+  created_at: string;
+};
+
 // ==================== Helper Functions ====================
 
 export function formatImageUrl(url: string | null | undefined): string | null {
@@ -101,10 +113,38 @@ export async function fetchFacilities(): Promise<Facility[]> {
 }
 
 /**
+ * Fetch borrowing history for a specific equipment
+ */
+export async function fetchEquipmentHistory(
+  equipmentId: number,
+): Promise<BorrowingHistory[]> {
+  const token = localStorage.getItem("authToken");
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/equipments/${equipmentId}/history`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "Failed to fetch equipment history" }));
+    throw new Error(error.detail || "Failed to fetch equipment history");
+  }
+
+  return response.json();
+}
+
+/**
  * Create a new equipment
  */
 export async function createEquipment(
-  equipment: Partial<Equipment>
+  equipment: Partial<Equipment>,
 ): Promise<Equipment> {
   const token = localStorage.getItem("authToken");
 
@@ -132,7 +172,7 @@ export async function createEquipment(
  */
 export async function updateEquipment(
   id: number,
-  equipment: Partial<Equipment>
+  equipment: Partial<Equipment>,
 ): Promise<Equipment> {
   const token = localStorage.getItem("authToken");
 
@@ -210,7 +250,7 @@ export async function uploadEquipmentImage(file: File): Promise<string> {
  * Bulk import equipments
  */
 export async function bulkImportEquipments(
-  equipments: Partial<Equipment>[]
+  equipments: Partial<Equipment>[],
 ): Promise<{ imported: number; failed: number }> {
   const token = localStorage.getItem("authToken");
 
@@ -239,7 +279,7 @@ export async function bulkImportEquipments(
 export async function logEquipmentAction(
   action: string,
   equipmentName?: string,
-  details?: string
+  details?: string,
 ): Promise<void> {
   const token = localStorage.getItem("authToken");
 
@@ -292,7 +332,7 @@ export const filterEquipments = (
   equipments: Equipment[],
   categoryFilter: string,
   facilityFilter: string,
-  searchQuery: string = ""
+  searchQuery: string = "",
 ): Equipment[] => {
   return equipments.filter((eq) => {
     const matchesCategory =
@@ -314,7 +354,7 @@ export const getUniqueCategories = (equipments: Equipment[]): string[] => {
 
 export const calculateTotalPages = (
   totalItems: number,
-  itemsPerPage: number
+  itemsPerPage: number,
 ): number => {
   return Math.ceil(totalItems / itemsPerPage);
 };
@@ -322,14 +362,14 @@ export const calculateTotalPages = (
 // CSV parsing helper
 export const parseCSVToEquipment = async (
   file: File,
-  facilities: Facility[] = []
+  facilities: Facility[] = [],
 ): Promise<Partial<Equipment>[]> => {
   const text = await file.text();
   const lines = text.split("\n").filter((line) => line.trim());
 
   if (lines.length < 2) {
     throw new Error(
-      "CSV file must have at least a header row and one data row"
+      "CSV file must have at least a header row and one data row",
     );
   }
 
@@ -425,7 +465,7 @@ export const parseCSVToEquipment = async (
         case "facility":
           if (value && facilities.length > 0) {
             const facility = facilities.find(
-              (f) => f.facility_name.toLowerCase() === value.toLowerCase()
+              (f) => f.facility_name.toLowerCase() === value.toLowerCase(),
             );
             if (facility) {
               equipment.facility_id = facility.facility_id;

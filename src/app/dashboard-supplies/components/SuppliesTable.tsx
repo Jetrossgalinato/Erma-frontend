@@ -17,6 +17,7 @@ interface SuppliesTableProps {
   onImageClick?: (imageUrl: string, supplyName: string) => void;
   currentPage: number;
   itemsPerPage: number;
+  onRowClick: (supply: Supply) => void;
 }
 
 const SuppliesTable: React.FC<SuppliesTableProps> = ({
@@ -27,6 +28,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
   onImageClick,
   currentPage,
   itemsPerPage,
+  onRowClick,
 }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -76,18 +78,22 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
           {currentSupplies.map((supply, index) => {
             const stockStatus = getStockStatus(
               supply.quantity,
-              supply.stocking_point
+              supply.stocking_point,
             );
             return (
               <tr
                 key={supply.id}
-                className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                onClick={() => onRowClick(supply)}
+                className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
                   index % 2 === 0
                     ? "bg-white dark:bg-gray-800"
                     : "bg-gray-50/50 dark:bg-gray-700/20"
                 }`}
               >
-                <td className="sticky left-0 z-10 w-12 px-6 py-4 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <td
+                  onClick={(e) => e.stopPropagation()}
+                  className="sticky left-0 z-10 w-12 px-6 py-4 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                >
                   <input
                     type="checkbox"
                     checked={selectedRows.includes(supply.id)}
@@ -104,13 +110,15 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                         className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
                         width={48} // Adjust width as needed
                         height={48} // Adjust height as needed
-                        onClick={() =>
-                          onImageClick &&
-                          onImageClick(
-                            formatImageUrl(supply.image)!,
-                            supply.name
-                          )
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onImageClick) {
+                            onImageClick(
+                              formatImageUrl(supply.image!),
+                              supply.name,
+                            );
+                          }
+                        }}
                       />
                     </>
                   ) : (

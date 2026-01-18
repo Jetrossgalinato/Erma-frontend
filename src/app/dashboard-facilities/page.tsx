@@ -19,6 +19,7 @@ import FilterControls from "./components/FilterControls";
 import ActionsDropdown from "./components/ActionsDropdown";
 import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
+import FacilityHistory from "./components/FacilityHistory";
 import { RefreshCw, Search } from "lucide-react";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
@@ -26,10 +27,11 @@ const EditModal = lazy(() => import("./components/EditModal"));
 const AddFacilityForm = lazy(() => import("./components/AddFacilityForm"));
 const ImportModal = lazy(() => import("./components/ImportModal"));
 const DeleteConfirmationModal = lazy(
-  () => import("./components/DeleteConfirmationModal")
+  () => import("./components/DeleteConfirmationModal"),
 );
 import {
   fetchFacilities,
+  fetchFacilityHistory,
   createFacility,
   updateFacility,
   deleteFacilities,
@@ -41,6 +43,7 @@ import {
   filterFacilities,
   type Facility,
   type FacilityFormData,
+  type BorrowingHistory,
 } from "./utils/helpers";
 
 export default function DashboardFacilitiesPage() {
@@ -69,6 +72,14 @@ export default function DashboardFacilitiesPage() {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [importData, setImportData] = useState<Partial<Facility>[]>([]);
 
+  // History state
+  const [selectedFacilityForHistory, setSelectedFacilityForHistory] =
+    useState<Facility | null>(null);
+  const [facilityHistory, setFacilityHistory] = useState<BorrowingHistory[]>(
+    [],
+  );
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   // Filter State
   const [facilityTypeFilter, setFacilityTypeFilter] = useState<string>("");
   const [floorLevelFilter, setFloorLevelFilter] = useState<string>("");
@@ -90,6 +101,35 @@ export default function DashboardFacilitiesPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement | null>(null);
   const actionsDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // History handlers
+  const handleRowClick = async (facility: Facility) => {
+    if (selectedFacilityForHistory?.id === facility.id) {
+      return;
+    }
+
+    setSelectedFacilityForHistory(facility);
+    setIsLoadingHistory(true);
+    setFacilityHistory([]);
+
+    try {
+      const history = await fetchFacilityHistory(facility.id);
+      setFacilityHistory(history);
+    } catch (error) {
+      console.error("Failed to fetch history", error);
+      showAlert({
+        type: "error",
+        message: "Failed to fetch booking history",
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const handleCloseHistory = () => {
+    setSelectedFacilityForHistory(null);
+    setFacilityHistory([]);
+  };
 
   // Auth check
   useEffect(() => {
@@ -155,6 +195,27 @@ export default function DashboardFacilitiesPage() {
     setCurrentPage(1);
   }, [facilityTypeFilter, floorLevelFilter, searchQuery]);
 
+  // Select first facility by default when data loads
+  const selectedFacRef = useRef(false);
+  useEffect(() => {
+    if (
+      !loading &&
+      facilities.length > 0 &&
+      selectedFacilityForHistory === null &&
+      !selectedFacRef.current
+    ) {
+      selectedFacRef.current = true;
+      handleRowClick(facilities[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, facilities]);
+
+  useEffect(() => {
+    if (loading) {
+      selectedFacRef.current = false;
+    }
+  }, [loading]);
+
   // Handlers
   const handleRefreshClick = useCallback(() => {
     if (!isRefreshing) {
@@ -164,7 +225,7 @@ export default function DashboardFacilitiesPage() {
 
   const handleCheckboxChange = (id: number) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
     );
   };
 
@@ -174,10 +235,10 @@ export default function DashboardFacilitiesPage() {
       const endIndex = startIndex + itemsPerPage;
       const currentFacilitiesList = filteredFacilitiesComputed.slice(
         startIndex,
-        endIndex
+        endIndex,
       );
       setSelectedRows(
-        currentFacilitiesList.map((facility: Facility) => facility.id)
+        currentFacilitiesList.map((facility: Facility) => facility.id),
       );
     } else {
       setSelectedRows([]);
@@ -198,7 +259,7 @@ export default function DashboardFacilitiesPage() {
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
     const rowToEdit = facilities.find(
-      (facility) => facility.id === selectedRows[0]
+      (facility) => facility.id === selectedRows[0],
     );
     if (rowToEdit) {
       setEditingFacility(rowToEdit);
@@ -209,14 +270,14 @@ export default function DashboardFacilitiesPage() {
   const handleEditChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
 
     // Convert capacity to number
     if (name === "capacity") {
       setEditingFacility((prev) =>
-        prev ? { ...prev, [name]: value ? parseInt(value, 10) : 0 } : null
+        prev ? { ...prev, [name]: value ? parseInt(value, 10) : 0 } : null,
       );
     } else {
       setEditingFacility((prev) => (prev ? { ...prev, [name]: value } : null));
@@ -253,8 +314,8 @@ export default function DashboardFacilitiesPage() {
       // Update local state
       setFacilities((prev) =>
         prev.map((facility) =>
-          facility.id === updatedFacility.id ? updatedFacility : facility
-        )
+          facility.id === updatedFacility.id ? updatedFacility : facility,
+        ),
       );
 
       showAlert({
@@ -282,7 +343,7 @@ export default function DashboardFacilitiesPage() {
   const handleNewFacilityChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
 
@@ -357,7 +418,7 @@ export default function DashboardFacilitiesPage() {
   };
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -398,7 +459,7 @@ export default function DashboardFacilitiesPage() {
     try {
       // Filter out rows without facility_name (required field)
       const validData = importData.filter(
-        (item) => item.facility_name && item.facility_name.trim()
+        (item) => item.facility_name && item.facility_name.trim(),
       );
 
       if (validData.length === 0) {
@@ -419,7 +480,7 @@ export default function DashboardFacilitiesPage() {
       await logFacilityAction(
         "imported",
         undefined,
-        `Imported ${result.imported} facilities: ${facilityNames}`
+        `Imported ${result.imported} facilities: ${facilityNames}`,
       );
 
       showAlert({
@@ -476,7 +537,7 @@ export default function DashboardFacilitiesPage() {
           `"${facility.building || ""}"`,
           `"${facility.status || ""}"`,
           `"${facility.remarks || ""}"`,
-        ].join(",")
+        ].join(","),
       ),
     ].join("\n");
 
@@ -486,7 +547,7 @@ export default function DashboardFacilitiesPage() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `facilities_export_${new Date().toISOString().split("T")[0]}.csv`
+      `facilities_export_${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -515,12 +576,12 @@ export default function DashboardFacilitiesPage() {
       await logFacilityAction(
         "deleted",
         undefined,
-        `Deleted ${selectedRows.length} facilities: ${facilityNames.join(", ")}`
+        `Deleted ${selectedRows.length} facilities: ${facilityNames.join(", ")}`,
       );
 
       // Update local state by filtering out all selected rows
       setFacilities((prev) =>
-        prev.filter((facility) => !selectedRows.includes(facility.id))
+        prev.filter((facility) => !selectedRows.includes(facility.id)),
       );
       setSelectedRows([]);
       setShowDeleteModal(false);
@@ -540,6 +601,10 @@ export default function DashboardFacilitiesPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   // Computed values
   const uniqueFacilityTypes = getUniqueFacilityTypes(facilities);
   const uniqueFloorLevels = getUniqueFloorLevels(facilities);
@@ -547,10 +612,10 @@ export default function DashboardFacilitiesPage() {
     facilities,
     facilityTypeFilter,
     floorLevelFilter,
-    searchQuery
+    searchQuery,
   );
   const totalPages = Math.ceil(
-    filteredFacilitiesComputed.length / itemsPerPage
+    filteredFacilitiesComputed.length / itemsPerPage,
   );
 
   if (isLoading) {
@@ -673,7 +738,6 @@ export default function DashboardFacilitiesPage() {
                   </div>
                 </div>
               </div>
-
               {showInsertForm && (
                 <Suspense fallback={null}>
                   <AddFacilityForm
@@ -684,7 +748,6 @@ export default function DashboardFacilitiesPage() {
                   />
                 </Suspense>
               )}
-
               {loading ? (
                 <Loader />
               ) : facilities.length === 0 ? (
@@ -699,17 +762,27 @@ export default function DashboardFacilitiesPage() {
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     searchQuery={searchQuery}
+                    onRowClick={handleRowClick}
                   />
 
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={setCurrentPage}
+                    onPageChange={handlePageChange}
                     totalItems={filteredFacilitiesComputed.length}
                     itemsPerPage={itemsPerPage}
                   />
                 </div>
               )}
+              {/* Facility History Section */}
+              {selectedFacilityForHistory && (
+                <FacilityHistory
+                  history={facilityHistory}
+                  facilityName={selectedFacilityForHistory.facility_name}
+                  isLoading={isLoadingHistory}
+                  onClose={handleCloseHistory}
+                />
+              )}{" "}
             </div>
           </div>
         </main>

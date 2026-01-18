@@ -128,7 +128,7 @@ export async function fetchFacilities(): Promise<Facility[]> {
  * Create a new supply
  */
 export async function createSupply(
-  supplyData: SupplyFormData
+  supplyData: SupplyFormData,
 ): Promise<Supply> {
   const token = localStorage.getItem("authToken");
 
@@ -156,7 +156,7 @@ export async function createSupply(
  */
 export async function updateSupply(
   id: number,
-  supplyData: Partial<SupplyFormData>
+  supplyData: Partial<SupplyFormData>,
 ): Promise<Supply> {
   const token = localStorage.getItem("authToken");
 
@@ -234,7 +234,7 @@ export async function deleteSupplies(ids: number[]): Promise<void> {
  * Bulk import supplies
  */
 export async function bulkImportSupplies(
-  supplies: Partial<Supply>[]
+  supplies: Partial<Supply>[],
 ): Promise<{ imported: number; failed: number; message: string }> {
   const token = localStorage.getItem("authToken");
 
@@ -263,7 +263,7 @@ export async function bulkImportSupplies(
 export async function logSupplyAction(
   action: string,
   supplyName?: string,
-  details?: string
+  details?: string,
 ): Promise<void> {
   const token = localStorage.getItem("authToken");
 
@@ -291,13 +291,13 @@ export async function logSupplyAction(
  */
 export function parseCSVToSupplies(
   csvText: string,
-  facilities: Facility[] = []
+  facilities: Facility[] = [],
 ): Partial<Supply>[] {
   const lines = csvText.split("\n").filter((line) => line.trim());
 
   if (lines.length < 2) {
     throw new Error(
-      "CSV file must have at least a header row and one data row"
+      "CSV file must have at least a header row and one data row",
     );
   }
 
@@ -344,7 +344,7 @@ export function parseCSVToSupplies(
             const facility = facilities.find(
               (f) =>
                 f.facility_name?.toLowerCase() === value.toLowerCase() ||
-                f.name?.toLowerCase() === value.toLowerCase()
+                f.name?.toLowerCase() === value.toLowerCase(),
             );
             if (facility) {
               supply.facility_id = facility.facility_id || facility.id;
@@ -394,7 +394,7 @@ export function getUniqueFacilities(supplies: Supply[]): string[] {
   }
   return [
     ...new Set(
-      supplies.map((supply) => supply.facilities?.name).filter(Boolean)
+      supplies.map((supply) => supply.facilities?.name).filter(Boolean),
     ),
   ].sort() as string[];
 }
@@ -406,7 +406,7 @@ export function filterSupplies(
   supplies: Supply[],
   categoryFilter: string,
   facilityFilter: string,
-  searchQuery: string = ""
+  searchQuery: string = "",
 ): Supply[] {
   if (!Array.isArray(supplies)) {
     return [];
@@ -430,12 +430,45 @@ export function filterSupplies(
   });
 }
 
+export interface SupplyHistoryItem {
+  id: number;
+  borrower_name: string;
+  purpose: string;
+  request_date: string;
+  quantity: number;
+  request_status: string;
+}
+
+export const fetchSupplyHistory = async (
+  id: number,
+): Promise<SupplyHistoryItem[]> => {
+  const token = localStorage.getItem("authToken");
+  const response = await fetch(`${API_BASE_URL}/api/supplies/${id}/history`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch supply history: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+export const calculateTotalPages = (
+  totalItems: number,
+  itemsPerPage: number,
+) => {
+  return Math.ceil(totalItems / itemsPerPage);
+};
+
 /**
  * Get stock status with color coding
  */
 export function getStockStatus(
   quantity: number | string,
-  stockingPoint: number | string
+  stockingPoint: number | string,
 ): { status: string; color: string } {
   const qty = Number(quantity);
   const point = Number(stockingPoint);

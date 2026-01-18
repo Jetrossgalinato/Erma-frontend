@@ -15,6 +15,7 @@ interface FacilitiesTableProps {
   currentPage: number;
   itemsPerPage: number;
   searchQuery?: string;
+  onRowClick?: (facility: Facility) => void;
 }
 
 const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
@@ -25,6 +26,7 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
   currentPage,
   itemsPerPage,
   searchQuery = "",
+  onRowClick,
 }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -79,7 +81,8 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
           {currentFacilities.map((facility, index) => (
             <tr
               key={facility.id}
-              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+              onClick={() => onRowClick && onRowClick(facility)}
+              className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${
                 index % 2 === 0
                   ? "bg-white dark:bg-gray-800"
                   : "bg-gray-50/50 dark:bg-gray-700/20"
@@ -89,7 +92,11 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
                 <input
                   type="checkbox"
                   checked={selectedRows.includes(facility.id)}
-                  onChange={() => onCheckboxChange(facility.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onCheckboxChange(facility.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                   className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
                 />
               </td>
@@ -117,7 +124,7 @@ const FacilitiesTable: React.FC<FacilitiesTableProps> = ({
               <td className="px-6 py-4 whitespace-nowrap border-r border-gray-100 dark:border-gray-700">
                 <span
                   className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                    facility.status || ""
+                    facility.status || "",
                   )}`}
                 >
                   {facility.status || "N/A"}
