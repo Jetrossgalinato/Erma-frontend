@@ -111,8 +111,8 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                         src={formatImageUrl(supply.image)!}
                         alt={supply.name}
                         className="h-12 w-12 object-cover rounded cursor-pointer hover:opacity-75 transition-opacity"
-                        width={48} // Adjust width as needed
-                        height={48} // Adjust height as needed
+                        width={48}
+                        height={48}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onImageClick) {
