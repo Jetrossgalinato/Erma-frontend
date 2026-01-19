@@ -68,6 +68,16 @@ export default function ActionButtons({
           Book a Facility
         </Link>
       )}
+
+      {requestType === "acquiring" && (
+        <Link
+          href="/supplies"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        >
+          <Repeat className="w-4 h-4" />
+          Acquire Supplies
+        </Link>
+      )}
     </div>
   );
 }
