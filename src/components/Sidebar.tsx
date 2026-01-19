@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   LucideIcon,
+  PackageOpen,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
@@ -179,7 +180,7 @@ const Sidebar: React.FC = () => {
           const hasChanged = Object.keys(countsData).some(
             (key) =>
               countsData[key as keyof SidebarCounts] !==
-              prevCounts[key as keyof SidebarCounts]
+              prevCounts[key as keyof SidebarCounts],
           );
           return hasChanged ? countsData : prevCounts;
         });
@@ -254,7 +255,7 @@ const Sidebar: React.FC = () => {
       path: "/monitor-facilities",
     },
     {
-      icon: Activity,
+      icon: PackageOpen,
       label: "Supply Logs",
       count: loading ? null : counts.supply_logs,
       path: "/monitor-supplies",
