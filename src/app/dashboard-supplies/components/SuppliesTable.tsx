@@ -51,11 +51,11 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 className="rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
               />
             </th>
-            <th className="sticky left-12 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-              Image
-            </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Name
+            </th>
+            <th className="sticky left-12 z-10 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+              Image
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Category
@@ -101,6 +101,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                     className="rounded border-gray-300 dark:border-gray-600 text-orange-600 focus:ring-orange-500"
                   />
                 </td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
+                  {supply.name}
+                </td>
                 <td className="sticky left-12 z-10 px-6 py-4 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                   {supply.image ? (
                     <>
@@ -126,9 +129,6 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                       <ImageIcon className="h-6 w-6 text-gray-400 dark:text-gray-600" />
                     </div>
                   )}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
-                  {supply.name}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                   {supply.category}
