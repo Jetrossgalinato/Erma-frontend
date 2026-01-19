@@ -53,12 +53,6 @@ export default function FacilitiesTable({
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]"
-              >
-                Description
-              </th>
-              <th
-                scope="col"
                 className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-l"
               >
                 Actions
@@ -83,18 +77,13 @@ export default function FacilitiesTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                      facility.status
+                      facility.status,
                     )}`}
                   >
                     {facility.status}
                   </span>
                 </td>
-                <td
-                  className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate"
-                  title={facility.description || ""}
-                >
-                  {facility.description || "N/A"}
-                </td>
+
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white shadow-l">
                   <div className="flex justify-end gap-2">
                     {/* View Details Logic is usually handled by modal, but since table shows all, maybe unnecessary? 
@@ -126,8 +115,8 @@ export default function FacilitiesTable({
                           !isAuthenticated
                             ? "Please log in to book facility"
                             : facility.status !== "Available"
-                            ? "This facility is currently unavailable"
-                            : "Book this facility"
+                              ? "This facility is currently unavailable"
+                              : "Book this facility"
                         }
                       >
                         Book
