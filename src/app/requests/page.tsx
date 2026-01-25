@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, User, RefreshCw } from "lucide-react";
+import { Search, User, RefreshCw, LayoutGrid, List } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store";
 import StatisticsCards from "./components/StatisticsCards";
 import FilterControls from "./components/FilterControls";
 import RequestCard from "./components/RequestCard";
+import RequestTable from "./components/RequestTable";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import {
   type AccountRequest,
@@ -49,6 +50,9 @@ export default function AccountRequestsPage() {
 
   const [requestedAtOptions] = useState(getDateOptions());
   const [selectedRequestedAt, setSelectedRequestedAt] = useState("All Dates");
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // Role-based access control - Only Super Admin can access account requests
   useEffect(() => {
@@ -138,7 +142,7 @@ export default function AccountRequestsPage() {
       selectedStatus,
       selectedDepartment,
       selectedRole,
-      selectedRequestedAt
+      selectedRequestedAt,
     );
   }, [
     searchTerm,
@@ -188,8 +192,8 @@ export default function AccountRequestsPage() {
                 status: "Approved" as RequestStatus,
                 approved_acc_role: approvedRole,
               }
-            : r
-        )
+            : r,
+        ),
       );
 
       showAlert({
@@ -214,8 +218,8 @@ export default function AccountRequestsPage() {
         prevRequests.map((request) =>
           request.id === requestId
             ? { ...request, status: "Rejected" as RequestStatus }
-            : request
-        )
+            : request,
+        ),
       );
 
       showAlert({
@@ -236,7 +240,7 @@ export default function AccountRequestsPage() {
       await deleteAccountRequest(requestId);
 
       setRequests((prevRequests) =>
-        prevRequests.filter((request) => request.id !== requestId)
+        prevRequests.filter((request) => request.id !== requestId),
       );
 
       showAlert({
@@ -272,6 +276,30 @@ export default function AccountRequestsPage() {
               </p>
             </div>
             <div className="flex gap-3">
+              <div className="flex bg-gray-200 rounded-lg p-1 gap-1">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    viewMode === "table"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  title="Table View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
               <button
                 onClick={fetchRequests}
                 disabled={loading}
@@ -313,20 +341,28 @@ export default function AccountRequestsPage() {
           {/* Loading State */}
           {(loading || authLoading) && <Loader />}
 
-          {/* Account Requests Grid */}
-          {!loading && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
-              {paginatedRequests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  onDelete={openDeleteModal}
-                />
-              ))}
-            </div>
-          )}
+          {/* Account Requests Grid/Table */}
+          {!loading &&
+            (viewMode === "grid" ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
+                {paginatedRequests.map((request) => (
+                  <RequestCard
+                    key={request.id}
+                    request={request}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onDelete={openDeleteModal}
+                  />
+                ))}
+              </div>
+            ) : (
+              <RequestTable
+                requests={paginatedRequests}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onDelete={openDeleteModal}
+              />
+            ))}
 
           <div className="flex justify-center mt-2 mb-12 space-x-2">
             {Array.from({
