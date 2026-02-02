@@ -20,6 +20,7 @@ import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
 import SupplyHistory from "./components/SupplyHistory";
 import { RefreshCw, Search } from "lucide-react";
+import * as XLSX from "xlsx";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
 const EditModal = lazy(() => import("./components/EditModal"));
@@ -673,6 +674,70 @@ export default function DashboardSuppliesPage() {
       message: "Data exported successfully!",
     });
   };
+
+  const handleExportExcelClick = () => {
+    if (supplies.length === 0) {
+      showAlert({
+        type: "info",
+        message: "No data to export.",
+      });
+      return;
+    }
+
+    const data = supplies.map((supply) => {
+      const facilityName =
+        supply.facilities?.facility_name ||
+        supply.facilities?.name ||
+        facilities.find((f) => f.facility_id === supply.facility_id)
+          ?.facility_name ||
+        "-";
+      const status = getStockStatus(
+        supply.quantity,
+        supply.stocking_point,
+      ).status;
+      return {
+        ID: supply.id,
+        Name: supply.name,
+        Category: supply.category,
+        Quantity: supply.quantity,
+        "Stock Unit": supply.stock_unit,
+        "Stocking Point": supply.stocking_point,
+        Status: status,
+        Facility: facilityName,
+        Remarks: supply.remarks,
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Supplies");
+
+    // Auto-adjust column width
+    const wscols = [
+      { wch: 5 }, // ID
+      { wch: 20 }, // Name
+      { wch: 15 }, // Category
+      { wch: 10 }, // Quantity
+      { wch: 15 }, // Stock Unit
+      { wch: 15 }, // Stocking Point
+      { wch: 15 }, // Status
+      { wch: 20 }, // Facility
+      { wch: 20 }, // Remarks
+    ];
+    worksheet["!cols"] = wscols;
+
+    XLSX.writeFile(
+      workbook,
+      `supplies_export_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
+
+    setShowActionsDropdown(false);
+    showAlert({
+      type: "success",
+      message: "Data exported to Excel successfully!",
+    });
+  };
+
   const filteredSupplies = filterSupplies(
     supplies,
     categoryFilter,
@@ -950,6 +1015,7 @@ export default function DashboardSuppliesPage() {
                         setShowActionsDropdown(false);
                       }}
                       onExport={handleExportClick}
+                      onExportExcel={handleExportExcelClick}
                       dropdownRef={actionsDropdownRef}
                     />
 
