@@ -35,7 +35,7 @@ export default function EquipmentPage() {
   const searchTerm = useUIStore((state) => state.searchTerms.equipment || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
-    (state) => state.pagination.equipment?.currentPage || 1
+    (state) => state.pagination.equipment?.currentPage || 1,
   );
   const setCurrentPage = useUIStore((state) => state.setCurrentPage);
 
@@ -46,7 +46,7 @@ export default function EquipmentPage() {
   // Local UI state
   const [showModal, setShowModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(
-    null
+    null,
   );
 
   const [showImageModal, setShowImageModal] = useState(false);
@@ -88,7 +88,7 @@ export default function EquipmentPage() {
       equipmentData,
       searchTerm,
       selectedCategory,
-      selectedFacility
+      selectedFacility,
     );
   }, [equipmentData, searchTerm, selectedCategory, selectedFacility]);
 
@@ -96,7 +96,7 @@ export default function EquipmentPage() {
     return paginateEquipmentHelper(
       filteredEquipment,
       currentPage,
-      ITEMS_PER_PAGE
+      ITEMS_PER_PAGE,
     );
   }, [filteredEquipment, currentPage]);
 
@@ -138,7 +138,7 @@ export default function EquipmentPage() {
 
     const success = await createBorrowingRequest(
       selectedEquipment.id,
-      finalFormData
+      finalFormData,
     );
 
     if (success) {
@@ -188,7 +188,7 @@ export default function EquipmentPage() {
             <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <div>
                 <h1 className="text-xl sm:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2">
-                  Equipments
+                  Equipment
                 </h1>
                 <p className="text-xs sm:text-base text-gray-600">
                   View all equipment records, filter by category or facility,
@@ -303,7 +303,7 @@ export default function EquipmentPage() {
                               priority
                               onClick={() => {
                                 setSelectedImage(
-                                  formatImageUrl(equipment.image)!
+                                  formatImageUrl(equipment.image)!,
                                 );
                                 setSelectedEquipment(equipment);
                                 setShowImageModal(true);
@@ -312,7 +312,7 @@ export default function EquipmentPage() {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = "none";
                                 target.nextElementSibling?.classList.remove(
-                                  "hidden"
+                                  "hidden",
                                 );
                               }}
                             />
@@ -349,7 +349,7 @@ export default function EquipmentPage() {
                             <span
                               className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(
                                 equipment.status,
-                                equipment.availability
+                                equipment.availability,
                               )}`}
                             >
                               {equipment.status === "Working"
@@ -408,8 +408,8 @@ export default function EquipmentPage() {
                                   equipment.availability === "Borrowed"
                                     ? "This equipment is currently borrowed"
                                     : !isAuthenticated
-                                    ? "Please log in to borrow equipment"
-                                    : "Borrow this equipment"
+                                      ? "Please log in to borrow equipment"
+                                      : "Borrow this equipment"
                                 }
                               >
                                 {equipment.availability === "Borrowed"
@@ -440,7 +440,7 @@ export default function EquipmentPage() {
                   currentPage={currentPage}
                   totalPages={calculateTotalPages(
                     filteredEquipment.length,
-                    ITEMS_PER_PAGE
+                    ITEMS_PER_PAGE,
                   )}
                   onPageChange={(page) => setCurrentPage("equipment", page)}
                 />

@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
 
   // Track user's approved_acc_role - Initialize immediately from store
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(
-    user?.role || null
+    user?.role || null,
   );
 
   // Utility for checking if user is Staff/Faculty/Admin
@@ -213,7 +213,7 @@ const Navbar: React.FC = () => {
 
         setNotifications(filteredData);
         const unread = filteredData.filter(
-          (notif: Notification) => !notif.is_read
+          (notif: Notification) => !notif.is_read,
         ).length;
         setUnreadCount(unread);
       }
@@ -256,7 +256,7 @@ const Navbar: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         const pendingCount = data.filter(
-          (req: any) => req.status === "Pending"
+          (req: any) => req.status === "Pending",
         ).length;
         setPendingAccountRequestsCount(pendingCount);
       }
@@ -275,7 +275,7 @@ const Navbar: React.FC = () => {
 
   const handleNotificationClick = async (
     notificationId: string,
-    notificationTitle: string
+    notificationTitle: string,
   ) => {
     // Mark as read
     await markNotificationAsRead(notificationId);
@@ -359,14 +359,14 @@ const Navbar: React.FC = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.ok) {
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif.id === notificationId ? { ...notif, is_read: true } : notif
-          )
+            notif.id === notificationId ? { ...notif, is_read: true } : notif,
+          ),
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
@@ -447,7 +447,7 @@ const Navbar: React.FC = () => {
                   pathname.startsWith("/equipment") ? "text-orange-500" : ""
                 }`}
               >
-                Equipments
+                Equipment
               </a>
               <a
                 href="/facilities"
@@ -588,7 +588,7 @@ const Navbar: React.FC = () => {
                       onClick={() =>
                         handleNotificationClick(
                           notification.id,
-                          notification.title
+                          notification.title,
                         )
                       }
                       className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
@@ -661,7 +661,7 @@ const Navbar: React.FC = () => {
                     setIsResourcesOpen(false);
                   }}
                 >
-                  Equipments
+                  Equipment
                 </Link>
                 <Link
                   href="/facilities"
@@ -813,7 +813,7 @@ const Navbar: React.FC = () => {
                         </div>
                         <div className="text-xs text-gray-400 mt-1">
                           {new Date(
-                            notification.created_at
+                            notification.created_at,
                           ).toLocaleDateString()}
                         </div>
                       </div>

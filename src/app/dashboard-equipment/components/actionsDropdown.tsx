@@ -17,6 +17,7 @@ type ActionsDropdownProps = {
   onInsertClick: () => void;
   onImportClick: () => void;
   onExportClick: () => void;
+  onExportExcelClick: () => void;
   onEditClick: () => void;
   onDeleteClick: () => void;
 };
@@ -29,6 +30,7 @@ export default function ActionsDropdown({
   onInsertClick,
   onImportClick,
   onExportClick,
+  onExportExcelClick,
   onEditClick,
   onDeleteClick,
 }: ActionsDropdownProps) {
@@ -72,6 +74,14 @@ export default function ActionsDropdown({
             >
               <Upload className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
               Export Data to CSV File
+            </button>
+
+            <button
+              onClick={onExportExcelClick}
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
+            >
+              <Upload className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
+              Export Data to Excel File
             </button>
 
             <hr className="my-1 border-gray-100 dark:border-gray-600" />

@@ -269,7 +269,7 @@ export default function AccountRequestsPage() {
           <div className="mb-8 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                Account Requests Management
+                Account Request Management
               </h1>
               <p className="text-gray-600">
                 Review and manage user registration requests for the system
