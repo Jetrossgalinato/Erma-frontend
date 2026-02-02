@@ -790,8 +790,8 @@ export default function DashboardEquipmentPage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-8 pt-8 flex flex-col gap-6">
                 <PageHeader
-                  title="Equipments"
-                  description="Welcome to the Equipments page, where you can manage all the equipments efficiently."
+                  title="Equipment"
+                  description="Welcome to the Equipment page, where you can manage all the equipment efficiently."
                 />
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="relative w-full sm:w-auto">
