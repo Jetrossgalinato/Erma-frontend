@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { formatImageUrl, Supply } from "../utils/helpers";
+import { formatImageUrl, Supply, isLowStock } from "../utils/helpers";
 import { ImageIcon } from "lucide-react";
 
 interface SuppliesTableProps {
@@ -67,7 +67,7 @@ export default function SuppliesTable({
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10"
+                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-l"
               >
                 Actions
               </th>
@@ -83,7 +83,7 @@ export default function SuppliesTable({
                         onClick={() =>
                           onImageClick?.(
                             formatImageUrl(supply.image_url) || "",
-                            supply.supply_name
+                            supply.supply_name,
                           )
                         }
                         className="relative w-full h-full block cursor-pointer transition-opacity hover:opacity-80"
@@ -123,7 +123,15 @@ export default function SuppliesTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="flex flex-col">
-                    <span>
+                    <span
+                      className={
+                        supply.quantity <= 0
+                          ? "text-red-600 font-medium"
+                          : isLowStock(supply.quantity, supply.stocking_point)
+                            ? "text-yellow-600 font-medium"
+                            : "text-green-600 font-medium"
+                      }
+                    >
                       Qty: {supply.quantity} {supply.stock_unit}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -136,7 +144,7 @@ export default function SuppliesTable({
                     {supply.remarks || "-"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/95 backdrop-blur z-10 border-l border-gray-100">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white shadow-l">
                   <div className="flex justify-end gap-2">
                     {isLoading ? (
                       <div className="px-3 py-1 text-xs bg-gray-200 rounded animate-pulse w-[60px]"></div>
@@ -157,8 +165,8 @@ export default function SuppliesTable({
                           !isAuthenticated
                             ? "Please log in to acquire supplies"
                             : supply.quantity <= 0
-                            ? "Out of stock"
-                            : ""
+                              ? "Out of stock"
+                              : ""
                         }
                       >
                         {supply.quantity <= 0 ? "Out of Stock" : "Acquire"}

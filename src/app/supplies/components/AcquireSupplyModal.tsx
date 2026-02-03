@@ -1,5 +1,5 @@
 import { RefreshCw } from "lucide-react";
-import { Supply } from "../utils/helpers";
+import { Supply, isLowStock } from "../utils/helpers";
 
 interface AcquireSupplyModalProps {
   isOpen: boolean;
@@ -52,7 +52,15 @@ export default function AcquireSupplyModal({
           </p>
           <p className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
             Available Stock:{" "}
-            <span className="font-medium">
+            <span
+              className={`font-medium ${
+                supply.quantity <= 0
+                  ? "text-red-600"
+                  : isLowStock(supply.quantity, supply.stocking_point)
+                    ? "text-yellow-600"
+                    : "text-green-600"
+              }`}
+            >
               {supply.quantity} {supply.stock_unit}
             </span>
           </p>
