@@ -18,6 +18,7 @@ import {
   fetchSuppliesList,
   createAcquireRequest,
   formatImageUrl,
+  isLowStock,
 } from "./utils/helpers";
 import SupplyDetailsModal from "./components/SupplyDetailsModal";
 import AcquireSupplyModal from "./components/AcquireSupplyModal";
@@ -310,7 +311,18 @@ export default function SuppliesPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Stock:</span>
-                        <span className="text-gray-900">
+                        <span
+                          className={
+                            supply.quantity <= 0
+                              ? "text-red-600 font-medium"
+                              : isLowStock(
+                                    supply.quantity,
+                                    supply.stocking_point,
+                                  )
+                                ? "text-yellow-600 font-medium"
+                                : "text-green-600 font-medium"
+                          }
+                        >
                           {supply.quantity} {supply.stock_unit}
                         </span>
                       </div>

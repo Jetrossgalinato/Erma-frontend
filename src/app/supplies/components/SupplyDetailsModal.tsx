@@ -47,9 +47,11 @@ export default function SupplyDetailsModal({
             <strong>Current Stock:</strong>{" "}
             <span
               className={
-                isLowStock(supply.quantity, supply.stocking_point)
+                supply.quantity <= 0
                   ? "text-red-600 font-medium"
-                  : "text-green-600 font-medium"
+                  : isLowStock(supply.quantity, supply.stocking_point)
+                    ? "text-yellow-600 font-medium"
+                    : "text-green-600 font-medium"
               }
             >
               {supply.quantity} {supply.stock_unit}
@@ -64,16 +66,25 @@ export default function SupplyDetailsModal({
           </p>
         </div>
 
-        {isLowStock(supply.quantity, supply.stocking_point) && (
+        {supply.quantity <= 0 ? (
           <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-800 text-xs sm:text-sm font-medium">
-              ⚠️ Low Stock Alert
+              🚫 Out of Stock
             </p>
             <p className="text-red-700 text-[10px] sm:text-xs">
+              This item is currently out of stock.
+            </p>
+          </div>
+        ) : isLowStock(supply.quantity, supply.stocking_point) ? (
+          <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800 text-xs sm:text-sm font-medium">
+              ⚠️ Low Stock Warning
+            </p>
+            <p className="text-yellow-700 text-[10px] sm:text-xs">
               Current stock is at or below the stocking point.
             </p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
