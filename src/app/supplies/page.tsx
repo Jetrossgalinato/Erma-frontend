@@ -32,7 +32,7 @@ export default function SuppliesPage() {
   const searchTerm = useUIStore((state) => state.searchTerms.supplies || "");
   const setSearchTerm = useUIStore((state) => state.setSearchTerm);
   const currentPage = useUIStore(
-    (state) => state.pagination.supplies?.currentPage || 1
+    (state) => state.pagination.supplies?.currentPage || 1,
   );
   const setCurrentPage = useUIStore((state) => state.setCurrentPage);
 
@@ -85,7 +85,7 @@ export default function SuppliesPage() {
       supplies,
       searchTerm,
       selectedCategory,
-      selectedFacility
+      selectedFacility,
     );
   }, [supplies, searchTerm, selectedCategory, selectedFacility]);
 
@@ -112,7 +112,7 @@ export default function SuppliesPage() {
       selectedSupply.supply_id,
       quantityNum,
       acquireReason,
-      showAlert
+      showAlert,
     );
 
     if (success) {
@@ -277,7 +277,7 @@ export default function SuppliesPage() {
                         onClick={() =>
                           handleImageClick(
                             formatImageUrl(supply.image_url)!,
-                            supply.supply_name
+                            supply.supply_name,
                           )
                         }
                         onError={(e) => {
@@ -308,6 +308,12 @@ export default function SuppliesPage() {
                           {supply.facility_name}
                         </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Stock:</span>
+                        <span className="text-gray-900">
+                          {supply.quantity} {supply.stock_unit}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex gap-1 sm:gap-2">
@@ -334,8 +340,8 @@ export default function SuppliesPage() {
                             !isAuthenticated
                               ? "You must be logged in to acquire supplies"
                               : supply.quantity <= 0
-                              ? "Out of stock"
-                              : ""
+                                ? "Out of stock"
+                                : ""
                           }
                         >
                           {supply.quantity <= 0 ? "Out of Stock" : "Acquire"}
@@ -352,7 +358,7 @@ export default function SuppliesPage() {
               currentPage={currentPage}
               totalPages={calculateTotalPages(
                 filteredSupplies.length,
-                ITEMS_PER_PAGE
+                ITEMS_PER_PAGE,
               )}
               onPageChange={(page) => setCurrentPage("supplies", page)}
             />
