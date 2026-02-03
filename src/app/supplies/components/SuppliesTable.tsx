@@ -67,7 +67,7 @@ export default function SuppliesTable({
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10"
+                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-l"
               >
                 Actions
               </th>
@@ -144,7 +144,7 @@ export default function SuppliesTable({
                     {supply.remarks || "-"}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white/95 backdrop-blur z-10 border-l border-gray-100">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white shadow-l">
                   <div className="flex justify-end gap-2">
                     {isLoading ? (
                       <div className="px-3 py-1 text-xs bg-gray-200 rounded animate-pulse w-[60px]"></div>
