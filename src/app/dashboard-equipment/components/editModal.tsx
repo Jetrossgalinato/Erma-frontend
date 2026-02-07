@@ -143,9 +143,9 @@ export default function EditModal({
                 className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select availability</option>
-                <option value="available">Available</option>
-                <option value="for_disposal">For Disposal</option>
-                <option value="disposed">Disposed</option>
+                <option value="Available">Available</option>
+                <option value="For Disposal">For Disposal</option>
+                <option value="Disposed">Disposed</option>
               </select>
             </div>
             <div>
