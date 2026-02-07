@@ -257,6 +257,16 @@ export default function DashboardFacilitiesPage() {
     setActiveFilter(null);
   };
 
+  const handleRowEdit = (facility: Facility) => {
+    setEditingFacility(facility);
+    setShowEditModal(true);
+  };
+
+  const handleRowDelete = (facility: Facility) => {
+    setSelectedRows([facility.id]);
+    setShowDeleteModal(true);
+  };
+
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
     const rowToEdit = facilities.find(
@@ -818,6 +828,8 @@ export default function DashboardFacilitiesPage() {
                     itemsPerPage={itemsPerPage}
                     searchQuery={searchQuery}
                     onRowClick={handleRowClick}
+                    onEdit={handleRowEdit}
+                    onDelete={handleRowDelete}
                   />
 
                   <Pagination
