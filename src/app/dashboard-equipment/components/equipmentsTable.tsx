@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { Edit, Trash2 } from "lucide-react";
 import {
   type Equipment,
   type Facility,
@@ -29,6 +30,8 @@ interface EquipmentsTableProps {
   onKeyDown: (e: React.KeyboardEvent) => void;
   onCancelEdit: () => void;
   onRowClick: (equipment: Equipment) => void;
+  onEdit: (equipment: Equipment) => void;
+  onDelete: (equipment: Equipment) => void;
   categoryFilter: string;
   facilityFilter: string;
   searchQuery: string;
@@ -48,6 +51,8 @@ export default function EquipmentsTable({
   onKeyDown,
   onCancelEdit,
   onRowClick,
+  onEdit,
+  onDelete,
   categoryFilter,
   facilityFilter,
   searchQuery = "",
@@ -320,6 +325,9 @@ export default function EquipmentsTable({
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Remarks
             </th>
+            <th className="sticky right-0 z-10 px-3 py-3 border-b border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider shadow-sm">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -499,6 +507,30 @@ export default function EquipmentsTable({
                   editingCell?.column === "remarks"
                     ? renderEditableCell(eq, "remarks", eq.remarks)
                     : eq.remarks || "-"}
+                </div>
+              </td>
+              <td className="sticky right-0 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(eq);
+                    }}
+                    className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(eq);
+                    }}
+                    className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </td>
             </tr>

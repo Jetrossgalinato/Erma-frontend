@@ -736,6 +736,18 @@ export default function DashboardEquipmentPage() {
     });
   };
 
+  const handleRowEdit = (equipment: Equipment) => {
+    setEditingEquipment(equipment);
+    setShowEditModal(true);
+    setEditImageFile(null);
+    setEditImagePreview(null);
+  };
+
+  const handleRowDelete = (equipment: Equipment) => {
+    setSelectedRows([equipment.id]);
+    setShowDeleteModal(true);
+  };
+
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
     const rowToEdit = equipments.find((eq) => eq.id === selectedRows[0]);
@@ -1022,6 +1034,8 @@ export default function DashboardEquipmentPage() {
                     onKeyDown={handleKeyDown}
                     onCancelEdit={handleCancelEdit}
                     onRowClick={handleRowClick}
+                    onEdit={handleRowEdit}
+                    onDelete={handleRowDelete}
                   />
 
                   {/* Pagination */}
