@@ -263,6 +263,18 @@ export default function DashboardSuppliesPage() {
     }
   }, [isRefreshing, loadSupplies]);
 
+  const handleRowEdit = (supply: Supply) => {
+    setEditingSupply(supply);
+    setShowEditModal(true);
+    setEditImageFile(null);
+    setEditImagePreview(null);
+  };
+
+  const handleRowDelete = (supply: Supply) => {
+    setSelectedRows([supply.id]);
+    setShowDeleteModal(true);
+  };
+
   // Replace the existing handleEditClick function
   const handleEditClick = () => {
     if (selectedRows.length !== 1) return;
@@ -1105,6 +1117,8 @@ export default function DashboardSuppliesPage() {
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     onRowClick={handleRowClick}
+                    onEdit={handleRowEdit}
+                    onDelete={handleRowDelete}
                   />
 
                   <Pagination

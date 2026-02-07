@@ -6,7 +6,7 @@
 
 import React from "react";
 import { Supply, getStockStatus, formatImageUrl } from "../utils/helpers";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 interface SuppliesTableProps {
@@ -18,6 +18,8 @@ interface SuppliesTableProps {
   currentPage: number;
   itemsPerPage: number;
   onRowClick: (supply: Supply) => void;
+  onEdit: (supply: Supply) => void;
+  onDelete: (supply: Supply) => void;
 }
 
 const SuppliesTable: React.FC<SuppliesTableProps> = ({
@@ -29,6 +31,8 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
   currentPage,
   itemsPerPage,
   onRowClick,
+  onEdit,
+  onDelete,
 }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -71,6 +75,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Remarks
+            </th>
+            <th className="sticky right-0 z-10 px-3 py-3 border-b border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider shadow-sm">
+              Actions
             </th>
           </tr>
         </thead>
@@ -150,6 +157,30 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                   {supply.remarks || "—"}
+                </td>
+                <td className="sticky right-0 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(supply);
+                      }}
+                      className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(supply);
+                      }}
+                      className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             );
