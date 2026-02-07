@@ -156,7 +156,11 @@ export async function createFacility(
     throw new Error(error.detail || "Failed to create facility");
   }
 
-  return response.json();
+  const data = await response.json();
+  return {
+    ...data,
+    id: data.id || data.facility_id || 0,
+  };
 }
 
 /**
@@ -229,7 +233,12 @@ export async function updateFacility(
   }
 
   const result = await response.json();
-  return result.facility || result;
+  const facility = result.facility || result;
+  
+  return {
+    ...facility,
+    id: facility.id || facility.facility_id || 0,
+  };
 }
 
 /**

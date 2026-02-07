@@ -329,6 +329,8 @@ export default function DashboardFacilitiesPage() {
         ),
       );
 
+      loadFacilities(false);
+
       showAlert({
         type: "success",
         message: `Facility "${editingFacility.facility_name}" has been successfully updated!`,
