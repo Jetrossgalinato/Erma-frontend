@@ -73,7 +73,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Facility
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border-r border-gray-200 dark:border-gray-700 tracking-wider">
               Remarks
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -158,7 +158,7 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                     supply.facilities?.name ||
                     "—"}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                   {supply.remarks || "—"}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
