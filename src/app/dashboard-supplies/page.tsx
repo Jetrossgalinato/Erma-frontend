@@ -20,7 +20,6 @@ import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
 import SupplyHistory from "./components/SupplyHistory";
 import { RefreshCw, Search } from "lucide-react";
-import * as XLSX from "xlsx";
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
 const EditModal = lazy(() => import("./components/EditModal"));
@@ -46,7 +45,6 @@ import {
   getUniqueCategories,
   getUniqueFacilities,
   filterSupplies,
-  getStockStatus,
   fetchSupplyHistory,
   type SupplyHistoryItem,
 } from "./utils/helpers";
@@ -619,140 +617,6 @@ export default function DashboardSuppliesPage() {
     }
   };
 
-  const handleExportClick = () => {
-    if (supplies.length === 0) {
-      showAlert({
-        type: "info",
-        message: "No data to export.",
-      });
-      return;
-    }
-
-    const headers = [
-      "ID",
-      "Name",
-      "Description",
-      "Category",
-      "Quantity",
-      "Stock Unit",
-      "Stocking Point",
-      "Status",
-      "Facility",
-      "Remarks",
-    ];
-
-    const csvContent = [
-      headers.join(","),
-      ...supplies.map((supply) => {
-        const facilityName =
-          supply.facilities?.facility_name ||
-          supply.facilities?.name ||
-          facilities.find((f) => f.facility_id === supply.facility_id)
-            ?.facility_name ||
-          "-";
-        const status = getStockStatus(
-          supply.quantity,
-          supply.stocking_point,
-        ).status;
-        return [
-          supply.id,
-          `"${supply.name || ""}"`,
-          `"${supply.description || ""}"`,
-          `"${supply.category || ""}"`,
-          `"${supply.quantity || ""}"`,
-          `"${supply.stock_unit || ""}"`,
-          `"${supply.stocking_point || ""}"`,
-          `"${status}"`,
-          `"${facilityName}"`,
-          `"${supply.remarks || ""}"`,
-        ].join(",");
-      }),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `supplies_export_${new Date().toISOString().split("T")[0]}.csv`,
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setShowActionsDropdown(false);
-    showAlert({
-      type: "success",
-      message: "Data exported successfully!",
-    });
-  };
-
-  const handleExportExcelClick = () => {
-    if (supplies.length === 0) {
-      showAlert({
-        type: "info",
-        message: "No data to export.",
-      });
-      return;
-    }
-
-    const data = supplies.map((supply) => {
-      const facilityName =
-        supply.facilities?.facility_name ||
-        supply.facilities?.name ||
-        facilities.find((f) => f.facility_id === supply.facility_id)
-          ?.facility_name ||
-        "-";
-      const status = getStockStatus(
-        supply.quantity,
-        supply.stocking_point,
-      ).status;
-      return {
-        ID: supply.id,
-        Name: supply.name,
-        Description: supply.description,
-        Category: supply.category,
-        Quantity: supply.quantity,
-        "Stock Unit": supply.stock_unit,
-        "Stocking Point": supply.stocking_point,
-        Status: status,
-        Facility: facilityName,
-        Remarks: supply.remarks,
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Supplies");
-
-    // Auto-adjust column width
-    const wscols = [
-      { wch: 5 }, // ID
-      { wch: 20 }, // Name
-      { wch: 30 }, // Description
-      { wch: 15 }, // Category
-      { wch: 10 }, // Quantity
-      { wch: 15 }, // Stock Unit
-      { wch: 15 }, // Stocking Point
-      { wch: 15 }, // Status
-      { wch: 20 }, // Facility
-      { wch: 20 }, // Remarks
-    ];
-    worksheet["!cols"] = wscols;
-
-    XLSX.writeFile(
-      workbook,
-      `supplies_export_${new Date().toISOString().split("T")[0]}.xlsx`,
-    );
-
-    setShowActionsDropdown(false);
-    showAlert({
-      type: "success",
-      message: "Data exported to Excel successfully!",
-    });
-  };
 
   const filteredSupplies = filterSupplies(
     supplies,
@@ -1030,8 +894,9 @@ export default function DashboardSuppliesPage() {
                         setShowImportModal(true);
                         setShowActionsDropdown(false);
                       }}
-                      onExport={handleExportClick}
-                      onExportExcel={handleExportExcelClick}
+                      supplies={supplies}
+                      facilities={facilities}
+                      onExportComplete={() => setShowActionsDropdown(false)}
                       dropdownRef={actionsDropdownRef}
                     />
 
