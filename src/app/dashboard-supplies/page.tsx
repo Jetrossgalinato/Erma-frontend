@@ -631,6 +631,7 @@ export default function DashboardSuppliesPage() {
     const headers = [
       "ID",
       "Name",
+      "Description",
       "Category",
       "Quantity",
       "Stock Unit",
@@ -656,6 +657,7 @@ export default function DashboardSuppliesPage() {
         return [
           supply.id,
           `"${supply.name || ""}"`,
+          `"${supply.description || ""}"`,
           `"${supply.category || ""}"`,
           `"${supply.quantity || ""}"`,
           `"${supply.stock_unit || ""}"`,
@@ -710,6 +712,7 @@ export default function DashboardSuppliesPage() {
       return {
         ID: supply.id,
         Name: supply.name,
+        Description: supply.description,
         Category: supply.category,
         Quantity: supply.quantity,
         "Stock Unit": supply.stock_unit,
@@ -728,6 +731,7 @@ export default function DashboardSuppliesPage() {
     const wscols = [
       { wch: 5 }, // ID
       { wch: 20 }, // Name
+      { wch: 30 }, // Description
       { wch: 15 }, // Category
       { wch: 10 }, // Quantity
       { wch: 15 }, // Stock Unit
