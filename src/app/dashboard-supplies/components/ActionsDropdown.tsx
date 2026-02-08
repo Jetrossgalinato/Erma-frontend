@@ -12,8 +12,9 @@ import {
   Trash2,
   Plus,
   Download,
-  Upload,
 } from "lucide-react";
+import ExportFile from "./ExportFile";
+import { Supply, Facility } from "../utils/helpers";
 
 interface ActionsDropdownProps {
   selectedRows: number[];
@@ -25,9 +26,10 @@ interface ActionsDropdownProps {
   onEdit: () => void;
   onDelete: () => void;
   onImport: () => void;
-  onExport: () => void;
-  onExportExcel: () => void;
+  supplies: Supply[];
+  facilities: Facility[];
   dropdownRef: React.RefObject<HTMLDivElement | null>;
+  onExportComplete?: () => void;
 }
 
 const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
@@ -38,9 +40,10 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
   onEdit,
   onDelete,
   onImport,
-  onExport,
-  onExportExcel,
+  supplies,
+  facilities,
   dropdownRef,
+  onExportComplete,
 }) => {
   return (
     <div className="flex gap-2">
@@ -78,20 +81,12 @@ const ActionsDropdown: React.FC<ActionsDropdownProps> = ({
 
               <hr className="my-1 border-gray-100 dark:border-gray-600" />
 
-              <button
-                onClick={onExport}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <Upload className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
-                Export Data to CSV File
-              </button>
-              <button
-                onClick={onExportExcel}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                <Upload className="w-4 h-4 mr-3 text-blue-600 dark:text-blue-400" />
-                Export Data to Excel File
-              </button>
+              <ExportFile 
+                supplies={supplies} 
+                facilities={facilities} 
+                onExportComplete={onExportComplete} 
+              />
+              
               <hr className="my-1 border-gray-100 dark:border-gray-600" />
               <button
                 onClick={onEdit}

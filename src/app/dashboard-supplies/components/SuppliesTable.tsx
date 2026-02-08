@@ -68,13 +68,19 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
               Quantity
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
+              Stocking Point
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Status
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Facility
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border-r border-gray-200 dark:border-gray-700 tracking-wider">
               Remarks
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Description
             </th>
             <th className="sticky right-0 z-10 px-3 py-3 border-b border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider shadow-sm">
               Actions
@@ -143,9 +149,12 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
                   {supply.quantity} {supply.stock_unit}
                 </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
+                  {supply.stocking_point}
+                </td>
                 <td className="px-6 py-4 border-r border-gray-100 dark:border-gray-700">
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${stockStatus.color}`}
+                    className={`inline-flex px-4 py-1 text-xs font-semibold rounded-full border ${stockStatus.color}`}
                   >
                     {stockStatus.status}
                   </span>
@@ -155,8 +164,11 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                     supply.facilities?.name ||
                     "—"}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700">
                   {supply.remarks || "—"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  {supply.description || "—"}
                 </td>
                 <td className="sticky right-0 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-sm">
                   <div className="flex items-center justify-center gap-2">

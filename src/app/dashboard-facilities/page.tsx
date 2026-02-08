@@ -21,7 +21,7 @@ import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
 import FacilityHistory from "./components/FacilityHistory";
 import { RefreshCw, Search } from "lucide-react";
-import * as XLSX from "xlsx";
+
 
 // Code-split heavy modal components (lazy load on demand - 40% bundle reduction)
 const EditModal = lazy(() => import("./components/EditModal"));
@@ -514,118 +514,7 @@ export default function DashboardFacilitiesPage() {
     }
   };
 
-  const handleExportClick = () => {
-    if (facilities.length === 0) {
-      showAlert({
-        type: "info",
-        message: "No data to export.",
-      });
-      return;
-    }
 
-    const headers = [
-      "ID",
-      "Name",
-      "Type",
-      "Floor Level",
-      "Capacity",
-      "Cooling Tools",
-      "Connection Type",
-      "Building",
-      "Status",
-      "Remarks",
-    ];
-
-    const csvContent = [
-      headers.join(","),
-      ...facilities.map((facility) =>
-        [
-          facility.facility_id,
-          `"${facility.facility_name || ""}"`,
-          `"${facility.facility_type || ""}"`,
-          `"${facility.floor_level || ""}"`,
-          `"${facility.capacity || ""}"`,
-          `"${facility.cooling_tools || ""}"`,
-          `"${facility.connection_type || ""}"`,
-          `"${facility.building || ""}"`,
-          `"${facility.status || ""}"`,
-          `"${facility.remarks || ""}"`,
-        ].join(","),
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `facilities_export_${new Date().toISOString().split("T")[0]}.csv`,
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setShowActionsDropdown(false);
-    showAlert({
-      type: "success",
-      message: "Data exported successfully!",
-    });
-  };
-
-  const handleExportExcelClick = () => {
-    if (facilities.length === 0) {
-      showAlert({
-        type: "info",
-        message: "No data to export.",
-      });
-      return;
-    }
-
-    const data = facilities.map((facility) => ({
-      ID: facility.facility_id,
-      Name: facility.facility_name,
-      Type: facility.facility_type,
-      "Floor Level": facility.floor_level,
-      Capacity: facility.capacity,
-      "Cooling Tools": facility.cooling_tools,
-      "Connection Type": facility.connection_type,
-      Building: facility.building,
-      Status: facility.status,
-      Remarks: facility.remarks,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Facilities");
-
-    // Auto-adjust column width
-    const wscols = [
-      { wch: 5 }, // ID
-      { wch: 20 }, // Name
-      { wch: 15 }, // Type
-      { wch: 15 }, // Floor Level
-      { wch: 10 }, // Capacity
-      { wch: 15 }, // Cooling Tools
-      { wch: 15 }, // Connection Type
-      { wch: 15 }, // Building
-      { wch: 10 }, // Status
-      { wch: 20 }, // Remarks
-    ];
-    worksheet["!cols"] = wscols;
-
-    XLSX.writeFile(
-      workbook,
-      `facilities_export_${new Date().toISOString().split("T")[0]}.xlsx`,
-    );
-
-    setShowActionsDropdown(false);
-    showAlert({
-      type: "success",
-      message: "Data exported to Excel successfully!",
-    });
-  };
 
   const handleDeleteSelectedRows = async () => {
     if (selectedRows.length === 0) return;
@@ -760,6 +649,7 @@ export default function DashboardFacilitiesPage() {
                     />
 
                     <ActionsDropdown
+                      facilities={facilities}
                       selectedRows={selectedRows}
                       isRefreshing={isRefreshing}
                       showActionsDropdown={showActionsDropdown}
@@ -783,8 +673,6 @@ export default function DashboardFacilitiesPage() {
                         setShowImportModal(true);
                         setShowActionsDropdown(false);
                       }}
-                      onExport={handleExportClick}
-                      onExportExcel={handleExportExcelClick}
                       dropdownRef={actionsDropdownRef}
                     />
 
