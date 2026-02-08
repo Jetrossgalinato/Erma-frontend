@@ -76,6 +76,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Remarks
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Description
+            </th>
             <th className="sticky right-0 z-10 px-3 py-3 border-b border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider shadow-sm">
               Actions
             </th>
@@ -157,6 +160,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                   {supply.remarks || "—"}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  {supply.description || "—"}
                 </td>
                 <td className="sticky right-0 z-10 px-3 py-3 whitespace-nowrap text-sm font-medium bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-sm">
                   <div className="flex items-center justify-center gap-2">
