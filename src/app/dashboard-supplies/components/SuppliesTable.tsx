@@ -68,6 +68,9 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
               Quantity
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
+              Stocking Point
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
               Status
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
@@ -146,9 +149,12 @@ const SuppliesTable: React.FC<SuppliesTableProps> = ({
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
                   {supply.quantity} {supply.stock_unit}
                 </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 border-r border-gray-100 dark:border-gray-700">
+                  {supply.stocking_point}
+                </td>
                 <td className="px-6 py-4 border-r border-gray-100 dark:border-gray-700">
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${stockStatus.color}`}
+                    className={`inline-flex px-4 py-1 text-xs font-semibold rounded-full border ${stockStatus.color}`}
                   >
                     {stockStatus.status}
                   </span>
