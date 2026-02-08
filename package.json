@@ -35,5 +35,12 @@
     "supabase": "^2.33.9",
     "tailwindcss": "^4.1.11",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "chrome >= 100",
+    "safari >= 15",
+    "firefox >= 100"
+  ]
 }

@@ -40,6 +40,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, router, pathname]);
 
   if (isLoading) {
+    // Determine if the current route is public
+    const isPublicRoute = PUBLIC_ROUTES.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`),
+    );
+
+    // For public routes, don't block rendering with a loader
+    // let components handle their own loading states
+    if (isPublicRoute) {
+      return <>{children}</>;
+    }
     return <Loader />;
   }
 
