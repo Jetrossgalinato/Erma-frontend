@@ -1,9 +1,9 @@
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import HeroActions from "./HeroActions";
-// import Link from "next/link"; // Removed unused import
-// import { useAuthStore } from "@/store"; // Removed unused import
+
+const Navbar = dynamic(() => import("../../components/Navbar"), { ssr: true });
+const Footer = dynamic(() => import("../../components/Footer"), { ssr: true });
 
 export default function Home() {
   // const { isAuthenticated, isLoading } = useAuthStore(); // Moved to HeroActions
@@ -150,6 +150,7 @@ export default function Home() {
                               height={80}
                               className="object-contain h-auto"
                               style={{ height: "auto", width: "auto" }}
+                              priority
                             />
                           </div>
                         </div>
