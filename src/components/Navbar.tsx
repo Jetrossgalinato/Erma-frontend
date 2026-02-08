@@ -229,8 +229,8 @@ const Navbar: React.FC = () => {
         fetchNotifications();
       }, 1500); // Wait 1.5s after authentication to fetch notifications
 
-      // Set up polling for notifications every 2 seconds
-      const interval = setInterval(fetchNotifications, 2000);
+      // Set up polling for notifications every 30 seconds
+      const interval = setInterval(fetchNotifications, 30000);
 
       return () => {
         clearTimeout(timer);
@@ -417,9 +417,9 @@ const Navbar: React.FC = () => {
       {/* Desktop Links */}
       <div className="hidden md:flex pr-40 gap-6 text-gray-600 items-center">
         <a
-          href="/home"
+          href="/"
           className={`hover:text-black transition-colors duration-300 ${
-            pathname === "/home" ? "text-orange-500" : ""
+            pathname === "/" ? "text-orange-500" : ""
           }`}
         >
           Home
@@ -626,9 +626,9 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className="absolute top-16 left-0 text-sm md:text-lg w-full bg-white shadow-md flex flex-col items-start px-6 py-4 md:hidden z-50">
           <Link
-            href="/home"
+            href="/"
             className={`py-2 text-gray-700 ${
-              pathname === "/home" ? "text-orange-500" : ""
+              pathname === "/" ? "text-orange-500" : ""
             }`}
           >
             Home

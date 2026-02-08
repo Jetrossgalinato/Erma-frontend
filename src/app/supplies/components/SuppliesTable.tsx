@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { formatImageUrl, Supply, isLowStock } from "../utils/helpers";
-import { ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 
 interface SuppliesTableProps {
   data: Supply[];
