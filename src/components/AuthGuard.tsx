@@ -9,7 +9,6 @@ const PUBLIC_ROUTES = [
   "/login",
   "/register",
   "/",
-  "/home",
   "/equipment",
   "/facilities",
   "/supplies",

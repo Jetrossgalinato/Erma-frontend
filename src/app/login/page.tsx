@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push("/home");
+      router.push("/");
     }
   }, [authLoading, isAuthenticated, router]);
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
         type: "success",
         message: "You have logged in successfully!",
       });
-      setTimeout(() => router.push("/home"), 1500);
+      setTimeout(() => router.push("/"), 1500);
     } catch {
       setError("Login failed. Please try again.");
     }

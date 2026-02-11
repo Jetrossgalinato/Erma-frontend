@@ -158,7 +158,7 @@ const DashboardNavbar: React.FC = () => {
     } else if (newTheme === "system") {
       // Check system preference and apply accordingly
       const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
+        "(prefers-color-scheme: dark)",
       ).matches;
       root.classList.add(prefersDark ? "dark" : "light");
     }
@@ -246,14 +246,14 @@ const DashboardNavbar: React.FC = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.ok) {
         const data = await response.json();
         setNotifications(data || []);
         const unread = (data || []).filter(
-          (notif: Notification) => !notif.is_read
+          (notif: Notification) => !notif.is_read,
         ).length;
         setUnreadCount(unread);
       }
@@ -337,7 +337,7 @@ const DashboardNavbar: React.FC = () => {
 
   const handleNotificationClick = async (
     notificationId: string,
-    notificationTitle: string
+    notificationTitle: string,
   ) => {
     // Mark as read
     await markNotificationAsRead(notificationId);
@@ -386,14 +386,14 @@ const DashboardNavbar: React.FC = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.ok) {
         setNotifications((prev) =>
           prev.map((notif) =>
-            notif.id === notificationId ? { ...notif, is_read: true } : notif
-          )
+            notif.id === notificationId ? { ...notif, is_read: true } : notif,
+          ),
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
@@ -431,7 +431,7 @@ const DashboardNavbar: React.FC = () => {
   // Handle confirm return
   const handleConfirmReturn = async (
     notificationId: number,
-    borrowingId: number
+    borrowingId: number,
   ) => {
     const success = await confirmReturn(notificationId, borrowingId);
     if (success) {
@@ -450,7 +450,7 @@ const DashboardNavbar: React.FC = () => {
   // Handle confirm done
   const handleConfirmDone = async (
     notificationId: number,
-    bookingId: number
+    bookingId: number,
   ) => {
     const success = await confirmDone(notificationId, bookingId);
     if (success) {
@@ -542,7 +542,7 @@ const DashboardNavbar: React.FC = () => {
                     </div>
                   </div>
                   <a
-                    href="/home"
+                    href="/"
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition"
                   >
                     <Home size={16} />
@@ -710,7 +710,7 @@ const DashboardNavbar: React.FC = () => {
                               onClick={() =>
                                 handleNotificationClick(
                                   notification.id,
-                                  notification.title
+                                  notification.title,
                                 )
                               }
                               className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
@@ -727,7 +727,7 @@ const DashboardNavbar: React.FC = () => {
                               </div>
                               <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                 {new Date(
-                                  notification.created_at
+                                  notification.created_at,
                                 ).toLocaleDateString()}
                               </div>
                             </div>
@@ -775,7 +775,7 @@ const DashboardNavbar: React.FC = () => {
                                   </div>
                                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                     {new Date(
-                                      notification.created_at
+                                      notification.created_at,
                                     ).toLocaleDateString()}
                                   </div>
 
@@ -786,7 +786,7 @@ const DashboardNavbar: React.FC = () => {
                                         onClick={() =>
                                           handleConfirmReturn(
                                             notification.id,
-                                            notification.borrowing_id
+                                            notification.borrowing_id,
                                           )
                                         }
                                         className="flex items-center gap-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors"
@@ -874,7 +874,7 @@ const DashboardNavbar: React.FC = () => {
                                   </div>
                                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                     {new Date(
-                                      notification.created_at
+                                      notification.created_at,
                                     ).toLocaleDateString()}
                                   </div>
 
@@ -885,7 +885,7 @@ const DashboardNavbar: React.FC = () => {
                                         onClick={() =>
                                           handleConfirmDone(
                                             notification.id,
-                                            notification.booking_id
+                                            notification.booking_id,
                                           )
                                         }
                                         className="flex items-center gap-1 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-md transition-colors"
@@ -955,7 +955,7 @@ const DashboardNavbar: React.FC = () => {
                                 setIsNotificationDropdownOpen(false);
                                 // Navigate to the correct tab based on request type
                                 router.push(
-                                  `/dashboard-request?tab=${notification.request_type}`
+                                  `/dashboard-request?tab=${notification.request_type}`,
                                 );
                               }}
                               className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
@@ -969,8 +969,8 @@ const DashboardNavbar: React.FC = () => {
                                     {notification.request_type === "borrowing"
                                       ? "Equipment: "
                                       : notification.request_type === "booking"
-                                      ? "Facility: "
-                                      : "Supply: "}
+                                        ? "Facility: "
+                                        : "Supply: "}
                                     <span className="font-medium">
                                       {notification.item_name}
                                     </span>
@@ -980,7 +980,7 @@ const DashboardNavbar: React.FC = () => {
                                   </div>
                                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                     {new Date(
-                                      notification.created_at
+                                      notification.created_at,
                                     ).toLocaleDateString()}
                                   </div>
                                 </div>
@@ -990,9 +990,9 @@ const DashboardNavbar: React.FC = () => {
                                       notification.request_type === "borrowing"
                                         ? "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400"
                                         : notification.request_type ===
-                                          "booking"
-                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
-                                        : "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
+                                            "booking"
+                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                                          : "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400"
                                     }`}
                                   >
                                     {notification.request_type}
@@ -1101,7 +1101,7 @@ const DashboardNavbar: React.FC = () => {
                           </div>
                           <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                             {new Date(
-                              notification.created_at
+                              notification.created_at,
                             ).toLocaleDateString()}
                           </div>
                         </div>
@@ -1163,7 +1163,7 @@ const DashboardNavbar: React.FC = () => {
                       </div>
                     </div>
                     <Link
-                      href="/home"
+                      href="/"
                       className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition"
                     >
                       <Home size={16} />

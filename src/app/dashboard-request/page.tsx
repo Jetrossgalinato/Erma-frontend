@@ -93,7 +93,7 @@ function DashboardRequestsContent() {
       const userRole = user?.role;
       const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
       if (mappedRole === "Faculty") {
-        router.push("/home");
+        router.push("/");
         return;
       }
     }
@@ -116,7 +116,7 @@ function DashboardRequestsContent() {
         const data = await fetchBorrowingRequests(currentPage, PAGE_SIZE);
         // Deduplicate data by ID to prevent key errors
         const uniqueData = Array.from(
-          new Map(data.data.map((item) => [item.id, item])).values()
+          new Map(data.data.map((item) => [item.id, item])).values(),
         );
         setBorrowingRequests(uniqueData);
         setTotalPages(data.total_pages);
@@ -124,7 +124,7 @@ function DashboardRequestsContent() {
         const data = await fetchBookingRequests(currentPage, PAGE_SIZE);
         // Deduplicate data by ID
         const uniqueData = Array.from(
-          new Map(data.data.map((item) => [item.id, item])).values()
+          new Map(data.data.map((item) => [item.id, item])).values(),
         );
         setBookingRequests(uniqueData);
         setTotalPages(data.total_pages);
@@ -132,7 +132,7 @@ function DashboardRequestsContent() {
         const data = await fetchAcquiringRequests(currentPage, PAGE_SIZE);
         // Deduplicate data by ID
         const uniqueData = Array.from(
-          new Map(data.data.map((item) => [item.id, item])).values()
+          new Map(data.data.map((item) => [item.id, item])).values(),
         );
         setAcquiringRequests(uniqueData);
         setTotalPages(data.total_pages);
@@ -276,8 +276,8 @@ function DashboardRequestsContent() {
     currentRequestType === "borrowing"
       ? borrowingRequests
       : currentRequestType === "booking"
-      ? bookingRequests
-      : acquiringRequests;
+        ? bookingRequests
+        : acquiringRequests;
 
   const totalItems = currentRequests.length;
 

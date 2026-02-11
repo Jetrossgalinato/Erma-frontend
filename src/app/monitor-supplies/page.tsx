@@ -38,7 +38,7 @@ export default function MonitorSuppliesPage() {
   // Auth guard logic
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.replace("/home");
+      router.replace("/");
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -68,7 +68,7 @@ export default function MonitorSuppliesPage() {
       } catch (error) {
         console.error("Error fetching supply logs:", error);
         setError(
-          error instanceof Error ? error.message : "Failed to load supply logs"
+          error instanceof Error ? error.message : "Failed to load supply logs",
         );
       } finally {
         setIsLoadingSupplyLogs(false);
@@ -80,7 +80,7 @@ export default function MonitorSuppliesPage() {
       setIsLoadingSupplyLogs,
       setSupplyLogsPagination,
       searchQuery,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function MonitorSuppliesPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `supply_logs_${new Date().toISOString().split("T")[0]}.csv`
+        `supply_logs_${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(link);
       link.click();

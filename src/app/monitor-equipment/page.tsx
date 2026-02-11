@@ -38,7 +38,7 @@ export default function MonitorEquipmentPage() {
   // Auth guard logic
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.replace("/home");
+      router.replace("/");
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -70,7 +70,7 @@ export default function MonitorEquipmentPage() {
         setError(
           error instanceof Error
             ? error.message
-            : "Failed to load equipment logs"
+            : "Failed to load equipment logs",
         );
       } finally {
         setIsLoadingEquipmentLogs(false);
@@ -82,7 +82,7 @@ export default function MonitorEquipmentPage() {
       setIsLoadingEquipmentLogs,
       setEquipmentLogsPagination,
       searchQuery,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function MonitorEquipmentPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `equipment_logs_${new Date().toISOString().split("T")[0]}.csv`
+        `equipment_logs_${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(link);
       link.click();
