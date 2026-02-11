@@ -11,12 +11,24 @@ import {
   LogOut,
   FileText,
   Bell,
+  Package,
+  CheckCircle,
+  XCircle,
+  ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
+import {
+  ReturnNotification,
+  DoneNotification,
+  RequestNotification,
+  fetchReturnNotifications,
+  fetchDoneNotifications,
+  fetchRequestNotifications,
+} from "@/app/dashboard-request/utils/helpers";
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -54,6 +66,28 @@ const Navbar: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingAccountRequestsCount, setPendingAccountRequestsCount] =
     useState(0);
+
+  // Return Notifications State
+  const [returnNotifications, setReturnNotifications] = useState<
+    ReturnNotification[]
+  >([]);
+  const [returnNotificationsCount, setReturnNotificationsCount] = useState(0);
+
+  // Done Notifications State
+  const [doneNotifications, setDoneNotifications] = useState<
+    DoneNotification[]
+  >([]);
+  const [doneNotificationsCount, setDoneNotificationsCount] = useState(0);
+
+  // Request Notifications State
+  const [requestNotifications, setRequestNotifications] = useState<
+    RequestNotification[]
+  >([]);
+  const [requestNotificationsCount, setRequestNotificationsCount] = useState(0);
+
+  const [activeNotificationTab, setActiveNotificationTab] = useState<
+    "general" | "returns" | "done" | "requests"
+  >("general");
 
   // Track user's approved_acc_role - Initialize immediately from store
   const [approvedAccRole, setApprovedAccRole] = useState<string | null>(
@@ -222,22 +256,106 @@ const Navbar: React.FC = () => {
     }
   }, [isAuthenticated, approvedAccRole]);
 
+  const fetchReturnNotificationsData = useCallback(async () => {
+    const rawRole =
+      user?.role ||
+      approvedAccRole ||
+      (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
+    const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
+    const isAdminOrSuperAdmin =
+      currentRole === "Super Admin" || currentRole === "Admin";
+
+    if (!isAuthenticated || !isAdminOrSuperAdmin) return;
+
+    try {
+      const data = await fetchReturnNotifications();
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setReturnNotifications(uniqueData);
+      setReturnNotificationsCount(uniqueData.length);
+    } catch (error) {
+      console.error("Error fetching return notifications:", error);
+    }
+  }, [isAuthenticated, user, approvedAccRole]);
+
+  const fetchDoneNotificationsData = useCallback(async () => {
+    const rawRole =
+      user?.role ||
+      approvedAccRole ||
+      (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
+    const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
+    const isAdminOrSuperAdmin =
+      currentRole === "Super Admin" || currentRole === "Admin";
+
+    if (!isAuthenticated || !isAdminOrSuperAdmin) return;
+
+    try {
+      const data = await fetchDoneNotifications();
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setDoneNotifications(uniqueData);
+      setDoneNotificationsCount(uniqueData.length);
+    } catch (error) {
+      console.error("Error fetching done notifications:", error);
+    }
+  }, [isAuthenticated, user, approvedAccRole]);
+
+  const fetchRequestNotificationsData = useCallback(async () => {
+    const rawRole =
+      user?.role ||
+      approvedAccRole ||
+      (typeof window !== "undefined" ? localStorage.getItem("userRole") : null);
+    const currentRole = rawRole ? mapRoleToSystemRole(rawRole) : null;
+    const isAdminOrSuperAdmin =
+      currentRole === "Super Admin" || currentRole === "Admin";
+
+    if (!isAuthenticated || !isAdminOrSuperAdmin) return;
+
+    try {
+      const data = await fetchRequestNotifications();
+      // Deduplicate request notifications by ID to prevent key errors
+      const uniqueData = data
+        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        : [];
+      setRequestNotifications(uniqueData);
+      setRequestNotificationsCount(uniqueData.length);
+    } catch (error) {
+      console.error("Error fetching request notifications:", error);
+    }
+  }, [isAuthenticated, user, approvedAccRole]);
+
   useEffect(() => {
     if (isAuthenticated) {
       // Defer notification fetch to avoid blocking critical page load
       const timer = setTimeout(() => {
         fetchNotifications();
+        fetchReturnNotificationsData();
+        fetchDoneNotificationsData();
+        fetchRequestNotificationsData();
       }, 1500); // Wait 1.5s after authentication to fetch notifications
 
       // Set up polling for notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
+      const interval = setInterval(() => {
+        fetchNotifications();
+        fetchReturnNotificationsData();
+        fetchDoneNotificationsData();
+        fetchRequestNotificationsData();
+      }, 30000);
 
       return () => {
         clearTimeout(timer);
         clearInterval(interval);
       };
     }
-  }, [isAuthenticated, fetchNotifications]);
+  }, [
+    isAuthenticated,
+    fetchNotifications,
+    fetchReturnNotificationsData,
+    fetchDoneNotificationsData,
+    fetchRequestNotificationsData,
+  ]);
 
   const fetchAccountRequests = useCallback(async () => {
     if (!isAuthenticated || !isSuperAdmin) return;
@@ -557,55 +675,451 @@ const Navbar: React.FC = () => {
               className="relative p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-full cursor-pointer transition-colors duration-300"
             >
               <Bell size={25} />
-              {unreadCount > 0 && (
+              {(unreadCount > 0 ||
+                returnNotificationsCount > 0 ||
+                doneNotificationsCount > 0 ||
+                requestNotificationsCount > 0) && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {unreadCount +
+                    returnNotificationsCount +
+                    doneNotificationsCount +
+                    requestNotificationsCount >
+                  99
+                    ? "99+"
+                    : unreadCount +
+                      returnNotificationsCount +
+                      doneNotificationsCount +
+                      requestNotificationsCount}
                 </span>
               )}
             </button>
 
             {isNotificationDropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[300px] max-h-[400px] overflow-y-auto z-50">
-                <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800 flex justify-between items-center">
-                  <span>Notifications</span>
-                  {notifications.length > 0 && (
-                    <button
-                      onClick={clearAllNotifications}
-                      className="text-xs cursor-pointer text-red-600 hover:text-red-800 hover:underline"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-                {notifications.length === 0 ? (
-                  <div className="px-4 py-3 text-gray-500 text-center">
-                    No notifications yet
-                  </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      onClick={() =>
-                        handleNotificationClick(
-                          notification.id,
-                          notification.title,
-                        )
-                      }
-                      className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                        !notification.is_read ? "bg-orange-50" : ""
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-gray-800">
-                        {notification.title}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {notification.message}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(notification.created_at).toLocaleDateString()}
-                      </div>
+              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[350px] max-h-[450px] overflow-hidden z-50">
+                {isSuperAdmin || currentRole === "Admin" ? (
+                  <>
+                    {/* Tabs for Admins */}
+                    <div className="flex border-b border-gray-200">
+                      <button
+                        onClick={() => setActiveNotificationTab("general")}
+                        className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
+                          activeNotificationTab === "general"
+                            ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <Bell size={14} />
+                          <span className="text-[10px]">General</span>
+                          {unreadCount > 0 && (
+                            <span className="bg-red-500 text-white text-[9px] rounded-full px-1 py-0.5">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setActiveNotificationTab("returns")}
+                        className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
+                          activeNotificationTab === "returns"
+                            ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <Package size={14} />
+                          <span className="text-[10px]">Returns</span>
+                          {returnNotificationsCount > 0 && (
+                            <span className="bg-orange-500 text-white text-[9px] rounded-full px-1 py-0.5">
+                              {returnNotificationsCount > 99
+                                ? "99+"
+                                : returnNotificationsCount}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setActiveNotificationTab("done")}
+                        className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
+                          activeNotificationTab === "done"
+                            ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <LayoutDashboard size={14} />
+                          <span className="text-[10px]">Done</span>
+                          {doneNotificationsCount > 0 && (
+                            <span className="bg-blue-500 text-white text-[9px] rounded-full px-1 py-0.5">
+                              {doneNotificationsCount > 99
+                                ? "99+"
+                                : doneNotificationsCount}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setActiveNotificationTab("requests")}
+                        className={`relative flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${
+                          activeNotificationTab === "requests"
+                            ? "bg-orange-50 text-orange-600 border-b-2 border-orange-500"
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-0.5">
+                          <ClipboardList size={14} />
+                          <span className="text-[10px]">Requests</span>
+                        </div>
+                        {requestNotificationsCount > 0 && (
+                          <span className="absolute top-1 right-1 bg-purple-500 text-white text-[9px] rounded-full px-1.5 py-0.5 min-w-[16px] flex items-center justify-center">
+                            {requestNotificationsCount > 99
+                              ? "99+"
+                              : requestNotificationsCount}
+                          </span>
+                        )}
+                      </button>
                     </div>
-                  ))
+
+                    {/* Content */}
+                    <div className="max-h-[350px] overflow-y-auto">
+                      {activeNotificationTab === "general" ? (
+                        <>
+                          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+                            <span className="text-sm font-semibold text-gray-800">
+                              General Notifications
+                            </span>
+                            {notifications.length > 0 && (
+                              <button
+                                onClick={clearAllNotifications}
+                                className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                              >
+                                Clear All
+                              </button>
+                            )}
+                          </div>
+                          {notifications.length === 0 ? (
+                            <div className="px-4 py-8 text-gray-500 text-center">
+                              <Bell
+                                className="mx-auto mb-2 opacity-50"
+                                size={32}
+                              />
+                              <p>No notifications yet</p>
+                            </div>
+                          ) : (
+                            notifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                onClick={() =>
+                                  handleNotificationClick(
+                                    notification.id,
+                                    notification.title,
+                                  )
+                                }
+                                className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                                  !notification.is_read ? "bg-orange-50" : ""
+                                }`}
+                              >
+                                <div className="text-sm font-medium text-gray-800">
+                                  {notification.title}
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">
+                                  {notification.message}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  {new Date(
+                                    notification.created_at,
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </>
+                      ) : activeNotificationTab === "returns" ? (
+                        <>
+                          <div className="px-4 py-2 border-b border-gray-200 sticky top-0 bg-white">
+                            <span className="text-sm font-semibold text-gray-800">
+                              Return Notifications
+                            </span>
+                          </div>
+                          {returnNotifications.length === 0 ? (
+                            <div className="px-4 py-8 text-gray-500 text-center">
+                              <Package
+                                className="mx-auto mb-2 opacity-50"
+                                size={32}
+                              />
+                              <p>No return notifications</p>
+                            </div>
+                          ) : (
+                            returnNotifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  router.push(
+                                    "/dashboard-request?tab=borrowing",
+                                  );
+                                }}
+                                className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium text-gray-800">
+                                      {notification.borrower_name}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1">
+                                      Returned:{" "}
+                                      <span className="font-medium">
+                                        {notification.equipment_name}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {notification.message}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      {new Date(
+                                        notification.created_at,
+                                      ).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                      notification.status === "pending"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {notification.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                          {returnNotifications.length > 0 && (
+                            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 text-center">
+                              <button
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  router.push(
+                                    "/dashboard-request?tab=borrowing",
+                                  );
+                                }}
+                                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                              >
+                                View All Returns →
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : activeNotificationTab === "done" ? (
+                        <>
+                          <div className="px-4 py-2 border-b border-gray-200 sticky top-0 bg-white">
+                            <span className="text-sm font-semibold text-gray-800">
+                              Done Notifications
+                            </span>
+                          </div>
+                          {doneNotifications.length === 0 ? (
+                            <div className="px-4 py-8 text-gray-500 text-center">
+                              <LayoutDashboard
+                                className="mx-auto mb-2 opacity-50"
+                                size={32}
+                              />
+                              <p>No done notifications</p>
+                            </div>
+                          ) : (
+                            doneNotifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  router.push("/dashboard-request?tab=booking");
+                                }}
+                                className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium text-gray-800">
+                                      {notification.booker_name}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1">
+                                      Facility:{" "}
+                                      <span className="font-medium">
+                                        {notification.facility_name}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {notification.message}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      {new Date(
+                                        notification.created_at,
+                                      ).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                      notification.status === "pending"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-gray-100 text-gray-800"
+                                    }`}
+                                  >
+                                    {notification.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                          {doneNotifications.length > 0 && (
+                            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 text-center">
+                              <button
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  router.push("/dashboard-request?tab=booking");
+                                }}
+                                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                              >
+                                View All Done →
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : activeNotificationTab === "requests" ? (
+                        <>
+                          <div className="px-4 py-2 border-b border-gray-200 sticky top-0 bg-white">
+                            <span className="text-sm font-semibold text-gray-800">
+                              New Requests
+                            </span>
+                          </div>
+                          {requestNotifications.length === 0 ? (
+                            <div className="px-4 py-8 text-gray-500 text-center">
+                              <ClipboardList
+                                className="mx-auto mb-2 opacity-50"
+                                size={32}
+                              />
+                              <p>No pending requests</p>
+                            </div>
+                          ) : (
+                            requestNotifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  // Navigate to the correct tab based on request type
+                                  router.push(
+                                    `/dashboard-request?tab=${notification.request_type}`,
+                                  );
+                                }}
+                                className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium text-gray-800">
+                                      {notification.requester_name}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1">
+                                      {notification.request_type === "borrowing"
+                                        ? "Equipment: "
+                                        : notification.request_type ===
+                                            "booking"
+                                          ? "Facility: "
+                                          : "Supply: "}
+                                      <span className="font-medium">
+                                        {notification.item_name}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      Purpose: {notification.purpose}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      {new Date(
+                                        notification.created_at,
+                                      ).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <span
+                                      className={`text-xs px-2 py-1 rounded-full ${
+                                        notification.request_type ===
+                                        "borrowing"
+                                          ? "bg-orange-100 text-orange-800"
+                                          : notification.request_type ===
+                                              "booking"
+                                            ? "bg-blue-100 text-blue-800"
+                                            : "bg-purple-100 text-purple-800"
+                                      }`}
+                                    >
+                                      {notification.request_type}
+                                    </span>
+                                    <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">
+                                      {notification.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                          {requestNotifications.length > 0 && (
+                            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 text-center">
+                              <button
+                                onClick={() => {
+                                  setIsNotificationDropdownOpen(false);
+                                  router.push("/dashboard-request");
+                                }}
+                                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                              >
+                                View All Requests →
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800 flex justify-between items-center">
+                      <span>Notifications</span>
+                      {notifications.length > 0 && (
+                        <button
+                          onClick={clearAllNotifications}
+                          className="text-xs cursor-pointer text-red-600 hover:text-red-800 hover:underline"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-3 text-gray-500 text-center">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          onClick={() =>
+                            handleNotificationClick(
+                              notification.id,
+                              notification.title,
+                            )
+                          }
+                          className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                            !notification.is_read ? "bg-orange-50" : ""
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-gray-800">
+                            {notification.title}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {notification.message}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(
+                              notification.created_at,
+                            ).toLocaleDateString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -772,15 +1286,32 @@ const Navbar: React.FC = () => {
               >
                 <Bell size={20} className="mr-2" />
                 Notifications
-                {unreadCount > 0 && (
+                {(unreadCount > 0 ||
+                  returnNotificationsCount > 0 ||
+                  doneNotificationsCount > 0 ||
+                  requestNotificationsCount > 0) && (
                   <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {unreadCount > 99 ? "99+" : unreadCount}
+                    {unreadCount +
+                      returnNotificationsCount +
+                      doneNotificationsCount +
+                      requestNotificationsCount >
+                    99
+                      ? "99+"
+                      : unreadCount +
+                        returnNotificationsCount +
+                        doneNotificationsCount +
+                        requestNotificationsCount}
                   </span>
                 )}
               </button>
 
               {isNotificationDropdownOpen && (
                 <div className="mt-2 bg-white border border-gray-200 rounded-md shadow-lg min-w-[280px] max-h-[300px] overflow-y-auto">
+                  {/* Simplified Mobile View - Just show General for now, or could expand. 
+                      User only asked for notification on Navbar, usually implies desktop/primary nav. 
+                      We'll keep mobile simple but correct the badge. 
+                      Actually, let's at least show a message if they have admin notifications to check desktop or go to dashboard.
+                  */}
                   <div className="px-4 py-2 border-b border-gray-200 font-semibold text-gray-800 flex justify-between items-center">
                     <span>Notifications</span>
                     {notifications.length > 0 && (
@@ -792,32 +1323,60 @@ const Navbar: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  {notifications.length === 0 ? (
+                  {notifications.length === 0 &&
+                  returnNotificationsCount === 0 &&
+                  doneNotificationsCount === 0 &&
+                  requestNotificationsCount === 0 ? (
                     <div className="px-4 py-3 text-gray-500 text-center">
                       No notifications yet
                     </div>
                   ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        onClick={() => markNotificationAsRead(notification.id)}
-                        className={`px-4 py-3 border-b border-gray-100 cursor-pointer ${
-                          !notification.is_read ? "bg-orange-50" : ""
-                        }`}
-                      >
-                        <div className="text-sm font-medium text-gray-800">
-                          {notification.title}
+                    <>
+                      {/* Show summary of admin notifications if any */}
+                      {(isSuperAdmin || currentRole === "Admin") &&
+                        (returnNotificationsCount > 0 ||
+                          doneNotificationsCount > 0 ||
+                          requestNotificationsCount > 0) && (
+                          <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 text-xs text-orange-800">
+                            You have{" "}
+                            {returnNotificationsCount +
+                              doneNotificationsCount +
+                              requestNotificationsCount}{" "}
+                            pending requests.
+                            <br />
+                            <Link
+                              href="/dashboard-request"
+                              className="underline font-bold"
+                            >
+                              Go to Dashboard Requests
+                            </Link>
+                          </div>
+                        )}
+
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          onClick={() =>
+                            markNotificationAsRead(notification.id)
+                          }
+                          className={`px-4 py-3 border-b border-gray-100 cursor-pointer ${
+                            !notification.is_read ? "bg-orange-50" : ""
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-gray-800">
+                            {notification.title}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {notification.message}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {new Date(
+                              notification.created_at,
+                            ).toLocaleDateString()}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {new Date(
-                            notification.created_at,
-                          ).toLocaleDateString()}
-                        </div>
-                      </div>
-                    ))
+                      ))}
+                    </>
                   )}
                 </div>
               )}
