@@ -9,7 +9,7 @@ export default function UnauthorizedPage() {
       <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
         <ShieldAlert className="h-12 w-12 text-red-600 dark:text-red-500" />
       </div>
-      <h1 className="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+      <h1 className="mt-6 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
         Access Denied
       </h1>
       <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">

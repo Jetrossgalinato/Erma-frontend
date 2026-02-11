@@ -14,6 +14,13 @@ const PUBLIC_ROUTES = [
   "/supplies",
 ];
 
+const STAFF_ROLES = ["College Clerk", "Student Assistant", "Staff"];
+const STAFF_RESTRICTED_ROUTES = [
+  "/dashboard-request",
+  "/dashboard-users",
+  "/requests",
+];
+
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, initializeAuth, user } = useAuthStore();
   const router = useRouter();
@@ -28,11 +35,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
       const isDashboardRoute = pathname.startsWith("/dashboard");
       const userRole = user?.role;
+
+      // Faculty/Lecturer/Instructor - Block all dashboard access
       const isUnauthorizedForDashboard =
         isDashboardRoute &&
         (userRole === "Faculty" ||
           userRole === "Lecturer" ||
           userRole === "Instructor");
+
+      // Staff - Block specific routes
+      const isStaff = userRole && STAFF_ROLES.includes(userRole);
+      const isRestrictedForStaff =
+        isStaff &&
+        STAFF_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
 
       if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
@@ -41,7 +56,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         (pathname === "/login" || pathname === "/register")
       ) {
         router.push("/");
-      } else if (isUnauthorizedForDashboard) {
+      } else if (isUnauthorizedForDashboard || isRestrictedForStaff) {
         router.push("/unauthorized");
       }
     }
@@ -66,16 +81,23 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  // If unauthorized for dashboard, don't render children
   const isDashboardRoute = pathname.startsWith("/dashboard");
   const userRole = user?.role;
+
+  // Check Faculty/Lecturer restriction
   const isUnauthorizedForDashboard =
     isDashboardRoute &&
     (userRole === "Faculty" ||
       userRole === "Lecturer" ||
       userRole === "Instructor");
 
-  if (isUnauthorizedForDashboard) {
+  // Check Staff restriction
+  const isStaff = userRole && STAFF_ROLES.includes(userRole);
+  const isRestrictedForStaff =
+    isStaff &&
+    STAFF_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
+
+  if (isUnauthorizedForDashboard || isRestrictedForStaff) {
     return null;
   }
 
