@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useAuthStore } from "@/store";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
-import Loader from "@/components/Loader";
 import { useAlert } from "@/contexts/AlertContext";
 import { Eye, EyeOff } from "lucide-react";
+
+const Navbar = dynamic(() => import("../../components/Navbar"));
+const Footer = dynamic(() => import("../../components/Footer"));
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -60,7 +61,7 @@ export default function LoginPage() {
         setError(
           result.user
             ? "Your account is pending approval."
-            : "No user data returned."
+            : "No user data returned.",
         );
         return;
       }
@@ -98,8 +99,6 @@ export default function LoginPage() {
       setError("Login failed. Please try again.");
     }
   };
-
-  if (authLoading) return <Loader />;
 
   return (
     <div
