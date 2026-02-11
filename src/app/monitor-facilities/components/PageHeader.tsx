@@ -1,12 +1,13 @@
 "use client";
 
-import { RefreshCw, Search, Download } from "lucide-react";
+import { RefreshCw, Search, Download, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 interface PageHeaderProps {
   onRefresh: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  onExport: () => void;
+  onExport: (format: "csv" | "excel") => void;
 }
 
 export default function PageHeader({
@@ -15,6 +16,30 @@ export default function PageHeader({
   onSearchChange,
   onExport,
 }: PageHeaderProps) {
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsExportOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleExport = (format: "csv" | "excel") => {
+    onExport(format);
+    setIsExportOpen(false);
+  };
+
   return (
     <div className="mb-8 pt-8 flex flex-col sm:flex-row items-end justify-between gap-4">
       <div className="w-full sm:w-auto">
@@ -41,13 +66,35 @@ export default function PageHeader({
       </div>
 
       <div className="flex gap-4 items-center w-full sm:w-auto">
-        <button
-          onClick={onExport}
-          className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap"
-        >
-          <Download className="w-4 h-4" />
-          Export to CSV
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsExportOpen(!isExportOpen)}
+            className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            <Download className="w-4 h-4" />
+            Export
+            <ChevronDown className="w-4 h-4" />
+          </button>
+
+          {isExportOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              <div className="py-1">
+                <button
+                  onClick={() => handleExport("excel")}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Export to Excel
+                </button>
+                <button
+                  onClick={() => handleExport("csv")}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  Export to CSV
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={onRefresh}

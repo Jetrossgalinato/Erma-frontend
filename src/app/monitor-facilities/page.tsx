@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useMonitoringStore } from "@/store/monitoringStore";
 import { useAlert } from "@/contexts/AlertContext";
 import { fetchFacilityLogs } from "./utils/helpers";
+import * as XLSX from "xlsx";
 import PageHeader from "./components/PageHeader";
 import LogsCard from "./components/LogsCard";
 import ErrorMessage from "./components/ErrorMessage";
@@ -99,7 +100,7 @@ export default function MonitorFacilitiesPage() {
     setFacilityLogsPagination({ currentPage: page });
   };
 
-  const handleExportClick = async () => {
+  const handleExportClick = async (format: "csv" | "excel") => {
     try {
       if (facilityLogsPagination.totalCount === 0) {
         showAlert({
@@ -127,31 +128,45 @@ export default function MonitorFacilitiesPage() {
         return;
       }
 
-      const headers = ["ID", "Log Message", "Date Created"];
+      const timestamp = new Date().toISOString().split("T")[0];
 
-      const csvContent = [
-        headers.join(","),
-        ...logsToExport.map((log) => {
-          const id = log.id;
-          const message = `"${(log.log_message || "").replace(/"/g, '""')}"`;
-          const date = `"${new Date(log.created_at)
-            .toLocaleString()
-            .replace(/"/g, '""')}"`;
-          return [id, message, date].join(",");
-        }),
-      ].join("\n");
+      if (format === "excel") {
+        const data = logsToExport.map((log) => ({
+          ID: log.id,
+          "Log Message": log.log_message,
+          "Date Created": new Date(log.created_at).toLocaleString(),
+        }));
 
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `facility_logs_${new Date().toISOString().split("T")[0]}.csv`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Facility Logs");
+        XLSX.writeFile(workbook, `facility_logs_${timestamp}.xlsx`);
+      } else {
+        const headers = ["ID", "Log Message", "Date Created"];
+
+        const csvContent = [
+          headers.join(","),
+          ...logsToExport.map((log) => {
+            const id = log.id;
+            const message = `"${(log.log_message || "").replace(/"/g, '""')}"`;
+            const date = `"${new Date(log.created_at)
+              .toLocaleString()
+              .replace(/"/g, '""')}"`;
+            return [id, message, date].join(",");
+          }),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `facility_logs_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) {
       console.error("Export error:", error);
       showAlert({
