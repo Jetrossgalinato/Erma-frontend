@@ -44,7 +44,7 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null
+    null,
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +63,7 @@ export default function DashboardPage() {
         userRole === "Lecturer" ||
         userRole === "Instructor"
       ) {
-        router.push("/home");
+        router.push("/");
         return;
       }
     }

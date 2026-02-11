@@ -38,7 +38,7 @@ export default function MonitorFacilitiesPage() {
   // Auth guard logic
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.replace("/home");
+      router.replace("/");
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -70,7 +70,7 @@ export default function MonitorFacilitiesPage() {
         setError(
           error instanceof Error
             ? error.message
-            : "Failed to load facility logs"
+            : "Failed to load facility logs",
         );
       } finally {
         setIsLoadingFacilityLogs(false);
@@ -82,7 +82,7 @@ export default function MonitorFacilitiesPage() {
       setIsLoadingFacilityLogs,
       setFacilityLogsPagination,
       searchQuery,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function MonitorFacilitiesPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `facility_logs_${new Date().toISOString().split("T")[0]}.csv`
+        `facility_logs_${new Date().toISOString().split("T")[0]}.csv`,
       );
       document.body.appendChild(link);
       link.click();

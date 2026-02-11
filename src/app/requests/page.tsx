@@ -67,7 +67,7 @@ export default function AccountRequestsPage() {
       const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
 
       if (mappedRole !== "Super Admin") {
-        router.push("/home");
+        router.push("/");
         return;
       }
     }

@@ -95,7 +95,7 @@ const Navbar: React.FC = () => {
       message: "You have been logged out successfully.",
     });
     setTimeout(() => {
-      router.push("/home");
+      router.push("/");
     }, 1500);
   };
 

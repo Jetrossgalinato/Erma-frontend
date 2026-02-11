@@ -76,7 +76,7 @@ const UsersPage: React.FC = () => {
       const mappedRole = userRole ? mapRoleToSystemRole(userRole) : null;
 
       if (mappedRole !== "Super Admin") {
-        router.replace("/home");
+        router.replace("/");
         return;
       }
     }
@@ -111,7 +111,7 @@ const UsersPage: React.FC = () => {
       } catch (error) {
         console.error("Error fetching users:", error);
         setError(
-          error instanceof Error ? error.message : "Failed to load users"
+          error instanceof Error ? error.message : "Failed to load users",
         );
       } finally {
         if (showAnimation) {
@@ -132,7 +132,7 @@ const UsersPage: React.FC = () => {
       setIsLoadingUsers,
       setUsersPagination,
       searchQuery,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -165,7 +165,7 @@ const UsersPage: React.FC = () => {
   // Selection handlers
   const handleCheckboxChange = (id: string) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
     );
   };
 
@@ -212,7 +212,7 @@ const UsersPage: React.FC = () => {
   const handleEditChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setEditingUser((prev) => {
@@ -260,7 +260,7 @@ const UsersPage: React.FC = () => {
       });
 
       setUsers(
-        users.map((user) => (user.id === editingUser.id ? editingUser : user))
+        users.map((user) => (user.id === editingUser.id ? editingUser : user)),
       );
       setShowEditModal(false);
       setEditingUser(null);
