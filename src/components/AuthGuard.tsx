@@ -21,6 +21,9 @@ const STAFF_RESTRICTED_ROUTES = [
   "/requests",
 ];
 
+const ADMIN_ROLES = ["Department Chairperson", "Associate Dean", "Admin"];
+const ADMIN_RESTRICTED_ROUTES = ["/requests"];
+
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, initializeAuth, user } = useAuthStore();
   const router = useRouter();
@@ -49,6 +52,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         isStaff &&
         STAFF_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
 
+      // Admin - Block specific routes
+      const isAdmin = userRole && ADMIN_ROLES.includes(userRole);
+      const isRestrictedForAdmin =
+        isAdmin &&
+        ADMIN_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
+
       if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
       } else if (
@@ -56,7 +65,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         (pathname === "/login" || pathname === "/register")
       ) {
         router.push("/");
-      } else if (isUnauthorizedForDashboard || isRestrictedForStaff) {
+      } else if (
+        isUnauthorizedForDashboard ||
+        isRestrictedForStaff ||
+        isRestrictedForAdmin
+      ) {
         router.push("/unauthorized");
       }
     }
@@ -97,7 +110,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     isStaff &&
     STAFF_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (isUnauthorizedForDashboard || isRestrictedForStaff) {
+  // Check Admin restriction
+  const isAdmin = userRole && ADMIN_ROLES.includes(userRole);
+  const isRestrictedForAdmin =
+    isAdmin &&
+    ADMIN_RESTRICTED_ROUTES.some((route) => pathname.startsWith(route));
+
+  if (
+    isUnauthorizedForDashboard ||
+    isRestrictedForStaff ||
+    isRestrictedForAdmin
+  ) {
     return null;
   }
 
