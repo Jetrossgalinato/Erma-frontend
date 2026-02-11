@@ -48,6 +48,12 @@ export default function DashboardPage() {
   );
   const [error, setError] = useState<string | null>(null);
 
+  const userRole = user?.role;
+  const isUnauthorized =
+    userRole === "Faculty" ||
+    userRole === "Lecturer" ||
+    userRole === "Instructor";
+
   // Role-based access control - Faculty users should not access dashboard
   useEffect(() => {
     if (!authLoading) {
@@ -57,17 +63,12 @@ export default function DashboardPage() {
       }
 
       // Check if user is Faculty - they should not access dashboard
-      const userRole = user?.role;
-      if (
-        userRole === "Faculty" ||
-        userRole === "Lecturer" ||
-        userRole === "Instructor"
-      ) {
-        router.push("/");
+      if (isUnauthorized) {
+        router.push("/unauthorized");
         return;
       }
     }
-  }, [authLoading, isAuthenticated, user, router]);
+  }, [authLoading, isAuthenticated, user, router, isUnauthorized]);
 
   // Authentication check
   useEffect(() => {
@@ -109,11 +110,11 @@ export default function DashboardPage() {
   // Initial data load
   useEffect(() => {
     setMounted(true);
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated && !authLoading && !isUnauthorized) {
       loadDashboardData(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, isUnauthorized]);
 
   const handleOverlayClick = () => {
     setSidebarOpen(false);
@@ -136,6 +137,11 @@ export default function DashboardPage() {
 
   // Don't render if not authenticated (will redirect)
   if (!isAuthenticated) {
+    return null;
+  }
+
+  // Don't render if unauthorized (will redirect)
+  if (isUnauthorized) {
     return null;
   }
 
