@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = [
 ];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading, initializeAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, initializeAuth, user } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,6 +26,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading) {
       const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+      const isDashboardRoute = pathname.startsWith("/dashboard");
+      const userRole = user?.role;
+      const isUnauthorizedForDashboard =
+        isDashboardRoute &&
+        (userRole === "Faculty" ||
+          userRole === "Lecturer" ||
+          userRole === "Instructor");
 
       if (!isAuthenticated && !isPublicRoute) {
         router.push("/login");
@@ -34,9 +41,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         (pathname === "/login" || pathname === "/register")
       ) {
         router.push("/");
+      } else if (isUnauthorizedForDashboard) {
+        router.push("/unauthorized");
       }
     }
-  }, [isAuthenticated, isLoading, router, pathname]);
+  }, [isAuthenticated, isLoading, router, pathname, user]);
 
   if (isLoading) {
     // Determine if the current route is public
@@ -54,6 +63,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // If not authenticated and trying to access protected route, don't render children
   if (!isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
+    return null;
+  }
+
+  // If unauthorized for dashboard, don't render children
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const userRole = user?.role;
+  const isUnauthorizedForDashboard =
+    isDashboardRoute &&
+    (userRole === "Faculty" ||
+      userRole === "Lecturer" ||
+      userRole === "Instructor");
+
+  if (isUnauthorizedForDashboard) {
     return null;
   }
 
