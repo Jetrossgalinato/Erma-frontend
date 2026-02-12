@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Optimize images for better performance
+  output: "standalone",
   images: {
     // Disable image optimization in development to avoid "resolved to private ip" errors
     unoptimized: process.env.NODE_ENV !== "production",
