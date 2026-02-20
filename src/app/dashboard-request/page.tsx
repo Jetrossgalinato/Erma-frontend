@@ -81,6 +81,7 @@ function DashboardRequestsContent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Role-based access control - Faculty users should not access dashboard requests
   useEffect(() => {
@@ -120,6 +121,7 @@ function DashboardRequestsContent() {
         );
         setBorrowingRequests(uniqueData);
         setTotalPages(data.total_pages);
+        setTotalCount(data.total);
       } else if (currentRequestType === "booking") {
         const data = await fetchBookingRequests(currentPage, PAGE_SIZE);
         // Deduplicate data by ID
@@ -128,6 +130,7 @@ function DashboardRequestsContent() {
         );
         setBookingRequests(uniqueData);
         setTotalPages(data.total_pages);
+        setTotalCount(data.total);
       } else if (currentRequestType === "acquiring") {
         const data = await fetchAcquiringRequests(currentPage, PAGE_SIZE);
         // Deduplicate data by ID
@@ -136,6 +139,7 @@ function DashboardRequestsContent() {
         );
         setAcquiringRequests(uniqueData);
         setTotalPages(data.total_pages);
+        setTotalCount(data.total);
       }
     } catch (err) {
       setError("Failed to load requests");
@@ -143,7 +147,13 @@ function DashboardRequestsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentRequestType, currentPage, setIsLoading, setTotalPages]);
+  }, [
+    currentRequestType,
+    currentPage,
+    setIsLoading,
+    setTotalPages,
+    setTotalCount,
+  ]);
 
   // Load notifications
   const loadNotifications = useCallback(async () => {
@@ -279,7 +289,7 @@ function DashboardRequestsContent() {
         ? bookingRequests
         : acquiringRequests;
 
-  const totalItems = currentRequests.length;
+  const totalItems = totalCount;
 
   // Check if approve should be disabled (already approved or rejected)
   const disableApprove =
