@@ -36,9 +36,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push("/");
+      router.replace("/");
     }
   }, [authLoading, isAuthenticated, router]);
+
+  // Don't render anything while we're still determining auth state,
+  // or if the user is already authenticated (middleware handles the
+  // redirect for users with a cookie; this handles rehydration edge cases).
+  if (authLoading || isAuthenticated) {
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

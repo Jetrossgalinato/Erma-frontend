@@ -4,6 +4,19 @@ import { persist, createJSONStorage } from "zustand/middleware";
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Cookie helpers — used so Next.js middleware can read auth state server-side
+function setAuthCookie(token: string) {
+  if (typeof document === "undefined") return;
+  // 7-day expiry; SameSite=Lax keeps it safe
+  const maxAge = 60 * 60 * 24 * 7;
+  document.cookie = `authToken=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+function clearAuthCookie() {
+  if (typeof document === "undefined") return;
+  document.cookie = `authToken=; path=/; max-age=0; SameSite=Lax`;
+}
+
 // Types
 export interface User {
   userId: string;
@@ -53,9 +66,10 @@ export const useAuthStore = create<AuthState>()(
           if (user.accountRequestId) {
             localStorage.setItem(
               "accountRequestId",
-              user.accountRequestId.toString()
+              user.accountRequestId.toString(),
             );
           }
+          setAuthCookie(token);
         }
         set({
           user,
@@ -72,6 +86,7 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem("userEmail");
           localStorage.removeItem("userRole");
           localStorage.removeItem("accountRequestId");
+          clearAuthCookie();
         }
         set({
           user: null,
@@ -91,6 +106,7 @@ export const useAuthStore = create<AuthState>()(
           const token = localStorage.getItem("authToken");
 
           if (!token) {
+            clearAuthCookie();
             set({
               user: null,
               isAuthenticated: false,
@@ -98,6 +114,10 @@ export const useAuthStore = create<AuthState>()(
             });
             return;
           }
+
+          // Ensure the cookie is in sync with localStorage (migration for
+          // sessions created before the cookie approach was introduced)
+          setAuthCookie(token);
 
           // Verify token with backend
           const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
@@ -157,6 +177,14 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+      // Set isLoading to false immediately after persisted state is restored,
+      // so the UI renders with the correct auth state without waiting for
+      // the background token verification network call to complete.
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setIsLoading(false);
+        }
+      },
+    },
+  ),
 );

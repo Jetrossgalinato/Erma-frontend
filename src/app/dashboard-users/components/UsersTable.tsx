@@ -1,4 +1,5 @@
 import { User } from "../utils/helpers";
+import { getRoleBadgeClass } from "../../../../lib/roleUtils";
 
 interface UsersTableProps {
   users: User[];
@@ -83,7 +84,9 @@ export default function UsersTable({
               {user.phone_number}
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-blue-200 dark:border-blue-700 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
+              <span
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeClass(user.acc_role)}`}
+              >
                 {user.acc_role}
               </span>
             </td>

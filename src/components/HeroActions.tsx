@@ -4,13 +4,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/store";
 
 export default function HeroActions() {
-  const { isAuthenticated, isLoading } = useAuthStore();
-
-  if (isLoading) {
-    return (
-      <div className="h-14 w-40 bg-gray-200 animate-pulse rounded-xl"></div>
-    );
-  }
+  const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
     return (

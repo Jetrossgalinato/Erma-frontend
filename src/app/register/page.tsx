@@ -5,7 +5,6 @@ import { useAuthStore } from "@/store";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import EmployeeRegisterForm from "../../components/EmployeeRegisterForm";
-import Loader from "@/components/Loader";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
@@ -22,8 +21,10 @@ export default function RegisterPage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
-    return <Loader />;
+  // Don't render anything while auth state is being resolved, or if the
+  // user is already authenticated (avoids any flash of the register page).
+  if (isLoading || isAuthenticated) {
+    return null;
   }
 
   return (
