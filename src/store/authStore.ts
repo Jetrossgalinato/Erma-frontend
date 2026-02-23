@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthState>()(
           if (user.accountRequestId) {
             localStorage.setItem(
               "accountRequestId",
-              user.accountRequestId.toString()
+              user.accountRequestId.toString(),
             );
           }
         }
@@ -157,6 +157,14 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+      // Set isLoading to false immediately after persisted state is restored,
+      // so the UI renders with the correct auth state without waiting for
+      // the background token verification network call to complete.
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setIsLoading(false);
+        }
+      },
+    },
+  ),
 );
