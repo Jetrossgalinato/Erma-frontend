@@ -529,6 +529,7 @@ const Navbar: React.FC = () => {
           width={80}
           height={80}
           className="h-15 w-15 md:h-20 md:w-20 object-contain"
+          priority
         />
       </div>
 
