@@ -285,7 +285,7 @@ export default function EquipmentPage() {
               <>
                 {viewMode === "grid" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8 sm:mb-12">
-                    {paginatedEquipment.map((equipment) => (
+                    {paginatedEquipment.map((equipment, index) => (
                       <div
                         key={equipment.id}
                         className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow overflow-hidden"
@@ -299,8 +299,8 @@ export default function EquipmentPage() {
                               className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                               width={500}
                               height={500}
-                              sizes="100vw"
-                              priority
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              priority={index < 4}
                               onClick={() => {
                                 setSelectedImage(
                                   formatImageUrl(equipment.image)!,

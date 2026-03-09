@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { X } from "lucide-react";
 import { type Equipment, type Facility } from "../utils/helpers";
 
@@ -10,7 +11,7 @@ type InsertEquipmentFormProps = {
   imagePreview: string | null;
   onChange: (
     field: keyof Equipment,
-    value: string | number | undefined
+    value: string | number | undefined,
   ) => void;
   onImageSelect: () => void;
   onImageClear: () => void;
@@ -270,7 +271,7 @@ export default function InsertEquipmentForm({
               onChange={(e) =>
                 onChange(
                   "facility_id",
-                  e.target.value ? parseInt(e.target.value, 10) : undefined
+                  e.target.value ? parseInt(e.target.value, 10) : undefined,
                 )
               }
               className="w-full px-3 py-2 text-sm text-black dark:text-gray-100 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -316,10 +317,13 @@ export default function InsertEquipmentForm({
 
               {imagePreview && (
                 <div className="mt-2">
-                  <img
+                  <Image
                     src={imagePreview}
                     alt="Preview"
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded border object-cover"
+                    unoptimized
                   />
                 </div>
               )}

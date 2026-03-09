@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import Image from "next/image";
 import { Save, X, Upload } from "lucide-react";
 import { Supply, Facility } from "../utils/helpers";
 
@@ -15,7 +16,7 @@ interface AddSupplyFormProps {
   onChange: (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    >,
   ) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -159,11 +160,13 @@ const AddSupplyForm: React.FC<AddSupplyFormProps> = ({
             )}
           </div>
           {imagePreview && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
+              width={64}
+              height={64}
               className="mt-2 h-16 w-16 object-cover rounded"
+              unoptimized
             />
           )}
         </div>
