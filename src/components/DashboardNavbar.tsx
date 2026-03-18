@@ -313,10 +313,11 @@ const DashboardNavbar: React.FC = () => {
 
     if (typeof window === "undefined") return;
 
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const wsUrl = API_BASE_URL.replace(/^http/, "ws");
-    const token = localStorage.getItem("token");
+    const wsUrl = (
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+    ).replace(/^http/, "ws");
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("authToken");
 
     if (!token) return;
 
@@ -337,16 +338,39 @@ const DashboardNavbar: React.FC = () => {
           const data = JSON.parse(event.data);
 
           if (data.personalNotifications) {
-            setNotifications(data.personalNotifications);
+            const filteredData = data.personalNotifications || [];
+            setNotifications(filteredData);
+            const unread = filteredData.filter(
+              (notif: Notification) => !notif.is_read,
+            ).length;
+            setUnreadCount(unread);
           }
           if (data.returnNotifications) {
-            setReturnNotifications(data.returnNotifications);
+            const uniqueData = Array.from(
+              new Map(
+                data.returnNotifications.map((item: any) => [item.id, item]),
+              ).values(),
+            );
+            setReturnNotifications(uniqueData as any);
+            setReturnNotificationsCount(uniqueData.length);
           }
           if (data.doneNotifications) {
-            setDoneNotifications(data.doneNotifications);
+            const uniqueData = Array.from(
+              new Map(
+                data.doneNotifications.map((item: any) => [item.id, item]),
+              ).values(),
+            );
+            setDoneNotifications(uniqueData as any);
+            setDoneNotificationsCount(uniqueData.length);
           }
           if (data.pendingRequests) {
-            setRequestNotifications(data.pendingRequests);
+            const uniqueData = Array.from(
+              new Map(
+                data.pendingRequests.map((item: any) => [item.id, item]),
+              ).values(),
+            );
+            setRequestNotifications(uniqueData as any);
+            setRequestNotificationsCount(uniqueData.length);
           }
         } catch (err) {
           console.error("Error parsing websocket message:", err);

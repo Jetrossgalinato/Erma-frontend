@@ -363,10 +363,11 @@ function DashboardRequestsContent() {
 
     if (typeof window === "undefined") return;
 
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const wsUrl = API_BASE_URL.replace(/^http/, "ws");
-    const token = localStorage.getItem("token");
+    const wsUrl = (
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+    ).replace(/^http/, "ws");
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("authToken");
 
     if (!token) return;
 
