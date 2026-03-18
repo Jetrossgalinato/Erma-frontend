@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapRoleToSystemRole } from "@/../lib/roleUtils";
 import {
   fetchDoneNotifications,
@@ -161,6 +161,40 @@ export function useNavbarNotifications({
     }
   }, [isAuthenticated, isAdminOrSuperAdmin]);
 
+  // Keep the latest values without forcing the WS effect to restart.
+  const approvedAccRoleRef = useRef(approvedAccRole);
+  const isSuperAdminRef = useRef(isSuperAdmin);
+  const fetchNotificationsRef = useRef(fetchNotifications);
+  const fetchReturnNotificationsDataRef = useRef(fetchReturnNotificationsData);
+  const fetchDoneNotificationsDataRef = useRef(fetchDoneNotificationsData);
+  const fetchRequestNotificationsDataRef = useRef(
+    fetchRequestNotificationsData,
+  );
+
+  useEffect(() => {
+    approvedAccRoleRef.current = approvedAccRole;
+  }, [approvedAccRole]);
+
+  useEffect(() => {
+    isSuperAdminRef.current = isSuperAdmin;
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    fetchNotificationsRef.current = fetchNotifications;
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    fetchReturnNotificationsDataRef.current = fetchReturnNotificationsData;
+  }, [fetchReturnNotificationsData]);
+
+  useEffect(() => {
+    fetchDoneNotificationsDataRef.current = fetchDoneNotificationsData;
+  }, [fetchDoneNotificationsData]);
+
+  useEffect(() => {
+    fetchRequestNotificationsDataRef.current = fetchRequestNotificationsData;
+  }, [fetchRequestNotificationsData]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     if (typeof window === "undefined") return;
@@ -193,7 +227,7 @@ export function useNavbarNotifications({
     if (!cleanToken) {
       if (process.env.NODE_ENV !== "production") {
         // eslint-disable-next-line no-console
-        console.warn(
+        console.debug(
           "WebSocket skipped: missing/invalid auth token (expected JWT).",
         );
       }
@@ -215,10 +249,10 @@ export function useNavbarNotifications({
       }
     })();
 
-    fetchNotifications();
-    fetchReturnNotificationsData();
-    fetchDoneNotificationsData();
-    fetchRequestNotificationsData();
+    fetchNotificationsRef.current();
+    fetchReturnNotificationsDataRef.current();
+    fetchDoneNotificationsDataRef.current();
+    fetchRequestNotificationsDataRef.current();
 
     let ws: WebSocket | undefined;
     let wsReconnectTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -246,7 +280,7 @@ export function useNavbarNotifications({
 
           if (data.personalNotifications) {
             let filteredData = data.personalNotifications || [];
-            if (approvedAccRole === "Lab Technician") {
+            if (approvedAccRoleRef.current === "Lab Technician") {
               filteredData = filteredData.filter(
                 (notif: PersonalNotification) => {
                   if (notif.title.includes("Maintenance")) {
@@ -296,7 +330,7 @@ export function useNavbarNotifications({
             setRequestNotificationsCount(uniqueData.length);
           }
 
-          if (data.accountRequests && isSuperAdmin) {
+          if (data.accountRequests && isSuperAdminRef.current) {
             const pendingCount = data.accountRequests.filter(
               (req: any) => req.status === "Pending",
             ).length;
@@ -355,16 +389,7 @@ export function useNavbarNotifications({
       if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
       ws?.close();
     };
-  }, [
-    apiBaseUrl,
-    approvedAccRole,
-    fetchDoneNotificationsData,
-    fetchNotifications,
-    fetchRequestNotificationsData,
-    fetchReturnNotificationsData,
-    isAuthenticated,
-    isSuperAdmin,
-  ]);
+  }, [apiBaseUrl, isAuthenticated]);
 
   const fetchAccountRequests = useCallback(async () => {
     if (!isAuthenticated || !isSuperAdmin) return;
