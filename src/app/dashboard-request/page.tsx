@@ -404,10 +404,32 @@ function DashboardRequestsContent() {
           .replace(/\/$/, "");
       }
     })();
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("authToken");
+    const looksLikeJwt = (value: string) =>
+      /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
 
-    if (!token) return;
+    const cleanRawToken = (value: string) =>
+      value
+        .trim()
+        .replace(/^Bearer\s+/i, "")
+        .replace(/^"|"$/g, "")
+        .replace(/^'|'$/g, "");
+
+    const rawAuthToken = localStorage.getItem("authToken");
+    const rawLegacyToken = localStorage.getItem("token");
+    const cleanedAuthToken = rawAuthToken ? cleanRawToken(rawAuthToken) : null;
+    const cleanedLegacyToken = rawLegacyToken
+      ? cleanRawToken(rawLegacyToken)
+      : null;
+
+    const cleanToken =
+      (cleanedAuthToken && looksLikeJwt(cleanedAuthToken)
+        ? cleanedAuthToken
+        : null) ||
+      (cleanedLegacyToken && looksLikeJwt(cleanedLegacyToken)
+        ? cleanedLegacyToken
+        : null);
+
+    if (!cleanToken) return;
 
     let ws: WebSocket | undefined;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -417,7 +439,6 @@ function DashboardRequestsContent() {
     const connectWebSocket = () => {
       if (!isActive) return;
 
-      const cleanToken = token.replace(/^Bearer\s+/i, "");
       const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
 
       ws = new WebSocket(wsEndpoint);

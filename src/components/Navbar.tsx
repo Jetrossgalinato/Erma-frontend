@@ -8,12 +8,12 @@ import { Menu, X } from "lucide-react";
 import { useAuthStore } from "@/store";
 import { useAlert } from "@/contexts/AlertContext";
 
+import { API_BASE_URL } from "@/utils/api";
+
 import DesktopNavLinks from "@/components/navbar/DesktopNavLinks";
 import MobileNavMenu from "@/components/navbar/MobileNavMenu";
 import { useNavbarUserData } from "@/components/navbar/useNavbarUserData";
 import { useNavbarNotifications } from "@/components/navbar/useNavbarNotifications";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout: logoutFromStore } = useAuthStore();

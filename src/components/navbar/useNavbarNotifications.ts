@@ -165,9 +165,40 @@ export function useNavbarNotifications({
     if (!isAuthenticated) return;
     if (typeof window === "undefined") return;
 
-    const token =
-      localStorage.getItem("token") || localStorage.getItem("authToken");
-    if (!token) return;
+    const looksLikeJwt = (value: string) =>
+      /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
+
+    const cleanRawToken = (value: string) =>
+      value
+        .trim()
+        .replace(/^Bearer\s+/i, "")
+        .replace(/^"|"$/g, "")
+        .replace(/^'|'$/g, "");
+
+    const rawAuthToken = localStorage.getItem("authToken");
+    const rawLegacyToken = localStorage.getItem("token");
+    const cleanedAuthToken = rawAuthToken ? cleanRawToken(rawAuthToken) : null;
+    const cleanedLegacyToken = rawLegacyToken
+      ? cleanRawToken(rawLegacyToken)
+      : null;
+
+    const cleanToken =
+      (cleanedAuthToken && looksLikeJwt(cleanedAuthToken)
+        ? cleanedAuthToken
+        : null) ||
+      (cleanedLegacyToken && looksLikeJwt(cleanedLegacyToken)
+        ? cleanedLegacyToken
+        : null);
+
+    if (!cleanToken) {
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "WebSocket skipped: missing/invalid auth token (expected JWT).",
+        );
+      }
+      return;
+    }
 
     const baseUrl = apiBaseUrl || "http://localhost:8000";
     const wsUrl = (() => {
@@ -192,11 +223,11 @@ export function useNavbarNotifications({
     let ws: WebSocket | undefined;
     let wsReconnectTimeout: ReturnType<typeof setTimeout> | undefined;
     let isActive = true;
+    let hasWarned = false;
 
     const connectWebSocket = () => {
       if (!isActive) return;
 
-      const cleanToken = token.replace(/^Bearer\s+/i, "");
       const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
       ws = new WebSocket(wsEndpoint);
 
@@ -267,9 +298,28 @@ export function useNavbarNotifications({
         }
       };
 
+      ws.onerror = () => {
+        if (!hasWarned && process.env.NODE_ENV !== "production") {
+          hasWarned = true;
+          // eslint-disable-next-line no-console
+          console.warn(
+            "WebSocket connection error (details will appear in close event).",
+          );
+        }
+      };
+
       ws.onclose = (event) => {
         if (!isActive) return;
-        if (event.code === 1008) return;
+        if (event.code === 1008) {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn("WebSocket closed (auth/policy). Not reconnecting.", {
+              code: event.code,
+              reason: event.reason,
+            });
+          }
+          return;
+        }
         wsReconnectTimeout = setTimeout(connectWebSocket, 5000);
       };
     };

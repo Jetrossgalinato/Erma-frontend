@@ -1,26 +1,40 @@
 // Helper function to map original roles to system roles
 export function mapRoleToSystemRole(originalRole: string): string {
-  const superAdminRoles = [
-    "CCIS Dean",
-    "Lab Technician",
-    "Comlab Adviser",
-    "Super Admin",
-  ];
-  const adminRoles = ["Department Chairperson", "Associate Dean", "Admin"];
-  const staffRoles = ["College Clerk", "Student Assistant", "Staff"];
-  const facultyRoles = ["Faculty", "Lecturer", "Instructor"];
+  const normalizeRoleKey = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
 
-  if (superAdminRoles.includes(originalRole)) {
-    return "Super Admin";
-  } else if (adminRoles.includes(originalRole)) {
-    return "Admin";
-  } else if (staffRoles.includes(originalRole)) {
-    return "Staff";
-  } else if (facultyRoles.includes(originalRole)) {
-    return "Faculty";
-  } else {
-    return "Unknown"; // Handle edge case
-  }
+  const roleKey = normalizeRoleKey(originalRole);
+
+  const roleKeyToSystemRole: Record<
+    string,
+    "Super Admin" | "Admin" | "Staff" | "Faculty"
+  > = {
+    // Super Admin
+    ccisdean: "Super Admin",
+    labtechnician: "Super Admin",
+    comlabadviser: "Super Admin",
+    superadmin: "Super Admin",
+
+    // Admin
+    departmentchairperson: "Admin",
+    associatedean: "Admin",
+    admin: "Admin",
+
+    // Staff
+    collegeclerk: "Staff",
+    studentassistant: "Staff",
+    staff: "Staff",
+
+    // Faculty
+    faculty: "Faculty",
+    lecturer: "Faculty",
+    instructor: "Faculty",
+  };
+
+  return roleKeyToSystemRole[roleKey] ?? "Unknown";
 }
 
 // Additional helper function to get all available roles
