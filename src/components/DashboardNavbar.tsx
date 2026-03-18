@@ -297,9 +297,13 @@ const DashboardNavbar: React.FC = () => {
 
     try {
       const data = await fetchRequestNotifications();
-      // Deduplicate request notifications by ID to prevent key errors
+      // Deduplicate request notifications by ID and type to prevent key errors
       const uniqueData = data
-        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        ? Array.from(
+            new Map(
+              data.map((item) => [`${item.request_type}-${item.id}`, item]),
+            ).values(),
+          )
         : [];
       setRequestNotifications(uniqueData);
       setRequestNotificationsCount(uniqueData.length);
@@ -309,24 +313,174 @@ const DashboardNavbar: React.FC = () => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchNotifications();
-      fetchReturnNotificationsData();
-      fetchDoneNotificationsData();
-      fetchRequestNotificationsData();
+    if (!isAuthenticated) return;
 
-      // Set up polling for all notifications every 2 seconds
-      const interval = setInterval(() => {
-        fetchNotifications();
-        fetchReturnNotificationsData();
-        fetchDoneNotificationsData();
-        fetchRequestNotificationsData();
-      }, 2000);
+    if (typeof window === "undefined") return;
 
-      return () => {
-        clearInterval(interval);
+    const baseUrl = API_BASE_URL || "http://localhost:8000";
+    const wsUrl = (() => {
+      try {
+        const url = new URL(baseUrl);
+        const shouldUseSecureWs =
+          url.protocol === "https:" || window.location.protocol === "https:";
+        url.protocol = shouldUseSecureWs ? "wss:" : "ws:";
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return baseUrl
+          .replace(/^http(s)?/, (match, isHttps) => (isHttps ? "wss" : "ws"))
+          .replace(/\/$/, "");
+      }
+    })();
+    const looksLikeJwt = (value: string) =>
+      /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
+
+    const cleanRawToken = (value: string) =>
+      value
+        .trim()
+        .replace(/^Bearer\s+/i, "")
+        .replace(/^"|"$/g, "")
+        .replace(/^'|'$/g, "");
+
+    const rawAuthToken = localStorage.getItem("authToken");
+    const rawLegacyToken = localStorage.getItem("token");
+    const cleanedAuthToken = rawAuthToken ? cleanRawToken(rawAuthToken) : null;
+    const cleanedLegacyToken = rawLegacyToken
+      ? cleanRawToken(rawLegacyToken)
+      : null;
+
+    const token =
+      (cleanedAuthToken && looksLikeJwt(cleanedAuthToken)
+        ? cleanedAuthToken
+        : null) ||
+      (cleanedLegacyToken && looksLikeJwt(cleanedLegacyToken)
+        ? cleanedLegacyToken
+        : null);
+
+    if (!token) return;
+
+    // Initial fetch
+    fetchNotifications();
+    fetchReturnNotificationsData();
+    fetchDoneNotificationsData();
+    fetchRequestNotificationsData();
+
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let initialConnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
+    let hasWarned = false;
+
+    const connectWebSocket = () => {
+      if (!isActive) return;
+
+      const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(token)}`;
+      const wsSafeEndpoint = `${wsUrl}/api/ws/notifications`;
+      ws = new WebSocket(wsEndpoint);
+
+      ws.onopen = () => {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.debug("WebSocket connected.", { endpoint: wsSafeEndpoint });
+        }
       };
-    }
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.personalNotifications) {
+            const filteredData = data.personalNotifications || [];
+            setNotifications(filteredData);
+            const unread = filteredData.filter(
+              (notif: Notification) => !notif.is_read,
+            ).length;
+            setUnreadCount(unread);
+          }
+          if (data.returnNotifications) {
+            const uniqueData = Array.from(
+              new Map(
+                data.returnNotifications.map((item: any) => [item.id, item]),
+              ).values(),
+            );
+            setReturnNotifications(uniqueData as any);
+            setReturnNotificationsCount(uniqueData.length);
+          }
+          if (data.doneNotifications) {
+            const uniqueData = Array.from(
+              new Map(
+                data.doneNotifications.map((item: any) => [item.id, item]),
+              ).values(),
+            );
+            setDoneNotifications(uniqueData as any);
+            setDoneNotificationsCount(uniqueData.length);
+          }
+          if (data.pendingRequests) {
+            const uniqueData = Array.from(
+              new Map(
+                data.pendingRequests.map((item: any) => [
+                  `${item.request_type}-${item.id}`,
+                  item,
+                ]),
+              ).values(),
+            );
+            setRequestNotifications(uniqueData as any);
+            setRequestNotificationsCount(uniqueData.length);
+          }
+        } catch (err) {
+          console.error("Error parsing websocket message:", err);
+        }
+      };
+
+      ws.onerror = () => {
+        if (!hasWarned && process.env.NODE_ENV !== "production") {
+          hasWarned = true;
+          // eslint-disable-next-line no-console
+          console.debug(
+            "WebSocket error (details will appear in close event).",
+          );
+        }
+      };
+
+      ws.onclose = (event) => {
+        if (!isActive) return;
+
+        if (process.env.NODE_ENV !== "production") {
+          const isNormalClose = event.code === 1000 || event.code === 1005;
+          // eslint-disable-next-line no-console
+          (isNormalClose ? console.debug : console.warn)("WebSocket closed.", {
+            endpoint: wsSafeEndpoint,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
+        }
+
+        if (event.code === 1008) {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn("WebSocket closed (auth/policy). Not reconnecting.", {
+              code: event.code,
+              reason: event.reason,
+            });
+          }
+          return;
+        }
+
+        reconnectTimer = setTimeout(connectWebSocket, 5000);
+      };
+    };
+
+    // In React Strict Mode (dev), effects mount/unmount twice.
+    // Deferring the first connection avoids creating a socket that gets
+    // immediately torn down during the dev-only lifecycle cycle.
+    initialConnectTimer = setTimeout(connectWebSocket, 0);
+
+    return () => {
+      isActive = false;
+      if (initialConnectTimer) clearTimeout(initialConnectTimer);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
+    };
   }, [
     isAuthenticated,
     fetchNotifications,
@@ -950,7 +1104,7 @@ const DashboardNavbar: React.FC = () => {
                         ) : (
                           requestNotifications.map((notification) => (
                             <div
-                              key={notification.id}
+                              key={`${notification.request_type}-${notification.id}`}
                               onClick={() => {
                                 setIsNotificationDropdownOpen(false);
                                 // Navigate to the correct tab based on request type

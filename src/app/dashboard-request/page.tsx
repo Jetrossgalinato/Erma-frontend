@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
@@ -20,6 +20,7 @@ import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { Package, LayoutDashboard } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api";
 import {
   BorrowingRequest,
   BookingRequest,
@@ -154,6 +155,32 @@ function DashboardRequestsContent() {
     setTotalPages,
     setTotalCount,
   ]);
+
+  // Keep the WS connection stable while still reacting to state changes.
+  const loadDataRef = useRef(loadData);
+  const requestTypeRef = useRef(currentRequestType);
+  const isLoadingRef = useRef(isLoading);
+  const pendingRequestsFingerprintRef = useRef<string>("");
+  const pendingRefreshAfterLoadRef = useRef(false);
+
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  useEffect(() => {
+    requestTypeRef.current = currentRequestType;
+  }, [currentRequestType]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (!isLoading && pendingRefreshAfterLoadRef.current) {
+      pendingRefreshAfterLoadRef.current = false;
+      void loadData();
+    }
+  }, [isLoading, loadData]);
 
   // Load notifications
   const loadNotifications = useCallback(async () => {
@@ -357,18 +384,162 @@ function DashboardRequestsContent() {
     loadNotifications,
   ]);
 
-  // Set up polling for notifications every 2 seconds
+  // Set up WebSocket for real-time notifications
   useEffect(() => {
-    if (isAuthenticated) {
-      const interval = setInterval(() => {
-        loadNotifications();
-      }, 2000);
+    if (!isAuthenticated) return;
 
-      return () => {
-        clearInterval(interval);
+    if (typeof window === "undefined") return;
+
+    const baseUrl = API_BASE_URL || "http://localhost:8000";
+    const wsUrl = (() => {
+      try {
+        const url = new URL(baseUrl);
+        const shouldUseSecureWs =
+          url.protocol === "https:" || window.location.protocol === "https:";
+        url.protocol = shouldUseSecureWs ? "wss:" : "ws:";
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return baseUrl
+          .replace(/^http(s)?/, (match, isHttps) => (isHttps ? "wss" : "ws"))
+          .replace(/\/$/, "");
+      }
+    })();
+    const looksLikeJwt = (value: string) =>
+      /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
+
+    const cleanRawToken = (value: string) =>
+      value
+        .trim()
+        .replace(/^Bearer\s+/i, "")
+        .replace(/^"|"$/g, "")
+        .replace(/^'|'$/g, "");
+
+    const rawAuthToken = localStorage.getItem("authToken");
+    const rawLegacyToken = localStorage.getItem("token");
+    const cleanedAuthToken = rawAuthToken ? cleanRawToken(rawAuthToken) : null;
+    const cleanedLegacyToken = rawLegacyToken
+      ? cleanRawToken(rawLegacyToken)
+      : null;
+
+    const cleanToken =
+      (cleanedAuthToken && looksLikeJwt(cleanedAuthToken)
+        ? cleanedAuthToken
+        : null) ||
+      (cleanedLegacyToken && looksLikeJwt(cleanedLegacyToken)
+        ? cleanedLegacyToken
+        : null);
+
+    if (!cleanToken) return;
+
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let initialConnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
+    let hasWarned = false;
+
+    const connectWebSocket = () => {
+      if (!isActive) return;
+
+      const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+      const wsSafeEndpoint = `${wsUrl}/api/ws/notifications`;
+
+      ws = new WebSocket(wsEndpoint);
+
+      ws.onopen = () => {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.debug("WebSocket connected.", { endpoint: wsSafeEndpoint });
+        }
       };
-    }
-  }, [isAuthenticated, loadNotifications]);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.returnNotifications) {
+            setReturnNotifications(data.returnNotifications);
+          }
+          if (data.doneNotifications) {
+            setDoneNotifications(data.doneNotifications);
+          }
+          if (Array.isArray(data.pendingRequests)) {
+            const currentType = requestTypeRef.current;
+            const fingerprint = data.pendingRequests
+              .filter((item: any) => item?.request_type === currentType)
+              .map((item: any) => String(item?.id ?? ""))
+              .join(",");
+
+            if (fingerprint !== pendingRequestsFingerprintRef.current) {
+              pendingRequestsFingerprintRef.current = fingerprint;
+
+              // A new pending request (or one got approved/rejected) exists.
+              // Refresh the currently viewed list once so admins don't need manual refresh.
+              if (isLoadingRef.current) {
+                pendingRefreshAfterLoadRef.current = true;
+              } else {
+                void loadDataRef.current();
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Error parsing websocket message:", err);
+        }
+      };
+
+      ws.onerror = () => {
+        // Browser WebSocket error events are intentionally opaque (often `{}` in Next overlay).
+        // Avoid `console.error` to prevent noisy dev overlays; rely on `onclose` codes instead.
+        if (!hasWarned && process.env.NODE_ENV !== "production") {
+          hasWarned = true;
+          // eslint-disable-next-line no-console
+          console.debug(
+            "WebSocket error (details will appear in close event).",
+          );
+        }
+      };
+
+      ws.onclose = (event) => {
+        if (!isActive) return;
+
+        if (process.env.NODE_ENV !== "production") {
+          const isNormalClose = event.code === 1000 || event.code === 1005;
+          // eslint-disable-next-line no-console
+          (isNormalClose ? console.debug : console.warn)("WebSocket closed.", {
+            endpoint: wsSafeEndpoint,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
+        }
+
+        // 1008 is what the backend uses for invalid/missing token (policy violation).
+        // Reconnecting in a tight loop just spams the console.
+        if (event.code === 1008) {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn("WebSocket closed (auth/policy). Not reconnecting.", {
+              code: event.code,
+              reason: event.reason,
+            });
+          }
+          return;
+        }
+
+        reconnectTimer = setTimeout(connectWebSocket, 5000);
+      };
+    };
+
+    // In React Strict Mode (dev), effects mount/unmount twice.
+    // Deferring the first connection avoids creating a socket that gets
+    // immediately closed during the dev-only lifecycle cycle.
+    initialConnectTimer = setTimeout(connectWebSocket, 0);
+
+    return () => {
+      isActive = false;
+      if (initialConnectTimer) clearTimeout(initialConnectTimer);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
+    };
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Loader />;
