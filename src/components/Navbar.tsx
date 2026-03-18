@@ -343,7 +343,9 @@ const Navbar: React.FC = () => {
     const wsUrl = (() => {
       try {
         const url = new URL(baseUrl);
-        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const shouldUseSecureWs =
+          url.protocol === "https:" || window.location.protocol === "https:";
+        url.protocol = shouldUseSecureWs ? "wss:" : "ws:";
         return url.toString().replace(/\/$/, "");
       } catch {
         return baseUrl

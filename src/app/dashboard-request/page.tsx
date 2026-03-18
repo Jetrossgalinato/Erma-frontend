@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardNavbar from "@/components/DashboardNavbar";
 import Sidebar from "@/components/Sidebar";
@@ -20,6 +20,7 @@ import EmptyState from "./components/EmptyState";
 import Pagination from "./components/Pagination";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { Package, LayoutDashboard } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api";
 import {
   BorrowingRequest,
   BookingRequest,
@@ -154,6 +155,32 @@ function DashboardRequestsContent() {
     setTotalPages,
     setTotalCount,
   ]);
+
+  // Keep the WS connection stable while still reacting to state changes.
+  const loadDataRef = useRef(loadData);
+  const requestTypeRef = useRef(currentRequestType);
+  const isLoadingRef = useRef(isLoading);
+  const pendingRequestsFingerprintRef = useRef<string>("");
+  const pendingRefreshAfterLoadRef = useRef(false);
+
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  useEffect(() => {
+    requestTypeRef.current = currentRequestType;
+  }, [currentRequestType]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (!isLoading && pendingRefreshAfterLoadRef.current) {
+      pendingRefreshAfterLoadRef.current = false;
+      void loadData();
+    }
+  }, [isLoading, loadData]);
 
   // Load notifications
   const loadNotifications = useCallback(async () => {
@@ -363,11 +390,13 @@ function DashboardRequestsContent() {
 
     if (typeof window === "undefined") return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const baseUrl = API_BASE_URL || "http://localhost:8000";
     const wsUrl = (() => {
       try {
         const url = new URL(baseUrl);
-        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const shouldUseSecureWs =
+          url.protocol === "https:" || window.location.protocol === "https:";
+        url.protocol = shouldUseSecureWs ? "wss:" : "ws:";
         return url.toString().replace(/\/$/, "");
       } catch {
         return baseUrl
@@ -401,6 +430,25 @@ function DashboardRequestsContent() {
           }
           if (data.doneNotifications) {
             setDoneNotifications(data.doneNotifications);
+          }
+          if (Array.isArray(data.pendingRequests)) {
+            const currentType = requestTypeRef.current;
+            const fingerprint = data.pendingRequests
+              .filter((item: any) => item?.request_type === currentType)
+              .map((item: any) => String(item?.id ?? ""))
+              .join(",");
+
+            if (fingerprint !== pendingRequestsFingerprintRef.current) {
+              pendingRequestsFingerprintRef.current = fingerprint;
+
+              // A new pending request (or one got approved/rejected) exists.
+              // Refresh the currently viewed list once so admins don't need manual refresh.
+              if (isLoadingRef.current) {
+                pendingRefreshAfterLoadRef.current = true;
+              } else {
+                void loadDataRef.current();
+              }
+            }
           }
         } catch (err) {
           console.error("Error parsing websocket message:", err);

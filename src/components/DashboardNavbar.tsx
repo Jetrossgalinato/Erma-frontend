@@ -317,11 +317,13 @@ const DashboardNavbar: React.FC = () => {
 
     if (typeof window === "undefined") return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const baseUrl = API_BASE_URL || "http://localhost:8000";
     const wsUrl = (() => {
       try {
         const url = new URL(baseUrl);
-        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const shouldUseSecureWs =
+          url.protocol === "https:" || window.location.protocol === "https:";
+        url.protocol = shouldUseSecureWs ? "wss:" : "ws:";
         return url.toString().replace(/\/$/, "");
       } catch {
         return baseUrl
