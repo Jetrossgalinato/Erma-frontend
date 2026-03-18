@@ -59,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
       // Login action
       login: (token, user) => {
         if (typeof window !== "undefined") {
+          // Clean up legacy token key (some older code paths used this).
+          localStorage.removeItem("token");
           localStorage.setItem("authToken", token);
           localStorage.setItem("userId", user.userId);
           localStorage.setItem("userEmail", user.email);
@@ -81,6 +83,7 @@ export const useAuthStore = create<AuthState>()(
       // Logout action
       logout: () => {
         if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
           localStorage.removeItem("authToken");
           localStorage.removeItem("userId");
           localStorage.removeItem("userEmail");
@@ -103,6 +106,8 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
+          // Clean up legacy token key from older versions.
+          localStorage.removeItem("token");
           const token = localStorage.getItem("authToken");
 
           if (!token) {

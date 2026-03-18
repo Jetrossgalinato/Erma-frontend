@@ -222,6 +222,7 @@ export function useNavbarNotifications({
 
     let ws: WebSocket | undefined;
     let wsReconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+    let initialConnectTimer: ReturnType<typeof setTimeout> | undefined;
     let isActive = true;
     let hasWarned = false;
 
@@ -229,7 +230,15 @@ export function useNavbarNotifications({
       if (!isActive) return;
 
       const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+      const wsSafeEndpoint = `${wsUrl}/api/ws/notifications`;
       ws = new WebSocket(wsEndpoint);
+
+      ws.onopen = () => {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.debug("WebSocket connected.", { endpoint: wsSafeEndpoint });
+        }
+      };
 
       ws.onmessage = (event) => {
         try {
@@ -302,14 +311,25 @@ export function useNavbarNotifications({
         if (!hasWarned && process.env.NODE_ENV !== "production") {
           hasWarned = true;
           // eslint-disable-next-line no-console
-          console.warn(
-            "WebSocket connection error (details will appear in close event).",
+          console.debug(
+            "WebSocket error (details will appear in close event).",
           );
         }
       };
 
       ws.onclose = (event) => {
         if (!isActive) return;
+
+        if (process.env.NODE_ENV !== "production") {
+          const isNormalClose = event.code === 1000 || event.code === 1005;
+          // eslint-disable-next-line no-console
+          (isNormalClose ? console.debug : console.warn)("WebSocket closed.", {
+            endpoint: wsSafeEndpoint,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
+        }
         if (event.code === 1008) {
           if (process.env.NODE_ENV !== "production") {
             // eslint-disable-next-line no-console
@@ -324,10 +344,14 @@ export function useNavbarNotifications({
       };
     };
 
-    connectWebSocket();
+    // In React Strict Mode (dev), effects mount/unmount twice.
+    // Deferring the first connection avoids creating a socket that gets
+    // immediately closed during the dev-only lifecycle cycle.
+    initialConnectTimer = setTimeout(connectWebSocket, 0);
 
     return () => {
       isActive = false;
+      if (initialConnectTimer) clearTimeout(initialConnectTimer);
       if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
       ws?.close();
     };

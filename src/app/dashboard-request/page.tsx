@@ -433,6 +433,7 @@ function DashboardRequestsContent() {
 
     let ws: WebSocket | undefined;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let initialConnectTimer: ReturnType<typeof setTimeout> | undefined;
     let isActive = true;
     let hasWarned = false;
 
@@ -440,8 +441,16 @@ function DashboardRequestsContent() {
       if (!isActive) return;
 
       const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+      const wsSafeEndpoint = `${wsUrl}/api/ws/notifications`;
 
       ws = new WebSocket(wsEndpoint);
+
+      ws.onopen = () => {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.debug("WebSocket connected.", { endpoint: wsSafeEndpoint });
+        }
+      };
 
       ws.onmessage = (event) => {
         try {
@@ -482,14 +491,25 @@ function DashboardRequestsContent() {
         if (!hasWarned && process.env.NODE_ENV !== "production") {
           hasWarned = true;
           // eslint-disable-next-line no-console
-          console.warn(
-            "WebSocket connection error (details will appear in close event).",
+          console.debug(
+            "WebSocket error (details will appear in close event).",
           );
         }
       };
 
       ws.onclose = (event) => {
         if (!isActive) return;
+
+        if (process.env.NODE_ENV !== "production") {
+          const isNormalClose = event.code === 1000 || event.code === 1005;
+          // eslint-disable-next-line no-console
+          (isNormalClose ? console.debug : console.warn)("WebSocket closed.", {
+            endpoint: wsSafeEndpoint,
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
+        }
 
         // 1008 is what the backend uses for invalid/missing token (policy violation).
         // Reconnecting in a tight loop just spams the console.
@@ -508,10 +528,14 @@ function DashboardRequestsContent() {
       };
     };
 
-    connectWebSocket();
+    // In React Strict Mode (dev), effects mount/unmount twice.
+    // Deferring the first connection avoids creating a socket that gets
+    // immediately closed during the dev-only lifecycle cycle.
+    initialConnectTimer = setTimeout(connectWebSocket, 0);
 
     return () => {
       isActive = false;
+      if (initialConnectTimer) clearTimeout(initialConnectTimer);
       if (reconnectTimer) clearTimeout(reconnectTimer);
       ws?.close();
     };
