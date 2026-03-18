@@ -297,9 +297,13 @@ const DashboardNavbar: React.FC = () => {
 
     try {
       const data = await fetchRequestNotifications();
-      // Deduplicate request notifications by ID to prevent key errors
+      // Deduplicate request notifications by ID and type to prevent key errors
       const uniqueData = data
-        ? Array.from(new Map(data.map((item) => [item.id, item])).values())
+        ? Array.from(
+            new Map(
+              data.map((item) => [`${item.request_type}-${item.id}`, item]),
+            ).values(),
+          )
         : [];
       setRequestNotifications(uniqueData);
       setRequestNotificationsCount(uniqueData.length);
@@ -366,7 +370,10 @@ const DashboardNavbar: React.FC = () => {
           if (data.pendingRequests) {
             const uniqueData = Array.from(
               new Map(
-                data.pendingRequests.map((item: any) => [item.id, item]),
+                data.pendingRequests.map((item: any) => [
+                  `${item.request_type}-${item.id}`,
+                  item,
+                ]),
               ).values(),
             );
             setRequestNotifications(uniqueData as any);
@@ -1015,7 +1022,7 @@ const DashboardNavbar: React.FC = () => {
                         ) : (
                           requestNotifications.map((notification) => (
                             <div
-                              key={notification.id}
+                              key={`${notification.request_type}-${notification.id}`}
                               onClick={() => {
                                 setIsNotificationDropdownOpen(false);
                                 // Navigate to the correct tab based on request type
