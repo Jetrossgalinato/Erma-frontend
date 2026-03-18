@@ -317,9 +317,18 @@ const DashboardNavbar: React.FC = () => {
 
     if (typeof window === "undefined") return;
 
-    const wsUrl = (
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-    ).replace(/^http/, "ws");
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const wsUrl = (() => {
+      try {
+        const url = new URL(baseUrl);
+        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return baseUrl
+          .replace(/^http(s)?/, (match, isHttps) => (isHttps ? "wss" : "ws"))
+          .replace(/\/$/, "");
+      }
+    })();
     const token =
       localStorage.getItem("token") || localStorage.getItem("authToken");
 
@@ -331,11 +340,17 @@ const DashboardNavbar: React.FC = () => {
     fetchDoneNotificationsData();
     fetchRequestNotificationsData();
 
-    let ws: WebSocket;
-    let reconnectTimer: NodeJS.Timeout;
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
+    let hasWarned = false;
 
     const connectWebSocket = () => {
-      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+      if (!isActive) return;
+
+      const cleanToken = token.replace(/^Bearer\s+/i, "");
+      const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+      ws = new WebSocket(wsEndpoint);
 
       ws.onmessage = (event) => {
         try {
@@ -384,11 +399,30 @@ const DashboardNavbar: React.FC = () => {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.onerror = () => {
+        if (!hasWarned && process.env.NODE_ENV !== "production") {
+          hasWarned = true;
+          // eslint-disable-next-line no-console
+          console.warn(
+            "WebSocket connection error (details will appear in close event).",
+          );
+        }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        if (!isActive) return;
+
+        if (event.code === 1008) {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn("WebSocket closed (auth/policy). Not reconnecting.", {
+              code: event.code,
+              reason: event.reason,
+            });
+          }
+          return;
+        }
+
         reconnectTimer = setTimeout(connectWebSocket, 5000);
       };
     };
@@ -396,8 +430,9 @@ const DashboardNavbar: React.FC = () => {
     connectWebSocket();
 
     return () => {
-      clearTimeout(reconnectTimer);
-      if (ws) ws.close();
+      isActive = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
     };
   }, [
     isAuthenticated,

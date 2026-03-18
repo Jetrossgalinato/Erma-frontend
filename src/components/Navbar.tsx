@@ -339,10 +339,18 @@ const Navbar: React.FC = () => {
       localStorage.getItem("token") || localStorage.getItem("authToken");
     if (!token) return;
 
-    const wsUrl = (API_BASE_URL || "http://localhost:8000").replace(
-      /^http/,
-      "ws",
-    );
+    const baseUrl = API_BASE_URL || "http://localhost:8000";
+    const wsUrl = (() => {
+      try {
+        const url = new URL(baseUrl);
+        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return baseUrl
+          .replace(/^http(s)?/, (match, isHttps) => (isHttps ? "wss" : "ws"))
+          .replace(/\/$/, "");
+      }
+    })();
 
     // Initial fetches still can run once
     fetchNotifications();
@@ -350,11 +358,16 @@ const Navbar: React.FC = () => {
     fetchDoneNotificationsData();
     fetchRequestNotificationsData();
 
-    let ws: WebSocket;
-    let wsReconnectTimeout: NodeJS.Timeout;
+    let ws: WebSocket | undefined;
+    let wsReconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
 
     const connectWebSocket = () => {
-      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+      if (!isActive) return;
+
+      const cleanToken = token.replace(/^Bearer\s+/i, "");
+      const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+      ws = new WebSocket(wsEndpoint);
 
       ws.onmessage = (event) => {
         try {
@@ -417,7 +430,9 @@ const Navbar: React.FC = () => {
         }
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        if (!isActive) return;
+        if (event.code === 1008) return;
         wsReconnectTimeout = setTimeout(connectWebSocket, 5000);
       };
     };
@@ -425,8 +440,9 @@ const Navbar: React.FC = () => {
     connectWebSocket();
 
     return () => {
-      clearTimeout(wsReconnectTimeout);
-      if (ws) ws.close();
+      isActive = false;
+      if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
+      ws?.close();
     };
   }, [
     isAuthenticated,

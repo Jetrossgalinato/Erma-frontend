@@ -363,19 +363,35 @@ function DashboardRequestsContent() {
 
     if (typeof window === "undefined") return;
 
-    const wsUrl = (
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-    ).replace(/^http/, "ws");
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const wsUrl = (() => {
+      try {
+        const url = new URL(baseUrl);
+        url.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return baseUrl
+          .replace(/^http(s)?/, (match, isHttps) => (isHttps ? "wss" : "ws"))
+          .replace(/\/$/, "");
+      }
+    })();
     const token =
       localStorage.getItem("token") || localStorage.getItem("authToken");
 
     if (!token) return;
 
-    let ws: WebSocket;
-    let reconnectTimer: NodeJS.Timeout;
+    let ws: WebSocket | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
+    let hasWarned = false;
 
     const connectWebSocket = () => {
-      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+      if (!isActive) return;
+
+      const cleanToken = token.replace(/^Bearer\s+/i, "");
+      const wsEndpoint = `${wsUrl}/api/ws/notifications?token=${encodeURIComponent(cleanToken)}`;
+
+      ws = new WebSocket(wsEndpoint);
 
       ws.onmessage = (event) => {
         try {
@@ -391,25 +407,44 @@ function DashboardRequestsContent() {
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.onerror = () => {
+        // Browser WebSocket error events are intentionally opaque (often `{}` in Next overlay).
+        // Avoid `console.error` to prevent noisy dev overlays; rely on `onclose` codes instead.
+        if (!hasWarned && process.env.NODE_ENV !== "production") {
+          hasWarned = true;
+          // eslint-disable-next-line no-console
+          console.warn(
+            "WebSocket connection error (details will appear in close event).",
+          );
+        }
       };
 
-      ws.onclose = () => {
-        // Attempt to reconnect after 5 seconds if connection is closed
-        reconnectTimer = setTimeout(() => {
-          connectWebSocket();
-        }, 5000);
+      ws.onclose = (event) => {
+        if (!isActive) return;
+
+        // 1008 is what the backend uses for invalid/missing token (policy violation).
+        // Reconnecting in a tight loop just spams the console.
+        if (event.code === 1008) {
+          if (process.env.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.warn("WebSocket closed (auth/policy). Not reconnecting.", {
+              code: event.code,
+              reason: event.reason,
+            });
+          }
+          return;
+        }
+
+        reconnectTimer = setTimeout(connectWebSocket, 5000);
       };
     };
 
     connectWebSocket();
 
     return () => {
-      clearTimeout(reconnectTimer);
-      if (ws) {
-        ws.close();
-      }
+      isActive = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
     };
   }, [isAuthenticated]);
 
