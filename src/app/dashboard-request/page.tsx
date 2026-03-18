@@ -357,18 +357,60 @@ function DashboardRequestsContent() {
     loadNotifications,
   ]);
 
-  // Set up polling for notifications every 2 seconds
+  // Set up WebSocket for real-time notifications
   useEffect(() => {
-    if (isAuthenticated) {
-      const interval = setInterval(() => {
-        loadNotifications();
-      }, 2000);
+    if (!isAuthenticated) return;
 
-      return () => {
-        clearInterval(interval);
+    if (typeof window === "undefined") return;
+
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const wsUrl = API_BASE_URL.replace(/^http/, "ws");
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    let ws: WebSocket;
+    let reconnectTimer: NodeJS.Timeout;
+
+    const connectWebSocket = () => {
+      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.returnNotifications) {
+            setReturnNotifications(data.returnNotifications);
+          }
+          if (data.doneNotifications) {
+            setDoneNotifications(data.doneNotifications);
+          }
+        } catch (err) {
+          console.error("Error parsing websocket message:", err);
+        }
       };
-    }
-  }, [isAuthenticated, loadNotifications]);
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      ws.onclose = () => {
+        // Attempt to reconnect after 5 seconds if connection is closed
+        reconnectTimer = setTimeout(() => {
+          connectWebSocket();
+        }, 5000);
+      };
+    };
+
+    connectWebSocket();
+
+    return () => {
+      clearTimeout(reconnectTimer);
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Loader />;

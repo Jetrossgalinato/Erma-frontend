@@ -309,24 +309,65 @@ const DashboardNavbar: React.FC = () => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchNotifications();
-      fetchReturnNotificationsData();
-      fetchDoneNotificationsData();
-      fetchRequestNotificationsData();
+    if (!isAuthenticated) return;
 
-      // Set up polling for all notifications every 2 seconds
-      const interval = setInterval(() => {
-        fetchNotifications();
-        fetchReturnNotificationsData();
-        fetchDoneNotificationsData();
-        fetchRequestNotificationsData();
-      }, 2000);
+    if (typeof window === "undefined") return;
 
-      return () => {
-        clearInterval(interval);
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const wsUrl = API_BASE_URL.replace(/^http/, "ws");
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    // Initial fetch
+    fetchNotifications();
+    fetchReturnNotificationsData();
+    fetchDoneNotificationsData();
+    fetchRequestNotificationsData();
+
+    let ws: WebSocket;
+    let reconnectTimer: NodeJS.Timeout;
+
+    const connectWebSocket = () => {
+      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.personalNotifications) {
+            setNotifications(data.personalNotifications);
+          }
+          if (data.returnNotifications) {
+            setReturnNotifications(data.returnNotifications);
+          }
+          if (data.doneNotifications) {
+            setDoneNotifications(data.doneNotifications);
+          }
+          if (data.pendingRequests) {
+            setRequestNotifications(data.pendingRequests);
+          }
+        } catch (err) {
+          console.error("Error parsing websocket message:", err);
+        }
       };
-    }
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      ws.onclose = () => {
+        reconnectTimer = setTimeout(connectWebSocket, 5000);
+      };
+    };
+
+    connectWebSocket();
+
+    return () => {
+      clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
   }, [
     isAuthenticated,
     fetchNotifications,

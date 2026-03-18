@@ -326,31 +326,73 @@ const Navbar: React.FC = () => {
     }
   }, [isAuthenticated, user, approvedAccRole]);
 
+  // Replace polling with WebSocket logic
   useEffect(() => {
-    if (isAuthenticated) {
-      // Defer notification fetch to avoid blocking critical page load
-      const timer = setTimeout(() => {
-        fetchNotifications();
-        fetchReturnNotificationsData();
-        fetchDoneNotificationsData();
-        fetchRequestNotificationsData();
-      }, 1500); // Wait 1.5s after authentication to fetch notifications
+    if (!isAuthenticated) return;
+    if (typeof window === "undefined") return;
 
-      // Set up polling for notifications every 5 seconds
-      const interval = setInterval(() => {
-        fetchNotifications();
-        fetchReturnNotificationsData();
-        fetchDoneNotificationsData();
-        fetchRequestNotificationsData();
-      }, 2000);
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("authToken");
+    if (!token) return;
 
-      return () => {
-        clearTimeout(timer);
-        clearInterval(interval);
+    const wsUrl = (API_BASE_URL || "http://localhost:8000").replace(
+      /^http/,
+      "ws",
+    );
+
+    // Initial fetches still can run once
+    fetchNotifications();
+    fetchReturnNotificationsData();
+    fetchDoneNotificationsData();
+    fetchRequestNotificationsData();
+
+    let ws: WebSocket;
+    let wsReconnectTimeout: NodeJS.Timeout;
+
+    const connectWebSocket = () => {
+      ws = new WebSocket(`${wsUrl}/api/ws/notifications?token=${token}`);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.personalNotifications) {
+            setNotifications(data.personalNotifications);
+          }
+          if (data.returnNotifications) {
+            setReturnNotifications(data.returnNotifications);
+          }
+          if (data.doneNotifications) {
+            setDoneNotifications(data.doneNotifications);
+          }
+          if (data.pendingRequests) {
+            setRequestNotifications(data.pendingRequests);
+          }
+          if (data.accountRequests && isSuperAdmin) {
+            const pendingCount = data.accountRequests.filter(
+              (req: any) => req.status === "Pending",
+            ).length;
+            setPendingAccountRequestsCount(pendingCount);
+          }
+        } catch (err) {
+          console.error("Error parsing websocket message:", err);
+        }
       };
-    }
+
+      ws.onclose = () => {
+        wsReconnectTimeout = setTimeout(connectWebSocket, 5000);
+      };
+    };
+
+    connectWebSocket();
+
+    return () => {
+      clearTimeout(wsReconnectTimeout);
+      if (ws) ws.close();
+    };
   }, [
     isAuthenticated,
+    isSuperAdmin,
     fetchNotifications,
     fetchReturnNotificationsData,
     fetchDoneNotificationsData,
@@ -383,11 +425,10 @@ const Navbar: React.FC = () => {
     }
   }, [isAuthenticated, isSuperAdmin]);
 
+  // Set up fetch once for AccountRequests without polling (handled by above WS)
   useEffect(() => {
     if (isAuthenticated && isSuperAdmin) {
       fetchAccountRequests();
-      const interval = setInterval(fetchAccountRequests, 5000);
-      return () => clearInterval(interval);
     }
   }, [isAuthenticated, isSuperAdmin, fetchAccountRequests]);
 
